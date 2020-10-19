@@ -14,25 +14,46 @@ function exit_if() {
     fi
 }
 
-if [ ! -x $GOPATH/bin/protoc-gen-go ]
-then
-    echo 'No plugin for golang installed, skip the go installation' >&2
-    echo 'try go get github.com/golang/protobuf/protoc-gen-go' >&2
-else
-    echo Compiling go interfaces...
-    export GO_PATH=$GOPATH
-    export GOBIN=$GOPATH/bin
-    export PATH=$GOPATH/bin:$PATH
+function compile_go() {
+    if [ ! -x $GOPATH/bin/protoc-gen-go ]
+    then
+        echo 'No plugin for golang installed, skip the go installation' >&2
+        echo 'try go get github.com/golang/protobuf/protoc-gen-go' >&2
+    else
+        echo Compiling go interfaces...
+        export GO_PATH=$GOPATH
+        export GOBIN=$GOPATH/bin
+        export PATH=$GOPATH/bin:$PATH
 
-    # protoc -I proto/ \
-    #        --go_out=. --go_opt=paths=source_relative \
-    #        --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-    #        $protofiles
-    protoc -I proto/ \
-           --go_out=. \
-           --go-grpc_out=. \
+        protoc -I proto/ \
+               --go_out=. \
+               --go-grpc_out=. \
+               $protofiles
+        
+        exit_if $?
+        echo Done
+    fi
+}
+
+function compile_python() {
+    echo Compiling python interfaces...
+    python -m grpc_tools.protoc -I proto/ \
+           --python_out=python/ \
+           --grpc_python_out=python/ \
            $protofiles
-    
     exit_if $?
+
+    if [ yes`which protoc-gen-grpclib_python` != yes ]; then
+        python -m grpc_tools.protoc -I proto/ \
+               --grpclib_python_out=python/ \
+               $protofiles
+        
+        exit_if $?
+    else
+        echo 'No plugin for grpclib installed, skip the go installation' >&2
+    fi
     echo Done
-fi
+}
+
+compile_go
+compile_python

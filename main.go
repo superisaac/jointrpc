@@ -20,7 +20,7 @@ func (self *HelloServer) Greeting(context context.Context, req *hello.HelloReque
 }
 
 var (
-	port       = flag.Int("port", 10000, "The server port")
+	port       = flag.Int("port", 50055, "The server port")
 )
 
 func main() {
