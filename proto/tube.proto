@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option go_package = "intf/tube";
+
+
+service JSONRPCTube {
+  rpc call(JSONRPCRequest) returns (JSONRPCResult);
+  rpc handle(stream JSONRPCResult) returns (stream JSONRPCRequest);
+}
+
+message JSONRPCRequest {
+  string id = 1;  // empty id means notify
+  string method = 2;
+  repeated string arguments = 3; // JSON encoded
+}
+
+message JSONRPCResult {
+  string id = 1;
+  oneof result {
+    string ok = 10;  // JSON encoded
+    string error = 11;   // JSON encoded
+  }  
+}
+
