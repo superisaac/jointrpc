@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\tintf/tube',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\ntube.proto\"?\n\x0eJSONRPCRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x11\n\targuments\x18\x03 \x03(\t\"D\n\rJSONRPCResult\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x02ok\x18\n \x01(\tH\x00\x12\x0f\n\x05\x65rror\x18\x0b \x01(\tH\x00\x42\x08\n\x06result2e\n\x0bJSONRPCTube\x12\'\n\x04\x63\x61ll\x12\x0f.JSONRPCRequest\x1a\x0e.JSONRPCResult\x12-\n\x06handle\x12\x0e.JSONRPCResult\x1a\x0f.JSONRPCRequest(\x01\x30\x01\x42\x0bZ\tintf/tubeb\x06proto3'
+  serialized_pb=b'\n\ntube.proto\"<\n\x0eJSONRPCRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x0e\n\x06params\x18\x03 \x01(\t\"D\n\rJSONRPCResult\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x02ok\x18\n \x01(\tH\x00\x12\x0f\n\x05\x65rror\x18\x0b \x01(\tH\x00\x42\x08\n\x06result2e\n\x0bJSONRPCTube\x12\'\n\x04\x63\x61ll\x12\x0f.JSONRPCRequest\x1a\x0e.JSONRPCResult\x12-\n\x06handle\x12\x0e.JSONRPCResult\x1a\x0f.JSONRPCRequest(\x01\x30\x01\x42\x0bZ\tintf/tubeb\x06proto3'
 )
 
 
@@ -48,9 +48,9 @@ _JSONRPCREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='arguments', full_name='JSONRPCRequest.arguments', index=2,
-      number=3, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
+      name='params', full_name='JSONRPCRequest.params', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -67,7 +67,7 @@ _JSONRPCREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=14,
-  serialized_end=77,
+  serialized_end=74,
 )
 
 
@@ -117,8 +117,8 @@ _JSONRPCRESULT = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=79,
-  serialized_end=147,
+  serialized_start=76,
+  serialized_end=144,
 )
 
 _JSONRPCRESULT.oneofs_by_name['result'].fields.append(
@@ -155,8 +155,8 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=149,
-  serialized_end=250,
+  serialized_start=146,
+  serialized_end=247,
   methods=[
   _descriptor.MethodDescriptor(
     name='call',

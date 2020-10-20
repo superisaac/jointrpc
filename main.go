@@ -8,6 +8,8 @@ import (
 	"google.golang.org/grpc"
 	context "context"
 	hello "github.com/superisaac/rpctube/intf/hello"
+	tube "github.com/superisaac/rpctube/intf/tube"	
+	server "github.com/superisaac/rpctube/server"
 )
 
 type HelloServer struct {
@@ -33,5 +35,6 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	s := &HelloServer{}
 	hello.RegisterHelloServer(grpcServer, s)
+	tube.RegisterJSONRPCTubeServer(grpcServer, server.NewJSONRPCTubeServer())
 	grpcServer.Serve(lis)
 }

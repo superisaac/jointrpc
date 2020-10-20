@@ -11,7 +11,7 @@ service JSONRPCTube {
 message JSONRPCRequest {
   string id = 1;  // empty id means notify
   string method = 2;
-  repeated string arguments = 3; // JSON encoded
+  string params = 3; // JSON encoded
 }
 
 message JSONRPCResult {
