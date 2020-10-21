@@ -29,7 +29,6 @@ func TestRequestMsg(t *testing.T) {
 
 	assert.Equal(msg.Method, "add")
 
-	assert.Equal(msg.ServiceName, "abc")
 	assert.True(msg.IsValid())
 	assert.True(msg.IsRequest())
 	assert.False(msg.IsNotify())
@@ -57,7 +56,6 @@ func TestNotifyMsg(t *testing.T) {
 
 	assert.Equal(msg.Method, "add")
 
-	assert.Equal(msg.ServiceName, "abc")
 	assert.True(msg.IsValid())
 	assert.False(msg.IsRequest())
 	assert.True(msg.IsNotify())
@@ -71,8 +69,7 @@ func TestNotifyMsg(t *testing.T) {
 	assert.Equal(params[2], "hello")
 
 	arr := [](interface{}){3, "uu"}
-	msg = NewNotifyMessage("ttt", "hahaha", arr)
-	assert.Equal(msg.ServiceName, "ttt")
+	msg = NewNotifyMessage("hahaha", arr)
 	assert.Equal(msg.Method, "hahaha")
 	params = msg.GetParams()
 

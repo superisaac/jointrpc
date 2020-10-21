@@ -4,31 +4,32 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/bitly/go-simplejson"
-	"strings"
 )
 
-func ParseMessage(data []byte) (RPCMessage, error) {
+func ParseMessage(data []byte) (*RPCMessage, error) {
 	// Reserved for other data format
 	parsed, err := simplejson.NewJson(data)
 	if err != nil {
-		return RPCMessage{}, err
+		return nil, err
 	}
 	return NewRPCMessage(parsed), nil
 }
 
-func NewRPCMessage(data *simplejson.Json) RPCMessage {
+func MarshalJson(json_data *simplejson.Json) (string, error) {
+	data, err := json_data.Encode()
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func NewRPCMessage(data *simplejson.Json) *RPCMessage {
 	//msg := new(RPCMessage)
-	msg := RPCMessage{Initialized: true}
+	msg := &RPCMessage{Initialized: true}
 	msg.Id = data.Get("id").Interface()
 	method, err := data.Get("method").String()
 	if err == nil {
-		arr := strings.SplitN(method, "::", 2)
-		if len(arr) == 2 {
-			msg.ServiceName = arr[0]
-			msg.Method = arr[1]
-		} else if len(arr) == 1 {
-			msg.Method = arr[0]
-		}
+		msg.Method = method
 	}
 	msg.Params = data.Get("params")
 	msg.Result = data.Get("result")
@@ -37,21 +38,21 @@ func NewRPCMessage(data *simplejson.Json) RPCMessage {
 	return msg
 }
 
-func NewResultMessage(id interface{}, result interface{}) RPCMessage {
+func NewResultMessage(id interface{}, result interface{}) *RPCMessage {
 	resultJson := simplejson.New()
 	resultJson.Set("id", id)
 	resultJson.Set("result", result)
 	return NewRPCMessage(resultJson)
 }
 
-func NewNotifyMessage(serviceName string, method string, params []interface{}) RPCMessage {
+func NewNotifyMessage(method string, params []interface{}) *RPCMessage {
 	notifyJson := simplejson.New()
-	notifyJson.Set("method", serviceName+"::"+method)
+	notifyJson.Set("method", method)
 	notifyJson.Set("params", params)
 	return NewRPCMessage(notifyJson)
 }
 
-func NewErrorMessage(id interface{}, code int, message string) RPCMessage {
+func NewErrorMessage(id interface{}, code int, message string) *RPCMessage {
 	jsonData := NewErrorJSON(id, code, message)
 	return NewRPCMessage(jsonData)
 }
@@ -76,34 +77,27 @@ func (self RPCMessage) GetIntId() (int64, error) {
 }
 
 func (self RPCMessage) IsRequest() bool {
-	return self.Id != nil &&
-		self.ServiceName != "" &&
-		self.Method != ""
+	return self.Id != nil && self.Method != ""
 }
 
 func (self RPCMessage) IsNotify() bool {
-	return self.Id == nil &&
-		self.ServiceName != "" &&
-		self.Method != ""
+	return self.Id == nil && self.Method != ""
 }
 
 func (self RPCMessage) IsResult() bool {
 	return (self.Id != nil &&
-		self.ServiceName == "" &&
 		self.Method == "" &&
 		self.Result.Interface() != nil)
 }
 
 func (self RPCMessage) IsError() bool {
 	return (self.Id != nil &&
-		self.ServiceName == "" &&
 		self.Method == "" &&
 		self.Error.Interface() != nil)
 }
 
 func (self RPCMessage) IsResultOrError() bool {
 	return (self.Id != nil &&
-		self.ServiceName == "" &&
 		self.Method == "" &&
 		(self.Result.Interface() != nil || self.Error.Interface() != nil))
 }
@@ -115,5 +109,3 @@ func (self RPCMessage) IsValid() bool {
 func (self RPCMessage) GetParams() []interface{} {
 	return self.Params.MustArray()
 }
-
-

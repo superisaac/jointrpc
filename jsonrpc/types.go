@@ -10,7 +10,6 @@ type RPCMessage struct {
 	Initialized bool
 	FromConnId  CID
 	Id          interface{}
-	ServiceName string
 	Method      string
 	Params      *simplejson.Json
 	Result      *simplejson.Json
