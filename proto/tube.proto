@@ -2,10 +2,27 @@ syntax = "proto3";
 
 option go_package = "intf/tube";
 
-
 service JSONRPCTube {
   rpc call(JSONRPCRequest) returns (JSONRPCResult);
-  rpc handle(stream JSONRPCResult) returns (stream JSONRPCRequest);
+  rpc handle(stream JSONRPCResultPacket) returns (stream JSONRPCRequestPacket);
+}
+
+message MetaRequest {
+}
+
+enum RPCProtocol {
+  JSONRPC = 0;
+}
+
+message MetaResult {
+  repeated RPCEntry entries = 1;
+  int32 ping_interval = 3;
+}
+
+message RPCEntry {
+  RPCProtocol protocol = 1;
+  string name = 2;
+  string help = 3;
 }
 
 message JSONRPCRequest {
@@ -21,4 +38,19 @@ message JSONRPCResult {
     string error = 11;   // JSON encoded
   }  
 }
+
+message JSONRPCRequestPacket {
+  oneof payload {
+    MetaRequest meta_request = 1;
+    JSONRPCRequest request = 2;
+  }
+}
+
+message JSONRPCResultPacket {
+  oneof payload {
+    MetaResult meta_result = 1;
+    JSONRPCResult result = 2;
+  }
+}
+
 

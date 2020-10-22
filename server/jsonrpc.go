@@ -6,11 +6,11 @@ import (
 	"errors"
 	simplejson "github.com/bitly/go-simplejson"	
 	context "context"
-	tube "github.com/superisaac/rpctube/intf/tube"
+	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
-func RequestToMessage(req *tube.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
+func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 	json_data := simplejson.New()
 	json_data.Set("version", "2.0")	
 	json_data.Set("id", req.Id)
@@ -28,7 +28,7 @@ func RequestToMessage(req *tube.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 	return jsonrpc.NewRPCMessage(json_data), nil
 }
 
-func ResultToMessage(res *tube.JSONRPCResult) (*jsonrpc.RPCMessage, error) {
+func ResultToMessage(res *intf.JSONRPCResult) (*jsonrpc.RPCMessage, error) {
 	json_data := simplejson.New()
 	json_data.Set("version", "2.0")
 	json_data.Set("id", res.Id)
@@ -49,11 +49,11 @@ func ResultToMessage(res *tube.JSONRPCResult) (*jsonrpc.RPCMessage, error) {
 	return jsonrpc.NewRPCMessage(json_data), nil
 }
 
-func MessageToRequest(msg *jsonrpc.RPCMessage) (*tube.JSONRPCRequest, error) {
+func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
 	if !msg.IsRequest() || !msg.IsNotify() {
 		return nil, errors.New("msg is not request|notify")
 	}
-	req := &tube.JSONRPCRequest{}
+	req := &intf.JSONRPCRequest{}
 	req.Id = fmt.Sprintf("%v", msg.Id)
 	req.Method = msg.Method
 	params, err := jsonrpc.MarshalJson(msg.Params)
@@ -64,52 +64,54 @@ func MessageToRequest(msg *jsonrpc.RPCMessage) (*tube.JSONRPCRequest, error) {
 	return req, nil
 }
 
-func MessageToResult(msg *jsonrpc.RPCMessage) (*tube.JSONRPCResult, error) {
+func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
 	if !msg.IsResult() || !msg.IsError() {
 		return nil, errors.New("msg is not result|error")
 	}
-	res := &tube.JSONRPCResult{}	
+	res := &intf.JSONRPCResult{}	
 	res.Id = fmt.Sprintf("%v", msg.Id)
 	if msg.IsError() {
 		r, err := jsonrpc.MarshalJson(msg.Error)
 		if err != nil {
 			return nil, err
 		}
-		res.Result = &tube.JSONRPCResult_Error{Error: r}
+		res.Result = &intf.JSONRPCResult_Error{Error: r}
 	} else {
 		r, err := jsonrpc.MarshalJson(msg.Error)
 		if err != nil {
 			return nil, err
 		}
-		res.Result = &tube.JSONRPCResult_Ok{Ok: r}
+		res.Result = &intf.JSONRPCResult_Ok{Ok: r}
 	}
 	return res, nil
 }
 
 
 type JSONRPCTube struct {
-	tube.UnimplementedJSONRPCTubeServer
+	intf.UnimplementedJSONRPCTubeServer
 }
 
 
-func (self *JSONRPCTube) Call(context context.Context, req *tube.JSONRPCRequest) (*tube.JSONRPCResult, error) {
+func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
 	req_msg, err := RequestToMessage(req)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Printf("sss %v %v\n", req.Method, req_msg.Id)		
-	ok := &tube.JSONRPCResult_Ok{Ok: "okokook"}
-	res := &tube.JSONRPCResult{Id: req.Id, Result: ok}
+	ok := &intf.JSONRPCResult_Ok{Ok: "okokook"}
+	res := &intf.JSONRPCResult{Id: req.Id, Result: ok}
 	return res, nil
 }
 
-func recv(stream tube.JSONRPCTube_HandleServer) {
+func recv(stream intf.JSONRPCTube_HandleServer) {
 	for i:=0;i>5; i++ {
 		sid := fmt.Sprintf("%d", i)
 		//params := []string{"me", "you"}
 		params := `["abc", 1, 2]`
-		req := &tube.JSONRPCRequest{Id:sid, Method:"testing", Params: params}
-		err := stream.Send(req)
+		req := &intf.JSONRPCRequest{Id: sid, Method:"testing", Params: params}
+		payload := &intf.JSONRPCRequestPacket_Request{Request: req}
+		pac := &intf.JSONRPCRequestPacket{Payload: payload}
+		err := stream.Send(pac)
 		if err != nil {
 			//stream.Close()
 			break
@@ -118,14 +120,15 @@ func recv(stream tube.JSONRPCTube_HandleServer) {
 	}
 }
 
-func (self *JSONRPCTube) Handle(stream tube.JSONRPCTube_HandleServer) error {
+func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	go recv(stream)
 	
 	for {
-		res, err := stream.Recv()
+		pac, err := stream.Recv()
 		if err != nil {
 			return err
 		}
+		res := pac.GetResult()
 		fmt.Printf("result %v\n", res.Id)
 	}
 }

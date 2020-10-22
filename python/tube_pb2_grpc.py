@@ -21,8 +21,8 @@ class JSONRPCTubeStub(object):
                 )
         self.handle = channel.stream_stream(
                 '/JSONRPCTube/handle',
-                request_serializer=tube__pb2.JSONRPCResult.SerializeToString,
-                response_deserializer=tube__pb2.JSONRPCRequest.FromString,
+                request_serializer=tube__pb2.JSONRPCResultPacket.SerializeToString,
+                response_deserializer=tube__pb2.JSONRPCRequestPacket.FromString,
                 )
 
 
@@ -51,8 +51,8 @@ def add_JSONRPCTubeServicer_to_server(servicer, server):
             ),
             'handle': grpc.stream_stream_rpc_method_handler(
                     servicer.handle,
-                    request_deserializer=tube__pb2.JSONRPCResult.FromString,
-                    response_serializer=tube__pb2.JSONRPCRequest.SerializeToString,
+                    request_deserializer=tube__pb2.JSONRPCResultPacket.FromString,
+                    response_serializer=tube__pb2.JSONRPCRequestPacket.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -93,7 +93,7 @@ class JSONRPCTube(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/JSONRPCTube/handle',
-            tube__pb2.JSONRPCResult.SerializeToString,
-            tube__pb2.JSONRPCRequest.FromString,
+            tube__pb2.JSONRPCResultPacket.SerializeToString,
+            tube__pb2.JSONRPCRequestPacket.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -20,6 +20,205 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type RPCProtocol int32
+
+const (
+	RPCProtocol_JSONRPC RPCProtocol = 0
+)
+
+// Enum value maps for RPCProtocol.
+var (
+	RPCProtocol_name = map[int32]string{
+		0: "JSONRPC",
+	}
+	RPCProtocol_value = map[string]int32{
+		"JSONRPC": 0,
+	}
+)
+
+func (x RPCProtocol) Enum() *RPCProtocol {
+	p := new(RPCProtocol)
+	*p = x
+	return p
+}
+
+func (x RPCProtocol) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RPCProtocol) Descriptor() protoreflect.EnumDescriptor {
+	return file_tube_proto_enumTypes[0].Descriptor()
+}
+
+func (RPCProtocol) Type() protoreflect.EnumType {
+	return &file_tube_proto_enumTypes[0]
+}
+
+func (x RPCProtocol) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RPCProtocol.Descriptor instead.
+func (RPCProtocol) EnumDescriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{0}
+}
+
+type MetaRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MetaRequest) Reset() {
+	*x = MetaRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MetaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MetaRequest) ProtoMessage() {}
+
+func (x *MetaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MetaRequest.ProtoReflect.Descriptor instead.
+func (*MetaRequest) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{0}
+}
+
+type MetaResult struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Entries      []*RPCEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	PingInterval int32       `protobuf:"varint,3,opt,name=ping_interval,json=pingInterval,proto3" json:"ping_interval,omitempty"`
+}
+
+func (x *MetaResult) Reset() {
+	*x = MetaResult{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MetaResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MetaResult) ProtoMessage() {}
+
+func (x *MetaResult) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MetaResult.ProtoReflect.Descriptor instead.
+func (*MetaResult) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *MetaResult) GetEntries() []*RPCEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+func (x *MetaResult) GetPingInterval() int32 {
+	if x != nil {
+		return x.PingInterval
+	}
+	return 0
+}
+
+type RPCEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Protocol RPCProtocol `protobuf:"varint,1,opt,name=protocol,proto3,enum=RPCProtocol" json:"protocol,omitempty"`
+	Name     string      `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Help     string      `protobuf:"bytes,3,opt,name=help,proto3" json:"help,omitempty"`
+}
+
+func (x *RPCEntry) Reset() {
+	*x = RPCEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RPCEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RPCEntry) ProtoMessage() {}
+
+func (x *RPCEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RPCEntry.ProtoReflect.Descriptor instead.
+func (*RPCEntry) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *RPCEntry) GetProtocol() RPCProtocol {
+	if x != nil {
+		return x.Protocol
+	}
+	return RPCProtocol_JSONRPC
+}
+
+func (x *RPCEntry) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *RPCEntry) GetHelp() string {
+	if x != nil {
+		return x.Help
+	}
+	return ""
+}
+
 type JSONRPCRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -33,7 +232,7 @@ type JSONRPCRequest struct {
 func (x *JSONRPCRequest) Reset() {
 	*x = JSONRPCRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[0]
+		mi := &file_tube_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -46,7 +245,7 @@ func (x *JSONRPCRequest) String() string {
 func (*JSONRPCRequest) ProtoMessage() {}
 
 func (x *JSONRPCRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[0]
+	mi := &file_tube_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -59,7 +258,7 @@ func (x *JSONRPCRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCRequest.ProtoReflect.Descriptor instead.
 func (*JSONRPCRequest) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{0}
+	return file_tube_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *JSONRPCRequest) GetId() string {
@@ -98,7 +297,7 @@ type JSONRPCResult struct {
 func (x *JSONRPCResult) Reset() {
 	*x = JSONRPCResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[1]
+		mi := &file_tube_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -111,7 +310,7 @@ func (x *JSONRPCResult) String() string {
 func (*JSONRPCResult) ProtoMessage() {}
 
 func (x *JSONRPCResult) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[1]
+	mi := &file_tube_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -124,7 +323,7 @@ func (x *JSONRPCResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCResult.ProtoReflect.Descriptor instead.
 func (*JSONRPCResult) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{1}
+	return file_tube_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *JSONRPCResult) GetId() string {
@@ -171,28 +370,219 @@ func (*JSONRPCResult_Ok) isJSONRPCResult_Result() {}
 
 func (*JSONRPCResult_Error) isJSONRPCResult_Result() {}
 
+type JSONRPCRequestPacket struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Payload:
+	//	*JSONRPCRequestPacket_MetaRequest
+	//	*JSONRPCRequestPacket_Request
+	Payload isJSONRPCRequestPacket_Payload `protobuf_oneof:"payload"`
+}
+
+func (x *JSONRPCRequestPacket) Reset() {
+	*x = JSONRPCRequestPacket{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *JSONRPCRequestPacket) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JSONRPCRequestPacket) ProtoMessage() {}
+
+func (x *JSONRPCRequestPacket) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JSONRPCRequestPacket.ProtoReflect.Descriptor instead.
+func (*JSONRPCRequestPacket) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{5}
+}
+
+func (m *JSONRPCRequestPacket) GetPayload() isJSONRPCRequestPacket_Payload {
+	if m != nil {
+		return m.Payload
+	}
+	return nil
+}
+
+func (x *JSONRPCRequestPacket) GetMetaRequest() *MetaRequest {
+	if x, ok := x.GetPayload().(*JSONRPCRequestPacket_MetaRequest); ok {
+		return x.MetaRequest
+	}
+	return nil
+}
+
+func (x *JSONRPCRequestPacket) GetRequest() *JSONRPCRequest {
+	if x, ok := x.GetPayload().(*JSONRPCRequestPacket_Request); ok {
+		return x.Request
+	}
+	return nil
+}
+
+type isJSONRPCRequestPacket_Payload interface {
+	isJSONRPCRequestPacket_Payload()
+}
+
+type JSONRPCRequestPacket_MetaRequest struct {
+	MetaRequest *MetaRequest `protobuf:"bytes,1,opt,name=meta_request,json=metaRequest,proto3,oneof"`
+}
+
+type JSONRPCRequestPacket_Request struct {
+	Request *JSONRPCRequest `protobuf:"bytes,2,opt,name=request,proto3,oneof"`
+}
+
+func (*JSONRPCRequestPacket_MetaRequest) isJSONRPCRequestPacket_Payload() {}
+
+func (*JSONRPCRequestPacket_Request) isJSONRPCRequestPacket_Payload() {}
+
+type JSONRPCResultPacket struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Payload:
+	//	*JSONRPCResultPacket_MetaResult
+	//	*JSONRPCResultPacket_Result
+	Payload isJSONRPCResultPacket_Payload `protobuf_oneof:"payload"`
+}
+
+func (x *JSONRPCResultPacket) Reset() {
+	*x = JSONRPCResultPacket{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *JSONRPCResultPacket) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JSONRPCResultPacket) ProtoMessage() {}
+
+func (x *JSONRPCResultPacket) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JSONRPCResultPacket.ProtoReflect.Descriptor instead.
+func (*JSONRPCResultPacket) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{6}
+}
+
+func (m *JSONRPCResultPacket) GetPayload() isJSONRPCResultPacket_Payload {
+	if m != nil {
+		return m.Payload
+	}
+	return nil
+}
+
+func (x *JSONRPCResultPacket) GetMetaResult() *MetaResult {
+	if x, ok := x.GetPayload().(*JSONRPCResultPacket_MetaResult); ok {
+		return x.MetaResult
+	}
+	return nil
+}
+
+func (x *JSONRPCResultPacket) GetResult() *JSONRPCResult {
+	if x, ok := x.GetPayload().(*JSONRPCResultPacket_Result); ok {
+		return x.Result
+	}
+	return nil
+}
+
+type isJSONRPCResultPacket_Payload interface {
+	isJSONRPCResultPacket_Payload()
+}
+
+type JSONRPCResultPacket_MetaResult struct {
+	MetaResult *MetaResult `protobuf:"bytes,1,opt,name=meta_result,json=metaResult,proto3,oneof"`
+}
+
+type JSONRPCResultPacket_Result struct {
+	Result *JSONRPCResult `protobuf:"bytes,2,opt,name=result,proto3,oneof"`
+}
+
+func (*JSONRPCResultPacket_MetaResult) isJSONRPCResultPacket_Payload() {}
+
+func (*JSONRPCResultPacket_Result) isJSONRPCResultPacket_Payload() {}
+
 var File_tube_proto protoreflect.FileDescriptor
 
 var file_tube_proto_rawDesc = []byte{
-	0x0a, 0x0a, 0x74, 0x75, 0x62, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x50, 0x0a, 0x0e,
-	0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e,
-	0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x16,
-	0x0a, 0x06, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
-	0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x53,
-	0x0a, 0x0d, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12,
-	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12,
-	0x10, 0x0a, 0x02, 0x6f, 0x6b, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x02, 0x6f,
-	0x6b, 0x12, 0x16, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09,
-	0x48, 0x00, 0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x42, 0x08, 0x0a, 0x06, 0x72, 0x65, 0x73,
-	0x75, 0x6c, 0x74, 0x32, 0x65, 0x0a, 0x0b, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x54, 0x75,
-	0x62, 0x65, 0x12, 0x27, 0x0a, 0x04, 0x63, 0x61, 0x6c, 0x6c, 0x12, 0x0f, 0x2e, 0x4a, 0x53, 0x4f,
-	0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0e, 0x2e, 0x4a, 0x53,
-	0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x2d, 0x0a, 0x06, 0x68,
-	0x61, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x0e, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52,
-	0x65, 0x73, 0x75, 0x6c, 0x74, 0x1a, 0x0f, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x28, 0x01, 0x30, 0x01, 0x42, 0x0b, 0x5a, 0x09, 0x69, 0x6e,
-	0x74, 0x66, 0x2f, 0x74, 0x75, 0x62, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x0a, 0x0a, 0x74, 0x75, 0x62, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x0d, 0x0a, 0x0b,
+	0x4d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x56, 0x0a, 0x0a, 0x4d,
+	0x65, 0x74, 0x61, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x23, 0x0a, 0x07, 0x65, 0x6e, 0x74,
+	0x72, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x09, 0x2e, 0x52, 0x50, 0x43,
+	0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x12, 0x23,
+	0x0a, 0x0d, 0x70, 0x69, 0x6e, 0x67, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0c, 0x70, 0x69, 0x6e, 0x67, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x76, 0x61, 0x6c, 0x22, 0x5c, 0x0a, 0x08, 0x52, 0x50, 0x43, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12,
+	0x28, 0x0a, 0x08, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0e, 0x32, 0x0c, 0x2e, 0x52, 0x50, 0x43, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x52,
+	0x08, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a,
+	0x04, 0x68, 0x65, 0x6c, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x68, 0x65, 0x6c,
+	0x70, 0x22, 0x50, 0x0a, 0x0e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x02, 0x69, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x06, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x70,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x22, 0x53, 0x0a, 0x0d, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65,
+	0x73, 0x75, 0x6c, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x02, 0x69, 0x64, 0x12, 0x10, 0x0a, 0x02, 0x6f, 0x6b, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x09,
+	0x48, 0x00, 0x52, 0x02, 0x6f, 0x6b, 0x12, 0x16, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18,
+	0x0b, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x42, 0x08,
+	0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x22, 0x81, 0x01, 0x0a, 0x14, 0x4a, 0x53, 0x4f,
+	0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x65,
+	0x74, 0x12, 0x31, 0x0a, 0x0c, 0x6d, 0x65, 0x74, 0x61, 0x5f, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0b, 0x6d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x2b, 0x0a, 0x07, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x07, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x7a, 0x0a, 0x13,
+	0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x50, 0x61, 0x63,
+	0x6b, 0x65, 0x74, 0x12, 0x2e, 0x0a, 0x0b, 0x6d, 0x65, 0x74, 0x61, 0x5f, 0x72, 0x65, 0x73, 0x75,
+	0x6c, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x52,
+	0x65, 0x73, 0x75, 0x6c, 0x74, 0x48, 0x00, 0x52, 0x0a, 0x6d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x73,
+	0x75, 0x6c, 0x74, 0x12, 0x28, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73,
+	0x75, 0x6c, 0x74, 0x48, 0x00, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x42, 0x09, 0x0a,
+	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x2a, 0x1a, 0x0a, 0x0b, 0x52, 0x50, 0x43, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x0b, 0x0a, 0x07, 0x4a, 0x53, 0x4f, 0x4e, 0x52,
+	0x50, 0x43, 0x10, 0x00, 0x32, 0x71, 0x0a, 0x0b, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x54,
+	0x75, 0x62, 0x65, 0x12, 0x27, 0x0a, 0x04, 0x63, 0x61, 0x6c, 0x6c, 0x12, 0x0f, 0x2e, 0x4a, 0x53,
+	0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0e, 0x2e, 0x4a,
+	0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x39, 0x0a, 0x06,
+	0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x14, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43,
+	0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x1a, 0x15, 0x2e, 0x4a,
+	0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50, 0x61, 0x63,
+	0x6b, 0x65, 0x74, 0x28, 0x01, 0x30, 0x01, 0x42, 0x0b, 0x5a, 0x09, 0x69, 0x6e, 0x74, 0x66, 0x2f,
+	0x74, 0x75, 0x62, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -207,21 +597,34 @@ func file_tube_proto_rawDescGZIP() []byte {
 	return file_tube_proto_rawDescData
 }
 
-var file_tube_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_tube_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_tube_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_tube_proto_goTypes = []interface{}{
-	(*JSONRPCRequest)(nil), // 0: JSONRPCRequest
-	(*JSONRPCResult)(nil),  // 1: JSONRPCResult
+	(RPCProtocol)(0),             // 0: RPCProtocol
+	(*MetaRequest)(nil),          // 1: MetaRequest
+	(*MetaResult)(nil),           // 2: MetaResult
+	(*RPCEntry)(nil),             // 3: RPCEntry
+	(*JSONRPCRequest)(nil),       // 4: JSONRPCRequest
+	(*JSONRPCResult)(nil),        // 5: JSONRPCResult
+	(*JSONRPCRequestPacket)(nil), // 6: JSONRPCRequestPacket
+	(*JSONRPCResultPacket)(nil),  // 7: JSONRPCResultPacket
 }
 var file_tube_proto_depIdxs = []int32{
-	0, // 0: JSONRPCTube.call:input_type -> JSONRPCRequest
-	1, // 1: JSONRPCTube.handle:input_type -> JSONRPCResult
-	1, // 2: JSONRPCTube.call:output_type -> JSONRPCResult
-	0, // 3: JSONRPCTube.handle:output_type -> JSONRPCRequest
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	3, // 0: MetaResult.entries:type_name -> RPCEntry
+	0, // 1: RPCEntry.protocol:type_name -> RPCProtocol
+	1, // 2: JSONRPCRequestPacket.meta_request:type_name -> MetaRequest
+	4, // 3: JSONRPCRequestPacket.request:type_name -> JSONRPCRequest
+	2, // 4: JSONRPCResultPacket.meta_result:type_name -> MetaResult
+	5, // 5: JSONRPCResultPacket.result:type_name -> JSONRPCResult
+	4, // 6: JSONRPCTube.call:input_type -> JSONRPCRequest
+	7, // 7: JSONRPCTube.handle:input_type -> JSONRPCResultPacket
+	5, // 8: JSONRPCTube.call:output_type -> JSONRPCResult
+	6, // 9: JSONRPCTube.handle:output_type -> JSONRPCRequestPacket
+	8, // [8:10] is the sub-list for method output_type
+	6, // [6:8] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_tube_proto_init() }
@@ -231,7 +634,7 @@ func file_tube_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_tube_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*JSONRPCRequest); i {
+			switch v := v.(*MetaRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -243,6 +646,42 @@ func file_tube_proto_init() {
 			}
 		}
 		file_tube_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MetaResult); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_tube_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RPCEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_tube_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*JSONRPCRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_tube_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*JSONRPCResult); i {
 			case 0:
 				return &v.state
@@ -254,23 +693,56 @@ func file_tube_proto_init() {
 				return nil
 			}
 		}
+		file_tube_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*JSONRPCRequestPacket); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_tube_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*JSONRPCResultPacket); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
-	file_tube_proto_msgTypes[1].OneofWrappers = []interface{}{
+	file_tube_proto_msgTypes[4].OneofWrappers = []interface{}{
 		(*JSONRPCResult_Ok)(nil),
 		(*JSONRPCResult_Error)(nil),
+	}
+	file_tube_proto_msgTypes[5].OneofWrappers = []interface{}{
+		(*JSONRPCRequestPacket_MetaRequest)(nil),
+		(*JSONRPCRequestPacket_Request)(nil),
+	}
+	file_tube_proto_msgTypes[6].OneofWrappers = []interface{}{
+		(*JSONRPCResultPacket_MetaResult)(nil),
+		(*JSONRPCResultPacket_Result)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_tube_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      1,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_tube_proto_goTypes,
 		DependencyIndexes: file_tube_proto_depIdxs,
+		EnumInfos:         file_tube_proto_enumTypes,
 		MessageInfos:      file_tube_proto_msgTypes,
 	}.Build()
 	File_tube_proto = out.File

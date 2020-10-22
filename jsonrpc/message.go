@@ -16,11 +16,11 @@ func ParseMessage(data []byte) (*RPCMessage, error) {
 }
 
 func MarshalJson(json_data *simplejson.Json) (string, error) {
-	data, err := json_data.Encode()
+	bytes, err := json_data.MarshalJSON()
 	if err != nil {
 		return "", err
 	}
-	return string(data), nil
+	return string(bytes), nil
 }
 
 func NewRPCMessage(data *simplejson.Json) *RPCMessage {
