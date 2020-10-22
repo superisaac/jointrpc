@@ -5,6 +5,7 @@ import (
 )
 
 type CID uint64
+type UID uint64
 
 type RPCMessage struct {
 	Initialized bool

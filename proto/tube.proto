@@ -26,7 +26,7 @@ message RPCEntry {
 }
 
 message JSONRPCRequest {
-  string id = 1;  // empty id means notify
+  uint64 id = 1;  // empty id means notify
   string method = 2;
   string params = 3; // JSON encoded
 }
