@@ -27,7 +27,7 @@ func TestRequestMsg(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(intMsgId, int64(100))
 
-	assert.Equal(msg.Method, "add")
+	assert.Equal(msg.Method, "abc::add")
 
 	assert.True(msg.IsValid())
 	assert.True(msg.IsRequest())
@@ -54,7 +54,7 @@ func TestNotifyMsg(t *testing.T) {
 	assert.NotNil(err)
 	assert.Equal(intMsgId, int64(0))
 
-	assert.Equal(msg.Method, "add")
+	assert.Equal(msg.Method, "abc::add")
 
 	assert.True(msg.IsValid())
 	assert.False(msg.IsRequest())

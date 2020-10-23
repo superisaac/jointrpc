@@ -28,12 +28,12 @@ func (self *Router) Init() *Router {
 	self.routerLock = new(sync.RWMutex)
 	self.MethodConnMap = make(map[string]([]jsonrpc.CID))
 	self.ConnMethodMap = make(map[jsonrpc.CID]([]string))
-	self.ConnMap = make(map[jsonrpc.CID](ConnT))
+	self.ConnMap = make(map[jsonrpc.CID](IConn))
 	self.PendingMap = make(map[PendingKey]PendingValue)
 	return self
 }
 
-func (self *Router) registerConn(connId jsonrpc.CID, conn ConnT) {
+func (self *Router) registerConn(connId jsonrpc.CID, conn IConn) {
 	self.ConnMap[connId] = conn
 	// register connId as a service name
 }
@@ -187,7 +187,7 @@ func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
 	self.PendingMap[pKey] = pValue
 }
 
-func (self *Router) routeMessage(msg *jsonrpc.RPCMessage) *ConnT {
+func (self *Router) routeMessage(msg *jsonrpc.RPCMessage) *IConn {
 	fromConnId := msg.FromConnId
 	if msg.IsRequest() {
 		toConnId, found := self.SelectConn(msg.Method)
@@ -241,7 +241,7 @@ func (self *Router) broadcastNotify(notify *jsonrpc.RPCMessage) (int, error) {
 	return cntDeliver, nil
 }
 
-func (self *Router) deliverMessage(connId jsonrpc.CID, msg *jsonrpc.RPCMessage) *ConnT {
+func (self *Router) deliverMessage(connId jsonrpc.CID, msg *jsonrpc.RPCMessage) *IConn {
 	ct, ok := self.ConnMap[connId]
 	if ok {
 		ct.RecvChannel() <- msg //(*msg)
@@ -266,7 +266,7 @@ func (self *Router) deliverMessage(connId jsonrpc.CID, msg *jsonrpc.RPCMessage) 
 //}
 
 // commands
-func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId jsonrpc.CID) *ConnT {
+func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId jsonrpc.CID) *IConn {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 	
@@ -284,13 +284,26 @@ func (self *Router) BroadcastNotify(notify *jsonrpc.RPCMessage, fromConnId jsonr
 	return self.broadcastNotify(notify)
 }
 
-/*func (self *Router) Join(connId jsonrpc.CID, ch MsgChannel, intent string) {
-	conn := &ConnT{RecvChannel: ch, Intent: intent}
-	//self.registerConn(cmdOpen.ConnId, conn)
-	self.JoinConn(connId, conn)
-}*/
+// Drop-in implementor of IConn
+type SimpleConnT struct {
+	recvChannel MsgChannel
+	canBroadcast bool
+}
 
-func (self *Router) JoinConn(connId jsonrpc.CID, conn ConnT) {
+func (self SimpleConnT) RecvChannel() MsgChannel {
+	return self.recvChannel
+}
+
+func (self SimpleConnT) CanBroadcast() bool {
+	return self.canBroadcast
+}
+
+func (self *Router) Join(connId jsonrpc.CID, ch MsgChannel) {
+	conn := &SimpleConnT{recvChannel: ch, canBroadcast: true}
+	self.JoinConn(connId, conn)
+}
+
+func (self *Router) JoinConn(connId jsonrpc.CID, conn IConn) {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 	self.registerConn(connId, conn)

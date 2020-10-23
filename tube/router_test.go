@@ -28,5 +28,4 @@ func TestJoinConn(t *testing.T) {
 	c := TestConnT{ch: ch}
 	router.JoinConn(cid, c)
 	assert.Equal(len(router.ConnMap), 1)
-	
 }

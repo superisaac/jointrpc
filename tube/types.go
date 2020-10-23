@@ -34,12 +34,11 @@ type PendingValue struct {
 	Expire time.Time
 }
 
-// ConnT
-type ConnT interface {
+// IConn
+type IConn interface {
 	RecvChannel() MsgChannel
 	CanBroadcast() bool
 }
-
 
 type Router struct {
 	// channels
@@ -47,7 +46,7 @@ type Router struct {
 	MethodConnMap map[string]([]jsonrpc.CID)
 	ConnMethodMap map[jsonrpc.CID]([]string)
 
-	ConnMap    map[jsonrpc.CID](ConnT)
+	ConnMap    map[jsonrpc.CID](IConn)
 	PendingMap map[PendingKey]PendingValue
 }
 
