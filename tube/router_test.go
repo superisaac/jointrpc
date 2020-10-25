@@ -25,7 +25,11 @@ func TestJoinConn(t *testing.T) {
 
 	cid := jsonrpc.CID(1002)
 	ch := make(MsgChannel, 100)
-	c := TestConnT{ch: ch}
-	router.JoinConn(cid, c)
-	assert.Equal(len(router.ConnMap), 1)
+	router.Join(cid, ch)
+	assert.Equal(1, len(router.ConnMap))
+
+	router.RegisterMethod(cid, "abc")
+	methods := router.GetMethods(cid)
+	assert.Equal(1, len(methods))
+	assert.Equal("abc", methods[0])
 }

@@ -3,7 +3,7 @@ package tube
 import (
 	"sync"
 	"time"
-	"github.com/gorilla/websocket"
+	//	"github.com/gorilla/websocket"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
@@ -11,9 +11,10 @@ func NewRouter() *Router {
 	return new(Router).Init()
 }
 
-func GetConnId(c *websocket.Conn) string {
+/*func GetConnId(c *websocket.Conn) string {
 	return c.UnderlyingConn().RemoteAddr().String()
 }
+*/
 
 func RemoveElement(slice []jsonrpc.CID, elems jsonrpc.CID) []jsonrpc.CID {
 	for i := range slice {
@@ -38,7 +39,7 @@ func (self *Router) registerConn(connId jsonrpc.CID, conn IConn) {
 	// register connId as a service name
 }
 
-func (self *Router) RegisterService(connId jsonrpc.CID, method string) error {
+func (self *Router) RegisterMethod(connId jsonrpc.CID, method string) error {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
@@ -64,7 +65,7 @@ func (self *Router) RegisterService(connId jsonrpc.CID, method string) error {
 	return nil
 }
 
-func (self *Router) UnRegisterService(connId jsonrpc.CID, method string) error {
+func (self *Router) UnRegisterMethod(connId jsonrpc.CID, method string) error {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
