@@ -10,4 +10,3 @@ func ErrorResponse(w http.ResponseWriter, r *http.Request, err error, status int
 	w.WriteHeader(status)
 	w.Write([]byte(message))
 }
-

@@ -1,18 +1,18 @@
-package server;
+package server
 
 import (
-	"time"
-	"fmt"
-	"errors"
-	simplejson "github.com/bitly/go-simplejson"	
 	context "context"
+	"errors"
+	"fmt"
+	simplejson "github.com/bitly/go-simplejson"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	"time"
 )
 
 func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 	json_data := simplejson.New()
-	json_data.Set("version", "2.0")	
+	json_data.Set("version", "2.0")
 	json_data.Set("id", req.Id)
 	json_data.Set("method", req.Method)
 	if len(req.Params) > 0 {
@@ -68,7 +68,7 @@ func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
 	if !msg.IsResult() || !msg.IsError() {
 		return nil, errors.New("msg is not result|error")
 	}
-	res := &intf.JSONRPCResult{}	
+	res := &intf.JSONRPCResult{}
 	res.Id = fmt.Sprintf("%v", msg.Id)
 	if msg.IsError() {
 		r, err := jsonrpc.MarshalJson(msg.Error)
@@ -86,29 +86,27 @@ func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
 	return res, nil
 }
 
-
 type JSONRPCTube struct {
 	intf.UnimplementedJSONRPCTubeServer
 }
-
 
 func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
 	req_msg, err := RequestToMessage(req)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("sss %v %v\n", req.Method, req_msg.Id)		
+	fmt.Printf("sss %v %v\n", req.Method, req_msg.Id)
 	ok := &intf.JSONRPCResult_Ok{Ok: "okokook"}
 	res := &intf.JSONRPCResult{Id: req.Id, Result: ok}
 	return res, nil
 }
 
 func recv(stream intf.JSONRPCTube_HandleServer) {
-	for i:=0;i>5; i++ {
+	for i := 0; i > 5; i++ {
 		sid := fmt.Sprintf("%d", i)
 		//params := []string{"me", "you"}
 		params := `["abc", 1, 2]`
-		req := &intf.JSONRPCRequest{Id: sid, Method:"testing", Params: params}
+		req := &intf.JSONRPCRequest{Id: sid, Method: "testing", Params: params}
 		payload := &intf.JSONRPCRequestPacket_Request{Request: req}
 		pac := &intf.JSONRPCRequestPacket{Payload: payload}
 		err := stream.Send(pac)
@@ -122,7 +120,7 @@ func recv(stream intf.JSONRPCTube_HandleServer) {
 
 func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	go recv(stream)
-	
+
 	for {
 		pac, err := stream.Recv()
 		if err != nil {

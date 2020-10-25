@@ -1,15 +1,15 @@
 package main
 
 import (
-	"log"
-	"net"
+	context "context"
 	"flag"
 	"fmt"
-	"google.golang.org/grpc"
-	context "context"
 	hello "github.com/superisaac/rpctube/intf/hello"
-	intf "github.com/superisaac/rpctube/intf/tube"	
+	intf "github.com/superisaac/rpctube/intf/tube"
 	server "github.com/superisaac/rpctube/server"
+	"google.golang.org/grpc"
+	"log"
+	"net"
 )
 
 type HelloServer struct {
@@ -22,7 +22,7 @@ func (self *HelloServer) Greeting(context context.Context, req *hello.HelloReque
 }
 
 var (
-	port       = flag.Int("port", 50055, "The server port")
+	port = flag.Int("port", 50055, "The server port")
 )
 
 func main() {

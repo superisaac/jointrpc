@@ -11,7 +11,7 @@ type TestConnT struct {
 	ch MsgChannel
 }
 
-func (self TestConnT) RecvChannel() MsgChannel{
+func (self TestConnT) RecvChannel() MsgChannel {
 	return self.ch
 }
 

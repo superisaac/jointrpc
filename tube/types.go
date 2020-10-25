@@ -3,16 +3,15 @@ package tube
 import (
 	//"github.com/gorilla/websocket"
 	"errors"
+	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	"sync"
 	"time"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"	
 )
-
 
 // 5 seconds
 const (
 	DefaultRequestTimeout time.Duration = 1000000 * 5
-	
+
 	IntentLocal string = "local"
 )
 
@@ -21,6 +20,7 @@ var (
 )
 
 type CID uint64
+
 // Commands
 type MsgChannel chan *jsonrpc.RPCMessage
 

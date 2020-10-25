@@ -101,7 +101,6 @@ func (self *Router) UnRegisterMethod(connId CID, method string) error {
 		}
 	}
 
-
 	ct, ok := self.ConnMap[connId]
 	if ok {
 		delete(self.ConnMap, connId)
@@ -252,24 +251,24 @@ func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *IConn {
 
 //func (self *Router) Start() {
 /*	for {
-		select {
-		case cmdOpen := <-self.ChJoin:
-			//self.registerConn(cmdOpen.ConnId, cmdOpen.Channel, cmdOpen.Intent)
-		case msg := <-self.ChMsg:
-			self.routeMessage(msg)
-		case notify := <-self.ChBroadcast:
-			self.broadcastNotify(notify)
-		case cmdClose := <-self.ChLeave:
-			self.unregisterConn(CID(cmdClose))
-		}
-	} */
+	select {
+	case cmdOpen := <-self.ChJoin:
+		//self.registerConn(cmdOpen.ConnId, cmdOpen.Channel, cmdOpen.Intent)
+	case msg := <-self.ChMsg:
+		self.routeMessage(msg)
+	case notify := <-self.ChBroadcast:
+		self.broadcastNotify(notify)
+	case cmdClose := <-self.ChLeave:
+		self.unregisterConn(CID(cmdClose))
+	}
+} */
 //}
 
 // commands
 func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
-	
+
 	//msg.FromConnId = fromConnId
 	//self.ChMsg <- msg
 	return self.routeMessage(msg, fromConnId)
@@ -278,7 +277,7 @@ func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn
 func (self *Router) BroadcastNotify(notify *jsonrpc.RPCMessage, fromConnId CID) (int, error) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
-	
+
 	//notify.FromConnId = fromConnId
 	//self.ChBroadcast <- notify
 	return self.broadcastNotify(notify)
@@ -286,7 +285,7 @@ func (self *Router) BroadcastNotify(notify *jsonrpc.RPCMessage, fromConnId CID) 
 
 // Drop-in implementor of IConn
 type SimpleConnT struct {
-	recvChannel MsgChannel
+	recvChannel  MsgChannel
 	canBroadcast bool
 }
 
