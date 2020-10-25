@@ -2,7 +2,7 @@ package tube
 
 import (
 	"sync/atomic"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"		
+	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"		
 )
 
 var counter uint64 = 10000
@@ -11,6 +11,6 @@ func NextUID() uint64 {
 	return atomic.AddUint64(&counter, 1)
 }
 
-func GetCID() jsonrpc.CID {
-	return jsonrpc.CID(NextUID())
+func GetCID() CID {
+	return CID(NextUID())
 }

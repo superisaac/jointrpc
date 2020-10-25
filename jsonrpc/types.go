@@ -4,12 +4,12 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
-type CID uint64
+//type CID uint64
 type UID uint64
 
 type RPCMessage struct {
 	Initialized bool
-	FromConnId  CID
+	//FromConnId  CID
 	Id          interface{}
 	Method      string
 	Params      *simplejson.Json

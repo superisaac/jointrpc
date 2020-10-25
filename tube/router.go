@@ -16,7 +16,7 @@ func NewRouter() *Router {
 }
 */
 
-func RemoveElement(slice []jsonrpc.CID, elems jsonrpc.CID) []jsonrpc.CID {
+func RemoveElement(slice []CID, elems CID) []CID {
 	for i := range slice {
 		if slice[i] == elems {
 			slice = append(slice[:i], slice[i+1:]...)
@@ -27,19 +27,19 @@ func RemoveElement(slice []jsonrpc.CID, elems jsonrpc.CID) []jsonrpc.CID {
 
 func (self *Router) Init() *Router {
 	self.routerLock = new(sync.RWMutex)
-	self.MethodConnMap = make(map[string]([]jsonrpc.CID))
-	self.ConnMethodMap = make(map[jsonrpc.CID]([]string))
-	self.ConnMap = make(map[jsonrpc.CID](IConn))
+	self.MethodConnMap = make(map[string]([]CID))
+	self.ConnMethodMap = make(map[CID]([]string))
+	self.ConnMap = make(map[CID](IConn))
 	self.PendingMap = make(map[PendingKey]PendingValue)
 	return self
 }
 
-func (self *Router) registerConn(connId jsonrpc.CID, conn IConn) {
+func (self *Router) registerConn(connId CID, conn IConn) {
 	self.ConnMap[connId] = conn
 	// register connId as a service name
 }
 
-func (self *Router) RegisterMethod(connId jsonrpc.CID, method string) error {
+func (self *Router) RegisterMethod(connId CID, method string) error {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
@@ -48,7 +48,7 @@ func (self *Router) RegisterMethod(connId jsonrpc.CID, method string) error {
 	if ok {
 		cidArr = append(cidArr, connId)
 	} else {
-		var a []jsonrpc.CID
+		var a []CID
 		cidArr = append(a, connId)
 	}
 	self.MethodConnMap[method] = cidArr
@@ -65,7 +65,7 @@ func (self *Router) RegisterMethod(connId jsonrpc.CID, method string) error {
 	return nil
 }
 
-func (self *Router) UnRegisterMethod(connId jsonrpc.CID, method string) error {
+func (self *Router) UnRegisterMethod(connId CID, method string) error {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
@@ -87,7 +87,7 @@ func (self *Router) UnRegisterMethod(connId jsonrpc.CID, method string) error {
 
 	connIds, ok := self.MethodConnMap[method]
 	if ok {
-		var tmpConnIds []jsonrpc.CID
+		var tmpConnIds []CID
 		for _, cid := range connIds {
 			if cid != connId {
 				tmpConnIds = append(tmpConnIds, cid)
@@ -110,7 +110,7 @@ func (self *Router) UnRegisterMethod(connId jsonrpc.CID, method string) error {
 	return nil
 }
 
-func (self *Router) unregisterConn(connId jsonrpc.CID) {
+func (self *Router) unregisterConn(connId CID) {
 	self.ClearPending(connId)
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
@@ -139,7 +139,7 @@ func (self *Router) unregisterConn(connId jsonrpc.CID) {
 	}
 }
 
-func (self *Router) SelectConn(method string) (jsonrpc.CID, bool) {
+func (self *Router) SelectConn(method string) (CID, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
@@ -151,7 +151,7 @@ func (self *Router) SelectConn(method string) (jsonrpc.CID, bool) {
 	return 0, false
 }
 
-func (self *Router) GetMethods(connId jsonrpc.CID) []string {
+func (self *Router) GetMethods(connId CID) []string {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 	return self.ConnMethodMap[connId]
@@ -172,7 +172,7 @@ func (self *Router) ClearTimeoutRequests() {
 	self.PendingMap = tmpMap
 }
 
-func (self *Router) ClearPending(connId jsonrpc.CID) {
+func (self *Router) ClearPending(connId CID) {
 	for pKey, pValue := range self.PendingMap {
 		if pKey.ConnId == connId || pValue.ConnId == connId {
 			self.deletePending(pKey)
@@ -188,8 +188,7 @@ func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
 	self.PendingMap[pKey] = pValue
 }
 
-func (self *Router) routeMessage(msg *jsonrpc.RPCMessage) *IConn {
-	fromConnId := msg.FromConnId
+func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn {
 	if msg.IsRequest() {
 		toConnId, found := self.SelectConn(msg.Method)
 		if found {
@@ -242,7 +241,7 @@ func (self *Router) broadcastNotify(notify *jsonrpc.RPCMessage) (int, error) {
 	return cntDeliver, nil
 }
 
-func (self *Router) deliverMessage(connId jsonrpc.CID, msg *jsonrpc.RPCMessage) *IConn {
+func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *IConn {
 	ct, ok := self.ConnMap[connId]
 	if ok {
 		ct.RecvChannel() <- msg //(*msg)
@@ -261,26 +260,26 @@ func (self *Router) deliverMessage(connId jsonrpc.CID, msg *jsonrpc.RPCMessage) 
 		case notify := <-self.ChBroadcast:
 			self.broadcastNotify(notify)
 		case cmdClose := <-self.ChLeave:
-			self.unregisterConn(jsonrpc.CID(cmdClose))
+			self.unregisterConn(CID(cmdClose))
 		}
 	} */
 //}
 
 // commands
-func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId jsonrpc.CID) *IConn {
+func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 	
-	msg.FromConnId = fromConnId
+	//msg.FromConnId = fromConnId
 	//self.ChMsg <- msg
-	return self.routeMessage(msg)
+	return self.routeMessage(msg, fromConnId)
 }
 
-func (self *Router) BroadcastNotify(notify *jsonrpc.RPCMessage, fromConnId jsonrpc.CID) (int, error) {
+func (self *Router) BroadcastNotify(notify *jsonrpc.RPCMessage, fromConnId CID) (int, error) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 	
-	notify.FromConnId = fromConnId
+	//notify.FromConnId = fromConnId
 	//self.ChBroadcast <- notify
 	return self.broadcastNotify(notify)
 }
@@ -299,18 +298,18 @@ func (self SimpleConnT) CanBroadcast() bool {
 	return self.canBroadcast
 }
 
-func (self *Router) Join(connId jsonrpc.CID, ch MsgChannel) {
+func (self *Router) Join(connId CID, ch MsgChannel) {
 	conn := &SimpleConnT{recvChannel: ch, canBroadcast: true}
 	self.JoinConn(connId, conn)
 }
 
-func (self *Router) JoinConn(connId jsonrpc.CID, conn IConn) {
+func (self *Router) JoinConn(connId CID, conn IConn) {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 	self.registerConn(connId, conn)
 }
 
-func (self *Router) Leave(connId jsonrpc.CID) {
+func (self *Router) Leave(connId CID) {
 	//self.ChLeave <- LeaveCommand(connId)
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
