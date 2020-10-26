@@ -2,6 +2,7 @@ package server
 
 import (
 	context "context"
+	json "encoding/json"	
 	"errors"
 	"fmt"
 	simplejson "github.com/bitly/go-simplejson"
@@ -13,7 +14,13 @@ import (
 func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 	json_data := simplejson.New()
 	json_data.Set("version", "2.0")
-	json_data.Set("id", req.Id)
+	if req.Id != "" {
+		idjson, err := simplejson.NewJson([]byte(req.Id))
+		if err != nil {
+			return nil, err
+		}
+		json_data.Set("id", idjson.Interface())
+	}
 	json_data.Set("method", req.Method)
 	if len(req.Params) > 0 {
 		params, err := simplejson.NewJson([]byte(req.Params))
@@ -31,7 +38,13 @@ func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 func ResultToMessage(res *intf.JSONRPCResult) (*jsonrpc.RPCMessage, error) {
 	json_data := simplejson.New()
 	json_data.Set("version", "2.0")
-	json_data.Set("id", res.Id)
+	if res.Id != "" {
+		idjson, err := simplejson.NewJson([]byte(res.Id))
+		if err != nil {
+			return nil, err
+		}
+		json_data.Set("id", idjson.Interface())
+	}
 	if res_ok := res.GetOk(); res_ok != "" {
 		parsed, err := simplejson.NewJson([]byte(res_ok))
 		if err != nil {
@@ -50,11 +63,17 @@ func ResultToMessage(res *intf.JSONRPCResult) (*jsonrpc.RPCMessage, error) {
 }
 
 func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
-	if !msg.IsRequest() || !msg.IsNotify() {
-		return nil, errors.New("msg is not request|notify")
+	if !msg.IsRequest() && !msg.IsNotify() {
+		return nil, errors.New("msg is neither request nor notify")
 	}
 	req := &intf.JSONRPCRequest{}
-	req.Id = fmt.Sprintf("%v", msg.Id)
+	if msg.Id != nil {
+		idstr, err := json.Marshal(msg.Id)
+		if err != nil {
+			return nil, err
+		}
+		req.Id = string(idstr)
+	}
 	req.Method = msg.Method
 	params, err := jsonrpc.MarshalJson(msg.Params)
 	if err != nil {
@@ -65,11 +84,16 @@ func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
 }
 
 func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
-	if !msg.IsResult() || !msg.IsError() {
-		return nil, errors.New("msg is not result|error")
+	if !msg.IsResult() && !msg.IsError() {
+		return nil, errors.New("msg is neither result nor error")
 	}
 	res := &intf.JSONRPCResult{}
-	res.Id = fmt.Sprintf("%v", msg.Id)
+	idstr, err := json.Marshal(msg.Id)
+	if err != nil {
+		return nil, err
+	}
+	res.Id = string(idstr)
+	//res.Id = fmt.Sprintf("%v", msg.Id)
 	if msg.IsError() {
 		r, err := jsonrpc.MarshalJson(msg.Error)
 		if err != nil {
@@ -77,7 +101,7 @@ func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
 		}
 		res.Result = &intf.JSONRPCResult_Error{Error: r}
 	} else {
-		r, err := jsonrpc.MarshalJson(msg.Error)
+		r, err := jsonrpc.MarshalJson(msg.Result)
 		if err != nil {
 			return nil, err
 		}
