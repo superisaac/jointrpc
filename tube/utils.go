@@ -11,6 +11,6 @@ func NextUID() uint64 {
 	return atomic.AddUint64(&counter, 1)
 }
 
-func GetCID() CID {
+func NextCID() CID {
 	return CID(NextUID())
 }

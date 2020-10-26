@@ -41,6 +41,22 @@ type IConn interface {
 	CanBroadcast() bool
 }
 
+// Channel commands
+type CmdMsg struct {
+	Msg        *jsonrpc.RPCMessage
+	FromConnId CID
+}
+
+type CmdJoin struct {
+	ConnId      CID
+	RecvChannel MsgChannel
+}
+
+type CmdRegister struct {
+	ConnId CID
+	Method string
+}
+
 type Router struct {
 	// channels
 	routerLock    *sync.RWMutex
@@ -49,6 +65,13 @@ type Router struct {
 
 	ConnMap    map[CID](IConn)
 	PendingMap map[PendingKey]PendingValue
+
+	// channels
+	ChMsg      chan CmdMsg
+	ChJoin     chan CmdJoin
+	ChRegister chan CmdRegister
 }
 
-// An ConnActor manage a websocket connection and handles incoming messages
+type TubeT struct {
+	Router *Router
+}

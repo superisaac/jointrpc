@@ -2,12 +2,13 @@ package server
 
 import (
 	context "context"
-	json "encoding/json"	
+	json "encoding/json"
 	"errors"
 	"fmt"
 	simplejson "github.com/bitly/go-simplejson"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	tube "github.com/superisaac/rpctube/tube"
 	"time"
 )
 
@@ -125,7 +126,7 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 	return res, nil
 }
 
-func recv(stream intf.JSONRPCTube_HandleServer) {
+func relayResult(stream intf.JSONRPCTube_HandleServer) {
 	for i := 0; i > 5; i++ {
 		sid := fmt.Sprintf("%d", i)
 		//params := []string{"me", "you"}
@@ -142,8 +143,38 @@ func recv(stream intf.JSONRPCTube_HandleServer) {
 	}
 }
 
+func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, recv_ch tube.MsgChannel) {
+	for {
+		select {
+		case <-context.Done():
+			return
+		case msg := <-recv_ch:
+			req, err := MessageToRequest(msg)
+			if err != nil {
+				panic(err)
+			}
+			payload := &intf.JSONRPCRequestPacket_Request{Request: req}
+			pac := &intf.JSONRPCRequestPacket{Payload: payload}
+			err = stream.Send(pac)
+			if err != nil {
+				panic(err)
+			}
+
+		}
+	}
+}
+
 func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
-	go recv(stream)
+	conn_id := tube.NextCID()
+	recv_ch := make(tube.MsgChannel, 100)
+
+	tube.Tube().Router.ChJoin <- tube.CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go relayMessages(ctx, stream, recv_ch)
+	//go relayResult(stream)
 
 	for {
 		pac, err := stream.Recv()
@@ -152,6 +183,11 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 		}
 		res := pac.GetResult()
 		fmt.Printf("result %v\n", res.Id)
+		msg, err := ResultToMessage(res)
+		if err != nil {
+			return err
+		}
+		tube.Tube().Router.ChMsg <- tube.CmdMsg{Msg: msg, FromConnId: conn_id}
 	}
 }
 

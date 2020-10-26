@@ -1,6 +1,7 @@
 package tube
 
 import (
+	"context"
 	"sync"
 	"time"
 	//	"github.com/gorilla/websocket"
@@ -243,26 +244,40 @@ func (self *Router) broadcastNotify(notify *jsonrpc.RPCMessage) (int, error) {
 func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *IConn {
 	ct, ok := self.ConnMap[connId]
 	if ok {
-		ct.RecvChannel() <- msg //(*msg)
+		recv_ch := ct.RecvChannel()
+		recv_ch <- msg
 		return &ct
 	}
 	return nil
 }
 
-//func (self *Router) Start() {
-/*	for {
-	select {
-	case cmdOpen := <-self.ChJoin:
-		//self.registerConn(cmdOpen.ConnId, cmdOpen.Channel, cmdOpen.Intent)
-	case msg := <-self.ChMsg:
-		self.routeMessage(msg)
-	case notify := <-self.ChBroadcast:
-		self.broadcastNotify(notify)
-	case cmdClose := <-self.ChLeave:
-		self.unregisterConn(CID(cmdClose))
-	}
-} */
-//}
+func (self *Router) setupChannels() {
+	self.ChMsg = make(chan CmdMsg, 100)
+	self.ChJoin = make(chan CmdJoin, 100)
+	self.ChRegister = make(chan CmdRegister, 100)
+}
+
+func (self *Router) Start(ctx context.Context) {
+	self.setupChannels()
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case cmd_join := <-self.ChJoin:
+				self.Join(cmd_join.ConnId, cmd_join.RecvChannel)
+			case cmd_register := <-self.ChRegister:
+				self.RegisterMethod(cmd_register.ConnId, cmd_register.Method)
+			case cmd_msg := <-self.ChMsg:
+				self.RouteMessage(cmd_msg.Msg, cmd_msg.FromConnId)
+				//case notify := <-self.ChBroadcast:
+				//self.broadcastNotify(notify)
+				//case cmdClose := <-self.ChLeave:
+				//self.unregisterConn(CID(cmdClose))
+			}
+		}
+	}()
+}
 
 // commands
 func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn {
