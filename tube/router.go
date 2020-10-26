@@ -254,6 +254,7 @@ func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *IConn {
 func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 100)
 	self.ChJoin = make(chan CmdJoin, 100)
+	self.ChLeave = make(chan CmdLeave, 100)
 	self.ChRegister = make(chan CmdRegister, 100)
 }
 
@@ -266,6 +267,8 @@ func (self *Router) Start(ctx context.Context) {
 				return
 			case cmd_join := <-self.ChJoin:
 				self.Join(cmd_join.ConnId, cmd_join.RecvChannel)
+			case cmd_leave := <-self.ChLeave:
+				self.Leave(cmd_leave.ConnId)
 			case cmd_register := <-self.ChRegister:
 				self.RegisterMethod(cmd_register.ConnId, cmd_register.Method)
 			case cmd_msg := <-self.ChMsg:

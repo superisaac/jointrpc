@@ -115,14 +115,33 @@ type JSONRPCTube struct {
 	intf.UnimplementedJSONRPCTubeServer
 }
 
+func leaveConn(conn_id tube.CID) {
+	tube.Tube().Router.ChLeave <- tube.CmdLeave{ConnId: conn_id}
+}
+
 func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
 	req_msg, err := RequestToMessage(req)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("sss %v %v\n", req.Method, req_msg.Id)
-	ok := &intf.JSONRPCResult_Ok{Ok: "okokook"}
-	res := &intf.JSONRPCResult{Id: req.Id, Result: ok}
+
+	conn_id := tube.NextCID()
+	recv_ch := make(tube.MsgChannel, 100)
+	defer close(recv_ch)
+
+	router := tube.Tube().Router
+
+	router.ChJoin <- tube.CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
+	defer leaveConn(conn_id)
+
+	router.ChMsg <- tube.CmdMsg{Msg: req_msg, FromConnId: conn_id}
+
+	recvmsg := <-recv_ch
+
+	res, err := MessageToResult(recvmsg)
+	if err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 
@@ -167,8 +186,10 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	conn_id := tube.NextCID()
 	recv_ch := make(tube.MsgChannel, 100)
+	defer close(recv_ch)
 
 	tube.Tube().Router.ChJoin <- tube.CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
+	defer leaveConn(conn_id)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

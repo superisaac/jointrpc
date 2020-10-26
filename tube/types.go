@@ -52,6 +52,10 @@ type CmdJoin struct {
 	RecvChannel MsgChannel
 }
 
+type CmdLeave struct {
+	ConnId CID
+}
+
 type CmdRegister struct {
 	ConnId CID
 	Method string
@@ -69,6 +73,7 @@ type Router struct {
 	// channels
 	ChMsg      chan CmdMsg
 	ChJoin     chan CmdJoin
+	ChLeave    chan CmdLeave
 	ChRegister chan CmdRegister
 }
 
