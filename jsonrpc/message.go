@@ -1,7 +1,7 @@
 package jsonrpc
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"errors"
 	"github.com/bitly/go-simplejson"
 )
@@ -26,7 +26,15 @@ func MarshalJson(json_data *simplejson.Json) (string, error) {
 func NewRPCMessage(data *simplejson.Json) *RPCMessage {
 	//msg := new(RPCMessage)
 	msg := &RPCMessage{Initialized: true}
-	msg.Id = data.Get("id").Interface()
+	//msg.Id = data.Get("id").Interface()
+	msgId, err := data.Get("id").Int64()
+	if err != nil {
+		// TODO: print msg.Id
+		msg.Id = 0
+	} else {
+		msg.Id = UID(msgId)
+	}
+		
 	method, err := data.Get("method").String()
 	if err == nil {
 		msg.Method = method
@@ -67,37 +75,43 @@ func NewErrorJSON(id interface{}, code int, message string) *simplejson.Json {
 	return body
 }
 
-func (self RPCMessage) GetIntId() (int64, error) {
-	msgId, ok := self.Id.(json.Number)
-	if !ok {
-		return 0, errors.New("not a number")
+func (self RPCMessage) GetIntId() (UID, error) {
+	//msgId, ok := self.Id.(json.Number)
+	if self.Id == 0 {
+		return 0, errors.New("not an int64 id")
 	}
-	v, e := msgId.Int64()
-	return v, e
+	return self.Id, nil
+	
+	// if !ok {
+	// 	return 0, errors.New("not a number")
+	// }
+	// v, e := msgId.Int64()
+	// return v, e
 }
 
 func (self RPCMessage) IsRequest() bool {
-	return self.Id != nil && self.Method != ""
+	//return self.Id != nil && self.Method != ""
+	return self.Id != 0 && self.Method != ""
 }
 
 func (self RPCMessage) IsNotify() bool {
-	return self.Id == nil && self.Method != ""
+	return self.Id == 0 && self.Method != ""
 }
 
 func (self RPCMessage) IsResult() bool {
-	return (self.Id != nil &&
+	return (self.Id != 0 &&
 		self.Method == "" &&
 		self.Result.Interface() != nil)
 }
 
 func (self RPCMessage) IsError() bool {
-	return (self.Id != nil &&
+	return (self.Id != 0 &&
 		self.Method == "" &&
 		self.Error.Interface() != nil)
 }
 
 func (self RPCMessage) IsResultOrError() bool {
-	return (self.Id != nil &&
+	return (self.Id != 0 &&
 		self.Method == "" &&
 		(self.Result.Interface() != nil || self.Error.Interface() != nil))
 }

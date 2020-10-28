@@ -25,7 +25,7 @@ func TestRequestMsg(t *testing.T) {
 
 	intMsgId, err := msg.GetIntId()
 	assert.Nil(err)
-	assert.Equal(intMsgId, int64(100))
+	assert.Equal(intMsgId, UID(100))
 
 	assert.Equal(msg.Method, "abc::add")
 
@@ -52,7 +52,7 @@ func TestNotifyMsg(t *testing.T) {
 	msg := NewRPCMessage(js)
 	intMsgId, err := msg.GetIntId()
 	assert.NotNil(err)
-	assert.Equal(intMsgId, int64(0))
+	assert.Equal(intMsgId, UID(0))
 
 	assert.Equal(msg.Method, "abc::add")
 

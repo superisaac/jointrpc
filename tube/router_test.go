@@ -1,8 +1,9 @@
 package tube
 
 import (
+	//"fmt"
 	"context"
-	"encoding/json"
+	//"encoding/json"
 	"github.com/stretchr/testify/assert"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	"testing"
@@ -58,7 +59,7 @@ func TestRouteMessage(t *testing.T) {
 
 	msg, err := jsonrpc.ParseMessage([]byte(j1))
 	assert.Nil(err)
-	assert.Equal(json.Number("100002"), msg.Id)
+	assert.Equal(jsonrpc.UID(100002), msg.Id)
 	router.RouteMessage(msg, cid1)
 
 	rcvmsg := <-ch
@@ -91,11 +92,14 @@ func TestRouteRoutine(t *testing.T) {
 
 	msg, err := jsonrpc.ParseMessage([]byte(j1))
 	assert.Nil(err)
-	assert.Equal(json.Number("100002"), msg.Id)
+	assert.Equal(jsonrpc.UID(100002), msg.Id)
 
 	router.ChMsg <- CmdMsg{Msg: msg, FromConnId: cid1}
 
+	//fmt.Printf("will rcv %v\n", ch)
 	rcvmsg := <-ch
+	//fmt.Printf("recved %v\n", rcvmsg)
+		
 	assert.Equal(msg.Id, rcvmsg.Id)
 	assert.True(rcvmsg.IsRequest())
 }

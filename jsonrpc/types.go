@@ -10,7 +10,8 @@ type UID uint64
 type RPCMessage struct {
 	Initialized bool
 	//FromConnId  CID
-	Id     interface{}
+	//Id     interface{}
+	Id     UID
 	Method string
 	Params *simplejson.Json
 	Result *simplejson.Json

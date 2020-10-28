@@ -2,25 +2,25 @@ package server
 
 import (
 	context "context"
-	json "encoding/json"
+	//json "encoding/json"
 	"errors"
 	"fmt"
 	simplejson "github.com/bitly/go-simplejson"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	tube "github.com/superisaac/rpctube/tube"
-	"time"
+	//"time"
 )
 
 func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 	json_data := simplejson.New()
 	json_data.Set("version", "2.0")
-	if req.Id != "" {
-		idjson, err := simplejson.NewJson([]byte(req.Id))
-		if err != nil {
-			return nil, err
-		}
-		json_data.Set("id", idjson.Interface())
+	if req.Id != 0 {
+		// idjson, err := simplejson.NewJson([]byte(req.Id))
+		// if err != nil {
+		// 	return nil, err
+		// }
+		json_data.Set("id", req.Id) //idjson.Interface())
 	}
 	json_data.Set("method", req.Method)
 	if len(req.Params) > 0 {
@@ -39,12 +39,12 @@ func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 func ResultToMessage(res *intf.JSONRPCResult) (*jsonrpc.RPCMessage, error) {
 	json_data := simplejson.New()
 	json_data.Set("version", "2.0")
-	if res.Id != "" {
-		idjson, err := simplejson.NewJson([]byte(res.Id))
-		if err != nil {
-			return nil, err
-		}
-		json_data.Set("id", idjson.Interface())
+	if res.Id != 0 {
+		// idjson, err := simplejson.NewJson([]byte(res.Id))
+		// if err != nil {
+		// 	return nil, err
+		// }
+		json_data.Set("id", res.Id) //idjson.Interface())
 	}
 	if res_ok := res.GetOk(); res_ok != "" {
 		parsed, err := simplejson.NewJson([]byte(res_ok))
@@ -68,13 +68,14 @@ func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
 		return nil, errors.New("msg is neither request nor notify")
 	}
 	req := &intf.JSONRPCRequest{}
-	if msg.Id != nil {
-		idstr, err := json.Marshal(msg.Id)
-		if err != nil {
-			return nil, err
-		}
-		req.Id = string(idstr)
-	}
+	req.Id = int64(msg.Id)
+	//	if msg.Id != 0 {
+		// idstr, err := json.Marshal(msg.Id)
+		// if err != nil {
+		// 	return nil, err
+		// }
+	//req.Id = msg.Id //string(msg.)
+	//}
 	req.Method = msg.Method
 	params, err := jsonrpc.MarshalJson(msg.Params)
 	if err != nil {
@@ -89,11 +90,12 @@ func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
 		return nil, errors.New("msg is neither result nor error")
 	}
 	res := &intf.JSONRPCResult{}
-	idstr, err := json.Marshal(msg.Id)
-	if err != nil {
-		return nil, err
-	}
-	res.Id = string(idstr)
+	// idstr, err := json.Marshal(msg.Id)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// res.Id = string(idstr)
+	res.Id = int64(msg.Id)
 	//res.Id = fmt.Sprintf("%v", msg.Id)
 	if msg.IsError() {
 		r, err := jsonrpc.MarshalJson(msg.Error)
@@ -145,23 +147,6 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 	return res, nil
 }
 
-func relayResult(stream intf.JSONRPCTube_HandleServer) {
-	for i := 0; i > 5; i++ {
-		sid := fmt.Sprintf("%d", i)
-		//params := []string{"me", "you"}
-		params := `["abc", 1, 2]`
-		req := &intf.JSONRPCRequest{Id: sid, Method: "testing", Params: params}
-		payload := &intf.JSONRPCRequestPacket_Request{Request: req}
-		pac := &intf.JSONRPCRequestPacket{Payload: payload}
-		err := stream.Send(pac)
-		if err != nil {
-			//stream.Close()
-			break
-		}
-		time.Sleep(3000 * time.Millisecond)
-	}
-}
-
 func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, recv_ch tube.MsgChannel) {
 	for {
 		select {
@@ -195,7 +180,6 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	defer cancel()
 
 	go relayMessages(ctx, stream, recv_ch)
-	//go relayResult(stream)
 
 	for {
 		pac, err := stream.Recv()
