@@ -2,6 +2,7 @@ package tube
 
 import (
 	//"fmt"
+	"time"
 	"context"
 	//"encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -74,6 +75,8 @@ func TestRouteRoutine(t *testing.T) {
 	router.Start(ctx)
 	defer cancel()
 
+	time.Sleep(1 * time.Second)
+
 	cid := CID(1002)
 	ch := make(MsgChannel, 100)
 
@@ -89,7 +92,7 @@ func TestRouteRoutine(t *testing.T) {
 "method": "abc",
 "params": [1, 3]
 }`
-
+	time.Sleep(1 * time.Second)
 	msg, err := jsonrpc.ParseMessage([]byte(j1))
 	assert.Nil(err)
 	assert.Equal(jsonrpc.UID(100002), msg.Id)

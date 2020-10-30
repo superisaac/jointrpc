@@ -1,6 +1,7 @@
 package tube
 
 import (
+	//"fmt"
 	"context"
 	"sync"
 	"time"
@@ -243,6 +244,7 @@ func (self *Router) broadcastNotify(notify *jsonrpc.RPCMessage) (int, error) {
 
 func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *IConn {
 	ct, ok := self.ConnMap[connId]
+	//fmt.Printf("deliver message %v\n", msg)
 	if ok {
 		recv_ch := ct.RecvChannel()
 		recv_ch <- msg
