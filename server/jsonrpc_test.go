@@ -9,7 +9,7 @@ import (
 )
 
 const INT_100 = jsonrpc.UID(100)
-	
+
 func TestReqConvert(t *testing.T) {
 	assert := assert.New(t)
 

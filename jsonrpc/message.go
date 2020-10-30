@@ -34,7 +34,7 @@ func NewRPCMessage(data *simplejson.Json) *RPCMessage {
 	} else {
 		msg.Id = UID(msgId)
 	}
-		
+
 	method, err := data.Get("method").String()
 	if err == nil {
 		msg.Method = method
@@ -81,7 +81,7 @@ func (self RPCMessage) GetIntId() (UID, error) {
 		return 0, errors.New("not an int64 id")
 	}
 	return self.Id, nil
-	
+
 	// if !ok {
 	// 	return 0, errors.New("not a number")
 	// }

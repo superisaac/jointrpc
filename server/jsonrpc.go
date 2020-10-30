@@ -70,10 +70,10 @@ func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
 	req := &intf.JSONRPCRequest{}
 	req.Id = int64(msg.Id)
 	//	if msg.Id != 0 {
-		// idstr, err := json.Marshal(msg.Id)
-		// if err != nil {
-		// 	return nil, err
-		// }
+	// idstr, err := json.Marshal(msg.Id)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	//req.Id = msg.Id //string(msg.)
 	//}
 	req.Method = msg.Method
