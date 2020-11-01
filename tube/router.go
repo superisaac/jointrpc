@@ -5,6 +5,7 @@ import (
 	"context"
 	"sync"
 	"time"
+	"errors"
 	//	"github.com/gorilla/websocket"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
@@ -333,4 +334,30 @@ func (self *Router) Leave(connId CID) {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 	self.unregisterConn(connId)
+}
+
+func leaveConn(conn_id CID) {
+	Tube().Router.ChLeave <- CmdLeave{ConnId: conn_id}
+}
+
+func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
+	if !req_msg.IsRequest() && !req_msg.IsNotify() {
+		return nil, errors.New("only request and notify message accepted");
+	}
+	if req_msg.IsRequest() {
+		conn_id := NextCID()
+		recv_ch := make(MsgChannel, 100)
+		defer close(recv_ch)
+
+		self.ChJoin <- CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
+		defer leaveConn(conn_id)
+
+		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: conn_id}
+		
+		recvmsg := <-recv_ch
+		return recvmsg, nil
+	} else {
+		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: 0}
+		return nil, nil
+	}
 }

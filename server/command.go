@@ -30,6 +30,8 @@ func StartEntrypoint() {
 
 	tube.Tube().Start(ctx)
 
+	go StartHTTPd()
+	
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	//hello.RegisterHelloServer(grpcServer, s)

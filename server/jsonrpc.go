@@ -127,19 +127,11 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 		return nil, err
 	}
 
-	conn_id := tube.NextCID()
-	recv_ch := make(tube.MsgChannel, 100)
-	defer close(recv_ch)
-
 	router := tube.Tube().Router
-
-	router.ChJoin <- tube.CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
-	defer leaveConn(conn_id)
-
-	router.ChMsg <- tube.CmdMsg{Msg: req_msg, FromConnId: conn_id}
-
-	recvmsg := <-recv_ch
-
+	recvmsg, err := router.SingleCall(req_msg)
+	if err != nil {
+		return nil, err
+	}
 	res, err := MessageToResult(recvmsg)
 	if err != nil {
 		return nil, err
