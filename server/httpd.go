@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"bytes"
 	"errors"
 	http "net/http"
@@ -8,11 +9,12 @@ import (
 	tube "github.com/superisaac/rpctube/tube"	
 )
 
-func StartHTTPd() {
-	http.HandleFunc("/jsonrpc/http", HandleHttp)
+func StartHTTPd(http_bind string) {
+	log.Printf("start http proxy at %s", http_bind)
+	http.HandleFunc("/", HandleHttp)
 	//http.HandleFunc("/", HandleHome)
-	//log.Fatal(
-	http.ListenAndServe("localhost:16666", nil)
+	log.Fatal(
+		http.ListenAndServe(http_bind, nil))
 }
 
 func HandleHttp(w http.ResponseWriter, r*http.Request) {

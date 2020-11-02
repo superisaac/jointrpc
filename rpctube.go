@@ -17,7 +17,7 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
 	switch os.Args[1] {
-	case "entry":
+	case "node":
 		server.StartEntrypoint()
 	default:
 		fmt.Println("expect subcommands")
