@@ -60,15 +60,19 @@ func NewNotifyMessage(method string, params []interface{}) *RPCMessage {
 	return NewRPCMessage(notifyJson)
 }
 
-func NewErrorMessage(id interface{}, code int, message string) *RPCMessage {
-	jsonData := NewErrorJSON(id, code, message)
+func NewErrorMessage(id interface{}, code int, message string, retryable bool) *RPCMessage {
+	jsonData := NewErrorJSON(id, code, message, retryable)
 	return NewRPCMessage(jsonData)
 }
 
-func NewErrorJSON(id interface{}, code int, message string) *simplejson.Json {
+func NewErrorJSON(id interface{}, code int, message string, retryable bool) *simplejson.Json {
+	// Retryable indicates whether the client can retry the request using the same args
+	// Usually the parameter is used in case of network failure.
 	errJson := simplejson.New()
 	errJson.Set("code", code)
 	errJson.Set("message", message)
+
+	errJson.Set("retryable", retryable)
 	body := simplejson.New()
 	body.Set("id", id)
 	body.Set("error", errJson.Interface())

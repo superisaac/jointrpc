@@ -163,7 +163,8 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	conn_id := tube.NextCID()
 	recv_ch := make(tube.MsgChannel, 100)
-	defer close(recv_ch)
+	// router will take care of closing the receive channel
+	//defer close(recv_ch)
 
 	tube.Tube().Router.ChJoin <- tube.CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
 	defer leaveConn(conn_id)

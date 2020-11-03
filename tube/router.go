@@ -165,7 +165,7 @@ func (self *Router) ClearTimeoutRequests() {
 
 	for pKey, pValue := range self.PendingMap {
 		if now.After(pValue.Expire) {
-			errMsg := jsonrpc.NewErrorMessage(pKey.MsgId, 408, "request timeout")
+			errMsg := jsonrpc.NewErrorMessage(pKey.MsgId, 408, "request timeout", true)
 			_ = self.deliverMessage(pKey.ConnId, errMsg)
 		} else {
 			tmpMap[pKey] = pValue
@@ -200,19 +200,18 @@ func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn
 
 			self.setPending(pKey, pValue)
 			return self.deliverMessage(toConnId, msg)
-		} /*else {
-			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "service not found")
+		} else {
+			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "service not found", false)
 			return self.deliverMessage(fromConnId, errMsg)
-		}*/
+		}
 	} else if msg.IsNotify() {
 		toConnId, found := self.SelectConn(msg.Method)
 		if found {
 			return self.deliverMessage(toConnId, msg)
+			/*} else {
+			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "service not found", false)
+			return self.deliverMessage(fromConnId, errMsg) */
 		}
-		/* else {
-			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "service not found")
-			return self.deliverMessage(fromConnId, errMsg)
-		} */
 	} else if msg.IsResultOrError() {
 		for pKey, pValue := range self.PendingMap {
 			if pKey.MsgId == msg.Id && pValue.ConnId == fromConnId {
@@ -333,6 +332,7 @@ func (self *Router) Leave(connId CID) {
 	//self.ChLeave <- LeaveCommand(connId)
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
+	
 	self.unregisterConn(connId)
 }
 
@@ -347,7 +347,8 @@ func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage
 	if req_msg.IsRequest() {
 		conn_id := NextCID()
 		recv_ch := make(MsgChannel, 100)
-		defer close(recv_ch)
+		// router will take care of closing the receive channel
+		//defer close(recv_ch)
 
 		self.ChJoin <- CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
 		defer leaveConn(conn_id)
