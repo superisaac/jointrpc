@@ -3,9 +3,9 @@ package tube
 import (
 	//"fmt"
 	"context"
+	"errors"
 	"sync"
 	"time"
-	"errors"
 	//	"github.com/gorilla/websocket"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
@@ -37,6 +37,23 @@ func (self *Router) Init() *Router {
 	return self
 }
 
+func (self Router) GetMethods(connId CID) []string {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+	return self.ConnMethodMap[connId]
+}
+
+func (self Router) GetAllMethods() []string {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+
+	methods := []string{}
+	for method, _ := range self.MethodConnMap {
+		methods = append(methods, method)
+	}
+	return methods
+}
+
 func (self *Router) registerConn(connId CID, conn IConn) {
 	self.ConnMap[connId] = conn
 	// register connId as a service name
@@ -47,8 +64,8 @@ func (self *Router) RegisterMethod(connId CID, method string) error {
 	defer self.routerLock.Unlock()
 
 	// bi direction map
-	cidArr, ok := self.MethodConnMap[method]
-	if ok {
+	cidArr, methodFound := self.MethodConnMap[method]
+	if methodFound {
 		cidArr = append(cidArr, connId)
 	} else {
 		var a []CID
@@ -56,8 +73,8 @@ func (self *Router) RegisterMethod(connId CID, method string) error {
 	}
 	self.MethodConnMap[method] = cidArr
 
-	snArr, ok := self.ConnMethodMap[connId]
-	if ok {
+	snArr, connFound := self.ConnMethodMap[connId]
+	if connFound {
 		snArr = append(snArr, method)
 	} else {
 		var a []string
@@ -153,10 +170,20 @@ func (self *Router) SelectConn(method string) (CID, bool) {
 	return 0, false
 }
 
-func (self *Router) GetMethods(connId CID) []string {
+func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
-	return self.ConnMethodMap[connId]
+
+	connIds, ok := self.MethodConnMap[method]
+	if ok && len(connIds) > 0 {
+		// or random or round-robin
+		connId := connIds[0]
+		conn, found := self.ConnMap[connId]
+		if found {
+			return conn.RecvChannel(), found
+		}
+	}
+	return nil, false
 }
 
 func (self *Router) ClearTimeoutRequests() {
@@ -332,7 +359,7 @@ func (self *Router) Leave(connId CID) {
 	//self.ChLeave <- LeaveCommand(connId)
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
-	
+
 	self.unregisterConn(connId)
 }
 
@@ -342,7 +369,7 @@ func leaveConn(conn_id CID) {
 
 func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
 	if !req_msg.IsRequest() && !req_msg.IsNotify() {
-		return nil, errors.New("only request and notify message accepted");
+		return nil, errors.New("only request and notify message accepted")
 	}
 	if req_msg.IsRequest() {
 		conn_id := NextCID()
@@ -354,7 +381,7 @@ func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage
 		defer leaveConn(conn_id)
 
 		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: conn_id}
-		
+
 		recvmsg := <-recv_ch
 		return recvmsg, nil
 	} else {

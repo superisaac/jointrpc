@@ -139,6 +139,12 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 	return res, nil
 }
 
+func (self *JSONRPCTube) GetMethods(context context.Context, req *intf.GetMethodsRequest) (*intf.GetMethodsResponse, error) {
+	methods := tube.Tube().Router.GetAllMethods()
+	resp := &intf.GetMethodsResponse{Methods: methods}
+	return resp, nil
+}
+
 func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, recv_ch tube.MsgChannel) {
 	for {
 		select {

@@ -1,12 +1,12 @@
 package server
 
 import (
-	"log"
 	"bytes"
 	"errors"
-	http "net/http"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	tube "github.com/superisaac/rpctube/tube"	
+	tube "github.com/superisaac/rpctube/tube"
+	"log"
+	http "net/http"
 )
 
 func StartHTTPd(http_bind string) {
@@ -17,13 +17,13 @@ func StartHTTPd(http_bind string) {
 		http.ListenAndServe(http_bind, nil))
 }
 
-func HandleHttp(w http.ResponseWriter, r*http.Request) {
+func HandleHttp(w http.ResponseWriter, r *http.Request) {
 	// only support POST
 	if r.Method != "POST" {
 		jsonrpc.ErrorResponse(w, r, errors.New("method not allowed"), 405, "Method not allowed")
 		return
 	}
-	
+
 	var buffer bytes.Buffer
 	_, err := buffer.ReadFrom(r.Body)
 	if err != nil {
@@ -37,10 +37,9 @@ func HandleHttp(w http.ResponseWriter, r*http.Request) {
 		return
 	}
 
-
 	router := tube.Tube().Router
 
-	result, err := router.SingleCall(msg)	
+	result, err := router.SingleCall(msg)
 	if err != nil {
 		jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 		return
@@ -51,9 +50,9 @@ func HandleHttp(w http.ResponseWriter, r*http.Request) {
 			jsonrpc.ErrorResponse(w, r, err1, 500, "Server error")
 			return
 		}
-		w.Write(data)		
+		w.Write(data)
 	} else {
 		data := []byte("{}")
-		w.Write(data)		
+		w.Write(data)
 	}
 }

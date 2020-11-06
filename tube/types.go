@@ -80,3 +80,8 @@ type Router struct {
 type TubeT struct {
 	Router *Router
 }
+
+type HubT struct {
+	// entrypoint -> methods
+	EntryMethods map[string]([]string)
+}

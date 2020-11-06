@@ -48,6 +48,9 @@ func TestRouteMessage(t *testing.T) {
 	assert.Equal(1, len(router.ConnMap))
 	router.RegisterMethod(cid, "abc")
 
+	methods := router.GetAllMethods()
+	assert.Equal([]string{"abc"}, methods)
+
 	cid1 := CID(1003)
 	ch1 := make(MsgChannel, 100)
 	router.Join(cid1, ch1)

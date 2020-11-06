@@ -13,10 +13,158 @@ import (
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion7
 
+// MethodHubClient is the client API for MethodHub service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type MethodHubClient interface {
+	UpdateMethods(ctx context.Context, in *MethodsDecl, opts ...grpc.CallOption) (*UpdateMethodsResponse, error)
+	SubscribeAllMethods(ctx context.Context, in *Empty, opts ...grpc.CallOption) (MethodHub_SubscribeAllMethodsClient, error)
+}
+
+type methodHubClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewMethodHubClient(cc grpc.ClientConnInterface) MethodHubClient {
+	return &methodHubClient{cc}
+}
+
+func (c *methodHubClient) UpdateMethods(ctx context.Context, in *MethodsDecl, opts ...grpc.CallOption) (*UpdateMethodsResponse, error) {
+	out := new(UpdateMethodsResponse)
+	err := c.cc.Invoke(ctx, "/MethodHub/UpdateMethods", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *methodHubClient) SubscribeAllMethods(ctx context.Context, in *Empty, opts ...grpc.CallOption) (MethodHub_SubscribeAllMethodsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_MethodHub_serviceDesc.Streams[0], "/MethodHub/SubscribeAllMethods", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &methodHubSubscribeAllMethodsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type MethodHub_SubscribeAllMethodsClient interface {
+	Recv() (*MethodsDecl, error)
+	grpc.ClientStream
+}
+
+type methodHubSubscribeAllMethodsClient struct {
+	grpc.ClientStream
+}
+
+func (x *methodHubSubscribeAllMethodsClient) Recv() (*MethodsDecl, error) {
+	m := new(MethodsDecl)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// MethodHubServer is the server API for MethodHub service.
+// All implementations must embed UnimplementedMethodHubServer
+// for forward compatibility
+type MethodHubServer interface {
+	UpdateMethods(context.Context, *MethodsDecl) (*UpdateMethodsResponse, error)
+	SubscribeAllMethods(*Empty, MethodHub_SubscribeAllMethodsServer) error
+	mustEmbedUnimplementedMethodHubServer()
+}
+
+// UnimplementedMethodHubServer must be embedded to have forward compatible implementations.
+type UnimplementedMethodHubServer struct {
+}
+
+func (UnimplementedMethodHubServer) UpdateMethods(context.Context, *MethodsDecl) (*UpdateMethodsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMethods not implemented")
+}
+func (UnimplementedMethodHubServer) SubscribeAllMethods(*Empty, MethodHub_SubscribeAllMethodsServer) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeAllMethods not implemented")
+}
+func (UnimplementedMethodHubServer) mustEmbedUnimplementedMethodHubServer() {}
+
+// UnsafeMethodHubServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to MethodHubServer will
+// result in compilation errors.
+type UnsafeMethodHubServer interface {
+	mustEmbedUnimplementedMethodHubServer()
+}
+
+func RegisterMethodHubServer(s *grpc.Server, srv MethodHubServer) {
+	s.RegisterService(&_MethodHub_serviceDesc, srv)
+}
+
+func _MethodHub_UpdateMethods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MethodsDecl)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MethodHubServer).UpdateMethods(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MethodHub/UpdateMethods",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MethodHubServer).UpdateMethods(ctx, req.(*MethodsDecl))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MethodHub_SubscribeAllMethods_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(MethodHubServer).SubscribeAllMethods(m, &methodHubSubscribeAllMethodsServer{stream})
+}
+
+type MethodHub_SubscribeAllMethodsServer interface {
+	Send(*MethodsDecl) error
+	grpc.ServerStream
+}
+
+type methodHubSubscribeAllMethodsServer struct {
+	grpc.ServerStream
+}
+
+func (x *methodHubSubscribeAllMethodsServer) Send(m *MethodsDecl) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _MethodHub_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "MethodHub",
+	HandlerType: (*MethodHubServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "UpdateMethods",
+			Handler:    _MethodHub_UpdateMethods_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "SubscribeAllMethods",
+			Handler:       _MethodHub_SubscribeAllMethods_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "tube.proto",
+}
+
 // JSONRPCTubeClient is the client API for JSONRPCTube service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type JSONRPCTubeClient interface {
+	GetMethods(ctx context.Context, in *GetMethodsRequest, opts ...grpc.CallOption) (*GetMethodsResponse, error)
 	Call(ctx context.Context, in *JSONRPCRequest, opts ...grpc.CallOption) (*JSONRPCResult, error)
 	Handle(ctx context.Context, opts ...grpc.CallOption) (JSONRPCTube_HandleClient, error)
 }
@@ -29,9 +177,18 @@ func NewJSONRPCTubeClient(cc grpc.ClientConnInterface) JSONRPCTubeClient {
 	return &jSONRPCTubeClient{cc}
 }
 
+func (c *jSONRPCTubeClient) GetMethods(ctx context.Context, in *GetMethodsRequest, opts ...grpc.CallOption) (*GetMethodsResponse, error) {
+	out := new(GetMethodsResponse)
+	err := c.cc.Invoke(ctx, "/JSONRPCTube/GetMethods", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *jSONRPCTubeClient) Call(ctx context.Context, in *JSONRPCRequest, opts ...grpc.CallOption) (*JSONRPCResult, error) {
 	out := new(JSONRPCResult)
-	err := c.cc.Invoke(ctx, "/JSONRPCTube/call", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/JSONRPCTube/Call", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +196,7 @@ func (c *jSONRPCTubeClient) Call(ctx context.Context, in *JSONRPCRequest, opts .
 }
 
 func (c *jSONRPCTubeClient) Handle(ctx context.Context, opts ...grpc.CallOption) (JSONRPCTube_HandleClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_JSONRPCTube_serviceDesc.Streams[0], "/JSONRPCTube/handle", opts...)
+	stream, err := c.cc.NewStream(ctx, &_JSONRPCTube_serviceDesc.Streams[0], "/JSONRPCTube/Handle", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +230,7 @@ func (x *jSONRPCTubeHandleClient) Recv() (*JSONRPCRequestPacket, error) {
 // All implementations must embed UnimplementedJSONRPCTubeServer
 // for forward compatibility
 type JSONRPCTubeServer interface {
+	GetMethods(context.Context, *GetMethodsRequest) (*GetMethodsResponse, error)
 	Call(context.Context, *JSONRPCRequest) (*JSONRPCResult, error)
 	Handle(JSONRPCTube_HandleServer) error
 	mustEmbedUnimplementedJSONRPCTubeServer()
@@ -82,6 +240,9 @@ type JSONRPCTubeServer interface {
 type UnimplementedJSONRPCTubeServer struct {
 }
 
+func (UnimplementedJSONRPCTubeServer) GetMethods(context.Context, *GetMethodsRequest) (*GetMethodsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMethods not implemented")
+}
 func (UnimplementedJSONRPCTubeServer) Call(context.Context, *JSONRPCRequest) (*JSONRPCResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Call not implemented")
 }
@@ -99,6 +260,24 @@ type UnsafeJSONRPCTubeServer interface {
 
 func RegisterJSONRPCTubeServer(s *grpc.Server, srv JSONRPCTubeServer) {
 	s.RegisterService(&_JSONRPCTube_serviceDesc, srv)
+}
+
+func _JSONRPCTube_GetMethods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMethodsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JSONRPCTubeServer).GetMethods(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/JSONRPCTube/GetMethods",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JSONRPCTubeServer).GetMethods(ctx, req.(*GetMethodsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _JSONRPCTube_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -150,13 +329,17 @@ var _JSONRPCTube_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*JSONRPCTubeServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "call",
+			MethodName: "GetMethods",
+			Handler:    _JSONRPCTube_GetMethods_Handler,
+		},
+		{
+			MethodName: "Call",
 			Handler:    _JSONRPCTube_Call_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "handle",
+			StreamName:    "Handle",
 			Handler:       _JSONRPCTube_Handle_Handler,
 			ServerStreams: true,
 			ClientStreams: true,

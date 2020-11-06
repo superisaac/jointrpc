@@ -1,16 +1,16 @@
 package server
 
 import (
+	"context"
+	"flag"
 	"log"
 	"net"
 	"os"
-	"context"
-	"flag"
 	//"fmt"
-	grpc "google.golang.org/grpc"	
+	datadir "github.com/superisaac/rpctube/datadir"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	tube "github.com/superisaac/rpctube/tube"
-	datadir "github.com/superisaac/rpctube/datadir"	
+	grpc "google.golang.org/grpc"
 )
 
 func StartEntrypoint() {
@@ -34,7 +34,7 @@ func StartEntrypoint() {
 	tube.Tube().Start(ctx)
 
 	go StartHTTPd(*http_bind)
-	
+
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	//hello.RegisterHelloServer(grpcServer, s)

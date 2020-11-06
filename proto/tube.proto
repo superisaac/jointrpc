@@ -2,9 +2,42 @@ syntax = "proto3";
 
 option go_package = "intf/tube";
 
+message Empty {}
+
+service MethodHub {
+  rpc UpdateMethods(MethodsDecl) returns (UpdateMethodsResponse);
+  rpc SubscribeAllMethods(Empty) returns (stream MethodsDecl);
+}
+
+message MethodsDecl {
+  string entrypoint = 1;
+  repeated string methods = 2;
+}
+
+message UpdateMethodsResponse {
+  string res = 1;
+}
+    
 service JSONRPCTube {
-  rpc call(JSONRPCRequest) returns (JSONRPCResult);
-  rpc handle(stream JSONRPCResultPacket) returns (stream JSONRPCRequestPacket);
+  rpc GetMethods(GetMethodsRequest) returns (GetMethodsResponse);
+  //rpc SubscribeMethods(SubscribeMethodsRequest) returns (stream MethodUpdate);
+  
+  rpc Call(JSONRPCRequest) returns (JSONRPCResult);
+  rpc Handle(stream JSONRPCResultPacket) returns (stream JSONRPCRequestPacket);
+}
+
+message GetMethodsRequest {
+}
+
+message GetMethodsResponse {
+  repeated string methods = 1;
+}
+
+message SubscribeMethodsRequest {
+}
+
+message MethodUpdate {
+  repeated string methods = 1;
 }
 
 message MetaRequest {

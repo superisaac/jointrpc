@@ -12,26 +12,80 @@ if typing.TYPE_CHECKING:
 import tube_pb2
 
 
-class JSONRPCTubeBase(abc.ABC):
+class MethodHubBase(abc.ABC):
 
     @abc.abstractmethod
-    async def call(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCRequest, tube_pb2.JSONRPCResult]') -> None:
+    async def UpdateMethods(self, stream: 'grpclib.server.Stream[tube_pb2.MethodsDecl, tube_pb2.UpdateMethodsResponse]') -> None:
         pass
 
     @abc.abstractmethod
-    async def handle(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCResultPacket, tube_pb2.JSONRPCRequestPacket]') -> None:
+    async def SubscribeAllMethods(self, stream: 'grpclib.server.Stream[tube_pb2.Empty, tube_pb2.MethodsDecl]') -> None:
         pass
 
     def __mapping__(self) -> typing.Dict[str, grpclib.const.Handler]:
         return {
-            '/JSONRPCTube/call': grpclib.const.Handler(
-                self.call,
+            '/MethodHub/UpdateMethods': grpclib.const.Handler(
+                self.UpdateMethods,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                tube_pb2.MethodsDecl,
+                tube_pb2.UpdateMethodsResponse,
+            ),
+            '/MethodHub/SubscribeAllMethods': grpclib.const.Handler(
+                self.SubscribeAllMethods,
+                grpclib.const.Cardinality.UNARY_STREAM,
+                tube_pb2.Empty,
+                tube_pb2.MethodsDecl,
+            ),
+        }
+
+
+class MethodHubStub:
+
+    def __init__(self, channel: grpclib.client.Channel) -> None:
+        self.UpdateMethods = grpclib.client.UnaryUnaryMethod(
+            channel,
+            '/MethodHub/UpdateMethods',
+            tube_pb2.MethodsDecl,
+            tube_pb2.UpdateMethodsResponse,
+        )
+        self.SubscribeAllMethods = grpclib.client.UnaryStreamMethod(
+            channel,
+            '/MethodHub/SubscribeAllMethods',
+            tube_pb2.Empty,
+            tube_pb2.MethodsDecl,
+        )
+
+
+class JSONRPCTubeBase(abc.ABC):
+
+    @abc.abstractmethod
+    async def GetMethods(self, stream: 'grpclib.server.Stream[tube_pb2.GetMethodsRequest, tube_pb2.GetMethodsResponse]') -> None:
+        pass
+
+    @abc.abstractmethod
+    async def Call(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCRequest, tube_pb2.JSONRPCResult]') -> None:
+        pass
+
+    @abc.abstractmethod
+    async def Handle(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCResultPacket, tube_pb2.JSONRPCRequestPacket]') -> None:
+        pass
+
+    def __mapping__(self) -> typing.Dict[str, grpclib.const.Handler]:
+        return {
+            '/JSONRPCTube/GetMethods': grpclib.const.Handler(
+                self.GetMethods,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                tube_pb2.GetMethodsRequest,
+                tube_pb2.GetMethodsResponse,
+            ),
+            '/JSONRPCTube/Call': grpclib.const.Handler(
+                self.Call,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 tube_pb2.JSONRPCRequest,
                 tube_pb2.JSONRPCResult,
             ),
-            '/JSONRPCTube/handle': grpclib.const.Handler(
-                self.handle,
+            '/JSONRPCTube/Handle': grpclib.const.Handler(
+                self.Handle,
                 grpclib.const.Cardinality.STREAM_STREAM,
                 tube_pb2.JSONRPCResultPacket,
                 tube_pb2.JSONRPCRequestPacket,
@@ -42,15 +96,21 @@ class JSONRPCTubeBase(abc.ABC):
 class JSONRPCTubeStub:
 
     def __init__(self, channel: grpclib.client.Channel) -> None:
-        self.call = grpclib.client.UnaryUnaryMethod(
+        self.GetMethods = grpclib.client.UnaryUnaryMethod(
             channel,
-            '/JSONRPCTube/call',
+            '/JSONRPCTube/GetMethods',
+            tube_pb2.GetMethodsRequest,
+            tube_pb2.GetMethodsResponse,
+        )
+        self.Call = grpclib.client.UnaryUnaryMethod(
+            channel,
+            '/JSONRPCTube/Call',
             tube_pb2.JSONRPCRequest,
             tube_pb2.JSONRPCResult,
         )
-        self.handle = grpclib.client.StreamStreamMethod(
+        self.Handle = grpclib.client.StreamStreamMethod(
             channel,
-            '/JSONRPCTube/handle',
+            '/JSONRPCTube/Handle',
             tube_pb2.JSONRPCResultPacket,
             tube_pb2.JSONRPCRequestPacket,
         )
