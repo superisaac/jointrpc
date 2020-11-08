@@ -16,5 +16,15 @@ func (self *HubT) Init() *HubT {
 }
 
 func (self *HubT) UpdateMethods(entrypoint string, methods []string) {
-	self.EntryMethods[entrypoint] = methods
+	// copy elements here
+	tmp := methods
+	self.EntryMethods[entrypoint] = tmp
+}
+
+func (self *HubT) Subscribe(listener MethodDeclChan) {
+	self.Listeners = append(self.Listeners, listener)
+}
+
+func (self *HubT) Unsubscribe(listener MethodDeclChan) {
+	self.Listeners = delete(self.Listeners, listener)
 }

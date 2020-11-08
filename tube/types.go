@@ -81,7 +81,15 @@ type TubeT struct {
 	Router *Router
 }
 
+type MethodDecl struct {
+	Entrypoint string
+	Methods []string
+}
+type MethodDeclChan chan MethodDecl
+
 type HubT struct {
 	// entrypoint -> methods
 	EntryMethods map[string]([]string)
+	Listeners []MethodDeclChan
+	// TODO: add lock/sync
 }

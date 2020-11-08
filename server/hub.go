@@ -20,3 +20,7 @@ func (self *MethodHub) UpdateMethods(context context.Context, req *intf.MethodsD
 	res := &intf.UpdateMethodsResponse{Res: "ok"}
 	return res, nil
 }
+
+func (self *MethodHub) SubscribeAllMethods(ctx context.Context, in *Empty, opts ...grpc.CallOption) (MethodHub_SubscribeAllMethodsClient, error) {
+	
+}
