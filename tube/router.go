@@ -32,7 +32,7 @@ func (self *Router) Init() *Router {
 	self.routerLock = new(sync.RWMutex)
 	self.MethodConnMap = make(map[string]([]CID))
 	self.ConnMethodMap = make(map[CID]([]string))
-	self.ConnMap = make(map[CID](IConn))
+	self.ConnMap = make(map[CID](*ConnT))
 	self.PendingMap = make(map[PendingKey]PendingValue)
 	return self
 }
@@ -54,7 +54,28 @@ func (self Router) GetAllMethods() []string {
 	return methods
 }
 
-func (self *Router) registerConn(connId CID, conn IConn) {
+func (self ConnT) IsLocal() bool {
+	return self.Location == Location_Local
+}
+
+func (self Router) GetLocalMethods() []string {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+
+	methods := []string{}
+	for method, connIds := range self.MethodConnMap {
+		for _, connId := range connIds {
+			conn, found := self.ConnMap[connId]
+			if found && conn.IsLocal() {
+				methods = append(methods, method)
+			}
+		}
+
+	}
+	return methods
+}
+
+func (self *Router) registerConn(connId CID, conn *ConnT) {
 	self.ConnMap[connId] = conn
 	// register connId as a service name
 }
@@ -124,7 +145,7 @@ func (self *Router) UnRegisterMethod(connId CID, method string) error {
 	ct, ok := self.ConnMap[connId]
 	if ok {
 		delete(self.ConnMap, connId)
-		close(ct.RecvChannel())
+		close(ct.RecvChannel)
 	}
 	return nil
 }
@@ -154,7 +175,7 @@ func (self *Router) unregisterConn(connId CID) {
 	ct, ok := self.ConnMap[connId]
 	if ok {
 		delete(self.ConnMap, connId)
-		close(ct.RecvChannel())
+		close(ct.RecvChannel)
 	}
 }
 
@@ -180,7 +201,7 @@ func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
 		connId := connIds[0]
 		conn, found := self.ConnMap[connId]
 		if found {
-			return conn.RecvChannel(), found
+			return conn.RecvChannel, found
 		}
 	}
 	return nil, false
@@ -217,7 +238,7 @@ func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
 	self.PendingMap[pKey] = pValue
 }
 
-func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn {
+func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT {
 	if msg.IsRequest() {
 		toConnId, found := self.SelectConn(msg.Method)
 		if found {
@@ -252,30 +273,13 @@ func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn
 	return nil
 }
 
-func (self *Router) broadcastNotify(notify *jsonrpc.RPCMessage) (int, error) {
-	if !notify.IsNotify() {
-		/*errMsg := jsonrpc.NewErrorMessage(notify.Id, 400, "only notify can be broadcasted")
-		self.deliverMessage(notify.FromConnId, errMsg)
-		return nil */
-		return 0, ErrNotNotify
-	}
-	cntDeliver := 0
-	for connId, conn := range self.ConnMap {
-		if conn.CanBroadcast() { // == IntentLocal {
-			self.deliverMessage(connId, notify)
-			cntDeliver += 1
-		}
-	}
-	return cntDeliver, nil
-}
-
-func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *IConn {
+func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *ConnT {
 	ct, ok := self.ConnMap[connId]
 	//fmt.Printf("deliver message %v\n", msg)
 	if ok {
-		recv_ch := ct.RecvChannel()
+		recv_ch := ct.RecvChannel
 		recv_ch <- msg
-		return &ct
+		return ct
 	}
 	return nil
 }
@@ -295,15 +299,13 @@ func (self *Router) Start(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case cmd_join := <-self.ChJoin:
-				self.Join(cmd_join.ConnId, cmd_join.RecvChannel)
+				self.JoinLocal(cmd_join.ConnId, cmd_join.RecvChannel)
 			case cmd_leave := <-self.ChLeave:
 				self.Leave(cmd_leave.ConnId)
 			case cmd_register := <-self.ChRegister:
 				self.RegisterMethod(cmd_register.ConnId, cmd_register.Method)
 			case cmd_msg := <-self.ChMsg:
 				self.RouteMessage(cmd_msg.Msg, cmd_msg.FromConnId)
-				//case notify := <-self.ChBroadcast:
-				//self.broadcastNotify(notify)
 				//case cmdClose := <-self.ChLeave:
 				//self.unregisterConn(CID(cmdClose))
 			}
@@ -312,7 +314,7 @@ func (self *Router) Start(ctx context.Context) {
 }
 
 // commands
-func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn {
+func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
@@ -321,35 +323,17 @@ func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *IConn
 	return self.routeMessage(msg, fromConnId)
 }
 
-func (self *Router) BroadcastNotify(notify *jsonrpc.RPCMessage, fromConnId CID) (int, error) {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
-
-	//notify.FromConnId = fromConnId
-	//self.ChBroadcast <- notify
-	return self.broadcastNotify(notify)
+func (self *Router) JoinLocal(connId CID, ch MsgChannel) {
+	self.Join(connId, ch, Location_Local)
 }
 
-// Drop-in implementor of IConn
-type SimpleConnT struct {
-	recvChannel  MsgChannel
-	canBroadcast bool
-}
-
-func (self SimpleConnT) RecvChannel() MsgChannel {
-	return self.recvChannel
-}
-
-func (self SimpleConnT) CanBroadcast() bool {
-	return self.canBroadcast
-}
-
-func (self *Router) Join(connId CID, ch MsgChannel) {
-	conn := &SimpleConnT{recvChannel: ch, canBroadcast: true}
+func (self *Router) Join(connId CID, ch MsgChannel, location MethodLocation) {
+	//conn := &SimpleConnT{recvChannel: ch, location: Location_Local}
+	conn := &ConnT{RecvChannel: ch, Location: location}
 	self.JoinConn(connId, conn)
 }
 
-func (self *Router) JoinConn(connId CID, conn IConn) {
+func (self *Router) JoinConn(connId CID, conn *ConnT) {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 	self.registerConn(connId, conn)

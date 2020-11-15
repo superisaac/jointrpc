@@ -11,7 +11,7 @@ import (
 )
 
 // implements ConnT
-type TestConnT struct {
+/*type TestConnT struct {
 	ch MsgChannel
 }
 
@@ -19,9 +19,9 @@ func (self TestConnT) RecvChannel() MsgChannel {
 	return self.ch
 }
 
-func (self TestConnT) CanBroadcast() bool {
-	return true
-}
+func (self TestConnT) Location() MethodLocation {
+	return Location_Local
+}*/
 
 func TestJoinConn(t *testing.T) {
 	assert := assert.New(t)
@@ -29,7 +29,7 @@ func TestJoinConn(t *testing.T) {
 
 	cid := CID(1002)
 	ch := make(MsgChannel, 100)
-	router.Join(cid, ch)
+	router.JoinLocal(cid, ch)
 	assert.Equal(1, len(router.ConnMap))
 
 	router.RegisterMethod(cid, "abc")
@@ -44,7 +44,7 @@ func TestRouteMessage(t *testing.T) {
 
 	cid := CID(1002)
 	ch := make(MsgChannel, 100)
-	router.Join(cid, ch)
+	router.JoinLocal(cid, ch)
 	assert.Equal(1, len(router.ConnMap))
 	router.RegisterMethod(cid, "abc")
 
@@ -53,7 +53,7 @@ func TestRouteMessage(t *testing.T) {
 
 	cid1 := CID(1003)
 	ch1 := make(MsgChannel, 100)
-	router.Join(cid1, ch1)
+	router.JoinLocal(cid1, ch1)
 
 	j1 := `{
 "id": 100002,

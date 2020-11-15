@@ -139,9 +139,9 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 	return res, nil
 }
 
-func (self *JSONRPCTube) GetMethods(context context.Context, req *intf.GetMethodsRequest) (*intf.GetMethodsResponse, error) {
-	methods := tube.Tube().Router.GetAllMethods()
-	resp := &intf.GetMethodsResponse{Methods: methods}
+func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
+	methods := tube.Tube().Router.GetLocalMethods()
+	resp := &intf.ListMethodsResponse{Methods: methods}
 	return resp, nil
 }
 

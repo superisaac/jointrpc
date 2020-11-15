@@ -5,100 +5,6 @@ import grpc
 import tube_pb2 as tube__pb2
 
 
-class MethodHubStub(object):
-    """Missing associated documentation comment in .proto file."""
-
-    def __init__(self, channel):
-        """Constructor.
-
-        Args:
-            channel: A grpc.Channel.
-        """
-        self.UpdateMethods = channel.unary_unary(
-                '/MethodHub/UpdateMethods',
-                request_serializer=tube__pb2.MethodsDecl.SerializeToString,
-                response_deserializer=tube__pb2.UpdateMethodsResponse.FromString,
-                )
-        self.SubscribeAllMethods = channel.unary_stream(
-                '/MethodHub/SubscribeAllMethods',
-                request_serializer=tube__pb2.Empty.SerializeToString,
-                response_deserializer=tube__pb2.MethodsDecl.FromString,
-                )
-
-
-class MethodHubServicer(object):
-    """Missing associated documentation comment in .proto file."""
-
-    def UpdateMethods(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def SubscribeAllMethods(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-
-def add_MethodHubServicer_to_server(servicer, server):
-    rpc_method_handlers = {
-            'UpdateMethods': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateMethods,
-                    request_deserializer=tube__pb2.MethodsDecl.FromString,
-                    response_serializer=tube__pb2.UpdateMethodsResponse.SerializeToString,
-            ),
-            'SubscribeAllMethods': grpc.unary_stream_rpc_method_handler(
-                    servicer.SubscribeAllMethods,
-                    request_deserializer=tube__pb2.Empty.FromString,
-                    response_serializer=tube__pb2.MethodsDecl.SerializeToString,
-            ),
-    }
-    generic_handler = grpc.method_handlers_generic_handler(
-            'MethodHub', rpc_method_handlers)
-    server.add_generic_rpc_handlers((generic_handler,))
-
-
- # This class is part of an EXPERIMENTAL API.
-class MethodHub(object):
-    """Missing associated documentation comment in .proto file."""
-
-    @staticmethod
-    def UpdateMethods(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/MethodHub/UpdateMethods',
-            tube__pb2.MethodsDecl.SerializeToString,
-            tube__pb2.UpdateMethodsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def SubscribeAllMethods(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/MethodHub/SubscribeAllMethods',
-            tube__pb2.Empty.SerializeToString,
-            tube__pb2.MethodsDecl.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-
 class JSONRPCTubeStub(object):
     """Missing associated documentation comment in .proto file."""
 
@@ -108,10 +14,10 @@ class JSONRPCTubeStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetMethods = channel.unary_unary(
-                '/JSONRPCTube/GetMethods',
-                request_serializer=tube__pb2.GetMethodsRequest.SerializeToString,
-                response_deserializer=tube__pb2.GetMethodsResponse.FromString,
+        self.ListMethods = channel.unary_unary(
+                '/JSONRPCTube/ListMethods',
+                request_serializer=tube__pb2.ListMethodsRequest.SerializeToString,
+                response_deserializer=tube__pb2.ListMethodsResponse.FromString,
                 )
         self.Call = channel.unary_unary(
                 '/JSONRPCTube/Call',
@@ -128,7 +34,7 @@ class JSONRPCTubeStub(object):
 class JSONRPCTubeServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GetMethods(self, request, context):
+    def ListMethods(self, request, context):
         """rpc SubscribeMethods(SubscribeMethodsRequest) returns (stream MethodUpdate);
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -150,10 +56,10 @@ class JSONRPCTubeServicer(object):
 
 def add_JSONRPCTubeServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetMethods': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetMethods,
-                    request_deserializer=tube__pb2.GetMethodsRequest.FromString,
-                    response_serializer=tube__pb2.GetMethodsResponse.SerializeToString,
+            'ListMethods': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListMethods,
+                    request_deserializer=tube__pb2.ListMethodsRequest.FromString,
+                    response_serializer=tube__pb2.ListMethodsResponse.SerializeToString,
             ),
             'Call': grpc.unary_unary_rpc_method_handler(
                     servicer.Call,
@@ -176,7 +82,7 @@ class JSONRPCTube(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GetMethods(request,
+    def ListMethods(request,
             target,
             options=(),
             channel_credentials=None,
@@ -186,9 +92,9 @@ class JSONRPCTube(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/JSONRPCTube/GetMethods',
-            tube__pb2.GetMethodsRequest.SerializeToString,
-            tube__pb2.GetMethodsResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/JSONRPCTube/ListMethods',
+            tube__pb2.ListMethodsRequest.SerializeToString,
+            tube__pb2.ListMethodsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

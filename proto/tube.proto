@@ -4,32 +4,18 @@ option go_package = "intf/tube";
 
 message Empty {}
 
-service MethodHub {
-  rpc UpdateMethods(MethodsDecl) returns (UpdateMethodsResponse);
-  rpc SubscribeAllMethods(Empty) returns (stream MethodsDecl);
-}
-
-message MethodsDecl {
-  string entrypoint = 1;
-  repeated string methods = 2;
-}
-
-message UpdateMethodsResponse {
-  string res = 1;
-}
-    
 service JSONRPCTube {
-  rpc GetMethods(GetMethodsRequest) returns (GetMethodsResponse);
+  rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
   //rpc SubscribeMethods(SubscribeMethodsRequest) returns (stream MethodUpdate);
   
   rpc Call(JSONRPCRequest) returns (JSONRPCResult);
   rpc Handle(stream JSONRPCResultPacket) returns (stream JSONRPCRequestPacket);
 }
 
-message GetMethodsRequest {
+message ListMethodsRequest {
 }
 
-message GetMethodsResponse {
+message ListMethodsResponse {
   repeated string methods = 1;
 }
 
@@ -74,17 +60,43 @@ message JSONRPCResult {
   }  
 }
 
+enum MethodLocation {
+  LOCAL = 0;
+  REMOTE = 1;
+}
+
+message RegisterMethodsRequest {
+  repeated string methods = 1;
+  MethodLocation localcation = 2;
+}
+
+message UnRegisterMethodsRequest {
+  repeated string methods = 1;
+}
+
+message RegisterMethodsResponse {
+  string text = 1;
+}
+
+message UnRegisterMethodsResponse {
+  string text = 1;
+}
+
 message JSONRPCRequestPacket {
   oneof payload {
-    MetaRequest meta_request = 1;
-    JSONRPCRequest request = 2;
+    //MetaRequest meta_request = 1;
+    RegisterMethodsResponse register_methods = 1;
+    UnRegisterMethodsResponse unregister_methods=2;
+    JSONRPCRequest request = 10;
   }
 }
 
 message JSONRPCResultPacket {
   oneof payload {
-    MetaResult meta_result = 1;
-    JSONRPCResult result = 2;
+    //MetaResult meta_result = 1;
+    RegisterMethodsRequest register_methods = 1;
+    UnRegisterMethodsRequest unregister_methods = 2;
+    JSONRPCResult result = 10;
   }
 }
 

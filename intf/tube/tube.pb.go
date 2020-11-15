@@ -63,6 +63,52 @@ func (RPCProtocol) EnumDescriptor() ([]byte, []int) {
 	return file_tube_proto_rawDescGZIP(), []int{0}
 }
 
+type MethodLocation int32
+
+const (
+	MethodLocation_LOCAL  MethodLocation = 0
+	MethodLocation_REMOTE MethodLocation = 1
+)
+
+// Enum value maps for MethodLocation.
+var (
+	MethodLocation_name = map[int32]string{
+		0: "LOCAL",
+		1: "REMOTE",
+	}
+	MethodLocation_value = map[string]int32{
+		"LOCAL":  0,
+		"REMOTE": 1,
+	}
+)
+
+func (x MethodLocation) Enum() *MethodLocation {
+	p := new(MethodLocation)
+	*p = x
+	return p
+}
+
+func (x MethodLocation) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MethodLocation) Descriptor() protoreflect.EnumDescriptor {
+	return file_tube_proto_enumTypes[1].Descriptor()
+}
+
+func (MethodLocation) Type() protoreflect.EnumType {
+	return &file_tube_proto_enumTypes[1]
+}
+
+func (x MethodLocation) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MethodLocation.Descriptor instead.
+func (MethodLocation) EnumDescriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{1}
+}
+
 type Empty struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -101,17 +147,14 @@ func (*Empty) Descriptor() ([]byte, []int) {
 	return file_tube_proto_rawDescGZIP(), []int{0}
 }
 
-type MethodsDecl struct {
+type ListMethodsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Entrypoint string   `protobuf:"bytes,1,opt,name=entrypoint,proto3" json:"entrypoint,omitempty"`
-	Methods    []string `protobuf:"bytes,2,rep,name=methods,proto3" json:"methods,omitempty"`
 }
 
-func (x *MethodsDecl) Reset() {
-	*x = MethodsDecl{}
+func (x *ListMethodsRequest) Reset() {
+	*x = ListMethodsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_tube_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -119,13 +162,13 @@ func (x *MethodsDecl) Reset() {
 	}
 }
 
-func (x *MethodsDecl) String() string {
+func (x *ListMethodsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MethodsDecl) ProtoMessage() {}
+func (*ListMethodsRequest) ProtoMessage() {}
 
-func (x *MethodsDecl) ProtoReflect() protoreflect.Message {
+func (x *ListMethodsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_tube_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -137,35 +180,21 @@ func (x *MethodsDecl) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use MethodsDecl.ProtoReflect.Descriptor instead.
-func (*MethodsDecl) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListMethodsRequest.ProtoReflect.Descriptor instead.
+func (*ListMethodsRequest) Descriptor() ([]byte, []int) {
 	return file_tube_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *MethodsDecl) GetEntrypoint() string {
-	if x != nil {
-		return x.Entrypoint
-	}
-	return ""
-}
-
-func (x *MethodsDecl) GetMethods() []string {
-	if x != nil {
-		return x.Methods
-	}
-	return nil
-}
-
-type UpdateMethodsResponse struct {
+type ListMethodsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Res string `protobuf:"bytes,1,opt,name=res,proto3" json:"res,omitempty"`
+	Methods []string `protobuf:"bytes,1,rep,name=methods,proto3" json:"methods,omitempty"`
 }
 
-func (x *UpdateMethodsResponse) Reset() {
-	*x = UpdateMethodsResponse{}
+func (x *ListMethodsResponse) Reset() {
+	*x = ListMethodsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_tube_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -173,13 +202,13 @@ func (x *UpdateMethodsResponse) Reset() {
 	}
 }
 
-func (x *UpdateMethodsResponse) String() string {
+func (x *ListMethodsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateMethodsResponse) ProtoMessage() {}
+func (*ListMethodsResponse) ProtoMessage() {}
 
-func (x *UpdateMethodsResponse) ProtoReflect() protoreflect.Message {
+func (x *ListMethodsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_tube_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -191,97 +220,12 @@ func (x *UpdateMethodsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateMethodsResponse.ProtoReflect.Descriptor instead.
-func (*UpdateMethodsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListMethodsResponse.ProtoReflect.Descriptor instead.
+func (*ListMethodsResponse) Descriptor() ([]byte, []int) {
 	return file_tube_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *UpdateMethodsResponse) GetRes() string {
-	if x != nil {
-		return x.Res
-	}
-	return ""
-}
-
-type GetMethodsRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *GetMethodsRequest) Reset() {
-	*x = GetMethodsRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GetMethodsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetMethodsRequest) ProtoMessage() {}
-
-func (x *GetMethodsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetMethodsRequest.ProtoReflect.Descriptor instead.
-func (*GetMethodsRequest) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{3}
-}
-
-type GetMethodsResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Methods []string `protobuf:"bytes,1,rep,name=methods,proto3" json:"methods,omitempty"`
-}
-
-func (x *GetMethodsResponse) Reset() {
-	*x = GetMethodsResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GetMethodsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetMethodsResponse) ProtoMessage() {}
-
-func (x *GetMethodsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetMethodsResponse.ProtoReflect.Descriptor instead.
-func (*GetMethodsResponse) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *GetMethodsResponse) GetMethods() []string {
+func (x *ListMethodsResponse) GetMethods() []string {
 	if x != nil {
 		return x.Methods
 	}
@@ -297,7 +241,7 @@ type SubscribeMethodsRequest struct {
 func (x *SubscribeMethodsRequest) Reset() {
 	*x = SubscribeMethodsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[5]
+		mi := &file_tube_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -310,7 +254,7 @@ func (x *SubscribeMethodsRequest) String() string {
 func (*SubscribeMethodsRequest) ProtoMessage() {}
 
 func (x *SubscribeMethodsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[5]
+	mi := &file_tube_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -323,7 +267,7 @@ func (x *SubscribeMethodsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscribeMethodsRequest.ProtoReflect.Descriptor instead.
 func (*SubscribeMethodsRequest) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{5}
+	return file_tube_proto_rawDescGZIP(), []int{3}
 }
 
 type MethodUpdate struct {
@@ -337,7 +281,7 @@ type MethodUpdate struct {
 func (x *MethodUpdate) Reset() {
 	*x = MethodUpdate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[6]
+		mi := &file_tube_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -350,7 +294,7 @@ func (x *MethodUpdate) String() string {
 func (*MethodUpdate) ProtoMessage() {}
 
 func (x *MethodUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[6]
+	mi := &file_tube_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -363,7 +307,7 @@ func (x *MethodUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MethodUpdate.ProtoReflect.Descriptor instead.
 func (*MethodUpdate) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{6}
+	return file_tube_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MethodUpdate) GetMethods() []string {
@@ -382,7 +326,7 @@ type MetaRequest struct {
 func (x *MetaRequest) Reset() {
 	*x = MetaRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[7]
+		mi := &file_tube_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -395,7 +339,7 @@ func (x *MetaRequest) String() string {
 func (*MetaRequest) ProtoMessage() {}
 
 func (x *MetaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[7]
+	mi := &file_tube_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -408,7 +352,7 @@ func (x *MetaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetaRequest.ProtoReflect.Descriptor instead.
 func (*MetaRequest) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{7}
+	return file_tube_proto_rawDescGZIP(), []int{5}
 }
 
 type MetaResult struct {
@@ -423,7 +367,7 @@ type MetaResult struct {
 func (x *MetaResult) Reset() {
 	*x = MetaResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[8]
+		mi := &file_tube_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -436,7 +380,7 @@ func (x *MetaResult) String() string {
 func (*MetaResult) ProtoMessage() {}
 
 func (x *MetaResult) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[8]
+	mi := &file_tube_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -449,7 +393,7 @@ func (x *MetaResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetaResult.ProtoReflect.Descriptor instead.
 func (*MetaResult) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{8}
+	return file_tube_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *MetaResult) GetEntries() []*RPCEntry {
@@ -479,7 +423,7 @@ type RPCEntry struct {
 func (x *RPCEntry) Reset() {
 	*x = RPCEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[9]
+		mi := &file_tube_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -492,7 +436,7 @@ func (x *RPCEntry) String() string {
 func (*RPCEntry) ProtoMessage() {}
 
 func (x *RPCEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[9]
+	mi := &file_tube_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -505,7 +449,7 @@ func (x *RPCEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RPCEntry.ProtoReflect.Descriptor instead.
 func (*RPCEntry) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{9}
+	return file_tube_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *RPCEntry) GetProtocol() RPCProtocol {
@@ -543,7 +487,7 @@ type JSONRPCRequest struct {
 func (x *JSONRPCRequest) Reset() {
 	*x = JSONRPCRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[10]
+		mi := &file_tube_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -556,7 +500,7 @@ func (x *JSONRPCRequest) String() string {
 func (*JSONRPCRequest) ProtoMessage() {}
 
 func (x *JSONRPCRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[10]
+	mi := &file_tube_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -569,7 +513,7 @@ func (x *JSONRPCRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCRequest.ProtoReflect.Descriptor instead.
 func (*JSONRPCRequest) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{10}
+	return file_tube_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *JSONRPCRequest) GetId() int64 {
@@ -609,7 +553,7 @@ type JSONRPCResult struct {
 func (x *JSONRPCResult) Reset() {
 	*x = JSONRPCResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[11]
+		mi := &file_tube_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -622,7 +566,7 @@ func (x *JSONRPCResult) String() string {
 func (*JSONRPCResult) ProtoMessage() {}
 
 func (x *JSONRPCResult) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[11]
+	mi := &file_tube_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -635,7 +579,7 @@ func (x *JSONRPCResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCResult.ProtoReflect.Descriptor instead.
 func (*JSONRPCResult) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{11}
+	return file_tube_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *JSONRPCResult) GetId() int64 {
@@ -682,13 +626,210 @@ func (*JSONRPCResult_Ok) isJSONRPCResult_Result() {}
 
 func (*JSONRPCResult_Error) isJSONRPCResult_Result() {}
 
+type RegisterMethodsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Methods     []string       `protobuf:"bytes,1,rep,name=methods,proto3" json:"methods,omitempty"`
+	Localcation MethodLocation `protobuf:"varint,2,opt,name=localcation,proto3,enum=MethodLocation" json:"localcation,omitempty"`
+}
+
+func (x *RegisterMethodsRequest) Reset() {
+	*x = RegisterMethodsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RegisterMethodsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterMethodsRequest) ProtoMessage() {}
+
+func (x *RegisterMethodsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterMethodsRequest.ProtoReflect.Descriptor instead.
+func (*RegisterMethodsRequest) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RegisterMethodsRequest) GetMethods() []string {
+	if x != nil {
+		return x.Methods
+	}
+	return nil
+}
+
+func (x *RegisterMethodsRequest) GetLocalcation() MethodLocation {
+	if x != nil {
+		return x.Localcation
+	}
+	return MethodLocation_LOCAL
+}
+
+type UnRegisterMethodsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Methods []string `protobuf:"bytes,1,rep,name=methods,proto3" json:"methods,omitempty"`
+}
+
+func (x *UnRegisterMethodsRequest) Reset() {
+	*x = UnRegisterMethodsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UnRegisterMethodsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnRegisterMethodsRequest) ProtoMessage() {}
+
+func (x *UnRegisterMethodsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnRegisterMethodsRequest.ProtoReflect.Descriptor instead.
+func (*UnRegisterMethodsRequest) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *UnRegisterMethodsRequest) GetMethods() []string {
+	if x != nil {
+		return x.Methods
+	}
+	return nil
+}
+
+type RegisterMethodsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Text string `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+}
+
+func (x *RegisterMethodsResponse) Reset() {
+	*x = RegisterMethodsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RegisterMethodsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterMethodsResponse) ProtoMessage() {}
+
+func (x *RegisterMethodsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterMethodsResponse.ProtoReflect.Descriptor instead.
+func (*RegisterMethodsResponse) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RegisterMethodsResponse) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+type UnRegisterMethodsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Text string `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+}
+
+func (x *UnRegisterMethodsResponse) Reset() {
+	*x = UnRegisterMethodsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tube_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UnRegisterMethodsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnRegisterMethodsResponse) ProtoMessage() {}
+
+func (x *UnRegisterMethodsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_tube_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnRegisterMethodsResponse.ProtoReflect.Descriptor instead.
+func (*UnRegisterMethodsResponse) Descriptor() ([]byte, []int) {
+	return file_tube_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *UnRegisterMethodsResponse) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
 type JSONRPCRequestPacket struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Payload:
-	//	*JSONRPCRequestPacket_MetaRequest
+	//	*JSONRPCRequestPacket_RegisterMethods
+	//	*JSONRPCRequestPacket_UnregisterMethods
 	//	*JSONRPCRequestPacket_Request
 	Payload isJSONRPCRequestPacket_Payload `protobuf_oneof:"payload"`
 }
@@ -696,7 +837,7 @@ type JSONRPCRequestPacket struct {
 func (x *JSONRPCRequestPacket) Reset() {
 	*x = JSONRPCRequestPacket{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[12]
+		mi := &file_tube_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -709,7 +850,7 @@ func (x *JSONRPCRequestPacket) String() string {
 func (*JSONRPCRequestPacket) ProtoMessage() {}
 
 func (x *JSONRPCRequestPacket) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[12]
+	mi := &file_tube_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -722,7 +863,7 @@ func (x *JSONRPCRequestPacket) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCRequestPacket.ProtoReflect.Descriptor instead.
 func (*JSONRPCRequestPacket) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{12}
+	return file_tube_proto_rawDescGZIP(), []int{14}
 }
 
 func (m *JSONRPCRequestPacket) GetPayload() isJSONRPCRequestPacket_Payload {
@@ -732,9 +873,16 @@ func (m *JSONRPCRequestPacket) GetPayload() isJSONRPCRequestPacket_Payload {
 	return nil
 }
 
-func (x *JSONRPCRequestPacket) GetMetaRequest() *MetaRequest {
-	if x, ok := x.GetPayload().(*JSONRPCRequestPacket_MetaRequest); ok {
-		return x.MetaRequest
+func (x *JSONRPCRequestPacket) GetRegisterMethods() *RegisterMethodsResponse {
+	if x, ok := x.GetPayload().(*JSONRPCRequestPacket_RegisterMethods); ok {
+		return x.RegisterMethods
+	}
+	return nil
+}
+
+func (x *JSONRPCRequestPacket) GetUnregisterMethods() *UnRegisterMethodsResponse {
+	if x, ok := x.GetPayload().(*JSONRPCRequestPacket_UnregisterMethods); ok {
+		return x.UnregisterMethods
 	}
 	return nil
 }
@@ -750,15 +898,22 @@ type isJSONRPCRequestPacket_Payload interface {
 	isJSONRPCRequestPacket_Payload()
 }
 
-type JSONRPCRequestPacket_MetaRequest struct {
-	MetaRequest *MetaRequest `protobuf:"bytes,1,opt,name=meta_request,json=metaRequest,proto3,oneof"`
+type JSONRPCRequestPacket_RegisterMethods struct {
+	//MetaRequest meta_request = 1;
+	RegisterMethods *RegisterMethodsResponse `protobuf:"bytes,1,opt,name=register_methods,json=registerMethods,proto3,oneof"`
+}
+
+type JSONRPCRequestPacket_UnregisterMethods struct {
+	UnregisterMethods *UnRegisterMethodsResponse `protobuf:"bytes,2,opt,name=unregister_methods,json=unregisterMethods,proto3,oneof"`
 }
 
 type JSONRPCRequestPacket_Request struct {
-	Request *JSONRPCRequest `protobuf:"bytes,2,opt,name=request,proto3,oneof"`
+	Request *JSONRPCRequest `protobuf:"bytes,10,opt,name=request,proto3,oneof"`
 }
 
-func (*JSONRPCRequestPacket_MetaRequest) isJSONRPCRequestPacket_Payload() {}
+func (*JSONRPCRequestPacket_RegisterMethods) isJSONRPCRequestPacket_Payload() {}
+
+func (*JSONRPCRequestPacket_UnregisterMethods) isJSONRPCRequestPacket_Payload() {}
 
 func (*JSONRPCRequestPacket_Request) isJSONRPCRequestPacket_Payload() {}
 
@@ -768,7 +923,8 @@ type JSONRPCResultPacket struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Payload:
-	//	*JSONRPCResultPacket_MetaResult
+	//	*JSONRPCResultPacket_RegisterMethods
+	//	*JSONRPCResultPacket_UnregisterMethods
 	//	*JSONRPCResultPacket_Result
 	Payload isJSONRPCResultPacket_Payload `protobuf_oneof:"payload"`
 }
@@ -776,7 +932,7 @@ type JSONRPCResultPacket struct {
 func (x *JSONRPCResultPacket) Reset() {
 	*x = JSONRPCResultPacket{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tube_proto_msgTypes[13]
+		mi := &file_tube_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -789,7 +945,7 @@ func (x *JSONRPCResultPacket) String() string {
 func (*JSONRPCResultPacket) ProtoMessage() {}
 
 func (x *JSONRPCResultPacket) ProtoReflect() protoreflect.Message {
-	mi := &file_tube_proto_msgTypes[13]
+	mi := &file_tube_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -802,7 +958,7 @@ func (x *JSONRPCResultPacket) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCResultPacket.ProtoReflect.Descriptor instead.
 func (*JSONRPCResultPacket) Descriptor() ([]byte, []int) {
-	return file_tube_proto_rawDescGZIP(), []int{13}
+	return file_tube_proto_rawDescGZIP(), []int{15}
 }
 
 func (m *JSONRPCResultPacket) GetPayload() isJSONRPCResultPacket_Payload {
@@ -812,9 +968,16 @@ func (m *JSONRPCResultPacket) GetPayload() isJSONRPCResultPacket_Payload {
 	return nil
 }
 
-func (x *JSONRPCResultPacket) GetMetaResult() *MetaResult {
-	if x, ok := x.GetPayload().(*JSONRPCResultPacket_MetaResult); ok {
-		return x.MetaResult
+func (x *JSONRPCResultPacket) GetRegisterMethods() *RegisterMethodsRequest {
+	if x, ok := x.GetPayload().(*JSONRPCResultPacket_RegisterMethods); ok {
+		return x.RegisterMethods
+	}
+	return nil
+}
+
+func (x *JSONRPCResultPacket) GetUnregisterMethods() *UnRegisterMethodsRequest {
+	if x, ok := x.GetPayload().(*JSONRPCResultPacket_UnregisterMethods); ok {
+		return x.UnregisterMethods
 	}
 	return nil
 }
@@ -830,15 +993,22 @@ type isJSONRPCResultPacket_Payload interface {
 	isJSONRPCResultPacket_Payload()
 }
 
-type JSONRPCResultPacket_MetaResult struct {
-	MetaResult *MetaResult `protobuf:"bytes,1,opt,name=meta_result,json=metaResult,proto3,oneof"`
+type JSONRPCResultPacket_RegisterMethods struct {
+	//MetaResult meta_result = 1;
+	RegisterMethods *RegisterMethodsRequest `protobuf:"bytes,1,opt,name=register_methods,json=registerMethods,proto3,oneof"`
+}
+
+type JSONRPCResultPacket_UnregisterMethods struct {
+	UnregisterMethods *UnRegisterMethodsRequest `protobuf:"bytes,2,opt,name=unregister_methods,json=unregisterMethods,proto3,oneof"`
 }
 
 type JSONRPCResultPacket_Result struct {
-	Result *JSONRPCResult `protobuf:"bytes,2,opt,name=result,proto3,oneof"`
+	Result *JSONRPCResult `protobuf:"bytes,10,opt,name=result,proto3,oneof"`
 }
 
-func (*JSONRPCResultPacket_MetaResult) isJSONRPCResultPacket_Payload() {}
+func (*JSONRPCResultPacket_RegisterMethods) isJSONRPCResultPacket_Payload() {}
+
+func (*JSONRPCResultPacket_UnregisterMethods) isJSONRPCResultPacket_Payload() {}
 
 func (*JSONRPCResultPacket_Result) isJSONRPCResultPacket_Payload() {}
 
@@ -846,82 +1016,99 @@ var File_tube_proto protoreflect.FileDescriptor
 
 var file_tube_proto_rawDesc = []byte{
 	0x0a, 0x0a, 0x74, 0x75, 0x62, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x07, 0x0a, 0x05,
-	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x47, 0x0a, 0x0b, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73,
-	0x44, 0x65, 0x63, 0x6c, 0x12, 0x1e, 0x0a, 0x0a, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x70, 0x6f, 0x69,
-	0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x70,
-	0x6f, 0x69, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18,
-	0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x29,
-	0x0a, 0x15, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x72, 0x65, 0x73, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x72, 0x65, 0x73, 0x22, 0x13, 0x0a, 0x11, 0x47, 0x65, 0x74,
-	0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x2e,
-	0x0a, 0x12, 0x47, 0x65, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18,
-	0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x19,
-	0x0a, 0x17, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f,
-	0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x28, 0x0a, 0x0c, 0x4d, 0x65, 0x74,
-	0x68, 0x6f, 0x64, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x74,
-	0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68,
-	0x6f, 0x64, 0x73, 0x22, 0x0d, 0x0a, 0x0b, 0x4d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x22, 0x56, 0x0a, 0x0a, 0x4d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
-	0x12, 0x23, 0x0a, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x09, 0x2e, 0x52, 0x50, 0x43, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x07, 0x65, 0x6e,
-	0x74, 0x72, 0x69, 0x65, 0x73, 0x12, 0x23, 0x0a, 0x0d, 0x70, 0x69, 0x6e, 0x67, 0x5f, 0x69, 0x6e,
-	0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0c, 0x70, 0x69,
-	0x6e, 0x67, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x22, 0x5c, 0x0a, 0x08, 0x52, 0x50,
-	0x43, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x28, 0x0a, 0x08, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
-	0x6f, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0c, 0x2e, 0x52, 0x50, 0x43, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x52, 0x08, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x65, 0x6c, 0x70, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x04, 0x68, 0x65, 0x6c, 0x70, 0x22, 0x50, 0x0a, 0x0e, 0x4a, 0x53, 0x4f, 0x4e,
-	0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x6d, 0x65,
-	0x74, 0x68, 0x6f, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6d, 0x65, 0x74, 0x68,
-	0x6f, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x53, 0x0a, 0x0d, 0x4a, 0x53,
-	0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x12, 0x10, 0x0a, 0x02, 0x6f,
-	0x6b, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x02, 0x6f, 0x6b, 0x12, 0x16, 0x0a,
-	0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x05,
-	0x65, 0x72, 0x72, 0x6f, 0x72, 0x42, 0x08, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x22,
-	0x81, 0x01, 0x0a, 0x14, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x12, 0x31, 0x0a, 0x0c, 0x6d, 0x65, 0x74, 0x61,
-	0x5f, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c,
-	0x2e, 0x4d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0b,
-	0x6d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2b, 0x0a, 0x07, 0x72,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x4a,
-	0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52,
-	0x07, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c,
-	0x6f, 0x61, 0x64, 0x22, 0x7a, 0x0a, 0x13, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65,
-	0x73, 0x75, 0x6c, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x12, 0x2e, 0x0a, 0x0b, 0x6d, 0x65,
-	0x74, 0x61, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x0b, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x48, 0x00, 0x52, 0x0a,
-	0x6d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x28, 0x0a, 0x06, 0x72, 0x65,
-	0x73, 0x75, 0x6c, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x4a, 0x53, 0x4f,
-	0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x48, 0x00, 0x52, 0x06, 0x72, 0x65,
-	0x73, 0x75, 0x6c, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x2a,
-	0x1a, 0x0a, 0x0b, 0x52, 0x50, 0x43, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x0b,
-	0x0a, 0x07, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x10, 0x00, 0x32, 0x71, 0x0a, 0x09, 0x4d,
-	0x65, 0x74, 0x68, 0x6f, 0x64, 0x48, 0x75, 0x62, 0x12, 0x35, 0x0a, 0x0d, 0x55, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x0c, 0x2e, 0x4d, 0x65, 0x74, 0x68,
-	0x6f, 0x64, 0x73, 0x44, 0x65, 0x63, 0x6c, 0x1a, 0x16, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x2d, 0x0a, 0x13, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x41, 0x6c, 0x6c, 0x4d,
-	0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x0c,
-	0x2e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x44, 0x65, 0x63, 0x6c, 0x30, 0x01, 0x32, 0xa8,
-	0x01, 0x0a, 0x0b, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x54, 0x75, 0x62, 0x65, 0x12, 0x35,
-	0x0a, 0x0a, 0x47, 0x65, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x12, 0x2e, 0x47,
-	0x65, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x13, 0x2e, 0x47, 0x65, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a, 0x04, 0x43, 0x61, 0x6c, 0x6c, 0x12, 0x0f, 0x2e,
-	0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0e,
-	0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x39,
-	0x0a, 0x06, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x14, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52,
-	0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x1a, 0x15,
-	0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50,
-	0x61, 0x63, 0x6b, 0x65, 0x74, 0x28, 0x01, 0x30, 0x01, 0x42, 0x0b, 0x5a, 0x09, 0x69, 0x6e, 0x74,
-	0x66, 0x2f, 0x74, 0x75, 0x62, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x14, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65, 0x74,
+	0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x2f, 0x0a, 0x13, 0x4c,
+	0x69, 0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x19, 0x0a, 0x17,
+	0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x28, 0x0a, 0x0c, 0x4d, 0x65, 0x74, 0x68, 0x6f,
+	0x64, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f,
+	0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64,
+	0x73, 0x22, 0x0d, 0x0a, 0x0b, 0x4d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x22, 0x56, 0x0a, 0x0a, 0x4d, 0x65, 0x74, 0x61, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x23,
+	0x0a, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x09, 0x2e, 0x52, 0x50, 0x43, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72,
+	0x69, 0x65, 0x73, 0x12, 0x23, 0x0a, 0x0d, 0x70, 0x69, 0x6e, 0x67, 0x5f, 0x69, 0x6e, 0x74, 0x65,
+	0x72, 0x76, 0x61, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0c, 0x70, 0x69, 0x6e, 0x67,
+	0x49, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x22, 0x5c, 0x0a, 0x08, 0x52, 0x50, 0x43, 0x45,
+	0x6e, 0x74, 0x72, 0x79, 0x12, 0x28, 0x0a, 0x08, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0c, 0x2e, 0x52, 0x50, 0x43, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x63, 0x6f, 0x6c, 0x52, 0x08, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x12,
+	0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61,
+	0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x65, 0x6c, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x04, 0x68, 0x65, 0x6c, 0x70, 0x22, 0x50, 0x0a, 0x0e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50,
+	0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x6d, 0x65, 0x74, 0x68,
+	0x6f, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64,
+	0x12, 0x16, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x53, 0x0a, 0x0d, 0x4a, 0x53, 0x4f, 0x4e,
+	0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x12, 0x10, 0x0a, 0x02, 0x6f, 0x6b, 0x18,
+	0x0a, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x02, 0x6f, 0x6b, 0x12, 0x16, 0x0a, 0x05, 0x65,
+	0x72, 0x72, 0x6f, 0x72, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x05, 0x65, 0x72,
+	0x72, 0x6f, 0x72, 0x42, 0x08, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x22, 0x65, 0x0a,
+	0x16, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f,
+	0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64,
+	0x73, 0x12, 0x31, 0x0a, 0x0b, 0x6c, 0x6f, 0x63, 0x61, 0x6c, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0f, 0x2e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x4c,
+	0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x6c, 0x6f, 0x63, 0x61, 0x6c, 0x63, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x22, 0x34, 0x0a, 0x18, 0x55, 0x6e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74,
+	0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x09, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x2d, 0x0a, 0x17, 0x52, 0x65,
+	0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x22, 0x2f, 0x0a, 0x19, 0x55, 0x6e, 0x52,
+	0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x22, 0xe2, 0x01, 0x0a, 0x14, 0x4a,
+	0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50, 0x61, 0x63,
+	0x6b, 0x65, 0x74, 0x12, 0x45, 0x0a, 0x10, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x5f,
+	0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e,
+	0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0f, 0x72, 0x65, 0x67, 0x69, 0x73,
+	0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x4b, 0x0a, 0x12, 0x75, 0x6e,
+	0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x5f, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x55, 0x6e, 0x52, 0x65, 0x67, 0x69, 0x73,
+	0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x48, 0x00, 0x52, 0x11, 0x75, 0x6e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
+	0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x2b, 0x0a, 0x07, 0x72, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52,
+	0x50, 0x43, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x07, 0x72, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22,
+	0xdc, 0x01, 0x0a, 0x13, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c,
+	0x74, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x12, 0x44, 0x0a, 0x10, 0x72, 0x65, 0x67, 0x69, 0x73,
+	0x74, 0x65, 0x72, 0x5f, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x17, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68,
+	0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0f, 0x72, 0x65,
+	0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x4a, 0x0a,
+	0x12, 0x75, 0x6e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x5f, 0x6d, 0x65, 0x74, 0x68,
+	0x6f, 0x64, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x55, 0x6e, 0x52, 0x65,
+	0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x11, 0x75, 0x6e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74,
+	0x65, 0x72, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x28, 0x0a, 0x06, 0x72, 0x65, 0x73,
+	0x75, 0x6c, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x4a, 0x53, 0x4f, 0x4e,
+	0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x48, 0x00, 0x52, 0x06, 0x72, 0x65, 0x73,
+	0x75, 0x6c, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x2a, 0x1a,
+	0x0a, 0x0b, 0x52, 0x50, 0x43, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x0b, 0x0a,
+	0x07, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x10, 0x00, 0x2a, 0x27, 0x0a, 0x0e, 0x4d, 0x65,
+	0x74, 0x68, 0x6f, 0x64, 0x4c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x09, 0x0a, 0x05,
+	0x4c, 0x4f, 0x43, 0x41, 0x4c, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x52, 0x45, 0x4d, 0x4f, 0x54,
+	0x45, 0x10, 0x01, 0x32, 0xab, 0x01, 0x0a, 0x0b, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x54,
+	0x75, 0x62, 0x65, 0x12, 0x38, 0x0a, 0x0b, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f,
+	0x64, 0x73, 0x12, 0x13, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65,
+	0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a,
+	0x04, 0x43, 0x61, 0x6c, 0x6c, 0x12, 0x0f, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0e, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43,
+	0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x39, 0x0a, 0x06, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65,
+	0x12, 0x14, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x1a, 0x15, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x28, 0x01, 0x30,
+	0x01, 0x42, 0x0b, 0x5a, 0x09, 0x69, 0x6e, 0x74, 0x66, 0x2f, 0x74, 0x75, 0x62, 0x65, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -936,47 +1123,49 @@ func file_tube_proto_rawDescGZIP() []byte {
 	return file_tube_proto_rawDescData
 }
 
-var file_tube_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_tube_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_tube_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_tube_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_tube_proto_goTypes = []interface{}{
-	(RPCProtocol)(0),                // 0: RPCProtocol
-	(*Empty)(nil),                   // 1: Empty
-	(*MethodsDecl)(nil),             // 2: MethodsDecl
-	(*UpdateMethodsResponse)(nil),   // 3: UpdateMethodsResponse
-	(*GetMethodsRequest)(nil),       // 4: GetMethodsRequest
-	(*GetMethodsResponse)(nil),      // 5: GetMethodsResponse
-	(*SubscribeMethodsRequest)(nil), // 6: SubscribeMethodsRequest
-	(*MethodUpdate)(nil),            // 7: MethodUpdate
-	(*MetaRequest)(nil),             // 8: MetaRequest
-	(*MetaResult)(nil),              // 9: MetaResult
-	(*RPCEntry)(nil),                // 10: RPCEntry
-	(*JSONRPCRequest)(nil),          // 11: JSONRPCRequest
-	(*JSONRPCResult)(nil),           // 12: JSONRPCResult
-	(*JSONRPCRequestPacket)(nil),    // 13: JSONRPCRequestPacket
-	(*JSONRPCResultPacket)(nil),     // 14: JSONRPCResultPacket
+	(RPCProtocol)(0),                  // 0: RPCProtocol
+	(MethodLocation)(0),               // 1: MethodLocation
+	(*Empty)(nil),                     // 2: Empty
+	(*ListMethodsRequest)(nil),        // 3: ListMethodsRequest
+	(*ListMethodsResponse)(nil),       // 4: ListMethodsResponse
+	(*SubscribeMethodsRequest)(nil),   // 5: SubscribeMethodsRequest
+	(*MethodUpdate)(nil),              // 6: MethodUpdate
+	(*MetaRequest)(nil),               // 7: MetaRequest
+	(*MetaResult)(nil),                // 8: MetaResult
+	(*RPCEntry)(nil),                  // 9: RPCEntry
+	(*JSONRPCRequest)(nil),            // 10: JSONRPCRequest
+	(*JSONRPCResult)(nil),             // 11: JSONRPCResult
+	(*RegisterMethodsRequest)(nil),    // 12: RegisterMethodsRequest
+	(*UnRegisterMethodsRequest)(nil),  // 13: UnRegisterMethodsRequest
+	(*RegisterMethodsResponse)(nil),   // 14: RegisterMethodsResponse
+	(*UnRegisterMethodsResponse)(nil), // 15: UnRegisterMethodsResponse
+	(*JSONRPCRequestPacket)(nil),      // 16: JSONRPCRequestPacket
+	(*JSONRPCResultPacket)(nil),       // 17: JSONRPCResultPacket
 }
 var file_tube_proto_depIdxs = []int32{
-	10, // 0: MetaResult.entries:type_name -> RPCEntry
+	9,  // 0: MetaResult.entries:type_name -> RPCEntry
 	0,  // 1: RPCEntry.protocol:type_name -> RPCProtocol
-	8,  // 2: JSONRPCRequestPacket.meta_request:type_name -> MetaRequest
-	11, // 3: JSONRPCRequestPacket.request:type_name -> JSONRPCRequest
-	9,  // 4: JSONRPCResultPacket.meta_result:type_name -> MetaResult
-	12, // 5: JSONRPCResultPacket.result:type_name -> JSONRPCResult
-	2,  // 6: MethodHub.UpdateMethods:input_type -> MethodsDecl
-	1,  // 7: MethodHub.SubscribeAllMethods:input_type -> Empty
-	4,  // 8: JSONRPCTube.GetMethods:input_type -> GetMethodsRequest
-	11, // 9: JSONRPCTube.Call:input_type -> JSONRPCRequest
-	14, // 10: JSONRPCTube.Handle:input_type -> JSONRPCResultPacket
-	3,  // 11: MethodHub.UpdateMethods:output_type -> UpdateMethodsResponse
-	2,  // 12: MethodHub.SubscribeAllMethods:output_type -> MethodsDecl
-	5,  // 13: JSONRPCTube.GetMethods:output_type -> GetMethodsResponse
-	12, // 14: JSONRPCTube.Call:output_type -> JSONRPCResult
-	13, // 15: JSONRPCTube.Handle:output_type -> JSONRPCRequestPacket
-	11, // [11:16] is the sub-list for method output_type
-	6,  // [6:11] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	1,  // 2: RegisterMethodsRequest.localcation:type_name -> MethodLocation
+	14, // 3: JSONRPCRequestPacket.register_methods:type_name -> RegisterMethodsResponse
+	15, // 4: JSONRPCRequestPacket.unregister_methods:type_name -> UnRegisterMethodsResponse
+	10, // 5: JSONRPCRequestPacket.request:type_name -> JSONRPCRequest
+	12, // 6: JSONRPCResultPacket.register_methods:type_name -> RegisterMethodsRequest
+	13, // 7: JSONRPCResultPacket.unregister_methods:type_name -> UnRegisterMethodsRequest
+	11, // 8: JSONRPCResultPacket.result:type_name -> JSONRPCResult
+	3,  // 9: JSONRPCTube.ListMethods:input_type -> ListMethodsRequest
+	10, // 10: JSONRPCTube.Call:input_type -> JSONRPCRequest
+	17, // 11: JSONRPCTube.Handle:input_type -> JSONRPCResultPacket
+	4,  // 12: JSONRPCTube.ListMethods:output_type -> ListMethodsResponse
+	11, // 13: JSONRPCTube.Call:output_type -> JSONRPCResult
+	16, // 14: JSONRPCTube.Handle:output_type -> JSONRPCRequestPacket
+	12, // [12:15] is the sub-list for method output_type
+	9,  // [9:12] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_tube_proto_init() }
@@ -998,7 +1187,7 @@ func file_tube_proto_init() {
 			}
 		}
 		file_tube_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MethodsDecl); i {
+			switch v := v.(*ListMethodsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1010,7 +1199,7 @@ func file_tube_proto_init() {
 			}
 		}
 		file_tube_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateMethodsResponse); i {
+			switch v := v.(*ListMethodsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1022,30 +1211,6 @@ func file_tube_proto_init() {
 			}
 		}
 		file_tube_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetMethodsRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_tube_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetMethodsResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_tube_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SubscribeMethodsRequest); i {
 			case 0:
 				return &v.state
@@ -1057,7 +1222,7 @@ func file_tube_proto_init() {
 				return nil
 			}
 		}
-		file_tube_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_tube_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MethodUpdate); i {
 			case 0:
 				return &v.state
@@ -1069,7 +1234,7 @@ func file_tube_proto_init() {
 				return nil
 			}
 		}
-		file_tube_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_tube_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MetaRequest); i {
 			case 0:
 				return &v.state
@@ -1081,7 +1246,7 @@ func file_tube_proto_init() {
 				return nil
 			}
 		}
-		file_tube_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_tube_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MetaResult); i {
 			case 0:
 				return &v.state
@@ -1093,7 +1258,7 @@ func file_tube_proto_init() {
 				return nil
 			}
 		}
-		file_tube_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_tube_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*RPCEntry); i {
 			case 0:
 				return &v.state
@@ -1105,7 +1270,7 @@ func file_tube_proto_init() {
 				return nil
 			}
 		}
-		file_tube_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_tube_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*JSONRPCRequest); i {
 			case 0:
 				return &v.state
@@ -1117,7 +1282,7 @@ func file_tube_proto_init() {
 				return nil
 			}
 		}
-		file_tube_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_tube_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*JSONRPCResult); i {
 			case 0:
 				return &v.state
@@ -1129,8 +1294,32 @@ func file_tube_proto_init() {
 				return nil
 			}
 		}
+		file_tube_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RegisterMethodsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_tube_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UnRegisterMethodsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 		file_tube_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*JSONRPCRequestPacket); i {
+			switch v := v.(*RegisterMethodsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1142,6 +1331,30 @@ func file_tube_proto_init() {
 			}
 		}
 		file_tube_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UnRegisterMethodsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_tube_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*JSONRPCRequestPacket); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_tube_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*JSONRPCResultPacket); i {
 			case 0:
 				return &v.state
@@ -1154,16 +1367,18 @@ func file_tube_proto_init() {
 			}
 		}
 	}
-	file_tube_proto_msgTypes[11].OneofWrappers = []interface{}{
+	file_tube_proto_msgTypes[9].OneofWrappers = []interface{}{
 		(*JSONRPCResult_Ok)(nil),
 		(*JSONRPCResult_Error)(nil),
 	}
-	file_tube_proto_msgTypes[12].OneofWrappers = []interface{}{
-		(*JSONRPCRequestPacket_MetaRequest)(nil),
+	file_tube_proto_msgTypes[14].OneofWrappers = []interface{}{
+		(*JSONRPCRequestPacket_RegisterMethods)(nil),
+		(*JSONRPCRequestPacket_UnregisterMethods)(nil),
 		(*JSONRPCRequestPacket_Request)(nil),
 	}
-	file_tube_proto_msgTypes[13].OneofWrappers = []interface{}{
-		(*JSONRPCResultPacket_MetaResult)(nil),
+	file_tube_proto_msgTypes[15].OneofWrappers = []interface{}{
+		(*JSONRPCResultPacket_RegisterMethods)(nil),
+		(*JSONRPCResultPacket_UnregisterMethods)(nil),
 		(*JSONRPCResultPacket_Result)(nil),
 	}
 	type x struct{}
@@ -1171,10 +1386,10 @@ func file_tube_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_tube_proto_rawDesc,
-			NumEnums:      1,
-			NumMessages:   14,
+			NumEnums:      2,
+			NumMessages:   16,
 			NumExtensions: 0,
-			NumServices:   2,
+			NumServices:   1,
 		},
 		GoTypes:           file_tube_proto_goTypes,
 		DependencyIndexes: file_tube_proto_depIdxs,

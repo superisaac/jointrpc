@@ -12,7 +12,7 @@ import (
 const (
 	DefaultRequestTimeout time.Duration = 1000000 * 5
 
-	IntentLocal string = "local"
+	//IntentLocal string = "local"
 )
 
 var (
@@ -20,6 +20,13 @@ var (
 )
 
 type CID uint64
+
+type MethodLocation int32
+
+const (
+	Location_Local = 0;
+	Location_Remote = 1;
+)
 
 // Commands
 type MsgChannel chan *jsonrpc.RPCMessage
@@ -35,10 +42,11 @@ type PendingValue struct {
 	Expire time.Time
 }
 
-// IConn
-type IConn interface {
-	RecvChannel() MsgChannel
-	CanBroadcast() bool
+// Connect Struct
+type ConnT struct {
+	ConnId         CID
+	RecvChannel    MsgChannel
+	Location       MethodLocation
 }
 
 // Channel commands
@@ -67,7 +75,7 @@ type Router struct {
 	MethodConnMap map[string]([]CID)
 	ConnMethodMap map[CID]([]string)
 
-	ConnMap    map[CID](IConn)
+	ConnMap    map[CID](*ConnT)
 	PendingMap map[PendingKey]PendingValue
 
 	// channels
@@ -79,17 +87,4 @@ type Router struct {
 
 type TubeT struct {
 	Router *Router
-}
-
-type MethodDecl struct {
-	Entrypoint string
-	Methods []string
-}
-type MethodDeclChan chan MethodDecl
-
-type HubT struct {
-	// entrypoint -> methods
-	EntryMethods map[string]([]string)
-	Listeners []MethodDeclChan
-	// TODO: add lock/sync
 }
