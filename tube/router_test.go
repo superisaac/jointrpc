@@ -29,10 +29,10 @@ func TestJoinConn(t *testing.T) {
 
 	cid := CID(1002)
 	ch := make(MsgChannel, 100)
-	router.JoinLocal(cid, ch)
+	router.Join(cid, ch)
 	assert.Equal(1, len(router.ConnMap))
 
-	router.RegisterMethod(cid, "abc")
+	router.RegisterLocalMethod(cid, "abc")
 	methods := router.GetMethods(cid)
 	assert.Equal(1, len(methods))
 	assert.Equal("abc", methods[0])
@@ -44,16 +44,20 @@ func TestRouteMessage(t *testing.T) {
 
 	cid := CID(1002)
 	ch := make(MsgChannel, 100)
-	router.JoinLocal(cid, ch)
+	router.Join(cid, ch)
 	assert.Equal(1, len(router.ConnMap))
-	router.RegisterMethod(cid, "abc")
+	router.RegisterLocalMethod(cid, "abc")
+	router.RegisterMethod(cid, "def", Location_Remote)
 
 	methods := router.GetAllMethods()
-	assert.Equal([]string{"abc"}, methods)
+	assert.Equal([]string{"abc", "def"}, methods)
+
+	localMethods := router.GetLocalMethods()
+	assert.Equal([]string{"abc"}, localMethods)
 
 	cid1 := CID(1003)
 	ch1 := make(MsgChannel, 100)
-	router.JoinLocal(cid1, ch1)
+	router.Join(cid1, ch1)
 
 	j1 := `{
 "id": 100002,
@@ -84,7 +88,7 @@ func TestRouteRoutine(t *testing.T) {
 	ch := make(MsgChannel, 100)
 
 	router.ChJoin <- CmdJoin{RecvChannel: ch, ConnId: cid}
-	router.ChRegister <- CmdRegister{ConnId: cid, Method: "abc"}
+	router.ChReg <- CmdReg{ConnId: cid, Method: "abc", Location: Location_Local}
 
 	cid1 := CID(1003)
 	ch1 := make(MsgChannel, 100)

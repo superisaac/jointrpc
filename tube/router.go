@@ -6,6 +6,7 @@ import (
 	"errors"
 	"sync"
 	"time"
+	"sort"
 	//	"github.com/gorilla/websocket"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
@@ -19,9 +20,9 @@ func NewRouter() *Router {
 }
 */
 
-func RemoveElement(slice []CID, elems CID) []CID {
+func RemoveConnId(slice []MethodDesc, elem CID) []MethodDesc {
 	for i := range slice {
-		if slice[i] == elems {
+		if slice[i].ConnId == elem {
 			slice = append(slice[:i], slice[i+1:]...)
 		}
 	}
@@ -30,7 +31,7 @@ func RemoveElement(slice []CID, elems CID) []CID {
 
 func (self *Router) Init() *Router {
 	self.routerLock = new(sync.RWMutex)
-	self.MethodConnMap = make(map[string]([]CID))
+	self.MethodConnMap = make(map[string]([]MethodDesc))
 	self.ConnMethodMap = make(map[CID]([]string))
 	self.ConnMap = make(map[CID](*ConnT))
 	self.PendingMap = make(map[PendingKey]PendingValue)
@@ -51,10 +52,11 @@ func (self Router) GetAllMethods() []string {
 	for method, _ := range self.MethodConnMap {
 		methods = append(methods, method)
 	}
+	sort.Strings(methods)
 	return methods
 }
 
-func (self ConnT) IsLocal() bool {
+func (self MethodDesc) IsLocal() bool {
 	return self.Location == Location_Local
 }
 
@@ -63,15 +65,14 @@ func (self Router) GetLocalMethods() []string {
 	defer self.routerLock.RUnlock()
 
 	methods := []string{}
-	for method, connIds := range self.MethodConnMap {
-		for _, connId := range connIds {
-			conn, found := self.ConnMap[connId]
-			if found && conn.IsLocal() {
+	for method, descs := range self.MethodConnMap {
+		for _, desc := range descs {
+			if desc.IsLocal() {
 				methods = append(methods, method)
 			}
 		}
-
 	}
+	sort.Strings(methods)
 	return methods
 }
 
@@ -80,26 +81,32 @@ func (self *Router) registerConn(connId CID, conn *ConnT) {
 	// register connId as a service name
 }
 
-func (self *Router) RegisterMethod(connId CID, method string) error {
+func (self *Router) RegisterLocalMethod(connId CID, method string) error {
+	return self.RegisterMethod(connId, method, Location_Local)
+}
+
+func (self *Router) RegisterMethod(connId CID, method string, location MethodLocation) error {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
+	methodDesc := MethodDesc{ConnId: connId, Location: location}	
 	// bi direction map
-	cidArr, methodFound := self.MethodConnMap[method]
+	methodDescArr, methodFound := self.MethodConnMap[method]
+
 	if methodFound {
-		cidArr = append(cidArr, connId)
+		methodDescArr = append(methodDescArr, methodDesc)
 	} else {
-		var a []CID
-		cidArr = append(a, connId)
+		var tmp []MethodDesc
+		methodDescArr = append(tmp, methodDesc)
 	}
-	self.MethodConnMap[method] = cidArr
+	self.MethodConnMap[method] = methodDescArr
 
 	snArr, connFound := self.ConnMethodMap[connId]
 	if connFound {
 		snArr = append(snArr, method)
 	} else {
-		var a []string
-		snArr = append(a, method)
+		var tmp []string
+		snArr = append(tmp, method)
 	}
 	self.ConnMethodMap[connId] = snArr
 
@@ -126,19 +133,13 @@ func (self *Router) UnRegisterMethod(connId CID, method string) error {
 		}
 	}
 
-	connIds, ok := self.MethodConnMap[method]
+	methodDescList, ok := self.MethodConnMap[method]
 	if ok {
-		var tmpConnIds []CID
-		for _, cid := range connIds {
-			if cid != connId {
-				tmpConnIds = append(tmpConnIds, cid)
-			}
-
-			if len(tmpConnIds) > 0 {
-				self.MethodConnMap[method] = tmpConnIds
-			} else {
-				delete(self.MethodConnMap, method)
-			}
+		methodDescList = RemoveConnId(methodDescList, connId)
+		if(len(methodDescList) > 0) {
+			self.MethodConnMap[method] = methodDescList
+		} else {
+			delete(self.MethodConnMap, method)
 		}
 	}
 
@@ -158,13 +159,13 @@ func (self *Router) unregisterConn(connId CID) {
 	methods, ok := self.ConnMethodMap[connId]
 	if ok {
 		for _, method := range methods {
-			connIds, ok := self.MethodConnMap[method]
+			methodDescList, ok := self.MethodConnMap[method]
 			if !ok {
 				continue
 			}
-			connIds = RemoveElement(connIds, connId)
-			if len(connIds) > 0 {
-				self.MethodConnMap[method] = connIds
+			methodDescList = RemoveConnId(methodDescList, connId)
+			if len(methodDescList) > 0 {
+				self.MethodConnMap[method] = methodDescList
 			} else {
 				delete(self.MethodConnMap, method)
 			}
@@ -183,10 +184,10 @@ func (self *Router) SelectConn(method string) (CID, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
-	connIds, ok := self.MethodConnMap[method]
-	if ok && len(connIds) > 0 {
+	descs, ok := self.MethodConnMap[method]
+	if ok && len(descs) > 0 {
 		// or random or round-robin
-		return connIds[0], true
+		return descs[0].ConnId, true
 	}
 	return 0, false
 }
@@ -195,10 +196,10 @@ func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
-	connIds, ok := self.MethodConnMap[method]
-	if ok && len(connIds) > 0 {
+	descs, ok := self.MethodConnMap[method]
+	if ok && len(descs) > 0 {
 		// or random or round-robin
-		connId := connIds[0]
+		connId := descs[0].ConnId
 		conn, found := self.ConnMap[connId]
 		if found {
 			return conn.RecvChannel, found
@@ -288,7 +289,8 @@ func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 100)
 	self.ChJoin = make(chan CmdJoin, 100)
 	self.ChLeave = make(chan CmdLeave, 100)
-	self.ChRegister = make(chan CmdRegister, 100)
+	self.ChReg = make(chan CmdReg, 100)
+	self.ChUnReg = make(chan CmdUnReg, 100)	
 }
 
 func (self *Router) Start(ctx context.Context) {
@@ -299,11 +301,13 @@ func (self *Router) Start(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case cmd_join := <-self.ChJoin:
-				self.JoinLocal(cmd_join.ConnId, cmd_join.RecvChannel)
+				self.Join(cmd_join.ConnId, cmd_join.RecvChannel)
 			case cmd_leave := <-self.ChLeave:
 				self.Leave(cmd_leave.ConnId)
-			case cmd_register := <-self.ChRegister:
-				self.RegisterMethod(cmd_register.ConnId, cmd_register.Method)
+			case cmd_reg := <-self.ChReg:
+				self.RegisterMethod(cmd_reg.ConnId, cmd_reg.Method, cmd_reg.Location)
+			case cmd_unreg := <-self.ChUnReg:
+				self.UnRegisterMethod(cmd_unreg.ConnId, cmd_unreg.Method)
 			case cmd_msg := <-self.ChMsg:
 				self.RouteMessage(cmd_msg.Msg, cmd_msg.FromConnId)
 				//case cmdClose := <-self.ChLeave:
@@ -323,13 +327,9 @@ func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT
 	return self.routeMessage(msg, fromConnId)
 }
 
-func (self *Router) JoinLocal(connId CID, ch MsgChannel) {
-	self.Join(connId, ch, Location_Local)
-}
-
-func (self *Router) Join(connId CID, ch MsgChannel, location MethodLocation) {
+func (self *Router) Join(connId CID, ch MsgChannel) {
 	//conn := &SimpleConnT{recvChannel: ch, location: Location_Local}
-	conn := &ConnT{RecvChannel: ch, Location: location}
+	conn := &ConnT{ConnId: connId, RecvChannel: ch}
 	self.JoinConn(connId, conn)
 }
 
@@ -356,15 +356,17 @@ func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage
 		return nil, errors.New("only request and notify message accepted")
 	}
 	if req_msg.IsRequest() {
-		conn_id := NextCID()
+		connId := NextCID()
 		recv_ch := make(MsgChannel, 100)
 		// router will take care of closing the receive channel
 		//defer close(recv_ch)
 
-		self.ChJoin <- CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
-		defer leaveConn(conn_id)
+		//self.ChJoin <- CmdJoin{RecvChannel: recv_ch, ConnId: connId}
 
-		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: conn_id}
+		self.Join(connId, recv_ch)
+		defer leaveConn(connId)
+
+		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: connId}
 
 		recvmsg := <-recv_ch
 		return recvmsg, nil

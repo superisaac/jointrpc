@@ -15,7 +15,7 @@ func TestReqConvert(t *testing.T) {
 
 	j1 := `{
 "version": "2.0",
-"id": 100, 
+"id": 100,
 "method": "testAgain",
 "params": [3, "hello", "nice"]
 }`
@@ -70,7 +70,7 @@ func TestResultConvert(t *testing.T) {
 
 	j1 := `{
 "version": "2.0",
-"id": 100, 
+"id": 100,
 "result": "ok"
 }`
 	msg, err := jsonrpc.ParseMessage([]byte(j1))

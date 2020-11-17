@@ -172,7 +172,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	// router will take care of closing the receive channel
 	//defer close(recv_ch)
 
-	tube.Tube().Router.ChJoin <- tube.CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
+	//tube.Tube().Router.ChJoin <- tube.CmdJoin{RecvChannel: recv_ch, ConnId: conn_id}
 	defer leaveConn(conn_id)
 
 	ctx, cancel := context.WithCancel(context.Background())
