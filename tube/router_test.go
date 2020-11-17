@@ -27,13 +27,13 @@ func TestJoinConn(t *testing.T) {
 	assert := assert.New(t)
 	router := NewRouter()
 
-	cid := CID(1002)
-	ch := make(MsgChannel, 100)
-	router.Join(cid, ch)
+	//cid := CID(1002)
+	//ch := make(MsgChannel, 100)
+	conn := router.Join() //cid, ch)
 	assert.Equal(1, len(router.ConnMap))
 
-	router.RegisterLocalMethod(cid, "abc")
-	methods := router.GetMethods(cid)
+	router.RegisterLocalMethod(conn, "abc")
+	methods := conn.GetMethods()
 	assert.Equal(1, len(methods))
 	assert.Equal("abc", methods[0])
 }
@@ -42,12 +42,13 @@ func TestRouteMessage(t *testing.T) {
 	assert := assert.New(t)
 	router := NewRouter()
 
-	cid := CID(1002)
-	ch := make(MsgChannel, 100)
-	router.Join(cid, ch)
+	//cid := CID(1002)
+	//ch := make(MsgChannel, 100)
+	conn := router.Join()
+
 	assert.Equal(1, len(router.ConnMap))
-	router.RegisterLocalMethod(cid, "abc")
-	router.RegisterMethod(cid, "def", Location_Remote)
+	router.RegisterLocalMethod(conn, "abc")
+	router.RegisterMethod(conn, "def", Location_Remote)
 
 	methods := router.GetAllMethods()
 	assert.Equal([]string{"abc", "def"}, methods)
@@ -55,9 +56,7 @@ func TestRouteMessage(t *testing.T) {
 	localMethods := router.GetLocalMethods()
 	assert.Equal([]string{"abc"}, localMethods)
 
-	cid1 := CID(1003)
-	ch1 := make(MsgChannel, 100)
-	router.Join(cid1, ch1)
+	_ = router.Join()
 
 	j1 := `{
 "id": 100002,
@@ -68,9 +67,9 @@ func TestRouteMessage(t *testing.T) {
 	msg, err := jsonrpc.ParseMessage([]byte(j1))
 	assert.Nil(err)
 	assert.Equal(jsonrpc.UID(100002), msg.Id)
-	router.RouteMessage(msg, cid1)
+	router.RouteMessage(msg, conn.ConnId)
 
-	rcvmsg := <-ch
+	rcvmsg := <-conn.RecvChannel
 	assert.Equal(msg.Id, rcvmsg.Id)
 	assert.True(rcvmsg.IsRequest())
 }
@@ -84,15 +83,13 @@ func TestRouteRoutine(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	cid := CID(1002)
-	ch := make(MsgChannel, 100)
-
-	router.ChJoin <- CmdJoin{RecvChannel: ch, ConnId: cid}
+	conn := router.Join()
+	cid := conn.ConnId
+	ch := conn.RecvChannel
 	router.ChReg <- CmdReg{ConnId: cid, Method: "abc", Location: Location_Local}
 
-	cid1 := CID(1003)
-	ch1 := make(MsgChannel, 100)
-	router.ChJoin <- CmdJoin{RecvChannel: ch1, ConnId: cid1}
+	conn1 := router.Join()
+	cid1 := conn1.ConnId
 
 	j1 := `{
 "id": 100002,

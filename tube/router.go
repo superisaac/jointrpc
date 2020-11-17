@@ -4,9 +4,9 @@ import (
 	//"fmt"
 	"context"
 	"errors"
+	"sort"
 	"sync"
 	"time"
-	"sort"
 	//	"github.com/gorilla/websocket"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
@@ -20,9 +20,10 @@ func NewRouter() *Router {
 }
 */
 
-func RemoveConnId(slice []MethodDesc, elem CID) []MethodDesc {
+func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
 	for i := range slice {
-		if slice[i].ConnId == elem {
+		if slice[i].Conn == conn {
+			//if slice[i].Conn.ConnId == conn.ConnId {
 			slice = append(slice[:i], slice[i+1:]...)
 		}
 	}
@@ -32,16 +33,9 @@ func RemoveConnId(slice []MethodDesc, elem CID) []MethodDesc {
 func (self *Router) Init() *Router {
 	self.routerLock = new(sync.RWMutex)
 	self.MethodConnMap = make(map[string]([]MethodDesc))
-	self.ConnMethodMap = make(map[CID]([]string))
 	self.ConnMap = make(map[CID](*ConnT))
 	self.PendingMap = make(map[PendingKey]PendingValue)
 	return self
-}
-
-func (self Router) GetMethods(connId CID) []string {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
-	return self.ConnMethodMap[connId]
 }
 
 func (self Router) GetAllMethods() []string {
@@ -76,20 +70,23 @@ func (self Router) GetLocalMethods() []string {
 	return methods
 }
 
-func (self *Router) registerConn(connId CID, conn *ConnT) {
-	self.ConnMap[connId] = conn
-	// register connId as a service name
+func (self *Router) RegisterLocalMethod(conn *ConnT, method string) error {
+	return self.RegisterMethod(conn, method, Location_Local)
 }
 
-func (self *Router) RegisterLocalMethod(connId CID, method string) error {
-	return self.RegisterMethod(connId, method, Location_Local)
-}
-
-func (self *Router) RegisterMethod(connId CID, method string, location MethodLocation) error {
+func (self *Router) RegisterMethod(conn *ConnT, method string, location MethodLocation) error {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
-	methodDesc := MethodDesc{ConnId: connId, Location: location}	
+	_, found := conn.Methods[method]
+	if found {
+		// method already attach to this connection
+		return nil
+	}
+
+	conn.Methods[method] = true
+
+	methodDesc := MethodDesc{Conn: conn, Location: location}
 	// bi direction map
 	methodDescArr, methodFound := self.MethodConnMap[method]
 
@@ -100,96 +97,67 @@ func (self *Router) RegisterMethod(connId CID, method string, location MethodLoc
 		methodDescArr = append(tmp, methodDesc)
 	}
 	self.MethodConnMap[method] = methodDescArr
-
-	snArr, connFound := self.ConnMethodMap[connId]
-	if connFound {
-		snArr = append(snArr, method)
-	} else {
-		var tmp []string
-		snArr = append(tmp, method)
-	}
-	self.ConnMethodMap[connId] = snArr
-
 	return nil
 }
 
-func (self *Router) UnRegisterMethod(connId CID, method string) error {
+func (self *Router) UnRegisterMethod(conn *ConnT, method string) {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
-	methods, ok := self.ConnMethodMap[connId]
-	if ok {
-		var tmpMethods []string
-
-		for _, sname := range methods {
-			if sname != method {
-				tmpMethods = append(tmpMethods, sname)
-			}
-		}
-		if len(tmpMethods) > 0 {
-			self.ConnMethodMap[connId] = tmpMethods
-		} else {
-			delete(self.ConnMethodMap, connId)
-		}
+	_, found := conn.Methods[method]
+	if !found {
+		// method is not attached to this connection, just return
+		return
 	}
+
+	delete(conn.Methods, method)
 
 	methodDescList, ok := self.MethodConnMap[method]
 	if ok {
-		methodDescList = RemoveConnId(methodDescList, connId)
-		if(len(methodDescList) > 0) {
+		methodDescList = RemoveConn(methodDescList, conn)
+		if len(methodDescList) > 0 {
 			self.MethodConnMap[method] = methodDescList
 		} else {
 			delete(self.MethodConnMap, method)
 		}
 	}
-
-	ct, ok := self.ConnMap[connId]
-	if ok {
-		delete(self.ConnMap, connId)
-		close(ct.RecvChannel)
-	}
-	return nil
 }
 
-func (self *Router) unregisterConn(connId CID) {
-	self.ClearPending(connId)
+func (self *Router) leaveConn(conn *ConnT) {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
-	methods, ok := self.ConnMethodMap[connId]
-	if ok {
-		for _, method := range methods {
-			methodDescList, ok := self.MethodConnMap[method]
-			if !ok {
-				continue
-			}
-			methodDescList = RemoveConnId(methodDescList, connId)
-			if len(methodDescList) > 0 {
-				self.MethodConnMap[method] = methodDescList
-			} else {
-				delete(self.MethodConnMap, method)
-			}
+	for method, _ := range conn.Methods {
+		methodDescList, ok := self.MethodConnMap[method]
+		if !ok {
+			continue
 		}
-		delete(self.ConnMethodMap, connId)
+		methodDescList = RemoveConn(methodDescList, conn)
+		if len(methodDescList) > 0 {
+			self.MethodConnMap[method] = methodDescList
+		} else {
+			delete(self.MethodConnMap, method)
+		}
 	}
+	conn.Methods = make(map[string]bool)
 
-	ct, ok := self.ConnMap[connId]
+	ct, ok := self.ConnMap[conn.ConnId]
 	if ok {
-		delete(self.ConnMap, connId)
+		delete(self.ConnMap, conn.ConnId)
 		close(ct.RecvChannel)
 	}
 }
 
-func (self *Router) SelectConn(method string) (CID, bool) {
+func (self *Router) SelectConn(method string) (*ConnT, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
 	descs, ok := self.MethodConnMap[method]
 	if ok && len(descs) > 0 {
 		// or random or round-robin
-		return descs[0].ConnId, true
+		return descs[0].Conn, true
 	}
-	return 0, false
+	return nil, false
 }
 
 func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
@@ -199,11 +167,8 @@ func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
 	descs, ok := self.MethodConnMap[method]
 	if ok && len(descs) > 0 {
 		// or random or round-robin
-		connId := descs[0].ConnId
-		conn, found := self.ConnMap[connId]
-		if found {
-			return conn.RecvChannel, found
-		}
+		conn := descs[0].Conn
+		return conn.RecvChannel, true
 	}
 	return nil, false
 }
@@ -241,22 +206,22 @@ func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
 
 func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT {
 	if msg.IsRequest() {
-		toConnId, found := self.SelectConn(msg.Method)
+		toConn, found := self.SelectConn(msg.Method)
 		if found {
 			pKey := PendingKey{ConnId: fromConnId, MsgId: msg.Id}
 			expireTime := time.Now().Add(DefaultRequestTimeout)
-			pValue := PendingValue{ConnId: toConnId, Expire: expireTime}
+			pValue := PendingValue{ConnId: toConn.ConnId, Expire: expireTime}
 
 			self.setPending(pKey, pValue)
-			return self.deliverMessage(toConnId, msg)
+			return self.deliverMessage(toConn.ConnId, msg)
 		} else {
 			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "service not found", false)
 			return self.deliverMessage(fromConnId, errMsg)
 		}
 	} else if msg.IsNotify() {
-		toConnId, found := self.SelectConn(msg.Method)
+		toConn, found := self.SelectConn(msg.Method)
 		if found {
-			return self.deliverMessage(toConnId, msg)
+			return self.deliverMessage(toConn.ConnId, msg)
 			/*} else {
 			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "service not found", false)
 			return self.deliverMessage(fromConnId, errMsg) */
@@ -287,10 +252,9 @@ func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *ConnT {
 
 func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 100)
-	self.ChJoin = make(chan CmdJoin, 100)
 	self.ChLeave = make(chan CmdLeave, 100)
 	self.ChReg = make(chan CmdReg, 100)
-	self.ChUnReg = make(chan CmdUnReg, 100)	
+	self.ChUnReg = make(chan CmdUnReg, 100)
 }
 
 func (self *Router) Start(ctx context.Context) {
@@ -300,18 +264,31 @@ func (self *Router) Start(ctx context.Context) {
 			select {
 			case <-ctx.Done():
 				return
-			case cmd_join := <-self.ChJoin:
-				self.Join(cmd_join.ConnId, cmd_join.RecvChannel)
+				/*case cmd_join := <-self.ChJoin:
+				self.Join(cmd_join.ConnId, cmd_join.RecvChannel) */
 			case cmd_leave := <-self.ChLeave:
-				self.Leave(cmd_leave.ConnId)
+				conn, found := self.ConnMap[cmd_leave.ConnId]
+				if found {
+					self.Leave(conn)
+				}
 			case cmd_reg := <-self.ChReg:
-				self.RegisterMethod(cmd_reg.ConnId, cmd_reg.Method, cmd_reg.Location)
+				{
+					conn, found := self.ConnMap[cmd_reg.ConnId]
+					if found {
+						self.RegisterMethod(conn, cmd_reg.Method, cmd_reg.Location)
+					}
+				}
 			case cmd_unreg := <-self.ChUnReg:
-				self.UnRegisterMethod(cmd_unreg.ConnId, cmd_unreg.Method)
+				{
+					conn, found := self.ConnMap[cmd_unreg.ConnId]
+					if found {
+						self.UnRegisterMethod(conn, cmd_unreg.Method)
+					}
+				}
 			case cmd_msg := <-self.ChMsg:
-				self.RouteMessage(cmd_msg.Msg, cmd_msg.FromConnId)
-				//case cmdClose := <-self.ChLeave:
-				//self.unregisterConn(CID(cmdClose))
+				{
+					self.RouteMessage(cmd_msg.Msg, cmd_msg.FromConnId)
+				}
 			}
 		}
 	}()
@@ -327,28 +304,24 @@ func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT
 	return self.routeMessage(msg, fromConnId)
 }
 
-func (self *Router) Join(connId CID, ch MsgChannel) {
-	//conn := &SimpleConnT{recvChannel: ch, location: Location_Local}
-	conn := &ConnT{ConnId: connId, RecvChannel: ch}
-	self.JoinConn(connId, conn)
+func (self *Router) Join() *ConnT {
+	conn := NewConn()
+	self.JoinConn(conn)
+	return conn
 }
 
-func (self *Router) JoinConn(connId CID, conn *ConnT) {
+func (self *Router) JoinConn(conn *ConnT) {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
-	self.registerConn(connId, conn)
+	self.ConnMap[conn.ConnId] = conn
 }
 
-func (self *Router) Leave(connId CID) {
+func (self *Router) Leave(conn *ConnT) {
 	//self.ChLeave <- LeaveCommand(connId)
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
-	self.unregisterConn(connId)
-}
-
-func leaveConn(conn_id CID) {
-	Tube().Router.ChLeave <- CmdLeave{ConnId: conn_id}
+	self.leaveConn(conn)
 }
 
 func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
@@ -356,19 +329,20 @@ func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage
 		return nil, errors.New("only request and notify message accepted")
 	}
 	if req_msg.IsRequest() {
-		connId := NextCID()
-		recv_ch := make(MsgChannel, 100)
+		//connId := NextCID()
+		//recv_ch := make(MsgChannel, 100)
 		// router will take care of closing the receive channel
 		//defer close(recv_ch)
 
 		//self.ChJoin <- CmdJoin{RecvChannel: recv_ch, ConnId: connId}
 
-		self.Join(connId, recv_ch)
-		defer leaveConn(connId)
+		//self.Join(connId, recv_ch)
+		conn := self.Join()
+		defer self.leaveConn(conn)
 
-		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: connId}
+		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: conn.ConnId}
 
-		recvmsg := <-recv_ch
+		recvmsg := <-conn.RecvChannel
 		return recvmsg, nil
 	} else {
 		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: 0}

@@ -24,8 +24,8 @@ type CID uint64
 type MethodLocation int32
 
 const (
-	Location_Local = 0;
-	Location_Remote = 1;
+	Location_Local  = 0
+	Location_Remote = 1
 )
 
 // Commands
@@ -44,13 +44,14 @@ type PendingValue struct {
 
 // Connect Struct
 type ConnT struct {
-	ConnId         CID
-	RecvChannel    MsgChannel
-	//Location       MethodLocation
+	ConnId      CID
+	RecvChannel MsgChannel
+	Methods     map[string]bool
 }
 
 type MethodDesc struct {
-	ConnId  CID
+	//ConnId  CID
+	Conn     *ConnT
 	Location MethodLocation
 }
 
@@ -70,8 +71,8 @@ type CmdLeave struct {
 }
 
 type CmdReg struct {
-	ConnId CID
-	Method string
+	ConnId   CID
+	Method   string
 	Location MethodLocation
 }
 
@@ -84,17 +85,17 @@ type Router struct {
 	// channels
 	routerLock    *sync.RWMutex
 	MethodConnMap map[string]([]MethodDesc)
-	ConnMethodMap map[CID]([]string)
+	//ConnMethodMap map[CID]([]string)
 
 	ConnMap    map[CID](*ConnT)
 	PendingMap map[PendingKey]PendingValue
 
 	// channels
-	ChMsg      chan CmdMsg
-	ChJoin     chan CmdJoin
-	ChLeave    chan CmdLeave
-	ChReg      chan CmdReg
-	ChUnReg    chan CmdUnReg
+	ChMsg chan CmdMsg
+	//ChJoin     chan CmdJoin
+	ChLeave chan CmdLeave
+	ChReg   chan CmdReg
+	ChUnReg chan CmdUnReg
 }
 
 type TubeT struct {
