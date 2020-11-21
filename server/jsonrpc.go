@@ -155,8 +155,8 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 			if err != nil {
 				panic(err)
 			}
-			payload := &intf.JSONRPCRequestPacket_Request{Request: req}
-			pac := &intf.JSONRPCRequestPacket{Payload: payload}
+			payload := &intf.JSONRPCDownPacket_Request{Request: req}
+			pac := &intf.JSONRPCDownPacket{Payload: payload}
 			err = stream.Send(pac)
 			if err != nil {
 				panic(err)

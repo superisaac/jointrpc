@@ -9,7 +9,7 @@ service JSONRPCTube {
   //rpc SubscribeMethods(SubscribeMethodsRequest) returns (stream MethodUpdate);
   
   rpc Call(JSONRPCRequest) returns (JSONRPCResult);
-  rpc Handle(stream JSONRPCResultPacket) returns (stream JSONRPCRequestPacket);
+  rpc Handle(stream JSONRPCUpPacket) returns (stream JSONRPCDownPacket);
 }
 
 message ListMethodsRequest {
@@ -82,20 +82,33 @@ message UnRegisterMethodsResponse {
   string text = 1;
 }
 
-message JSONRPCRequestPacket {
+message PING {
+  string text = 1;
+}
+
+message PONG {
+  string text = 1;
+}
+
+message JSONRPCDownPacket {
   oneof payload {
     //MetaRequest meta_request = 1;
     RegisterMethodsResponse register_methods = 1;
     UnRegisterMethodsResponse unregister_methods=2;
+    PING ping = 3;
+    PONG pong = 4;
     JSONRPCRequest request = 10;
+    
   }
 }
 
-message JSONRPCResultPacket {
+message JSONRPCUpPacket {
   oneof payload {
     //MetaResult meta_result = 1;
     RegisterMethodsRequest register_methods = 1;
     UnRegisterMethodsRequest unregister_methods = 2;
+    PING ping = 3;
+    PONG pong = 4;
     JSONRPCResult result = 10;
   }
 }

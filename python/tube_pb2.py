@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\tintf/tube',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\ntube.proto\"\x07\n\x05\x45mpty\"\x14\n\x12ListMethodsRequest\"&\n\x13ListMethodsResponse\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\x19\n\x17SubscribeMethodsRequest\"\x1f\n\x0cMethodUpdate\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\r\n\x0bMetaRequest\"?\n\nMetaResult\x12\x1a\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\t.RPCEntry\x12\x15\n\rping_interval\x18\x03 \x01(\x05\"F\n\x08RPCEntry\x12\x1e\n\x08protocol\x18\x01 \x01(\x0e\x32\x0c.RPCProtocol\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04help\x18\x03 \x01(\t\"<\n\x0eJSONRPCRequest\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x0e\n\x06params\x18\x03 \x01(\t\"D\n\rJSONRPCResult\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0c\n\x02ok\x18\n \x01(\tH\x00\x12\x0f\n\x05\x65rror\x18\x0b \x01(\tH\x00\x42\x08\n\x06result\"O\n\x16RegisterMethodsRequest\x12\x0f\n\x07methods\x18\x01 \x03(\t\x12$\n\x0blocalcation\x18\x02 \x01(\x0e\x32\x0f.MethodLocation\"+\n\x18UnRegisterMethodsRequest\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\'\n\x17RegisterMethodsResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\")\n\x19UnRegisterMethodsResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"\xb5\x01\n\x14JSONRPCRequestPacket\x12\x34\n\x10register_methods\x18\x01 \x01(\x0b\x32\x18.RegisterMethodsResponseH\x00\x12\x38\n\x12unregister_methods\x18\x02 \x01(\x0b\x32\x1a.UnRegisterMethodsResponseH\x00\x12\"\n\x07request\x18\n \x01(\x0b\x32\x0f.JSONRPCRequestH\x00\x42\t\n\x07payload\"\xb0\x01\n\x13JSONRPCResultPacket\x12\x33\n\x10register_methods\x18\x01 \x01(\x0b\x32\x17.RegisterMethodsRequestH\x00\x12\x37\n\x12unregister_methods\x18\x02 \x01(\x0b\x32\x19.UnRegisterMethodsRequestH\x00\x12 \n\x06result\x18\n \x01(\x0b\x32\x0e.JSONRPCResultH\x00\x42\t\n\x07payload*\x1a\n\x0bRPCProtocol\x12\x0b\n\x07JSONRPC\x10\x00*\'\n\x0eMethodLocation\x12\t\n\x05LOCAL\x10\x00\x12\n\n\x06REMOTE\x10\x01\x32\xab\x01\n\x0bJSONRPCTube\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12\'\n\x04\x43\x61ll\x12\x0f.JSONRPCRequest\x1a\x0e.JSONRPCResult\x12\x39\n\x06Handle\x12\x14.JSONRPCResultPacket\x1a\x15.JSONRPCRequestPacket(\x01\x30\x01\x42\x0bZ\tintf/tubeb\x06proto3'
+  serialized_pb=b'\n\ntube.proto\"\x07\n\x05\x45mpty\"\x14\n\x12ListMethodsRequest\"&\n\x13ListMethodsResponse\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\x19\n\x17SubscribeMethodsRequest\"\x1f\n\x0cMethodUpdate\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\r\n\x0bMetaRequest\"?\n\nMetaResult\x12\x1a\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\t.RPCEntry\x12\x15\n\rping_interval\x18\x03 \x01(\x05\"F\n\x08RPCEntry\x12\x1e\n\x08protocol\x18\x01 \x01(\x0e\x32\x0c.RPCProtocol\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04help\x18\x03 \x01(\t\"<\n\x0eJSONRPCRequest\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x0e\n\x06params\x18\x03 \x01(\t\"D\n\rJSONRPCResult\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0c\n\x02ok\x18\n \x01(\tH\x00\x12\x0f\n\x05\x65rror\x18\x0b \x01(\tH\x00\x42\x08\n\x06result\"O\n\x16RegisterMethodsRequest\x12\x0f\n\x07methods\x18\x01 \x03(\t\x12$\n\x0blocalcation\x18\x02 \x01(\x0e\x32\x0f.MethodLocation\"+\n\x18UnRegisterMethodsRequest\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\'\n\x17RegisterMethodsResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\")\n\x19UnRegisterMethodsResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PING\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PONG\x12\x0c\n\x04text\x18\x01 \x01(\t\"\xe0\x01\n\x11JSONRPCDownPacket\x12\x34\n\x10register_methods\x18\x01 \x01(\x0b\x32\x18.RegisterMethodsResponseH\x00\x12\x38\n\x12unregister_methods\x18\x02 \x01(\x0b\x32\x1a.UnRegisterMethodsResponseH\x00\x12\x15\n\x04ping\x18\x03 \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x04 \x01(\x0b\x32\x05.PONGH\x00\x12\"\n\x07request\x18\n \x01(\x0b\x32\x0f.JSONRPCRequestH\x00\x42\t\n\x07payload\"\xda\x01\n\x0fJSONRPCUpPacket\x12\x33\n\x10register_methods\x18\x01 \x01(\x0b\x32\x17.RegisterMethodsRequestH\x00\x12\x37\n\x12unregister_methods\x18\x02 \x01(\x0b\x32\x19.UnRegisterMethodsRequestH\x00\x12\x15\n\x04ping\x18\x03 \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x04 \x01(\x0b\x32\x05.PONGH\x00\x12 \n\x06result\x18\n \x01(\x0b\x32\x0e.JSONRPCResultH\x00\x42\t\n\x07payload*\x1a\n\x0bRPCProtocol\x12\x0b\n\x07JSONRPC\x10\x00*\'\n\x0eMethodLocation\x12\t\n\x05LOCAL\x10\x00\x12\n\n\x06REMOTE\x10\x01\x32\xa4\x01\n\x0bJSONRPCTube\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12\'\n\x04\x43\x61ll\x12\x0f.JSONRPCRequest\x1a\x0e.JSONRPCResult\x12\x32\n\x06Handle\x12\x10.JSONRPCUpPacket\x1a\x12.JSONRPCDownPacket(\x01\x30\x01\x42\x0bZ\tintf/tubeb\x06proto3'
 )
 
 _RPCPROTOCOL = _descriptor.EnumDescriptor(
@@ -38,8 +38,8 @@ _RPCPROTOCOL = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1002,
-  serialized_end=1028,
+  serialized_start=1131,
+  serialized_end=1157,
 )
 _sym_db.RegisterEnumDescriptor(_RPCPROTOCOL)
 
@@ -64,8 +64,8 @@ _METHODLOCATION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1030,
-  serialized_end=1069,
+  serialized_start=1159,
+  serialized_end=1198,
 )
 _sym_db.RegisterEnumDescriptor(_METHODLOCATION)
 
@@ -557,32 +557,18 @@ _UNREGISTERMETHODSRESPONSE = _descriptor.Descriptor(
 )
 
 
-_JSONRPCREQUESTPACKET = _descriptor.Descriptor(
-  name='JSONRPCRequestPacket',
-  full_name='JSONRPCRequestPacket',
+_PING = _descriptor.Descriptor(
+  name='PING',
+  full_name='PING',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='register_methods', full_name='JSONRPCRequestPacket.register_methods', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='unregister_methods', full_name='JSONRPCRequestPacket.unregister_methods', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='request', full_name='JSONRPCRequestPacket.request', index=2,
-      number=10, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='text', full_name='PING.text', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -597,41 +583,82 @@ _JSONRPCREQUESTPACKET = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
-    _descriptor.OneofDescriptor(
-      name='payload', full_name='JSONRPCRequestPacket.payload',
-      index=0, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
   ],
-  serialized_start=640,
-  serialized_end=821,
+  serialized_start=639,
+  serialized_end=659,
 )
 
 
-_JSONRPCRESULTPACKET = _descriptor.Descriptor(
-  name='JSONRPCResultPacket',
-  full_name='JSONRPCResultPacket',
+_PONG = _descriptor.Descriptor(
+  name='PONG',
+  full_name='PONG',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='register_methods', full_name='JSONRPCResultPacket.register_methods', index=0,
+      name='text', full_name='PONG.text', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=661,
+  serialized_end=681,
+)
+
+
+_JSONRPCDOWNPACKET = _descriptor.Descriptor(
+  name='JSONRPCDownPacket',
+  full_name='JSONRPCDownPacket',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='register_methods', full_name='JSONRPCDownPacket.register_methods', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='unregister_methods', full_name='JSONRPCResultPacket.unregister_methods', index=1,
+      name='unregister_methods', full_name='JSONRPCDownPacket.unregister_methods', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='result', full_name='JSONRPCResultPacket.result', index=2,
+      name='ping', full_name='JSONRPCDownPacket.ping', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='pong', full_name='JSONRPCDownPacket.pong', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='request', full_name='JSONRPCDownPacket.request', index=4,
       number=10, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -649,13 +676,78 @@ _JSONRPCRESULTPACKET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
     _descriptor.OneofDescriptor(
-      name='payload', full_name='JSONRPCResultPacket.payload',
+      name='payload', full_name='JSONRPCDownPacket.payload',
       index=0, containing_type=None,
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=824,
-  serialized_end=1000,
+  serialized_start=684,
+  serialized_end=908,
+)
+
+
+_JSONRPCUPPACKET = _descriptor.Descriptor(
+  name='JSONRPCUpPacket',
+  full_name='JSONRPCUpPacket',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='register_methods', full_name='JSONRPCUpPacket.register_methods', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='unregister_methods', full_name='JSONRPCUpPacket.unregister_methods', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='ping', full_name='JSONRPCUpPacket.ping', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='pong', full_name='JSONRPCUpPacket.pong', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='result', full_name='JSONRPCUpPacket.result', index=4,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='payload', full_name='JSONRPCUpPacket.payload',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=911,
+  serialized_end=1129,
 )
 
 _METARESULT.fields_by_name['entries'].message_type = _RPCENTRY
@@ -667,30 +759,46 @@ _JSONRPCRESULT.oneofs_by_name['result'].fields.append(
   _JSONRPCRESULT.fields_by_name['error'])
 _JSONRPCRESULT.fields_by_name['error'].containing_oneof = _JSONRPCRESULT.oneofs_by_name['result']
 _REGISTERMETHODSREQUEST.fields_by_name['localcation'].enum_type = _METHODLOCATION
-_JSONRPCREQUESTPACKET.fields_by_name['register_methods'].message_type = _REGISTERMETHODSRESPONSE
-_JSONRPCREQUESTPACKET.fields_by_name['unregister_methods'].message_type = _UNREGISTERMETHODSRESPONSE
-_JSONRPCREQUESTPACKET.fields_by_name['request'].message_type = _JSONRPCREQUEST
-_JSONRPCREQUESTPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCREQUESTPACKET.fields_by_name['register_methods'])
-_JSONRPCREQUESTPACKET.fields_by_name['register_methods'].containing_oneof = _JSONRPCREQUESTPACKET.oneofs_by_name['payload']
-_JSONRPCREQUESTPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCREQUESTPACKET.fields_by_name['unregister_methods'])
-_JSONRPCREQUESTPACKET.fields_by_name['unregister_methods'].containing_oneof = _JSONRPCREQUESTPACKET.oneofs_by_name['payload']
-_JSONRPCREQUESTPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCREQUESTPACKET.fields_by_name['request'])
-_JSONRPCREQUESTPACKET.fields_by_name['request'].containing_oneof = _JSONRPCREQUESTPACKET.oneofs_by_name['payload']
-_JSONRPCRESULTPACKET.fields_by_name['register_methods'].message_type = _REGISTERMETHODSREQUEST
-_JSONRPCRESULTPACKET.fields_by_name['unregister_methods'].message_type = _UNREGISTERMETHODSREQUEST
-_JSONRPCRESULTPACKET.fields_by_name['result'].message_type = _JSONRPCRESULT
-_JSONRPCRESULTPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCRESULTPACKET.fields_by_name['register_methods'])
-_JSONRPCRESULTPACKET.fields_by_name['register_methods'].containing_oneof = _JSONRPCRESULTPACKET.oneofs_by_name['payload']
-_JSONRPCRESULTPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCRESULTPACKET.fields_by_name['unregister_methods'])
-_JSONRPCRESULTPACKET.fields_by_name['unregister_methods'].containing_oneof = _JSONRPCRESULTPACKET.oneofs_by_name['payload']
-_JSONRPCRESULTPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCRESULTPACKET.fields_by_name['result'])
-_JSONRPCRESULTPACKET.fields_by_name['result'].containing_oneof = _JSONRPCRESULTPACKET.oneofs_by_name['payload']
+_JSONRPCDOWNPACKET.fields_by_name['register_methods'].message_type = _REGISTERMETHODSRESPONSE
+_JSONRPCDOWNPACKET.fields_by_name['unregister_methods'].message_type = _UNREGISTERMETHODSRESPONSE
+_JSONRPCDOWNPACKET.fields_by_name['ping'].message_type = _PING
+_JSONRPCDOWNPACKET.fields_by_name['pong'].message_type = _PONG
+_JSONRPCDOWNPACKET.fields_by_name['request'].message_type = _JSONRPCREQUEST
+_JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCDOWNPACKET.fields_by_name['register_methods'])
+_JSONRPCDOWNPACKET.fields_by_name['register_methods'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
+_JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCDOWNPACKET.fields_by_name['unregister_methods'])
+_JSONRPCDOWNPACKET.fields_by_name['unregister_methods'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
+_JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCDOWNPACKET.fields_by_name['ping'])
+_JSONRPCDOWNPACKET.fields_by_name['ping'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
+_JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCDOWNPACKET.fields_by_name['pong'])
+_JSONRPCDOWNPACKET.fields_by_name['pong'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
+_JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCDOWNPACKET.fields_by_name['request'])
+_JSONRPCDOWNPACKET.fields_by_name['request'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
+_JSONRPCUPPACKET.fields_by_name['register_methods'].message_type = _REGISTERMETHODSREQUEST
+_JSONRPCUPPACKET.fields_by_name['unregister_methods'].message_type = _UNREGISTERMETHODSREQUEST
+_JSONRPCUPPACKET.fields_by_name['ping'].message_type = _PING
+_JSONRPCUPPACKET.fields_by_name['pong'].message_type = _PONG
+_JSONRPCUPPACKET.fields_by_name['result'].message_type = _JSONRPCRESULT
+_JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCUPPACKET.fields_by_name['register_methods'])
+_JSONRPCUPPACKET.fields_by_name['register_methods'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
+_JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCUPPACKET.fields_by_name['unregister_methods'])
+_JSONRPCUPPACKET.fields_by_name['unregister_methods'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
+_JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCUPPACKET.fields_by_name['ping'])
+_JSONRPCUPPACKET.fields_by_name['ping'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
+_JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCUPPACKET.fields_by_name['pong'])
+_JSONRPCUPPACKET.fields_by_name['pong'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
+_JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
+  _JSONRPCUPPACKET.fields_by_name['result'])
+_JSONRPCUPPACKET.fields_by_name['result'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
 DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
 DESCRIPTOR.message_types_by_name['ListMethodsRequest'] = _LISTMETHODSREQUEST
 DESCRIPTOR.message_types_by_name['ListMethodsResponse'] = _LISTMETHODSRESPONSE
@@ -705,8 +813,10 @@ DESCRIPTOR.message_types_by_name['RegisterMethodsRequest'] = _REGISTERMETHODSREQ
 DESCRIPTOR.message_types_by_name['UnRegisterMethodsRequest'] = _UNREGISTERMETHODSREQUEST
 DESCRIPTOR.message_types_by_name['RegisterMethodsResponse'] = _REGISTERMETHODSRESPONSE
 DESCRIPTOR.message_types_by_name['UnRegisterMethodsResponse'] = _UNREGISTERMETHODSRESPONSE
-DESCRIPTOR.message_types_by_name['JSONRPCRequestPacket'] = _JSONRPCREQUESTPACKET
-DESCRIPTOR.message_types_by_name['JSONRPCResultPacket'] = _JSONRPCRESULTPACKET
+DESCRIPTOR.message_types_by_name['PING'] = _PING
+DESCRIPTOR.message_types_by_name['PONG'] = _PONG
+DESCRIPTOR.message_types_by_name['JSONRPCDownPacket'] = _JSONRPCDOWNPACKET
+DESCRIPTOR.message_types_by_name['JSONRPCUpPacket'] = _JSONRPCUPPACKET
 DESCRIPTOR.enum_types_by_name['RPCProtocol'] = _RPCPROTOCOL
 DESCRIPTOR.enum_types_by_name['MethodLocation'] = _METHODLOCATION
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -809,19 +919,33 @@ UnRegisterMethodsResponse = _reflection.GeneratedProtocolMessageType('UnRegister
   })
 _sym_db.RegisterMessage(UnRegisterMethodsResponse)
 
-JSONRPCRequestPacket = _reflection.GeneratedProtocolMessageType('JSONRPCRequestPacket', (_message.Message,), {
-  'DESCRIPTOR' : _JSONRPCREQUESTPACKET,
+PING = _reflection.GeneratedProtocolMessageType('PING', (_message.Message,), {
+  'DESCRIPTOR' : _PING,
   '__module__' : 'tube_pb2'
-  # @@protoc_insertion_point(class_scope:JSONRPCRequestPacket)
+  # @@protoc_insertion_point(class_scope:PING)
   })
-_sym_db.RegisterMessage(JSONRPCRequestPacket)
+_sym_db.RegisterMessage(PING)
 
-JSONRPCResultPacket = _reflection.GeneratedProtocolMessageType('JSONRPCResultPacket', (_message.Message,), {
-  'DESCRIPTOR' : _JSONRPCRESULTPACKET,
+PONG = _reflection.GeneratedProtocolMessageType('PONG', (_message.Message,), {
+  'DESCRIPTOR' : _PONG,
   '__module__' : 'tube_pb2'
-  # @@protoc_insertion_point(class_scope:JSONRPCResultPacket)
+  # @@protoc_insertion_point(class_scope:PONG)
   })
-_sym_db.RegisterMessage(JSONRPCResultPacket)
+_sym_db.RegisterMessage(PONG)
+
+JSONRPCDownPacket = _reflection.GeneratedProtocolMessageType('JSONRPCDownPacket', (_message.Message,), {
+  'DESCRIPTOR' : _JSONRPCDOWNPACKET,
+  '__module__' : 'tube_pb2'
+  # @@protoc_insertion_point(class_scope:JSONRPCDownPacket)
+  })
+_sym_db.RegisterMessage(JSONRPCDownPacket)
+
+JSONRPCUpPacket = _reflection.GeneratedProtocolMessageType('JSONRPCUpPacket', (_message.Message,), {
+  'DESCRIPTOR' : _JSONRPCUPPACKET,
+  '__module__' : 'tube_pb2'
+  # @@protoc_insertion_point(class_scope:JSONRPCUpPacket)
+  })
+_sym_db.RegisterMessage(JSONRPCUpPacket)
 
 
 DESCRIPTOR._options = None
@@ -833,8 +957,8 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1072,
-  serialized_end=1243,
+  serialized_start=1201,
+  serialized_end=1365,
   methods=[
   _descriptor.MethodDescriptor(
     name='ListMethods',
@@ -861,8 +985,8 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
     full_name='JSONRPCTube.Handle',
     index=2,
     containing_service=None,
-    input_type=_JSONRPCRESULTPACKET,
-    output_type=_JSONRPCREQUESTPACKET,
+    input_type=_JSONRPCUPPACKET,
+    output_type=_JSONRPCDOWNPACKET,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

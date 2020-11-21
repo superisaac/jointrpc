@@ -23,7 +23,7 @@ class JSONRPCTubeBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def Handle(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCResultPacket, tube_pb2.JSONRPCRequestPacket]') -> None:
+    async def Handle(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCUpPacket, tube_pb2.JSONRPCDownPacket]') -> None:
         pass
 
     def __mapping__(self) -> typing.Dict[str, grpclib.const.Handler]:
@@ -43,8 +43,8 @@ class JSONRPCTubeBase(abc.ABC):
             '/JSONRPCTube/Handle': grpclib.const.Handler(
                 self.Handle,
                 grpclib.const.Cardinality.STREAM_STREAM,
-                tube_pb2.JSONRPCResultPacket,
-                tube_pb2.JSONRPCRequestPacket,
+                tube_pb2.JSONRPCUpPacket,
+                tube_pb2.JSONRPCDownPacket,
             ),
         }
 
@@ -67,6 +67,6 @@ class JSONRPCTubeStub:
         self.Handle = grpclib.client.StreamStreamMethod(
             channel,
             '/JSONRPCTube/Handle',
-            tube_pb2.JSONRPCResultPacket,
-            tube_pb2.JSONRPCRequestPacket,
+            tube_pb2.JSONRPCUpPacket,
+            tube_pb2.JSONRPCDownPacket,
         )

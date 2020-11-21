@@ -58,8 +58,8 @@ func (c *jSONRPCTubeClient) Handle(ctx context.Context, opts ...grpc.CallOption)
 }
 
 type JSONRPCTube_HandleClient interface {
-	Send(*JSONRPCResultPacket) error
-	Recv() (*JSONRPCRequestPacket, error)
+	Send(*JSONRPCUpPacket) error
+	Recv() (*JSONRPCDownPacket, error)
 	grpc.ClientStream
 }
 
@@ -67,12 +67,12 @@ type jSONRPCTubeHandleClient struct {
 	grpc.ClientStream
 }
 
-func (x *jSONRPCTubeHandleClient) Send(m *JSONRPCResultPacket) error {
+func (x *jSONRPCTubeHandleClient) Send(m *JSONRPCUpPacket) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *jSONRPCTubeHandleClient) Recv() (*JSONRPCRequestPacket, error) {
-	m := new(JSONRPCRequestPacket)
+func (x *jSONRPCTubeHandleClient) Recv() (*JSONRPCDownPacket, error) {
+	m := new(JSONRPCDownPacket)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -156,8 +156,8 @@ func _JSONRPCTube_Handle_Handler(srv interface{}, stream grpc.ServerStream) erro
 }
 
 type JSONRPCTube_HandleServer interface {
-	Send(*JSONRPCRequestPacket) error
-	Recv() (*JSONRPCResultPacket, error)
+	Send(*JSONRPCDownPacket) error
+	Recv() (*JSONRPCUpPacket, error)
 	grpc.ServerStream
 }
 
@@ -165,12 +165,12 @@ type jSONRPCTubeHandleServer struct {
 	grpc.ServerStream
 }
 
-func (x *jSONRPCTubeHandleServer) Send(m *JSONRPCRequestPacket) error {
+func (x *jSONRPCTubeHandleServer) Send(m *JSONRPCDownPacket) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *jSONRPCTubeHandleServer) Recv() (*JSONRPCResultPacket, error) {
-	m := new(JSONRPCResultPacket)
+func (x *jSONRPCTubeHandleServer) Recv() (*JSONRPCUpPacket, error) {
+	m := new(JSONRPCUpPacket)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
