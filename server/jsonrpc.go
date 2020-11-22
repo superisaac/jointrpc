@@ -167,7 +167,8 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 }
 
 func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
-	conn := tube.Tube().Router.Join()
+	router := tube.Tube().Router
+	conn := router.Join()
 	defer leaveConn(conn)
 	//defer leaveConn(conn_id)
 
@@ -177,17 +178,63 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	go relayMessages(ctx, stream, conn.RecvChannel)
 
 	for {
-		pac, err := stream.Recv()
+		up_pac, err := stream.Recv()
 		if err != nil {
 			return err
 		}
-		res := pac.GetResult()
-		fmt.Printf("result %v\n", res.Id)
-		msg, err := ResultToMessage(res)
-		if err != nil {
-			return err
+		// Pong on Ping
+		ping := up_pac.GetPing()
+		if ping != nil {
+			pong := &intf.PONG{Text: ping.Text}
+			payload := &intf.JSONRPCDownPacket_Pong{Pong: pong}
+			down_pac := &intf.JSONRPCDownPacket{Payload: payload}
+
+			stream.Send(down_pac)
+			continue
 		}
-		tube.Tube().Router.ChMsg <- tube.CmdMsg{Msg: msg, FromConnId: conn.ConnId}
+
+		// Handle JSONRPC Result
+		res := up_pac.GetResult()
+		if res != nil {
+			fmt.Printf("result %v\n", res.Id)
+			msg, err := ResultToMessage(res)
+			if err != nil {
+				return err
+			}
+			cmd_msg := tube.CmdMsg{Msg: msg, FromConnId: conn.ConnId}
+			router.ChMsg <- cmd_msg
+			continue
+		}
+
+		reg := up_pac.GetRegisterMethods()
+		if reg != nil {
+			var loc tube.MethodLocation = tube.Location_Local
+			if reg.Location == intf.MethodLocation_REMOTE {
+				loc = tube.Location_Remote
+			}
+			for _, method := range reg.Methods {
+				cmd_reg := tube.CmdReg{
+					ConnId:   conn.ConnId,
+					Method:   method,
+					Location: loc,
+				}
+				router.ChReg <- cmd_reg
+			}
+			continue
+		}
+
+		unreg := up_pac.GetUnregisterMethods()
+		if unreg != nil {
+			for _, method := range unreg.Methods {
+				cmd_unreg := tube.CmdUnreg{
+					ConnId: conn.ConnId,
+					Method: method,
+				}
+				router.ChUnreg <- cmd_unreg
+			}
+			continue
+		}
+
 	}
 }
 

@@ -76,7 +76,7 @@ type CmdReg struct {
 	Location MethodLocation
 }
 
-type CmdUnReg struct {
+type CmdUnreg struct {
 	ConnId CID
 	Method string
 }
@@ -95,7 +95,7 @@ type Router struct {
 	//ChJoin     chan CmdJoin
 	ChLeave chan CmdLeave
 	ChReg   chan CmdReg
-	ChUnReg chan CmdUnReg
+	ChUnreg chan CmdUnreg
 }
 
 type TubeT struct {

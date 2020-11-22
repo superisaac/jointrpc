@@ -100,7 +100,7 @@ func (self *Router) RegisterMethod(conn *ConnT, method string, location MethodLo
 	return nil
 }
 
-func (self *Router) UnRegisterMethod(conn *ConnT, method string) {
+func (self *Router) UnregisterMethod(conn *ConnT, method string) {
 	self.routerLock.Lock()
 	defer self.routerLock.Unlock()
 
@@ -254,7 +254,7 @@ func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 100)
 	self.ChLeave = make(chan CmdLeave, 100)
 	self.ChReg = make(chan CmdReg, 100)
-	self.ChUnReg = make(chan CmdUnReg, 100)
+	self.ChUnreg = make(chan CmdUnreg, 100)
 }
 
 func (self *Router) Start(ctx context.Context) {
@@ -278,11 +278,11 @@ func (self *Router) Start(ctx context.Context) {
 						self.RegisterMethod(conn, cmd_reg.Method, cmd_reg.Location)
 					}
 				}
-			case cmd_unreg := <-self.ChUnReg:
+			case cmd_unreg := <-self.ChUnreg:
 				{
 					conn, found := self.ConnMap[cmd_unreg.ConnId]
 					if found {
-						self.UnRegisterMethod(conn, cmd_unreg.Method)
+						self.UnregisterMethod(conn, cmd_unreg.Method)
 					}
 				}
 			case cmd_msg := <-self.ChMsg:

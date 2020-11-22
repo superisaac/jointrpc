@@ -67,10 +67,10 @@ enum MethodLocation {
 
 message RegisterMethodsRequest {
   repeated string methods = 1;
-  MethodLocation localcation = 2;
+  MethodLocation location = 2;
 }
 
-message UnRegisterMethodsRequest {
+message UnregisterMethodsRequest {
   repeated string methods = 1;
 }
 
@@ -78,7 +78,7 @@ message RegisterMethodsResponse {
   string text = 1;
 }
 
-message UnRegisterMethodsResponse {
+message UnregisterMethodsResponse {
   string text = 1;
 }
 
@@ -94,7 +94,7 @@ message JSONRPCDownPacket {
   oneof payload {
     //MetaRequest meta_request = 1;
     RegisterMethodsResponse register_methods = 1;
-    UnRegisterMethodsResponse unregister_methods=2;
+    UnregisterMethodsResponse unregister_methods=2;
     PING ping = 3;
     PONG pong = 4;
     JSONRPCRequest request = 10;
@@ -106,7 +106,7 @@ message JSONRPCUpPacket {
   oneof payload {
     //MetaResult meta_result = 1;
     RegisterMethodsRequest register_methods = 1;
-    UnRegisterMethodsRequest unregister_methods = 2;
+    UnregisterMethodsRequest unregister_methods = 2;
     PING ping = 3;
     PONG pong = 4;
     JSONRPCResult result = 10;
