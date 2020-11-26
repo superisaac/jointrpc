@@ -1,7 +1,8 @@
 package jsonrpc
 
 import (
-	"encoding/json"
+	//"fmt"
+	json "encoding/json"
 	"github.com/bitly/go-simplejson"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -75,4 +76,27 @@ func TestNotifyMsg(t *testing.T) {
 
 	assert.Equal(len(params), 2)
 	assert.Equal(params[1], "uu")
+}
+
+func TestGuessJson(t * testing.T) {
+	assert := assert.New(t)
+
+	v1, err := GuessJson("5")
+	assert.Equal(int64(5), v1)
+
+	v2, err := GuessJson("false")
+	assert.Equal(false, v2)
+
+	_, err = GuessJson("[aaa")
+	assert.Contains(err.Error(), "invalid character")
+
+	v3, err := GuessJson(`{"abc": 5}`)
+	map3 := v3.(map[string]interface{})
+	assert.NotNil(map3)
+	assert.Equal(json.Number("5"), map3["abc"])
+
+	v4, err := GuessJsonArray([]string{"5", "hahah", `{"ccc": 6}`})
+	assert.Equal(3, len(v4))
+	assert.Equal(int64(5), v4[0])
+	assert.Equal("hahah", v4[1])
 }

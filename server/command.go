@@ -17,7 +17,7 @@ func StartEntrypoint() {
 	datadir.GetConfig()
 	entryCmd := flag.NewFlagSet("node", flag.ExitOnError)
 	bind := entryCmd.String("bind", "127.0.0.1:50055", "The grpc server address and port")
-	http_bind := entryCmd.String("httpd", "127.0.0.1:50056", "http address and port")
+	httpBind := entryCmd.String("httpd", "127.0.0.1:50056", "http address and port")
 
 	entryCmd.Parse(os.Args[2:])
 	//lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *bind, *port))
@@ -33,7 +33,7 @@ func StartEntrypoint() {
 
 	tube.Tube().Start(ctx)
 
-	go StartHTTPd(*http_bind)
+	go StartHTTPd(*httpBind)
 
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
