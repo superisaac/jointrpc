@@ -21,7 +21,7 @@ func main() {
 	case "node":
 		server.StartEntrypoint()
 	case "rpc":
-		client.CallRPC()
+		client.CommandCallRPC()
 	default:
 		fmt.Println("expect subcommands")
 		os.Exit(1)

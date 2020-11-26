@@ -13,27 +13,21 @@ import (
 )
 
 func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
-	json_data := simplejson.New()
-	json_data.Set("version", "2.0")
-	if req.Id != 0 {
-		// idjson, err := simplejson.NewJson([]byte(req.Id))
-		// if err != nil {
-		// 	return nil, err
-		// }
-		json_data.Set("id", req.Id) //idjson.Interface())
+
+	var id interface{} = req.Id
+	if req.Id == 0 {
+		id = nil
 	}
-	json_data.Set("method", req.Method)
-	if len(req.Params) > 0 {
-		params, err := simplejson.NewJson([]byte(req.Params))
+	params := [](interface{}){}
+	if len(req.Params) > 0 {	
+		paramsJson, err := simplejson.NewJson([]byte(req.Params))
 		if err != nil {
 			return nil, err
 		}
-		json_data.Set("params", params)
-	} else {
-		empty := [](interface{}){}
-		json_data.Set("params", empty)
+		params = paramsJson.Interface().([]interface{})
 	}
-	return jsonrpc.NewRPCMessage(json_data), nil
+	msg := jsonrpc.NewRequestMessage(id, req.Method, params)
+	return msg, nil
 }
 
 func ResultToMessage(res *intf.JSONRPCResult) (*jsonrpc.RPCMessage, error) {

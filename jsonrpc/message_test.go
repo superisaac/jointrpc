@@ -84,6 +84,12 @@ func TestGuessJson(t * testing.T) {
 	v1, err := GuessJson("5")
 	assert.Equal(int64(5), v1)
 
+	v1_1, err := GuessJson("-5")
+	assert.Equal(int64(-5), v1_1)
+
+	v1_2, err := GuessJson("-5.78389383")
+	assert.InDelta(float64(-5.78389383), v1_2, 0.0001)
+
 	v2, err := GuessJson("false")
 	assert.Equal(false, v2)
 

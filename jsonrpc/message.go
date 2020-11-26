@@ -97,18 +97,27 @@ func NewRPCMessage(data *simplejson.Json) *RPCMessage {
 	return msg
 }
 
+func NewRequestMessage(id interface{}, method string, params []interface{}) *RPCMessage {
+	reqJson := simplejson.New()
+	reqJson.Set("version", "2.0")
+	if id != nil {
+		reqJson.Set("id", id)
+	}
+	reqJson.Set("method", method)
+	reqJson.Set("params", params)
+	return NewRPCMessage(reqJson)
+}
+
 func NewResultMessage(id interface{}, result interface{}) *RPCMessage {
 	resultJson := simplejson.New()
+	resultJson.Set("version", "2.0")	
 	resultJson.Set("id", id)
 	resultJson.Set("result", result)
 	return NewRPCMessage(resultJson)
 }
 
 func NewNotifyMessage(method string, params []interface{}) *RPCMessage {
-	notifyJson := simplejson.New()
-	notifyJson.Set("method", method)
-	notifyJson.Set("params", params)
-	return NewRPCMessage(notifyJson)
+	return NewRequestMessage(nil, method, params)
 }
 
 func NewErrorMessage(id interface{}, code int, message string, retryable bool) *RPCMessage {
@@ -128,6 +137,14 @@ func NewErrorJSON(id interface{}, code int, message string, retryable bool) *sim
 	body.Set("id", id)
 	body.Set("error", errJson.Interface())
 	return body
+}
+
+func (self RPCMessage) EncodePretty() (string, error) {
+	bytes, err := self.Raw.EncodePretty()
+	if err == nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
 
 func (self RPCMessage) GetIntId() (UID, error) {
