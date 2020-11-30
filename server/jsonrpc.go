@@ -4,7 +4,7 @@ import (
 	context "context"
 	//json "encoding/json"
 	"errors"
-	"fmt"
+	//"fmt"
 	simplejson "github.com/bitly/go-simplejson"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
@@ -19,7 +19,7 @@ func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 		id = nil
 	}
 	params := [](interface{}){}
-	if len(req.Params) > 0 {	
+	if len(req.Params) > 0 {
 		paramsJson, err := simplejson.NewJson([]byte(req.Params))
 		if err != nil {
 			return nil, err
@@ -145,15 +145,30 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 		case <-context.Done():
 			return
 		case msg := <-recv_ch:
-			req, err := MessageToRequest(msg)
-			if err != nil {
-				panic(err)
-			}
-			payload := &intf.JSONRPCDownPacket_Request{Request: req}
-			pac := &intf.JSONRPCDownPacket{Payload: payload}
-			err = stream.Send(pac)
-			if err != nil {
-				panic(err)
+			if msg.IsRequest() || msg.IsNotify() {
+				req, err := MessageToRequest(msg)
+				if err != nil {
+					panic(err)
+				}
+				payload := &intf.JSONRPCDownPacket_Request{Request: req}
+				pac := &intf.JSONRPCDownPacket{Payload: payload}
+				err = stream.Send(pac)
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				// msg.IsResult() || msg.IsError()
+				res, err := MessageToResult(msg)
+				if err != nil {
+					panic(err)
+				}
+				payload := &intf.JSONRPCDownPacket_Result{Result: res}
+				pac := &intf.JSONRPCDownPacket{Payload: payload}
+				err = stream.Send(pac)
+				if err != nil {
+					panic(err)
+				}
+
 			}
 
 		}
@@ -187,10 +202,21 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			continue
 		}
 
+		// Handle JSONRPC Request
+		req := up_pac.GetRequest()
+		if req != nil {
+			msg, err := RequestToMessage(req)
+			if err != nil {
+				return err
+			}
+			cmd_msg := tube.CmdMsg{Msg: msg, FromConnId: conn.ConnId}
+			router.ChMsg <- cmd_msg
+			continue
+		}
+
 		// Handle JSONRPC Result
 		res := up_pac.GetResult()
 		if res != nil {
-			fmt.Printf("result %v\n", res.Id)
 			msg, err := ResultToMessage(res)
 			if err != nil {
 				return err

@@ -98,6 +98,7 @@ message JSONRPCDownPacket {
     PING ping = 3;
     PONG pong = 4;
     JSONRPCRequest request = 10;
+    JSONRPCResult result = 11;
     
   }
 }
@@ -109,7 +110,9 @@ message JSONRPCUpPacket {
     UnregisterMethodsRequest unregister_methods = 2;
     PING ping = 3;
     PONG pong = 4;
-    JSONRPCResult result = 10;
+ 
+    JSONRPCRequest request = 10;
+    JSONRPCResult result = 11;
   }
 }
 
