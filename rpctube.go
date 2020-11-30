@@ -18,10 +18,14 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
 	switch os.Args[1] {
-	case "node":
-		server.StartEntrypoint()
+	case "server":
+		server.CommandStartServer()
+	case "listmethods":
+		client.CommandListMethods()
 	case "rpc":
 		client.CommandCallRPC()
+	case "example.fifo":
+		client.CommandExampleFIFO()
 	default:
 		fmt.Println("expect subcommands")
 		os.Exit(1)

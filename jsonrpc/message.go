@@ -1,7 +1,9 @@
 package jsonrpc
 
 import (
-	//"encoding/json"
+	json "encoding/json"
+	"log"
+	//"reflect"
 	"errors"
 	"strconv"
 	simplejson "github.com/bitly/go-simplejson"
@@ -78,13 +80,18 @@ func NewRPCMessage(data *simplejson.Json) *RPCMessage {
 	//msg := new(RPCMessage)
 	msg := &RPCMessage{Initialized: true}
 	//msg.Id = data.Get("id").Interface()
-	msgId, err := data.Get("id").Int64()
-	if err != nil {
-		// TODO: print msg.Id
-		msg.Id = 0
-	} else {
-		msg.Id = UID(msgId)
-	}
+	//msgId, err := data.Get("id").Int64()
+	msgId := data.Get("id").Interface()
+	
+	// if msgId =
+
+	// 	log.Printf("lllll %s %v %s", err.Error(), v, reflect.TypeOf(msgId))
+	// 	// TODO: print msg.Id
+	// 	msg.Id = 0
+	// } else {
+	// 	msg.Id = UID(msgId)
+	// }
+	msg.Id = msgId
 
 	method, err := data.Get("method").String()
 	if err == nil {
@@ -141,24 +148,34 @@ func NewErrorJSON(id interface{}, code int, message string, retryable bool) *sim
 
 func (self RPCMessage) EncodePretty() (string, error) {
 	bytes, err := self.Raw.EncodePretty()
-	if err == nil {
+	log.Printf("bytes %v", bytes)
+	if err != nil {
 		return "", err
 	}
 	return string(bytes), nil
 }
 
-func (self RPCMessage) GetIntId() (UID, error) {
-	//msgId, ok := self.Id.(json.Number)
-	if self.Id == 0 {
-		return 0, errors.New("not an int64 id")
+func (self RPCMessage) MustString() string {
+	bytes, err := self.Raw.MarshalJSON()
+	if err != nil {
+		panic(err)
 	}
-	return self.Id, nil
+	return string(bytes)
+}
 
-	// if !ok {
-	// 	return 0, errors.New("not a number")
+
+func (self RPCMessage) GetIntId() (int64, error) {
+	msgId, ok := self.Id.(json.Number)
+	// if self.Id == 0 {
+	// 	return 0, errors.New("not an int64 id")
 	// }
-	// v, e := msgId.Int64()
-	// return v, e
+	// return self.Id, nil
+
+	if !ok {
+		return 0, errors.New("not a number")
+	}
+	v, e := msgId.Int64()
+	return v, e
 }
 
 func (self RPCMessage) IsRequest() bool {

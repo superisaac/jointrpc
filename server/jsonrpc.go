@@ -4,6 +4,7 @@ import (
 	//json "encoding/json"
 	//"errors"
 	//"fmt"
+	"log"
 	//simplejson "github.com/bitly/go-simplejson"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
@@ -16,15 +17,19 @@ type JSONRPCTube struct {
 }
 
 func leaveConn(conn *tube.ConnT) {
-	tube.Tube().Router.ChLeave <- tube.CmdLeave{ConnId: conn.ConnId}
+	//tube.Tube().Router.ChLeave <- tube.CmdLeave{ConnId: conn.ConnId}
+	log.Printf("leave connection %s", conn.ConnId)
+	tube.Tube().Router.Leave(conn)
 }
 
 func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
+	log.Printf("called method %s", req.Method)
 	req_msg, err := RequestToMessage(req)
 	if err != nil {
 		return nil, err
 	}
-
+	s, _ := req_msg.EncodePretty()
+	log.Printf("ddd %v", s)
 	router := tube.Tube().Router
 	recvmsg, err := router.SingleCall(req_msg)
 	if err != nil {
@@ -136,6 +141,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			if reg.Location == intf.MethodLocation_REMOTE {
 				loc = tube.Location_Remote
 			}
+			log.Printf("reg methods %v", reg.Methods)
 			for _, method := range reg.Methods {
 				cmd_reg := tube.CmdReg{
 					ConnId:   conn.ConnId,
