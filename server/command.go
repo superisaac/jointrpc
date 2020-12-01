@@ -17,15 +17,15 @@ func CommandStartServer() {
 	datadir.GetConfig()
 	serverFlags := flag.NewFlagSet("server", flag.ExitOnError)
 	bind := serverFlags.String("bind", "127.0.0.1:50055", "The grpc server address and port")
-	httpBind := serverFlags.String("httpd", "127.0.0.1:50056", "http address and port")
+	//httpBind := serverFlags.String("httpd", "127.0.0.1:50056", "http address and port")
 
 	serverFlags.Parse(os.Args[2:])
 	//lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *bind, *port)
 
-	go StartHTTPd(*httpBind)	
+	//go StartHTTPd(*httpBind)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	StartServer(ctx, *bind)
 }
 
@@ -36,7 +36,6 @@ func StartServer(ctx context.Context, bind string) {
 	} else {
 		log.Printf("entry server listen at %s", bind)
 	}
-
 
 	tube.Tube().Start(ctx)
 

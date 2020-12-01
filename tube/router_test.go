@@ -3,11 +3,11 @@ package tube
 import (
 	//"fmt"
 	"context"
-	"time"
-	//"encoding/json"
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	"testing"
+	"time"
 )
 
 // implements ConnT
@@ -32,7 +32,7 @@ func TestJoinConn(t *testing.T) {
 	conn := router.Join() //cid, ch)
 	assert.Equal(1, len(router.ConnMap))
 
-	router.RegisterLocalMethod(conn, "abc")
+	router.RegisterLocalMethods(conn, []string{"abc"})
 	methods := conn.GetMethods()
 	assert.Equal(1, len(methods))
 	assert.Equal("abc", methods[0])
@@ -47,8 +47,8 @@ func TestRouteMessage(t *testing.T) {
 	conn := router.Join()
 
 	assert.Equal(1, len(router.ConnMap))
-	router.RegisterLocalMethod(conn, "abc")
-	router.RegisterMethod(conn, "def", Location_Remote)
+	router.RegisterLocalMethods(conn, []string{"abc"})
+	router.RegisterMethods(conn, []string{"def"}, Location_Remote)
 
 	methods := router.GetAllMethods()
 	assert.Equal([]string{"abc", "def"}, methods)
@@ -66,7 +66,7 @@ func TestRouteMessage(t *testing.T) {
 
 	msg, err := jsonrpc.ParseMessage([]byte(j1))
 	assert.Nil(err)
-	assert.Equal(jsonrpc.UID(100002), msg.Id)
+	assert.Equal(json.Number("100002"), msg.Id)
 	router.RouteMessage(msg, conn.ConnId)
 
 	rcvmsg := <-conn.RecvChannel
@@ -86,7 +86,7 @@ func TestRouteRoutine(t *testing.T) {
 	conn := router.Join()
 	cid := conn.ConnId
 	ch := conn.RecvChannel
-	router.ChReg <- CmdReg{ConnId: cid, Method: "abc", Location: Location_Local}
+	router.ChReg <- CmdReg{ConnId: cid, Methods: []string{"abc"}, Location: Location_Local}
 
 	conn1 := router.Join()
 	cid1 := conn1.ConnId
@@ -99,7 +99,7 @@ func TestRouteRoutine(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	msg, err := jsonrpc.ParseMessage([]byte(j1))
 	assert.Nil(err)
-	assert.Equal(jsonrpc.UID(100002), msg.Id)
+	assert.Equal(json.Number("100002"), msg.Id)
 
 	router.ChMsg <- CmdMsg{Msg: msg, FromConnId: cid1}
 

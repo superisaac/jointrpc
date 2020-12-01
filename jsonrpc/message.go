@@ -2,11 +2,10 @@ package jsonrpc
 
 import (
 	json "encoding/json"
-	"log"
 	//"reflect"
 	"errors"
-	"strconv"
 	simplejson "github.com/bitly/go-simplejson"
+	"strconv"
 )
 
 func GuessJson(input string) (interface{}, error) {
@@ -28,7 +27,7 @@ func GuessJson(input string) (interface{}, error) {
 	if err == nil {
 		return fv, nil
 	}
-	
+
 	fc := input[0]
 	if fc == '[' {
 		parsed, err := simplejson.NewJson([]byte(input))
@@ -44,7 +43,7 @@ func GuessJson(input string) (interface{}, error) {
 		return parsed.MustMap(), nil
 	} else {
 		return input, nil
-	}	
+	}
 }
 
 func GuessJsonArray(inputArr []string) ([]interface{}, error) {
@@ -79,18 +78,8 @@ func MarshalJson(json_data *simplejson.Json) (string, error) {
 func NewRPCMessage(data *simplejson.Json) *RPCMessage {
 	//msg := new(RPCMessage)
 	msg := &RPCMessage{Initialized: true}
-	//msg.Id = data.Get("id").Interface()
-	//msgId, err := data.Get("id").Int64()
 	msgId := data.Get("id").Interface()
-	
-	// if msgId =
 
-	// 	log.Printf("lllll %s %v %s", err.Error(), v, reflect.TypeOf(msgId))
-	// 	// TODO: print msg.Id
-	// 	msg.Id = 0
-	// } else {
-	// 	msg.Id = UID(msgId)
-	// }
 	msg.Id = msgId
 
 	method, err := data.Get("method").String()
@@ -117,7 +106,7 @@ func NewRequestMessage(id interface{}, method string, params []interface{}) *RPC
 
 func NewResultMessage(id interface{}, result interface{}) *RPCMessage {
 	resultJson := simplejson.New()
-	resultJson.Set("version", "2.0")	
+	resultJson.Set("version", "2.0")
 	resultJson.Set("id", id)
 	resultJson.Set("result", result)
 	return NewRPCMessage(resultJson)
@@ -148,7 +137,6 @@ func NewErrorJSON(id interface{}, code int, message string, retryable bool) *sim
 
 func (self RPCMessage) EncodePretty() (string, error) {
 	bytes, err := self.Raw.EncodePretty()
-	log.Printf("bytes %v", bytes)
 	if err != nil {
 		return "", err
 	}
@@ -163,7 +151,6 @@ func (self RPCMessage) MustString() string {
 	return string(bytes)
 }
 
-
 func (self RPCMessage) GetIntId() (int64, error) {
 	msgId, ok := self.Id.(json.Number)
 	// if self.Id == 0 {
@@ -172,7 +159,7 @@ func (self RPCMessage) GetIntId() (int64, error) {
 	// return self.Id, nil
 
 	if !ok {
-		return 0, errors.New("not a number")
+		return 0, errors.New("id is not a number")
 	}
 	v, e := msgId.Int64()
 	return v, e
@@ -180,27 +167,27 @@ func (self RPCMessage) GetIntId() (int64, error) {
 
 func (self RPCMessage) IsRequest() bool {
 	//return self.Id != nil && self.Method != ""
-	return self.Id != 0 && self.Method != ""
+	return self.Id != nil && self.Method != ""
 }
 
 func (self RPCMessage) IsNotify() bool {
-	return self.Id == 0 && self.Method != ""
+	return (self.Id == nil || self.Id == false || self.Id == 0) && self.Method != ""
 }
 
 func (self RPCMessage) IsResult() bool {
-	return (self.Id != 0 &&
+	return (self.Id != nil &&
 		self.Method == "" &&
 		self.Result.Interface() != nil)
 }
 
 func (self RPCMessage) IsError() bool {
-	return (self.Id != 0 &&
+	return (self.Id != nil &&
 		self.Method == "" &&
 		self.Error.Interface() != nil)
 }
 
 func (self RPCMessage) IsResultOrError() bool {
-	return (self.Id != 0 &&
+	return (self.Id != nil &&
 		self.Method == "" &&
 		(self.Result.Interface() != nil || self.Error.Interface() != nil))
 }

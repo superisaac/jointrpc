@@ -72,13 +72,13 @@ type CmdLeave struct {
 
 type CmdReg struct {
 	ConnId   CID
-	Method   string
+	Methods  []string
 	Location MethodLocation
 }
 
 type CmdUnreg struct {
-	ConnId CID
-	Method string
+	ConnId  CID
+	Methods []string
 }
 
 type Router struct {

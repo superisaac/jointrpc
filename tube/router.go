@@ -4,6 +4,7 @@ import (
 	//"fmt"
 	"context"
 	"errors"
+	"log"
 	"sort"
 	"sync"
 	"time"
@@ -70,13 +71,23 @@ func (self Router) GetLocalMethods() []string {
 	return methods
 }
 
-func (self *Router) RegisterLocalMethod(conn *ConnT, method string) error {
-	return self.RegisterMethod(conn, method, Location_Local)
+func (self *Router) RegisterLocalMethods(conn *ConnT, methods []string) error {
+	return self.RegisterMethods(conn, methods, Location_Local)
 }
 
-func (self *Router) RegisterMethod(conn *ConnT, method string, location MethodLocation) error {
-	self.routerLock.Lock()
-	defer self.routerLock.Unlock()
+func (self *Router) RegisterMethods(conn *ConnT, methods []string, location MethodLocation) error {
+	self.lock("RegisterMethods")
+	defer self.unlock("RegisterMethods")
+	for _, method := range methods {
+		err := self.registerMethod(conn, method, location)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (self *Router) registerMethod(conn *ConnT, method string, location MethodLocation) error {
 
 	_, found := conn.Methods[method]
 	if found {
@@ -100,10 +111,15 @@ func (self *Router) RegisterMethod(conn *ConnT, method string, location MethodLo
 	return nil
 }
 
-func (self *Router) UnregisterMethod(conn *ConnT, method string) {
-	self.routerLock.Lock()
-	defer self.routerLock.Unlock()
+func (self *Router) UnregisterMethods(conn *ConnT, methods []string) {
+	self.lock("UnregisterMethod")
+	defer self.unlock("UnregisterMethod")
+	for _, method := range methods {
+		self.unregisterMethod(conn, method)
+	}
+}
 
+func (self *Router) unregisterMethod(conn *ConnT, method string) {
 	_, found := conn.Methods[method]
 	if !found {
 		// method is not attached to this connection, just return
@@ -124,9 +140,6 @@ func (self *Router) UnregisterMethod(conn *ConnT, method string) {
 }
 
 func (self *Router) leaveConn(conn *ConnT) {
-	self.routerLock.Lock()
-	defer self.routerLock.Unlock()
-
 	for method, _ := range conn.Methods {
 		methodDescList, ok := self.MethodConnMap[method]
 		if !ok {
@@ -275,14 +288,14 @@ func (self *Router) Start(ctx context.Context) {
 				{
 					conn, found := self.ConnMap[cmd_reg.ConnId]
 					if found {
-						self.RegisterMethod(conn, cmd_reg.Method, cmd_reg.Location)
+						self.RegisterMethods(conn, cmd_reg.Methods, cmd_reg.Location)
 					}
 				}
 			case cmd_unreg := <-self.ChUnreg:
 				{
 					conn, found := self.ConnMap[cmd_unreg.ConnId]
 					if found {
-						self.UnregisterMethod(conn, cmd_unreg.Method)
+						self.UnregisterMethods(conn, cmd_unreg.Methods)
 					}
 				}
 			case cmd_msg := <-self.ChMsg:
@@ -311,15 +324,25 @@ func (self *Router) Join() *ConnT {
 }
 
 func (self *Router) JoinConn(conn *ConnT) {
-	self.routerLock.Lock()
-	defer self.routerLock.Unlock()
+	self.lock("JoinConn")
+	defer self.unlock("JoinConn")
 	self.ConnMap[conn.ConnId] = conn
 }
 
-func (self *Router) Leave(conn *ConnT) {
-	//self.ChLeave <- LeaveCommand(connId)
+func (self *Router) lock(wrapper string) {
+	log.Printf("router want lock %s", wrapper)
 	self.routerLock.Lock()
-	defer self.routerLock.Unlock()
+	log.Printf("router locked %s", wrapper)
+}
+func (self *Router) unlock(wrapper string) {
+	log.Printf("router want unlock %s", wrapper)
+	self.routerLock.Unlock()
+	log.Printf("router want unlocked %s", wrapper)
+}
+
+func (self *Router) Leave(conn *ConnT) {
+	self.lock("Leave")
+	defer self.unlock("Leave")
 
 	self.leaveConn(conn)
 }
@@ -329,16 +352,8 @@ func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage
 		return nil, errors.New("only request and notify message accepted")
 	}
 	if req_msg.IsRequest() {
-		//connId := NextCID()
-		//recv_ch := make(MsgChannel, 100)
-		// router will take care of closing the receive channel
-		//defer close(recv_ch)
-
-		//self.ChJoin <- CmdJoin{RecvChannel: recv_ch, ConnId: connId}
-
-		//self.Join(connId, recv_ch)
 		conn := self.Join()
-		defer self.leaveConn(conn)
+		defer self.Leave(conn)
 
 		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: conn.ConnId}
 

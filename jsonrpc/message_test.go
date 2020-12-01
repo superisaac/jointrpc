@@ -26,7 +26,7 @@ func TestRequestMsg(t *testing.T) {
 
 	intMsgId, err := msg.GetIntId()
 	assert.Nil(err)
-	assert.Equal(intMsgId, UID(100))
+	assert.Equal(int64(100), intMsgId)
 
 	assert.Equal(msg.Method, "abc::add")
 
@@ -51,9 +51,9 @@ func TestNotifyMsg(t *testing.T) {
 	assert.Equal(js.Get("id").MustString(), "")
 
 	msg := NewRPCMessage(js)
-	intMsgId, err := msg.GetIntId()
+	_, err := msg.GetIntId()
 	assert.NotNil(err)
-	assert.Equal(intMsgId, UID(0))
+	assert.Equal("id is not a number", err.Error())
 
 	assert.Equal(msg.Method, "abc::add")
 
@@ -78,7 +78,7 @@ func TestNotifyMsg(t *testing.T) {
 	assert.Equal(params[1], "uu")
 }
 
-func TestGuessJson(t * testing.T) {
+func TestGuessJson(t *testing.T) {
 	assert := assert.New(t)
 
 	v1, err := GuessJson("5")

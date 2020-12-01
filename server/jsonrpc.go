@@ -1,4 +1,5 @@
 package server
+
 import (
 	context "context"
 	//json "encoding/json"
@@ -18,7 +19,6 @@ type JSONRPCTube struct {
 
 func leaveConn(conn *tube.ConnT) {
 	//tube.Tube().Router.ChLeave <- tube.CmdLeave{ConnId: conn.ConnId}
-	log.Printf("leave connection %s", conn.ConnId)
 	tube.Tube().Router.Leave(conn)
 }
 
@@ -85,10 +85,11 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 }
 
 func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
+	log.Printf("Handler connected %v", stream)
 	router := tube.Tube().Router
 	conn := router.Join()
+	log.Printf("Joined conn %d", conn.ConnId)
 	defer leaveConn(conn)
-	//defer leaveConn(conn_id)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -98,6 +99,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	for {
 		up_pac, err := stream.Recv()
 		if err != nil {
+			log.Printf("error on stream Recv() %s", err.Error())
 			return err
 		}
 		// Pong on Ping
@@ -116,6 +118,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 		if req != nil {
 			msg, err := RequestToMessage(req)
 			if err != nil {
+				log.Printf("error on requesttomessage() %s", err.Error())
 				return err
 			}
 			cmd_msg := tube.CmdMsg{Msg: msg, FromConnId: conn.ConnId}
@@ -142,26 +145,22 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 				loc = tube.Location_Remote
 			}
 			log.Printf("reg methods %v", reg.Methods)
-			for _, method := range reg.Methods {
-				cmd_reg := tube.CmdReg{
-					ConnId:   conn.ConnId,
-					Method:   method,
-					Location: loc,
-				}
-				router.ChReg <- cmd_reg
+			cmd_reg := tube.CmdReg{
+				ConnId:   conn.ConnId,
+				Methods:  reg.Methods,
+				Location: loc,
 			}
+			router.ChReg <- cmd_reg
 			continue
 		}
 
 		unreg := up_pac.GetUnregisterMethods()
 		if unreg != nil {
-			for _, method := range unreg.Methods {
-				cmd_unreg := tube.CmdUnreg{
-					ConnId: conn.ConnId,
-					Method: method,
-				}
-				router.ChUnreg <- cmd_unreg
+			cmd_unreg := tube.CmdUnreg{
+				ConnId:  conn.ConnId,
+				Methods: unreg.Methods,
 			}
+			router.ChUnreg <- cmd_unreg
 			continue
 		}
 
