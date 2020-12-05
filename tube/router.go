@@ -22,13 +22,20 @@ func NewRouter() *Router {
 */
 
 func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
-	for i := range slice {
-		if slice[i].Conn == conn {
-			//if slice[i].Conn.ConnId == conn.ConnId {
-			slice = append(slice[:i], slice[i+1:]...)
+	// for i := range slice {
+	// 	if slice[i].Conn == conn {
+	// 		//if slice[i].Conn.ConnId == conn.ConnId {
+	// 		slice = append(slice[:i], slice[i+1:]...)
+	// 	}
+	// }
+	// return slice
+	newarr := make([]MethodDesc, 0, len(slice)-1)
+	for _, desc := range slice {
+		if desc.Conn != conn {
+			newarr = append(newarr, desc)
 		}
 	}
-	return slice
+	return newarr
 }
 
 func (self *Router) Init() *Router {
@@ -145,7 +152,9 @@ func (self *Router) leaveConn(conn *ConnT) {
 		if !ok {
 			continue
 		}
+		log.Printf("method desc pre remove %v", methodDescList)
 		methodDescList = RemoveConn(methodDescList, conn)
+		log.Printf("method desc post remove %v", methodDescList)
 		if len(methodDescList) > 0 {
 			self.MethodConnMap[method] = methodDescList
 		} else {
@@ -228,16 +237,13 @@ func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT
 			self.setPending(pKey, pValue)
 			return self.deliverMessage(toConn.ConnId, msg)
 		} else {
-			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "service not found", false)
+			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "method not found", false)
 			return self.deliverMessage(fromConnId, errMsg)
 		}
 	} else if msg.IsNotify() {
 		toConn, found := self.SelectConn(msg.Method)
 		if found {
 			return self.deliverMessage(toConn.ConnId, msg)
-			/*} else {
-			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "service not found", false)
-			return self.deliverMessage(fromConnId, errMsg) */
 		}
 	} else if msg.IsResultOrError() {
 		for pKey, pValue := range self.PendingMap {

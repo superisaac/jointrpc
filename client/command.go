@@ -1,13 +1,13 @@
 package client
 
 import (
-	"os"
 	"flag"
 	"fmt"
-	"log"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	//simplejson "github.com/bitly/go-simplejson"	
+	"log"
+	"os"
+	//simplejson "github.com/bitly/go-simplejson"
 	grpc "google.golang.org/grpc"
 )
 
@@ -17,7 +17,7 @@ func printHelp() {
 
 func CommandCallRPC() {
 	callFlags := flag.NewFlagSet("rpc", flag.ExitOnError)
-	
+
 	serverAddress := callFlags.String("address", "localhost:50055", "the tube server address")
 	callFlags.Parse(os.Args[2:])
 	log.Printf("dial server %s", *serverAddress)
@@ -47,7 +47,7 @@ func RunCallRPC(serverAddress string, method string, params []interface{}) error
 	if err != nil {
 		return err
 	}
-	
+
 	c := intf.NewJSONRPCTubeClient(conn)
 	res, err := CallRPC(c, method, params)
 	if err != nil {
@@ -56,7 +56,7 @@ func RunCallRPC(serverAddress string, method string, params []interface{}) error
 
 	repr, err := res.EncodePretty()
 	if err != nil {
-	 	return err
+		return err
 	}
 	fmt.Printf("%s\n", repr)
 	//repr = res.MustString()
@@ -67,7 +67,7 @@ func RunCallRPC(serverAddress string, method string, params []interface{}) error
 // Call ListMethods
 func CommandListMethods() {
 	listMethodsFlags := flag.NewFlagSet("listmethods", flag.ExitOnError)
-	
+
 	serverAddress := listMethodsFlags.String("address", "localhost:50055", "the tube server address")
 	listMethodsFlags.Parse(os.Args[2:])
 	log.Printf("dial server %s", *serverAddress)
@@ -82,7 +82,7 @@ func RunListMethods(serverAddress string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	c := intf.NewJSONRPCTubeClient(conn)
 	methods, err := ListMethods(c)
 	if err != nil {
@@ -97,7 +97,7 @@ func RunListMethods(serverAddress string) error {
 
 // Example FIFO
 func CommandExampleFIFO() {
-	examFlags := flag.NewFlagSet("example.fifo", flag.ExitOnError)	
+	examFlags := flag.NewFlagSet("example.fifo", flag.ExitOnError)
 	serverAddress := examFlags.String("address", "localhost:50055", "the tube server address")
 	examFlags.Parse(os.Args[2:])
 	log.Printf("dial server %s", *serverAddress)
@@ -113,7 +113,7 @@ func StartExampleFIFO(serverAddress string) error {
 		return err
 	}
 	c := intf.NewJSONRPCTubeClient(conn)
-	
+
 	err = ExampleFIFO(c)
 	if err != nil {
 		return err

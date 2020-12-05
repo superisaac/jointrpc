@@ -2,11 +2,11 @@ package client
 
 import (
 	"context"
-	"log"
+	simplejson "github.com/bitly/go-simplejson"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	server "github.com/superisaac/rpctube/server"
-	simplejson "github.com/bitly/go-simplejson"	
+	"log"
 )
 
 func CallRPC(c intf.JSONRPCTubeClient, method string, params []interface{}) (*jsonrpc.RPCMessage, error) {
@@ -18,7 +18,7 @@ func CallRPC(c intf.JSONRPCTubeClient, method string, params []interface{}) (*js
 		return nil, err
 	}
 	req := &intf.JSONRPCRequest{
-		Id: "1",
+		Id:     "1",
 		Method: method,
 		Params: paramsStr}
 	ctx, cancel := context.WithCancel(context.Background())

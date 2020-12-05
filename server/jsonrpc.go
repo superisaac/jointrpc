@@ -89,10 +89,12 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	router := tube.Tube().Router
 	conn := router.Join()
 	log.Printf("Joined conn %d", conn.ConnId)
-	defer leaveConn(conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	defer func() {
+		cancel()
+		leaveConn(conn)
+	}()
 
 	go relayMessages(ctx, stream, conn.RecvChannel)
 
