@@ -16,7 +16,16 @@ func NewRPCClient() *RPCClient {
 func (self *RPCClient) handleRequestMsg(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
 	handler, ok := self.MethodHandlers[msg.Method]
 	if ok {
-		return handler(msg)
+		req := &RPCRequest{Message: msg}
+		params := msg.Params.MustArray()
+		res, err := handler(req, params)
+		if err != nil {
+			return nil, nil
+		} else {
+			resmsg := jsonrpc.NewResultMessage(msg.Id, res)
+			return resmsg, nil
+		}
+
 	} else {
 		errmsg := jsonrpc.NewErrorMessage(msg.Id, 404, "no such message", false)
 		return errmsg, nil

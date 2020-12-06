@@ -5,7 +5,11 @@ import (
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
-type Handler func(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error)
+type RPCRequest struct {
+	Message *jsonrpc.RPCMessage
+}
+
+type Handler func(req *RPCRequest, params []interface{}) (interface{}, error)
 
 type RPCClient struct {
 	MethodHandlers map[string]Handler

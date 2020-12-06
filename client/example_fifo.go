@@ -2,7 +2,7 @@ package client
 
 import (
 	intf "github.com/superisaac/rpctube/intf/tube"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
 type Fifo struct {
@@ -14,29 +14,25 @@ func ExampleFIFO(c intf.JSONRPCTubeClient) error {
 
 	client := NewRPCClient()
 
-	client.Handle("fifo.put", func(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
-		for _, elem := range msg.Params.MustArray() {
+	client.Handle("fifo.put", func(req *RPCRequest, params []interface{}) (interface{}, error) {
+		for _, elem := range params {
 			fifo.Items = append(fifo.Items, elem)
 		}
-		resmsg := jsonrpc.NewResultMessage(msg.Id, "ok")
-		return resmsg, nil
+		return "ok", nil
 	})
 
-	client.Handle("fifo.get", func(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
+	client.Handle("fifo.get", func(req *RPCRequest, params []interface{}) (interface{}, error) {
 		if len(fifo.Items) > 0 {
 			elem := fifo.Items[0]
 			fifo.Items = fifo.Items[1:len(fifo.Items)]
-			resmsg := jsonrpc.NewResultMessage(msg.Id, elem)
-			return resmsg, nil
+			return elem, nil
 		} else {
-			resmsg := jsonrpc.NewResultMessage(msg.Id, nil)
-			return resmsg, nil
+			return nil, nil
 		}
 	})
 
-	client.Handle("fifo.list", func(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
-		resmsg := jsonrpc.NewResultMessage(msg.Id, fifo.Items)
-		return resmsg, nil
+	client.Handle("fifo.list", func(req *RPCRequest, params []interface{}) (interface{}, error) {
+		return fifo.Items, nil
 	})
 
 	client.HandleMethods(c)

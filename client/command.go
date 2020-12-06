@@ -5,10 +5,9 @@ import (
 	"fmt"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	grpc "google.golang.org/grpc"
 	"log"
 	"os"
-	//simplejson "github.com/bitly/go-simplejson"
-	grpc "google.golang.org/grpc"
 )
 
 func printHelp() {
