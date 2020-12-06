@@ -3,19 +3,19 @@ package client
 import (
 	"flag"
 	"fmt"
-	intf "github.com/superisaac/rpctube/intf/tube"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	grpc "google.golang.org/grpc"
 	"log"
 	"os"
+	//intf "github.com/superisaac/rpctube/intf/tube"
+	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	//grpc "google.golang.org/grpc"
 )
 
 func printHelp() {
 	fmt.Println("method params...")
 }
 
-func CommandCallRPC() {
-	callFlags := flag.NewFlagSet("rpc", flag.ExitOnError)
+func CommandCallRPC(command string) {
+	callFlags := flag.NewFlagSet(command, flag.ExitOnError)
 
 	serverAddress := callFlags.String("address", "localhost:50055", "the tube server address")
 	callFlags.Parse(os.Args[2:])
@@ -42,13 +42,13 @@ func CommandCallRPC() {
 }
 
 func RunCallRPC(serverAddress string, method string, params []interface{}) error {
-	conn, err := grpc.Dial(serverAddress, grpc.WithInsecure())
+
+	client := NewRPCClient(serverAddress)
+	err := client.Connect()
 	if err != nil {
 		return err
 	}
-
-	c := intf.NewJSONRPCTubeClient(conn)
-	res, err := CallRPC(c, method, params)
+	res, err := client.CallRPC(method, params)
 	if err != nil {
 		return err
 	}
@@ -77,13 +77,12 @@ func CommandListMethods() {
 }
 
 func RunListMethods(serverAddress string) error {
-	conn, err := grpc.Dial(serverAddress, grpc.WithInsecure())
+	client := NewRPCClient(serverAddress)
+	err := client.Connect()
 	if err != nil {
 		return err
 	}
-
-	c := intf.NewJSONRPCTubeClient(conn)
-	methods, err := ListMethods(c)
+	methods, err := client.ListMethods()
 	if err != nil {
 		return nil
 	}

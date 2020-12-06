@@ -23,7 +23,9 @@ func main() {
 	case "listmethods":
 		client.CommandListMethods()
 	case "rpc":
-		client.CommandCallRPC()
+		client.CommandCallRPC("rpc")
+	case "call":
+		client.CommanbdCallRPC("call")
 	case "example.fifo":
 		client.CommandExampleFIFO()
 	default:

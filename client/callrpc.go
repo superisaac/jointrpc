@@ -2,14 +2,14 @@ package client
 
 import (
 	"context"
+	"log"
 	simplejson "github.com/bitly/go-simplejson"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	server "github.com/superisaac/rpctube/server"
-	"log"
 )
 
-func CallRPC(c intf.JSONRPCTubeClient, method string, params []interface{}) (*jsonrpc.RPCMessage, error) {
+func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RPCMessage, error) {
 	log.Printf("log methods %s, params %v", method, params)
 	paramsJson := simplejson.New()
 	paramsJson.SetPath(nil, params)
@@ -23,7 +23,7 @@ func CallRPC(c intf.JSONRPCTubeClient, method string, params []interface{}) (*js
 		Params: paramsStr}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	res, err := c.Call(ctx, req)
+	res, err := self.TubeClient.Call(ctx, req)
 	log.Printf("res is %v", res)
 	if err != nil {
 		return nil, err
@@ -36,11 +36,11 @@ func CallRPC(c intf.JSONRPCTubeClient, method string, params []interface{}) (*js
 	return msg, err
 }
 
-func ListMethods(c intf.JSONRPCTubeClient) ([]string, error) {
+func (self *RPCClient) ListMethods() ([]string, error) {
 	req := &intf.ListMethodsRequest{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	res, err := c.ListMethods(ctx, req)
+	res, err := self.TubeClient.ListMethods(ctx, req)
 	if err != nil {
 		return []string{}, err
 	}

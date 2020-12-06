@@ -33,10 +33,12 @@ func (self *RPCClient) handleRequestMsg(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMe
 
 		res, err := handler(req, params)
 		if err != nil {
-			return nil, nil
-		} else {
+			return nil, err
+		} else if msg.IsRequest() {
 			resmsg := jsonrpc.NewResultMessage(msg.Id, res)
 			return resmsg, nil
+		} else {
+			return nil, nil
 		}
 
 	} else {
@@ -56,12 +58,12 @@ func (self *RPCClient) registerMethods(stream intf.JSONRPCTube_HandleClient) {
 	stream.Send(up_pac)
 }
 
-func (self *RPCClient) Handle(method string, handler Handler) {
+func (self *RPCClient) On(method string, handler Handler) {
 	//h, ok := self.methodHandlers[method]
 	self.methodHandlers[method] = handler
 }
 
-func (self *RPCClient) HandleMethods() error {
+func (self *RPCClient) HandleRPC() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
