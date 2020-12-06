@@ -100,22 +100,8 @@ func CommandExampleFIFO() {
 	serverAddress := examFlags.String("address", "localhost:50055", "the tube server address")
 	examFlags.Parse(os.Args[2:])
 	log.Printf("dial server %s", *serverAddress)
-	err := StartExampleFIFO(*serverAddress)
+	err := ExampleFIFO(*serverAddress)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func StartExampleFIFO(serverAddress string) error {
-	conn, err := grpc.Dial(serverAddress, grpc.WithInsecure())
-	if err != nil {
-		return err
-	}
-	c := intf.NewJSONRPCTubeClient(conn)
-
-	err = ExampleFIFO(c)
-	if err != nil {
-		return err
-	}
-	return nil
 }

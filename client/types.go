@@ -1,7 +1,7 @@
 package client
 
 import (
-	//intf "github.com/superisaac/rpctube/intf/tube"
+	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
@@ -12,5 +12,7 @@ type RPCRequest struct {
 type Handler func(req *RPCRequest, params []interface{}) (interface{}, error)
 
 type RPCClient struct {
-	MethodHandlers map[string]Handler
+	ServerAddress  string
+	TubeClient     intf.JSONRPCTubeClient
+	methodHandlers map[string]Handler
 }

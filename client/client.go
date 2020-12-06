@@ -5,19 +5,32 @@ import (
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	server "github.com/superisaac/rpctube/server"
+	grpc "google.golang.org/grpc"
 	"log"
 )
 
-func NewRPCClient() *RPCClient {
+func NewRPCClient(serverAddress string) *RPCClient {
 	methodHandlers := make(map[string](Handler))
-	return &RPCClient{MethodHandlers: methodHandlers}
+	return &RPCClient{ServerAddress: serverAddress, methodHandlers: methodHandlers}
+
+}
+
+func (self *RPCClient) Connect() error {
+	conn, err := grpc.Dial(self.ServerAddress, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	self.TubeClient = intf.NewJSONRPCTubeClient(conn)
+	return nil
 }
 
 func (self *RPCClient) handleRequestMsg(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
-	handler, ok := self.MethodHandlers[msg.Method]
+	handler, ok := self.methodHandlers[msg.Method]
 	if ok {
 		req := &RPCRequest{Message: msg}
+
 		params := msg.Params.MustArray()
+
 		res, err := handler(req, params)
 		if err != nil {
 			return nil, nil
@@ -33,8 +46,8 @@ func (self *RPCClient) handleRequestMsg(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMe
 }
 
 func (self *RPCClient) registerMethods(stream intf.JSONRPCTube_HandleClient) {
-	methods := make([]string, 0, len(self.MethodHandlers))
-	for method := range self.MethodHandlers {
+	methods := make([]string, 0, len(self.methodHandlers))
+	for method := range self.methodHandlers {
 		methods = append(methods, method)
 	}
 	reg := &intf.RegisterMethodsRequest{Methods: methods}
@@ -44,15 +57,15 @@ func (self *RPCClient) registerMethods(stream intf.JSONRPCTube_HandleClient) {
 }
 
 func (self *RPCClient) Handle(method string, handler Handler) {
-	//h, ok := self.MethodHandlers[method]
-	self.MethodHandlers[method] = handler
+	//h, ok := self.methodHandlers[method]
+	self.methodHandlers[method] = handler
 }
 
-func (self *RPCClient) HandleMethods(c intf.JSONRPCTubeClient) error {
+func (self *RPCClient) HandleMethods() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	stream, err := c.Handle(ctx)
+	stream, err := self.TubeClient.Handle(ctx)
 	if err != nil {
 		return err
 	}
