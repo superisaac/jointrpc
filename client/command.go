@@ -7,6 +7,7 @@ import (
 	"os"
 	//intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	//example "github.com/superisaac/rpctube/client/example"
 	//grpc "google.golang.org/grpc"
 )
 
@@ -94,13 +95,13 @@ func RunListMethods(serverAddress string) error {
 }
 
 // Example FIFO
-func CommandExampleFIFO() {
-	examFlags := flag.NewFlagSet("example.fifo", flag.ExitOnError)
-	serverAddress := examFlags.String("address", "localhost:50055", "the tube server address")
-	examFlags.Parse(os.Args[2:])
-	log.Printf("dial server %s", *serverAddress)
-	err := ExampleFIFO(*serverAddress)
-	if err != nil {
-		panic(err)
-	}
-}
+// func CommandExampleFIFO() {
+// 	examFlags := flag.NewFlagSet("example.fifo", flag.ExitOnError)
+// 	serverAddress := examFlags.String("address", "localhost:50055", "the tube server address")
+// 	examFlags.Parse(os.Args[2:])
+// 	log.Printf("dial server %s", *serverAddress)
+// 	err := example.ExampleFIFO(*serverAddress)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }

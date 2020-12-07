@@ -6,6 +6,7 @@ import (
 	"log"
 	server "github.com/superisaac/rpctube/server"
 	client "github.com/superisaac/rpctube/client"
+	example "github.com/superisaac/rpctube/client/example"	
 	//tube "github.com/superisaac/rpctube/tube"
 )
 
@@ -25,9 +26,9 @@ func main() {
 	case "rpc":
 		client.CommandCallRPC("rpc")
 	case "call":
-		client.CommanbdCallRPC("call")
+		client.CommandCallRPC("call")
 	case "example.fifo":
-		client.CommandExampleFIFO()
+		example.CommandExampleFIFO()
 	default:
 		fmt.Println("expect subcommands")
 		os.Exit(1)
