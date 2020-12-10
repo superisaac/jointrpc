@@ -3,13 +3,14 @@ package server
 import (
 	"context"
 	"flag"
-	"log"
+	//"log"
 	"net"
 	"os"
 	//"fmt"
 	datadir "github.com/superisaac/rpctube/datadir"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	tube "github.com/superisaac/rpctube/tube"
+	utils "github.com/superisaac/rpctube/utils"
 	grpc "google.golang.org/grpc"
 )
 
@@ -32,9 +33,9 @@ func CommandStartServer() {
 func StartServer(ctx context.Context, bind string) {
 	lis, err := net.Listen("tcp", bind)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		utils.InfoLogger.Fatalf("failed to listen: %v", err)
 	} else {
-		log.Printf("entry server listen at %s", bind)
+		utils.InfoLogger.Printf("entry server listen at %s", bind)
 	}
 
 	tube.Tube().Start(ctx)

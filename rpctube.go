@@ -1,12 +1,13 @@
 package main
 
 import (
-	"os"
 	"fmt"
-	"log"
-	server "github.com/superisaac/rpctube/server"
 	client "github.com/superisaac/rpctube/client"
-	example "github.com/superisaac/rpctube/client/example"	
+	example "github.com/superisaac/rpctube/client/example"
+	server "github.com/superisaac/rpctube/server"
+	utils "github.com/superisaac/rpctube/utils"
+	"log"
+	"os"
 	//tube "github.com/superisaac/rpctube/tube"
 )
 
@@ -17,6 +18,8 @@ func main() {
 	}
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+
+	utils.InitLog()
 
 	switch os.Args[1] {
 	case "server":

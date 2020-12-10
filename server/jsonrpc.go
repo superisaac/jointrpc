@@ -5,9 +5,10 @@ import (
 	//json "encoding/json"
 	//"errors"
 	//"fmt"
-	"log"
+	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
 	intf "github.com/superisaac/rpctube/intf/tube"
+	utils "github.com/superisaac/rpctube/utils"
 	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	tube "github.com/superisaac/rpctube/tube"
 	//"time"
@@ -23,13 +24,12 @@ func leaveConn(conn *tube.ConnT) {
 }
 
 func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
-	log.Printf("called method %s", req.Method)
+	utils.DebugLogger.Printf("called method %s", req.Method)
 	req_msg, err := RequestToMessage(req)
 	if err != nil {
 		return nil, err
 	}
-	s, _ := req_msg.EncodePretty()
-	log.Printf("ddd %v", s)
+	//s, _ := req_msg.EncodePretty()
 	router := tube.Tube().Router
 	recvmsg, err := router.SingleCall(req_msg)
 	if err != nil {
@@ -85,10 +85,10 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 }
 
 func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
-	log.Printf("Handler connected %v", stream)
+	utils.DebugLogger.Printf("Handler connected %v", stream)
 	router := tube.Tube().Router
 	conn := router.Join()
-	log.Printf("Joined conn %d", conn.ConnId)
+	utils.DebugLogger.Printf("Joined conn %d", conn.ConnId)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
@@ -101,7 +101,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	for {
 		up_pac, err := stream.Recv()
 		if err != nil {
-			log.Printf("error on stream Recv() %s", err.Error())
+			utils.InfoLogger.Printf("error on stream Recv() %s", err.Error())
 			return err
 		}
 		// Pong on Ping
@@ -120,7 +120,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 		if req != nil {
 			msg, err := RequestToMessage(req)
 			if err != nil {
-				log.Printf("error on requesttomessage() %s", err.Error())
+				utils.WarningLogger.Printf("error on requesttomessage() %s", err.Error())
 				return err
 			}
 			cmd_msg := tube.CmdMsg{Msg: msg, FromConnId: conn.ConnId}
@@ -146,7 +146,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			if reg.Location == intf.MethodLocation_REMOTE {
 				loc = tube.Location_Remote
 			}
-			log.Printf("reg methods %v", reg.Methods)
+			utils.DebugLogger.Printf("reg methods %v", reg.Methods)
 			cmd_reg := tube.CmdReg{
 				ConnId:   conn.ConnId,
 				Methods:  reg.Methods,
