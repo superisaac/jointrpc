@@ -15,8 +15,8 @@ func printHelp() {
 	fmt.Println("method params...")
 }
 
-func CommandCallRPC(command string) {
-	callFlags := flag.NewFlagSet(command, flag.ExitOnError)
+func CommandCallRPC(subcmd string) {
+	callFlags := flag.NewFlagSet(subcmd, flag.ExitOnError)
 
 	serverAddress := callFlags.String("address", "localhost:50055", "the tube server address")
 	callFlags.Parse(os.Args[2:])
