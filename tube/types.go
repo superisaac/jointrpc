@@ -4,6 +4,7 @@ import (
 	//"github.com/gorilla/websocket"
 	"errors"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	"net"
 	"sync"
 	"time"
 )
@@ -45,6 +46,7 @@ type PendingValue struct {
 // Connect Struct
 type ConnT struct {
 	ConnId      CID
+	PeerAddr    net.Addr
 	RecvChannel MsgChannel
 	Methods     map[string]bool
 }

@@ -15,7 +15,7 @@ import (
 )
 
 func NewRPCClient(serverAddress string) *RPCClient {
-	methodHandlers := make(map[string](Handler))
+	methodHandlers := make(map[string](MethodHandler))
 	return &RPCClient{ServerAddress: serverAddress, methodHandlers: methodHandlers}
 
 }
@@ -46,7 +46,19 @@ func (self *RPCClient) handleRequestMsg(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMe
 		} else {
 			return nil, nil
 		}
+	} else if self.defaultHandler != nil {
+		req := &RPCRequest{Message: msg}
 
+		params := msg.Params.MustArray()
+		res, err := self.defaultHandler(req, msg.Method, params)
+		if err != nil {
+			return nil, err
+		} else if msg.IsRequest() {
+			resmsg := jsonrpc.NewResultMessage(msg.Id, res)
+			return resmsg, nil
+		} else {
+			return nil, nil
+		}
 	} else {
 		errmsg := jsonrpc.NewErrorMessage(msg.Id, 404, "no such message", false)
 		return errmsg, nil
@@ -64,19 +76,18 @@ func (self *RPCClient) registerMethods(stream intf.JSONRPCTube_HandleClient) {
 	stream.Send(uppac)
 }
 
-func (self *RPCClient) On(method string, handler Handler) {
+func (self *RPCClient) On(method string, handler MethodHandler) {
 	//h, ok := self.methodHandlers[method]
 	self.methodHandlers[method] = handler
+}
+
+func (self *RPCClient) OnDefault(handler MsgHandler) {
+	self.defaultHandler = handler
 }
 
 func (self *RPCClient) HandleRPC() error {
 	for {
 		err := self.handleRPC()
-		log.Printf("sss %+v", err)
-		//if err == transport.ErrConnClosing {
-
-		//if err != nil && err.Error() == "transport is closing" {
-		//if false {
 		if err != nil {
 			if grpc.Code(err) == codes.Unavailable {
 				log.Printf("connect closed retrying")

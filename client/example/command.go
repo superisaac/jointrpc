@@ -1,9 +1,9 @@
 package example
 
 import (
-	"os"
-	"log"
 	"flag"
+	"log"
+	"os"
 	//client "github.com/superisaac/rpctube/client"
 )
 

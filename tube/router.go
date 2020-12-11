@@ -336,14 +336,14 @@ func (self *Router) JoinConn(conn *ConnT) {
 }
 
 func (self *Router) lock(wrapper string) {
-	log.Printf("router want lock %s", wrapper)
+	//log.Printf("router want lock %s", wrapper)
 	self.routerLock.Lock()
-	log.Printf("router locked %s", wrapper)
+	//log.Printf("router locked %s", wrapper)
 }
 func (self *Router) unlock(wrapper string) {
-	log.Printf("router want unlock %s", wrapper)
+	//log.Printf("router want unlock %s", wrapper)
 	self.routerLock.Unlock()
-	log.Printf("router want unlocked %s", wrapper)
+	//log.Printf("router want unlocked %s", wrapper)
 }
 
 func (self *Router) Leave(conn *ConnT) {

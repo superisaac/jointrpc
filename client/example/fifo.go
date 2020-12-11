@@ -3,8 +3,7 @@ package example
 import (
 	//intf "github.com/superisaac/rpctube/intf/tube"
 	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	client "github.com/superisaac/rpctube/client"	
-	
+	client "github.com/superisaac/rpctube/client"
 )
 
 type Fifo struct {
@@ -36,6 +35,11 @@ func ExampleFIFO(serverAddress string) error {
 	rpcClient.On("fifo.list", func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
 		return fifo.Items, nil
 	})
+
+	rpcClient.OnDefault(func(req *client.RPCRequest, method string, params []interface{}) (interface{}, error) {
+		return "I don't know how to respond", nil
+	})
+
 	err := rpcClient.Connect()
 	if err != nil {
 		return err
