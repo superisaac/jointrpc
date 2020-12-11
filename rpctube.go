@@ -9,14 +9,16 @@ import (
 	server "github.com/superisaac/rpctube/server"
 	"log/syslog"
 	"os"
-	"strings"
+	//"strings"
 	//tube "github.com/superisaac/rpctube/tube"
 )
 
 func setupLogger() {
 	envLogOutput := os.Getenv("LOG_OUTPUT")
-	if envLogOutput == "" || strings.ToLower(envLogOutput) == "console" {
+	if envLogOutput == "" || envLogOutput == "console" || envLogOutput == "stdout" {
 		log.SetOutput(os.Stdout)
+	} else if envLogOutput == "stderr" {
+		log.SetOutput(os.Stderr)
 	} else {
 		file, err := os.OpenFile(envLogOutput, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
@@ -25,8 +27,9 @@ func setupLogger() {
 		log.SetOutput(file)
 	}
 
-	if os.Getenv("LOG_DISABLE_SYSLOG") != "yes" {
-		hook, err := logsyslog.NewSyslogHook("", "", syslog.LOG_INFO, "")
+	envLogSyslog := os.Getenv("LOG_SYSLOG")
+	if envLogSyslog != "disabled" && envLogSyslog != "no" && envLogSyslog != "false" {
+		hook, err := logsyslog.NewSyslogHook("", envLogSyslog, syslog.LOG_INFO, "")
 		if err != nil {
 			panic(err)
 		}
