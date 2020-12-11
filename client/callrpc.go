@@ -3,14 +3,14 @@ package client
 import (
 	"context"
 	simplejson "github.com/bitly/go-simplejson"
+	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	server "github.com/superisaac/rpctube/server"
-	"log"
 )
 
 func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RPCMessage, error) {
-	log.Printf("log methods %s, params %v", method, params)
+	log.Infof("log methods %s, params %v", method, params)
 	paramsJson := simplejson.New()
 	paramsJson.SetPath(nil, params)
 	paramsStr, err := jsonrpc.MarshalJson(paramsJson)
@@ -24,7 +24,7 @@ func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RP
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	res, err := self.TubeClient.Call(ctx, req)
-	log.Printf("res is %v", res)
+	log.Infof("res is %v", res)
 	if err != nil {
 		return nil, err
 	}

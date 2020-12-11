@@ -3,13 +3,13 @@ package client
 import (
 	"context"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	server "github.com/superisaac/rpctube/server"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	"io"
-	"log"
 	"time"
 	//transport "google.golang.org/grpc/internal/transport"
 )
@@ -37,7 +37,7 @@ func (self *RPCClient) handleRequestMsg(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMe
 
 		params := msg.Params.MustArray()
 
-		res, err := handler(req, params)
+		res, err := handler.function(req, params)
 		if err != nil {
 			return nil, err
 		} else if msg.IsRequest() {
@@ -76,12 +76,22 @@ func (self *RPCClient) registerMethods(stream intf.JSONRPCTube_HandleClient) {
 	stream.Send(uppac)
 }
 
-func (self *RPCClient) On(method string, handler MethodHandler) {
-	//h, ok := self.methodHandlers[method]
-	self.methodHandlers[method] = handler
+func (self *RPCClient) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
+	h := MethodHandler{function: handler}
+	for _, opt := range opts {
+		opt(&h)
+	}
+	self.methodHandlers[method] = h
 }
 
-func (self *RPCClient) OnDefault(handler MsgHandler) {
+func WithSchema(schema string) func(*MethodHandler) {
+	return func(h *MethodHandler) {
+		// TODO: parse schema
+		h.schema = schema
+	}
+}
+
+func (self *RPCClient) OnDefault(handler DefaultHandlerFunc) {
 	self.defaultHandler = handler
 }
 
@@ -90,7 +100,7 @@ func (self *RPCClient) HandleRPC() error {
 		err := self.handleRPC()
 		if err != nil {
 			if grpc.Code(err) == codes.Unavailable {
-				log.Printf("connect closed retrying")
+				log.Debugf("connect closed retrying")
 			} else {
 				return err
 			}
@@ -114,11 +124,11 @@ func (self *RPCClient) handleRPC() error {
 	for {
 		downpac, err := stream.Recv()
 		if err == io.EOF {
-			log.Printf("eor close")
+			log.Infof("eor close")
 			return nil
 		}
 		if err != nil {
-			log.Printf("down pack error %+v %d", err, grpc.Code(err))
+			log.Infof("down pack error %+v %d", err, grpc.Code(err))
 			return err
 		}
 

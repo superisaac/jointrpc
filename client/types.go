@@ -10,12 +10,18 @@ type RPCRequest struct {
 	// TODO: add more fields
 }
 
-type MethodHandler func(req *RPCRequest, params []interface{}) (interface{}, error)
-type MsgHandler func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
+type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)
+type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
+
+type MethodHandler struct {
+	function HandlerFunc
+	//Options HandlerOption
+	schema string
+}
 
 type RPCClient struct {
 	ServerAddress  string
 	TubeClient     intf.JSONRPCTubeClient
 	methodHandlers map[string]MethodHandler
-	defaultHandler MsgHandler
+	defaultHandler DefaultHandlerFunc
 }

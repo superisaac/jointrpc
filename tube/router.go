@@ -4,7 +4,7 @@ import (
 	//"fmt"
 	"context"
 	"errors"
-	"log"
+	//"log"
 	"sort"
 	"sync"
 	"time"
@@ -15,11 +15,6 @@ import (
 func NewRouter() *Router {
 	return new(Router).Init()
 }
-
-/*func GetConnId(c *websocket.Conn) string {
-	return c.UnderlyingConn().RemoteAddr().String()
-}
-*/
 
 func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
 	// for i := range slice {
@@ -152,9 +147,9 @@ func (self *Router) leaveConn(conn *ConnT) {
 		if !ok {
 			continue
 		}
-		log.Printf("method desc pre remove %v", methodDescList)
+		//log.Printf("method desc pre remove %v", methodDescList)
 		methodDescList = RemoveConn(methodDescList, conn)
-		log.Printf("method desc post remove %v", methodDescList)
+		//log.Printf("method desc post remove %v", methodDescList)
 		if len(methodDescList) > 0 {
 			self.MethodConnMap[method] = methodDescList
 		} else {

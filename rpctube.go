@@ -2,14 +2,51 @@ package main
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
+	logsyslog "github.com/sirupsen/logrus/hooks/syslog"
 	client "github.com/superisaac/rpctube/client"
 	example "github.com/superisaac/rpctube/client/example"
 	server "github.com/superisaac/rpctube/server"
-	utils "github.com/superisaac/rpctube/utils"
-	"log"
+	"log/syslog"
 	"os"
+	"strings"
 	//tube "github.com/superisaac/rpctube/tube"
 )
+
+func setupLogger() {
+	envLogOutput := os.Getenv("LOG_OUTPUT")
+	if envLogOutput == "" || strings.ToLower(envLogOutput) == "console" {
+		log.SetOutput(os.Stdout)
+	} else {
+		file, err := os.OpenFile(envLogOutput, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			panic(err)
+		}
+		log.SetOutput(file)
+	}
+
+	if os.Getenv("LOG_DISABLE_SYSLOG") != "yes" {
+		hook, err := logsyslog.NewSyslogHook("", "", syslog.LOG_INFO, "")
+		if err != nil {
+			panic(err)
+		}
+		log.AddHook(hook)
+	}
+
+	envLogLevel := os.Getenv("LOG_LEVEL")
+	switch envLogLevel {
+	case "DEBUG":
+		log.SetLevel(log.DebugLevel)
+	case "INFO":
+		log.SetLevel(log.InfoLevel)
+	case "WARN":
+		log.SetLevel(log.WarnLevel)
+	case "ERROR":
+		log.SetLevel(log.ErrorLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
+	}
+}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -17,9 +54,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
-
-	utils.InitLog()
+	setupLogger()
 
 	switch os.Args[1] {
 	case "server":

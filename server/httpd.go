@@ -3,14 +3,14 @@ package server
 import (
 	"bytes"
 	"errors"
+	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	tube "github.com/superisaac/rpctube/tube"
-	"log"
 	http "net/http"
 )
 
 func StartHTTPd(http_bind string) {
-	log.Printf("start http proxy at %s", http_bind)
+	log.Infof("start http proxy at %s", http_bind)
 	http.HandleFunc("/", HandleHttp)
 	//http.HandleFunc("/", HandleHome)
 	log.Fatal(

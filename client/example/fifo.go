@@ -30,11 +30,12 @@ func ExampleFIFO(serverAddress string) error {
 		} else {
 			return nil, nil
 		}
-	})
+	}, client.WithSchema(``))
 
-	rpcClient.On("fifo.list", func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
-		return fifo.Items, nil
-	})
+	rpcClient.On("fifo.list",
+		func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
+			return fifo.Items, nil
+		})
 
 	rpcClient.OnDefault(func(req *client.RPCRequest, method string, params []interface{}) (interface{}, error) {
 		return "I don't know how to respond", nil

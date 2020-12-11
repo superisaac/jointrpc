@@ -3,7 +3,7 @@ package client
 import (
 	"flag"
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	//intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
@@ -20,7 +20,7 @@ func CommandCallRPC(subcmd string) {
 
 	serverAddress := callFlags.String("address", "localhost:50055", "the tube server address")
 	callFlags.Parse(os.Args[2:])
-	log.Printf("dial server %s", *serverAddress)
+	log.Infof("dial server %s", *serverAddress)
 
 	if callFlags.NArg() < 1 {
 		printHelp()
@@ -70,7 +70,7 @@ func CommandListMethods() {
 
 	serverAddress := listMethodsFlags.String("address", "localhost:50055", "the tube server address")
 	listMethodsFlags.Parse(os.Args[2:])
-	log.Printf("dial server %s", *serverAddress)
+	log.Infof("dial server %s", *serverAddress)
 	err := RunListMethods(*serverAddress)
 	if err != nil {
 		panic(err)
@@ -93,15 +93,3 @@ func RunListMethods(serverAddress string) error {
 	}
 	return nil
 }
-
-// Example FIFO
-// func CommandExampleFIFO() {
-// 	examFlags := flag.NewFlagSet("example.fifo", flag.ExitOnError)
-// 	serverAddress := examFlags.String("address", "localhost:50055", "the tube server address")
-// 	examFlags.Parse(os.Args[2:])
-// 	log.Printf("dial server %s", *serverAddress)
-// 	err := example.ExampleFIFO(*serverAddress)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
