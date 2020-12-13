@@ -19,3 +19,10 @@ type RPCMessage struct {
 	Error  *simplejson.Json
 	Raw    *simplejson.Json
 }
+
+type RPCError struct {
+	Code   int
+	Reason string
+	Retryable bool
+}
+

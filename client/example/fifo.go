@@ -2,7 +2,7 @@ package example
 
 import (
 	//intf "github.com/superisaac/rpctube/intf/tube"
-	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	client "github.com/superisaac/rpctube/client"
 )
 
@@ -35,6 +35,24 @@ func ExampleFIFO(serverAddress string) error {
 	rpcClient.On("fifo.list",
 		func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
 			return fifo.Items, nil
+		})
+
+	rpcClient.On("fifo.add",
+		func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
+			if len(fifo.Items) < 2 {
+				return nil, &jsonrpc.RPCError{10408, "items size < 2", false}
+			}
+			a, err := jsonrpc.ValidateFloat64(fifo.Items[len(fifo.Items) - 2])
+			if err != nil {
+				return nil, err
+			}
+			b, err := jsonrpc.ValidateFloat64(fifo.Items[len(fifo.Items) - 1])
+			if err != nil {
+				return nil, err
+			}
+			fifo.Items = fifo.Items[0:len(fifo.Items) - 2]
+			return a + b, nil
+
 		})
 
 	rpcClient.OnDefault(func(req *client.RPCRequest, method string, params []interface{}) (interface{}, error) {

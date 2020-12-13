@@ -1,6 +1,7 @@
 package jsonrpc
 
 import (
+	"fmt"
 	json "encoding/json"
 	//"reflect"
 	"errors"
@@ -116,22 +117,27 @@ func NewNotifyMessage(method string, params []interface{}) *RPCMessage {
 	return NewRequestMessage(nil, method, params)
 }
 
-func NewErrorMessage(id interface{}, code int, message string, retryable bool) *RPCMessage {
-	jsonData := NewErrorJSON(id, code, message, retryable)
+func NewErrorMessage(id interface{}, code int, reason string, retryable bool) *RPCMessage {
+	jsonData := NewErrorJSON(id, code, reason, retryable)
 	return NewRPCMessage(jsonData)
 }
 
-func NewErrorJSON(id interface{}, code int, message string, retryable bool) *simplejson.Json {
+func NewErrorJSON(id interface{}, code int, reason string, retryable bool) *simplejson.Json {
 	// Retryable indicates whether the client can retry the request using the same args
 	// Usually the parameter is used in case of network failure.
-	errJson := simplejson.New()
-	errJson.Set("code", code)
-	errJson.Set("message", message)
+	// errJson := simplejson.New()
+	// errJson.Set("code", code)
+	// errJson.Set("reason", reason)
+	// errJson.Set("retryable", retryable)
 
-	errJson.Set("retryable", retryable)
+	errMap := make(map[string]interface{})
+	errMap["code"] = code
+	errMap["reason"] = reason
+	errMap["retryable"] = retryable
+	
 	body := simplejson.New()
 	body.Set("id", id)
-	body.Set("error", errJson.Interface())
+	body.Set("error", errMap) //errJson.Interface())
 	return body
 }
 
@@ -166,7 +172,6 @@ func (self RPCMessage) GetIntId() (int64, error) {
 }
 
 func (self RPCMessage) IsRequest() bool {
-	//return self.Id != nil && self.Method != ""
 	return self.Id != nil && self.Method != ""
 }
 
@@ -199,3 +204,12 @@ func (self RPCMessage) IsValid() bool {
 func (self RPCMessage) GetParams() []interface{} {
 	return self.Params.MustArray()
 }
+
+func (self *RPCError) Error() string {
+	return fmt.Sprintf("code=%d, reason=%s", self.Code, self.Reason)
+}
+
+func (self RPCError) ToMessage(id interface{}) *RPCMessage {
+	return NewErrorMessage(id, self.Code, self.Reason, self.Retryable)
+}
+

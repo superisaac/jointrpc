@@ -30,38 +30,35 @@ func (self *RPCClient) Connect() error {
 	return nil
 }
 
+func (self *RPCClient) wrapHandlerResult(msg *jsonrpc.RPCMessage, res interface{}, err error) (*jsonrpc.RPCMessage, error) {
+	if err != nil {
+		if rpcErr, ok := err.(*jsonrpc.RPCError); ok {
+			return rpcErr.ToMessage(msg.Id), nil
+		}
+		return nil, err
+	} else if msg.IsRequest() {
+		return jsonrpc.NewResultMessage(msg.Id, res), nil
+	} else {
+		return nil, nil
+	}
+}
+
 func (self *RPCClient) handleRequestMsg(msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
 	handler, ok := self.methodHandlers[msg.Method]
 	if ok {
 		req := &RPCRequest{Message: msg}
 
 		params := msg.Params.MustArray()
-
 		res, err := handler.function(req, params)
-		if err != nil {
-			return nil, err
-		} else if msg.IsRequest() {
-			resmsg := jsonrpc.NewResultMessage(msg.Id, res)
-			return resmsg, nil
-		} else {
-			return nil, nil
-		}
+		return self.wrapHandlerResult(msg, res, err)
 	} else if self.defaultHandler != nil {
 		req := &RPCRequest{Message: msg}
 
 		params := msg.Params.MustArray()
 		res, err := self.defaultHandler(req, msg.Method, params)
-		if err != nil {
-			return nil, err
-		} else if msg.IsRequest() {
-			resmsg := jsonrpc.NewResultMessage(msg.Id, res)
-			return resmsg, nil
-		} else {
-			return nil, nil
-		}
+		return self.wrapHandlerResult(msg, res, err)
 	} else {
-		errmsg := jsonrpc.NewErrorMessage(msg.Id, 404, "no such message", false)
-		return errmsg, nil
+		return jsonrpc.ErrNoSuchMethod.ToMessage(msg.Id), nil
 	}
 }
 
