@@ -3,17 +3,21 @@ package main
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	logsyslog "github.com/sirupsen/logrus/hooks/syslog"
 	client "github.com/superisaac/rpctube/client"
 	example "github.com/superisaac/rpctube/client/example"
 	server "github.com/superisaac/rpctube/server"
-	"log/syslog"
 	"os"
+	"strings"
 	//"strings"
 	//tube "github.com/superisaac/rpctube/tube"
 )
 
-func setupLogger() {
+var commands []string = []string{
+	"server", "listmethods", "rpc", "call",
+	"example.info", "help",
+}
+
+func setupClientSideLogger() {
 	envLogOutput := os.Getenv("LOG_OUTPUT")
 	if envLogOutput == "" || envLogOutput == "console" || envLogOutput == "stdout" {
 		log.SetOutput(os.Stdout)
@@ -25,15 +29,6 @@ func setupLogger() {
 			panic(err)
 		}
 		log.SetOutput(file)
-	}
-
-	envLogSyslog := os.Getenv("LOG_SYSLOG")
-	if envLogSyslog != "disabled" && envLogSyslog != "no" && envLogSyslog != "false" {
-		hook, err := logsyslog.NewSyslogHook("", envLogSyslog, syslog.LOG_INFO, "")
-		if err != nil {
-			panic(err)
-		}
-		log.AddHook(hook)
 	}
 
 	envLogLevel := os.Getenv("LOG_LEVEL")
@@ -51,27 +46,37 @@ func setupLogger() {
 	}
 }
 
+func showHelp() {
+	fmt.Printf("usage: %s <command> [<args>]\n", os.Args[0])
+	fmt.Printf("commands are: %s\n", strings.Join(commands, ","))
+}
+
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("expect subcommands")
+		showHelp()
 		os.Exit(1)
 	}
-
-	setupLogger()
 
 	switch os.Args[1] {
 	case "server":
 		server.CommandStartServer()
 	case "listmethods":
+		setupClientSideLogger()
 		client.CommandListMethods()
 	case "rpc":
+		setupClientSideLogger()
 		client.CommandCallRPC("rpc")
 	case "call":
+		setupClientSideLogger()
 		client.CommandCallRPC("call")
 	case "example.fifo":
+		setupClientSideLogger()
 		example.CommandExampleFIFO()
+	case "help":
+		showHelp()
 	default:
-		fmt.Println("expect subcommands")
+		//fmt.Println("expect subcommands")
+		showHelp()
 		os.Exit(1)
 	}
 

@@ -14,22 +14,29 @@ import (
 )
 
 func CommandStartServer() {
-	datadir.GetConfig()
 	serverFlags := flag.NewFlagSet("server", flag.ExitOnError)
-	bind := serverFlags.String("bind", "127.0.0.1:50055", "The grpc server address and port")
+	pBind := serverFlags.String("b", "", "The grpc server address and port")
+	pDatadir := serverFlags.String("d", "", "The datadir to store configs")
 	//httpBind := serverFlags.String("httpd", "127.0.0.1:50056", "http address and port")
 
 	serverFlags.Parse(os.Args[2:])
-	//lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *bind, *port)
+	if *pDatadir != "" {
+		datadir.SetDatadir(*pDatadir)
+	}
 
 	//go StartHTTPd(*httpBind)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	StartServer(ctx, *bind)
+	StartServer(ctx, *pBind)
 }
 
 func StartServer(ctx context.Context, bind string) {
+	cfg := datadir.GetConfig()
+	if bind == "" {
+		bind = cfg.Server.Bind
+	}
 	lis, err := net.Listen("tcp", bind)
 	if err != nil {
 		log.Panicf("failed to listen: %w", err)

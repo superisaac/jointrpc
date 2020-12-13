@@ -1,44 +1,44 @@
 package datadir
 
 import (
-        "os"
-        "path/filepath"
-	"log"
+	log "github.com/sirupsen/logrus"
+	"os"
+	"path/filepath"
 )
 
-var dataDirPath string = ""
+var datadirPath string = ""
 
-func SetDataDir(dir string) {
-	dataDirPath = dir
+func SetDatadir(dir string) {
+	datadirPath = dir
 }
 
-func DataDir() string {
-        if dataDirPath == "" {
+func Datadir() string {
+	if datadirPath == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
 			panic(err)
 		}
-                dataDirPath = filepath.Join(cwd, "rpctube")
-        }
-	return dataDirPath
+		datadirPath = filepath.Join(cwd, ".rpctube")
+	}
+	return datadirPath
 }
 
-func DataPath(path string) string {
+func Datapath(path string) string {
 	if path == "" {
-		return DataDir()
+		return Datadir()
 	} else {
-		return filepath.Join(DataDir(), path)
+		return filepath.Join(Datadir(), path)
 	}
 }
 
-func EnsureDataDir(dir string) string {
-        dir = DataPath(dir)
+func EnsureDatadir(dir string) string {
+	dir = Datapath(dir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		log.Printf("make datadir %s", dir)
+		log.Debugf("make datadir %s", dir)
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
 			panic(err)
 		}
 	}
-        return dir
+	return dir
 }
