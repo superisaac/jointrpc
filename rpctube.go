@@ -14,7 +14,7 @@ import (
 
 var commands []string = []string{
 	"server", "listmethods", "rpc", "call",
-	"example.info", "help",
+	"example.array", "help",
 }
 
 func setupClientSideLogger() {
@@ -69,9 +69,9 @@ func main() {
 	case "call":
 		setupClientSideLogger()
 		client.CommandCallRPC("call")
-	case "example.fifo":
+	case "example.array":
 		setupClientSideLogger()
-		example.CommandExampleFIFO()
+		example.CommandExampleArray()
 	case "help":
 		showHelp()
 	default:

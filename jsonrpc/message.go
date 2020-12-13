@@ -1,8 +1,8 @@
 package jsonrpc
 
 import (
-	"fmt"
 	json "encoding/json"
+	"fmt"
 	//"reflect"
 	"errors"
 	simplejson "github.com/bitly/go-simplejson"
@@ -134,7 +134,7 @@ func NewErrorJSON(id interface{}, code int, reason string, retryable bool) *simp
 	errMap["code"] = code
 	errMap["reason"] = reason
 	errMap["retryable"] = retryable
-	
+
 	body := simplejson.New()
 	body.Set("id", id)
 	body.Set("error", errMap) //errJson.Interface())
@@ -212,4 +212,3 @@ func (self *RPCError) Error() string {
 func (self RPCError) ToMessage(id interface{}) *RPCMessage {
 	return NewErrorMessage(id, self.Code, self.Reason, self.Retryable)
 }
-

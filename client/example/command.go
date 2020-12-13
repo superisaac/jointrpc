@@ -6,13 +6,13 @@ import (
 	"os"
 )
 
-// Example FIFO
-func CommandExampleFIFO() {
-	examFlags := flag.NewFlagSet("example.fifo", flag.ExitOnError)
+// Example ARRAY
+func CommandExampleArray() {
+	examFlags := flag.NewFlagSet("example.array", flag.ExitOnError)
 	serverAddress := examFlags.String("address", "localhost:50055", "the tube server address")
 	examFlags.Parse(os.Args[2:])
 	log.Infof("dial server %s", *serverAddress)
-	err := ExampleFIFO(*serverAddress)
+	err := ExampleArray(*serverAddress)
 	if err != nil {
 		panic(err)
 	}

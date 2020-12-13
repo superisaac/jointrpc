@@ -21,8 +21,7 @@ type RPCMessage struct {
 }
 
 type RPCError struct {
-	Code   int
-	Reason string
+	Code      int
+	Reason    string
 	Retryable bool
 }
-

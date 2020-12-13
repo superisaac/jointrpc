@@ -3,11 +3,15 @@ package server
 import (
 	context "context"
 	"errors"
+	//"time"
 	//json "encoding/json"
 	//"errors"
 	//"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
@@ -53,8 +57,13 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 	for {
 		select {
 		case <-context.Done():
+			log.Debugf("context done")
 			return
-		case msg := <-recv_ch:
+		case msg, ok := <-recv_ch:
+			if !ok {
+				log.Debugf("recv channel closed")
+				return
+			}
 			if msg.IsRequest() || msg.IsNotify() {
 				req, err := MessageToRequest(msg)
 				if err != nil {
@@ -82,6 +91,9 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 			}
 
 		}
+	} // and for loop
+	if r := recover(); r != nil {
+		log.Fatalf("panic recovered %+v", r)
 	}
 }
 
@@ -100,6 +112,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	defer func() {
 		cancel()
 		leaveConn(conn)
+		//time.Sleep(1 * time.Second)
 	}()
 
 	log.Debugf("Handler connected, conn %d from ip %s", conn.ConnId, conn.PeerAddr.String())
@@ -109,7 +122,11 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	for {
 		up_pac, err := stream.Recv()
 		if err != nil {
-			log.Infof("error on stream Recv() %s", err.Error())
+			if grpc.Code(err) == codes.Canceled {
+				log.Debugf("canceled")
+				return nil
+			}
+			log.Warnf("error on stream Recv() %s", err.Error())
 			return err
 		}
 		// Pong on Ping

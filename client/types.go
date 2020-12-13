@@ -16,12 +16,15 @@ type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{
 type MethodHandler struct {
 	function HandlerFunc
 	//Options HandlerOption
-	schema string
+	schema     string
+	concurrent bool
 }
 
 type RPCClient struct {
-	ServerAddress  string
-	TubeClient     intf.JSONRPCTubeClient
-	methodHandlers map[string]MethodHandler
-	defaultHandler DefaultHandlerFunc
+	ServerAddress     string
+	TubeClient        intf.JSONRPCTubeClient
+	methodHandlers    map[string]MethodHandler
+	defaultHandler    DefaultHandlerFunc
+	defaultConcurrent bool
+	sendUpChannel     chan *intf.JSONRPCUpPacket
 }
