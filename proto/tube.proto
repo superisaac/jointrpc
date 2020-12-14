@@ -60,25 +60,22 @@ message JSONRPCResult {
   }  
 }
 
-enum MethodLocation {
-  LOCAL = 0;
-  REMOTE = 1;
+// enum MethodLocation {
+//   LOCAL = 0;
+//   REMOTE = 1;
+// }
+
+message MethodInfo {
+  string name = 1;
+  //MethodLocation location = 2;
+  bool   delegated = 2;
 }
 
-message RegisterMethodsRequest {
-  repeated string methods = 1;
-  MethodLocation location = 2;
+message UpdateMethodsRequest {
+  repeated MethodInfo methods  = 1;
 }
 
-message UnregisterMethodsRequest {
-  repeated string methods = 1;
-}
-
-message RegisterMethodsResponse {
-  string text = 1;
-}
-
-message UnregisterMethodsResponse {
+message UpdateMethodsResponse {
   string text = 1;
 }
 
@@ -92,27 +89,25 @@ message PONG {
 
 message JSONRPCDownPacket {
   oneof payload {
-    //MetaRequest meta_request = 1;
-    RegisterMethodsResponse register_methods = 1;
-    UnregisterMethodsResponse unregister_methods=2;
-    PING ping = 3;
-    PONG pong = 4;
-    JSONRPCRequest request = 10;
-    JSONRPCResult result = 11;
+    UpdateMethodsResponse update_methods = 1;
+ 
+    PING ping = 10;
+    PONG pong = 11;
+    JSONRPCRequest request = 20;
+    JSONRPCResult result = 21;
     
   }
 }
 
 message JSONRPCUpPacket {
   oneof payload {
-    //MetaResult meta_result = 1;
-    RegisterMethodsRequest register_methods = 1;
-    UnregisterMethodsRequest unregister_methods = 2;
-    PING ping = 3;
-    PONG pong = 4;
+    UpdateMethodsRequest update_methods= 1;
  
-    JSONRPCRequest request = 10;
-    JSONRPCResult result = 11;
+    PING ping = 10;
+    PONG pong = 11;
+ 
+    JSONRPCRequest request = 20;
+    JSONRPCResult result = 21;
   }
 }
 

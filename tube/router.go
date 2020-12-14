@@ -4,12 +4,11 @@ import (
 	//"fmt"
 	"context"
 	"errors"
-	//"log"
+	log "github.com/sirupsen/logrus"
+	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	"sort"
 	"sync"
 	"time"
-	//	"github.com/gorilla/websocket"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
 func NewRouter() *Router {
@@ -54,7 +53,7 @@ func (self Router) GetAllMethods() []string {
 }
 
 func (self MethodDesc) IsLocal() bool {
-	return self.Location == Location_Local
+	return !self.Delegated
 }
 
 func (self Router) GetLocalMethods() []string {
@@ -73,65 +72,58 @@ func (self Router) GetLocalMethods() []string {
 	return methods
 }
 
-func (self *Router) RegisterLocalMethods(conn *ConnT, methods []string) error {
-	return self.RegisterMethods(conn, methods, Location_Local)
+func (self *Router) UpdateMethods(conn *ConnT, methods []MethodInfo) bool {
+	self.lock("UpdateMethods")
+	defer self.unlock("UpdateMethods")
+	return self.updateMethods(conn, methods)
 }
 
-func (self *Router) RegisterMethods(conn *ConnT, methods []string, location MethodLocation) error {
-	self.lock("RegisterMethods")
-	defer self.unlock("RegisterMethods")
-	for _, method := range methods {
-		err := self.registerMethod(conn, method, location)
-		if err != nil {
-			return err
+func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
+	connMethods := make(map[string]bool)
+	newMethods := make([]MethodInfo, 0)
+	deletingMethods := make([]string, 0)
+
+	// Find new methods
+	for _, minfo := range methods {
+		connMethods[minfo.Name] = true
+		if _, found := conn.Methods[minfo.Name]; !found {
+			newMethods = append(newMethods, minfo)
 		}
 	}
-	return nil
-}
-
-func (self *Router) registerMethod(conn *ConnT, method string, location MethodLocation) error {
-
-	_, found := conn.Methods[method]
-	if found {
-		// method already attach to this connection
-		return nil
+	// find old methods to delete
+	for method, _ := range conn.Methods {
+		if _, found := connMethods[method]; !found {
+			deletingMethods = append(deletingMethods, method)
+		}
 	}
 
-	conn.Methods[method] = true
+	conn.Methods = connMethods
 
-	methodDesc := MethodDesc{Conn: conn, Location: location}
-	// bi direction map
-	methodDescArr, methodFound := self.MethodConnMap[method]
+	// add methods
+	for _, minfo := range newMethods {
+		method := minfo.Name
+		methodDesc := MethodDesc{
+			Conn:      conn,
+			Delegated: minfo.Delegated,
+		}
+		// bi direction map
+		methodDescArr, methodFound := self.MethodConnMap[method]
 
-	if methodFound {
-		methodDescArr = append(methodDescArr, methodDesc)
-	} else {
-		var tmp []MethodDesc
-		methodDescArr = append(tmp, methodDesc)
-	}
-	self.MethodConnMap[method] = methodDescArr
-	return nil
-}
-
-func (self *Router) UnregisterMethods(conn *ConnT, methods []string) {
-	self.lock("UnregisterMethod")
-	defer self.unlock("UnregisterMethod")
-	for _, method := range methods {
-		self.unregisterMethod(conn, method)
-	}
-}
-
-func (self *Router) unregisterMethod(conn *ConnT, method string) {
-	_, found := conn.Methods[method]
-	if !found {
-		// method is not attached to this connection, just return
-		return
+		if methodFound {
+			methodDescArr = append(methodDescArr, methodDesc)
+		} else {
+			var tmp []MethodDesc
+			methodDescArr = append(tmp, methodDesc)
+		}
+		self.MethodConnMap[method] = methodDescArr
 	}
 
-	delete(conn.Methods, method)
-
-	methodDescList, ok := self.MethodConnMap[method]
-	if ok {
+	// delete methods
+	for _, method := range deletingMethods {
+		methodDescList, ok := self.MethodConnMap[method]
+		if !ok {
+			continue
+		}
 		methodDescList = RemoveConn(methodDescList, conn)
 		if len(methodDescList) > 0 {
 			self.MethodConnMap[method] = methodDescList
@@ -139,6 +131,8 @@ func (self *Router) unregisterMethod(conn *ConnT, method string) {
 			delete(self.MethodConnMap, method)
 		}
 	}
+
+	return len(newMethods) > 0 || len(deletingMethods) > 0
 }
 
 func (self *Router) leaveConn(conn *ConnT) {
@@ -267,8 +261,7 @@ func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *ConnT {
 func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 100)
 	self.ChLeave = make(chan CmdLeave, 100)
-	self.ChReg = make(chan CmdReg, 100)
-	self.ChUnreg = make(chan CmdUnreg, 100)
+	self.ChUpdate = make(chan CmdUpdate, 100)
 }
 
 func (self *Router) Start(ctx context.Context) {
@@ -277,30 +270,40 @@ func (self *Router) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
+				log.Debugf("Router goroutine done")
 				return
 				/*case cmd_join := <-self.ChJoin:
 				self.Join(cmd_join.ConnId, cmd_join.RecvChannel) */
-			case cmd_leave := <-self.ChLeave:
+			case cmd_leave, ok := <-self.ChLeave:
+				if !ok {
+					log.Warnf("ChLeave channel not ok")
+					return
+				}
 				conn, found := self.ConnMap[cmd_leave.ConnId]
 				if found {
 					self.Leave(conn)
 				}
-			case cmd_reg := <-self.ChReg:
+			case cmd_update, ok := <-self.ChUpdate:
 				{
-					conn, found := self.ConnMap[cmd_reg.ConnId]
+					if !ok {
+						log.Warnf("ChUpdate channel not ok")
+						return
+					}
+					conn, found := self.ConnMap[cmd_update.ConnId]
 					if found {
-						self.RegisterMethods(conn, cmd_reg.Methods, cmd_reg.Location)
+						self.UpdateMethods(conn, cmd_update.Methods)
+					} else {
+						log.Infof("Conn %d not found for update methods", cmd_update.ConnId)
 					}
 				}
-			case cmd_unreg := <-self.ChUnreg:
+
+			case cmd_msg, ok := <-self.ChMsg:
 				{
-					conn, found := self.ConnMap[cmd_unreg.ConnId]
-					if found {
-						self.UnregisterMethods(conn, cmd_unreg.Methods)
+					if !ok {
+						log.Warnf("ChMsg channel not ok")
+						return
 					}
-				}
-			case cmd_msg := <-self.ChMsg:
-				{
+
 					self.RouteMessage(cmd_msg.Msg, cmd_msg.FromConnId)
 				}
 			}
@@ -357,7 +360,6 @@ func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage
 		defer self.Leave(conn)
 
 		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: conn.ConnId}
-
 		recvmsg := <-conn.RecvChannel
 		return recvmsg, nil
 	} else {

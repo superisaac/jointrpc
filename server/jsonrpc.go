@@ -165,29 +165,20 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			continue
 		}
 
-		reg := up_pac.GetRegisterMethods()
-		if reg != nil {
-			var loc tube.MethodLocation = tube.Location_Local
-			if reg.Location == intf.MethodLocation_REMOTE {
-				loc = tube.Location_Remote
-			}
-			log.Debugf("conn %d, registered methods %v", conn.ConnId, reg.Methods)
-			cmd_reg := tube.CmdReg{
-				ConnId:   conn.ConnId,
-				Methods:  reg.Methods,
-				Location: loc,
-			}
-			router.ChReg <- cmd_reg
-			continue
-		}
+		update := up_pac.GetUpdateMethods()
+		if update != nil {
+			upMethods := make([]tube.MethodInfo, 0)
 
-		unreg := up_pac.GetUnregisterMethods()
-		if unreg != nil {
-			cmd_unreg := tube.CmdUnreg{
-				ConnId:  conn.ConnId,
-				Methods: unreg.Methods,
+			for _, m := range update.Methods {
+				minfo := tube.MethodInfo{m.Name, m.Delegated}
+				upMethods = append(upMethods, minfo)
 			}
-			router.ChUnreg <- cmd_unreg
+			log.Debugf("conn %d, update methods %v", conn.ConnId, update.Methods)
+			cmd_update := tube.CmdUpdate{
+				ConnId:  conn.ConnId,
+				Methods: upMethods,
+			}
+			router.ChUpdate <- cmd_update
 			continue
 		}
 

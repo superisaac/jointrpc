@@ -22,13 +22,6 @@ var (
 
 type CID uint64
 
-type MethodLocation int32
-
-const (
-	Location_Local  = 0
-	Location_Remote = 1
-)
-
 // Commands
 type MsgChannel chan *jsonrpc.RPCMessage
 
@@ -53,8 +46,13 @@ type ConnT struct {
 
 type MethodDesc struct {
 	//ConnId  CID
-	Conn     *ConnT
-	Location MethodLocation
+	Conn      *ConnT
+	Delegated bool
+}
+
+type MethodInfo struct {
+	Name      string
+	Delegated bool
 }
 
 // Channel commands
@@ -72,15 +70,9 @@ type CmdLeave struct {
 	ConnId CID
 }
 
-type CmdReg struct {
-	ConnId   CID
-	Methods  []string
-	Location MethodLocation
-}
-
-type CmdUnreg struct {
+type CmdUpdate struct {
 	ConnId  CID
-	Methods []string
+	Methods []MethodInfo
 }
 
 type Router struct {
@@ -95,9 +87,8 @@ type Router struct {
 	// channels
 	ChMsg chan CmdMsg
 	//ChJoin     chan CmdJoin
-	ChLeave chan CmdLeave
-	ChReg   chan CmdReg
-	ChUnreg chan CmdUnreg
+	ChLeave  chan CmdLeave
+	ChUpdate chan CmdUpdate
 }
 
 type TubeT struct {

@@ -39,7 +39,7 @@ func StartServer(ctx context.Context, bind string) {
 	}
 	lis, err := net.Listen("tcp", bind)
 	if err != nil {
-		log.Panicf("failed to listen: %w", err)
+		log.Panicf("failed to listen: %v", err)
 	} else {
 		log.Infof("entry server listen at %s", bind)
 	}

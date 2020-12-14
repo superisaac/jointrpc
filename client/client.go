@@ -42,15 +42,15 @@ func (self *RPCClient) wrapHandlerResult(msg *jsonrpc.RPCMessage, res interface{
 	}
 }
 
-func (self *RPCClient) registerMethods(stream intf.JSONRPCTube_HandleClient) {
-	methods := make([]string, 0, len(self.methodHandlers))
-	for method := range self.methodHandlers {
-		methods = append(methods, method)
+func (self *RPCClient) updateMethods() {
+	upMethods := make([](*intf.MethodInfo), 0)
+	for m := range self.methodHandlers {
+		minfo := &intf.MethodInfo{Name: m}
+		upMethods = append(upMethods, minfo)
 	}
-	reg := &intf.RegisterMethodsRequest{Methods: methods}
-	payload := &intf.JSONRPCUpPacket_RegisterMethods{RegisterMethods: reg}
+	up := &intf.UpdateMethodsRequest{Methods: upMethods}
+	payload := &intf.JSONRPCUpPacket_UpdateMethods{UpdateMethods: up}
 	uppac := &intf.JSONRPCUpPacket{Payload: payload}
-	//stream.Send(uppac)
 	self.sendUpChannel <- uppac
 }
 
@@ -70,7 +70,24 @@ func (self *RPCClient) On(method string, handler HandlerFunc, opts ...func(*Meth
 	for _, opt := range opts {
 		opt(&h)
 	}
+
+	_, found := self.methodHandlers[method]
 	self.methodHandlers[method] = h
+
+	if !found && self.sendUpChannel != nil {
+		self.updateMethods()
+	}
+}
+
+func (self *RPCClient) UnHandle(method string) bool {
+	_, found := self.methodHandlers[method]
+	if found {
+		delete(self.methodHandlers, method)
+		if self.sendUpChannel != nil {
+			self.updateMethods()
+		}
+	}
+	return found
 }
 
 func WithSchema(schema string) func(*MethodHandler) {
@@ -116,10 +133,15 @@ func (self *RPCClient) HandleRPC() error {
 	return nil
 }
 
-func (self *RPCClient) sendUpResult(stream intf.JSONRPCTube_HandleClient) {
+func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JSONRPCTube_HandleClient) {
+	// self.sendUpChannel = make(chan *intf.JSONRPCUpPacket)
+	// defer func() {
+	// 	self.sendUpChannel = nil
+	// }()
+
 	for {
 		select {
-		case <-stream.Context().Done():
+		case <-ctx.Done():
 			return
 		case uppacket, ok := <-self.sendUpChannel:
 			if !ok {
@@ -144,9 +166,11 @@ func (self *RPCClient) handleRPC() error {
 		return err
 	}
 
-	go self.sendUpResult(stream)
-	// register methods first
-	self.registerMethods(stream)
+	sendCtx, sendCancel := context.WithCancel(context.Background())
+	defer sendCancel()
+
+	go self.sendUpResult(sendCtx, stream)
+	self.updateMethods()
 
 	for {
 		downpac, err := stream.Recv()
