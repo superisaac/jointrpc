@@ -13,6 +13,9 @@ func ValidateNumber(v interface{}) (json.Number, error) {
 }
 
 func ValidateFloat(v interface{}) (float64, error) {
+	if f, ok := v.(float64); ok {
+		return f, nil
+	}
 	n, err := ValidateNumber(v)
 	if err != nil {
 		return 0, err
@@ -25,6 +28,9 @@ func ValidateFloat(v interface{}) (float64, error) {
 }
 
 func ValidateInt(v interface{}) (int64, error) {
+	if n, ok := v.(int64); ok {
+		return n, nil
+	}
 	n, err := ValidateNumber(v)
 	if err != nil {
 		return 0, err
