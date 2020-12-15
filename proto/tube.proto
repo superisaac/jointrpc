@@ -16,7 +16,7 @@ message ListMethodsRequest {
 }
 
 message ListMethodsResponse {
-  repeated string methods = 1;
+  repeated MethodInfo method_infos = 1;
 }
 
 message SubscribeMethodsRequest {
@@ -68,7 +68,8 @@ message JSONRPCResult {
 message MethodInfo {
   string name = 1;
   //MethodLocation location = 2;
-  bool   delegated = 2;
+  string help = 2;
+  bool   delegated = 3;
 }
 
 message UpdateMethodsRequest {

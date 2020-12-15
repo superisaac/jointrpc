@@ -17,6 +17,7 @@ type MethodHandler struct {
 	function HandlerFunc
 	//Options HandlerOption
 	schema     string
+	help       string
 	concurrent bool
 }
 

@@ -53,13 +53,15 @@ func ExampleArray(serverAddress string) error {
 		}
 	},
 		client.WithSchema(``),
+		client.WithHelp("pop the last element from the array"),
 		client.WithConcurrent(true))
 
 	rpcClient.On("array.list",
 		func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
 			return items, nil
 		},
-		client.WithConcurrent(true))
+		client.WithConcurrent(true),
+		client.WithHelp("list the array elements"))
 
 	rpcClient.On("array.add",
 		func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
@@ -75,9 +77,13 @@ func ExampleArray(serverAddress string) error {
 				return nil, err
 			}
 			items = items[0 : len(items)-2]
-			return a + b, nil
+			v := a + b
+			items = append(items, v)
+			return v, nil
 
-		}, client.WithConcurrent(true))
+		},
+		client.WithHelp("pop two integers from the array, add them and push the result to array"),
+		client.WithConcurrent(true))
 
 	rpcClient.OnDefault(func(req *client.RPCRequest, method string, params []interface{}) (interface{}, error) {
 		return "I don't know how to respond", nil
@@ -87,7 +93,5 @@ func ExampleArray(serverAddress string) error {
 	if err != nil {
 		return err
 	}
-	rpcClient.HandleRPC()
-
-	return nil
+	return rpcClient.RunHandlers()
 } // end of ExampleArray

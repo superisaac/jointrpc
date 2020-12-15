@@ -48,8 +48,18 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 }
 
 func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
-	methods := tube.Tube().Router.GetLocalMethods()
-	resp := &intf.ListMethodsResponse{Methods: methods}
+	log.Debugf("begin list methods")
+	minfos := tube.Tube().Router.GetLocalMethods()
+	intfMInfos := make([]*intf.MethodInfo, 0)
+	for _, minfo := range minfos {
+		iminfo := &intf.MethodInfo{
+			Name:      minfo.Name,
+			Help:      minfo.Help,
+			Delegated: minfo.Delegated}
+		intfMInfos = append(intfMInfos, iminfo)
+	}
+	resp := &intf.ListMethodsResponse{MethodInfos: intfMInfos}
+	log.Debugf("list methods resp %v", resp)
 	return resp, nil
 }
 
@@ -167,10 +177,11 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 
 		update := up_pac.GetUpdateMethods()
 		if update != nil {
+			//log.Debugf("update methods %+v", update)
 			upMethods := make([]tube.MethodInfo, 0)
 
 			for _, m := range update.Methods {
-				minfo := tube.MethodInfo{m.Name, m.Delegated}
+				minfo := tube.MethodInfo{m.Name, m.Help, m.Delegated}
 				upMethods = append(upMethods, minfo)
 			}
 			log.Debugf("conn %d, update methods %v", conn.ConnId, update.Methods)

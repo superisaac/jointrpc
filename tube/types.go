@@ -47,11 +47,13 @@ type ConnT struct {
 type MethodDesc struct {
 	//ConnId  CID
 	Conn      *ConnT
+	Help      string
 	Delegated bool
 }
 
 type MethodInfo struct {
 	Name      string
+	Help      string
 	Delegated bool
 }
 

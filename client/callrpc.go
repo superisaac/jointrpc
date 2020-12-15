@@ -36,14 +36,14 @@ func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RP
 	return msg, err
 }
 
-func (self *RPCClient) ListMethods() ([]string, error) {
+func (self *RPCClient) ListMethods() ([]*intf.MethodInfo, error) {
 	req := &intf.ListMethodsRequest{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	res, err := self.TubeClient.ListMethods(ctx, req)
 	if err != nil {
-		return []string{}, err
+		return [](*intf.MethodInfo){}, err
 	}
 
-	return res.Methods, nil
+	return res.MethodInfos, nil
 }

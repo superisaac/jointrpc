@@ -56,20 +56,25 @@ func (self MethodDesc) IsLocal() bool {
 	return !self.Delegated
 }
 
-func (self Router) GetLocalMethods() []string {
+func (self Router) GetLocalMethods() []MethodInfo {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
-	methods := []string{}
+	minfos := []MethodInfo{}
 	for method, descs := range self.MethodConnMap {
 		for _, desc := range descs {
 			if desc.IsLocal() {
-				methods = append(methods, method)
+				info := MethodInfo{
+					Name:      method,
+					Help:      desc.Help,
+					Delegated: desc.Delegated,
+				}
+				minfos = append(minfos, info)
 			}
 		}
 	}
-	sort.Strings(methods)
-	return methods
+	sort.Slice(minfos, func(i, j int) bool { return minfos[i].Name < minfos[j].Name })
+	return minfos
 }
 
 func (self *Router) UpdateMethods(conn *ConnT, methods []MethodInfo) bool {
@@ -100,10 +105,12 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 	conn.Methods = connMethods
 
 	// add methods
+	log.Debugf("update methods(), adding %v", newMethods)
 	for _, minfo := range newMethods {
 		method := minfo.Name
 		methodDesc := MethodDesc{
 			Conn:      conn,
+			Help:      minfo.Help,
 			Delegated: minfo.Delegated,
 		}
 		// bi direction map
@@ -117,8 +124,10 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 		}
 		self.MethodConnMap[method] = methodDescArr
 	}
+	log.Debugf("conn map %v", self.MethodConnMap)
 
 	// delete methods
+	log.Debugf("update methods(), deleting %v", deletingMethods)
 	for _, method := range deletingMethods {
 		methodDescList, ok := self.MethodConnMap[method]
 		if !ok {
@@ -131,6 +140,7 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 			delete(self.MethodConnMap, method)
 		}
 	}
+	log.Debugf("after deleting conn map %v", self.MethodConnMap)
 
 	return len(newMethods) > 0 || len(deletingMethods) > 0
 }

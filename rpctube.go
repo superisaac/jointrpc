@@ -17,7 +17,7 @@ var commands []string = []string{
 	"example.array", "help",
 }
 
-func setupClientSideLogger() {
+func setupClientSideLogger(logLevel string) {
 	envLogOutput := os.Getenv("LOG_OUTPUT")
 	if envLogOutput == "" || envLogOutput == "console" || envLogOutput == "stdout" {
 		log.SetOutput(os.Stdout)
@@ -31,8 +31,11 @@ func setupClientSideLogger() {
 		log.SetOutput(file)
 	}
 
-	envLogLevel := os.Getenv("LOG_LEVEL")
-	switch envLogLevel {
+	
+	if logLevel == "" {
+		logLevel = os.Getenv("LOG_LEVEL")
+	}
+	switch logLevel {
 	case "DEBUG":
 		log.SetLevel(log.DebugLevel)
 	case "INFO":
@@ -42,7 +45,7 @@ func setupClientSideLogger() {
 	case "ERROR":
 		log.SetLevel(log.ErrorLevel)
 	default:
-		log.SetLevel(log.InfoLevel)
+		log.SetLevel(log.WarnLevel)
 	}
 }
 
@@ -61,16 +64,16 @@ func main() {
 	case "server":
 		server.CommandStartServer()
 	case "listmethods":
-		setupClientSideLogger()
+		setupClientSideLogger("")
 		client.CommandListMethods()
 	case "rpc":
-		setupClientSideLogger()
+		setupClientSideLogger("")
 		client.CommandCallRPC("rpc")
 	case "call":
-		setupClientSideLogger()
+		setupClientSideLogger("")
 		client.CommandCallRPC("call")
 	case "example.array":
-		setupClientSideLogger()
+		setupClientSideLogger("")
 		example.CommandExampleArray()
 	case "help":
 		showHelp()

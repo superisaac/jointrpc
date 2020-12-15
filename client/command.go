@@ -15,12 +15,26 @@ func printHelp() {
 	fmt.Println("method params...")
 }
 
+func tryGetServerAddress(serverAddress string) string {
+	if serverAddress == "" {
+		serverAddress = os.Getenv("TUBE_CONNECT")
+	}
+
+	if serverAddress == "" {
+		serverAddress = "localhost:50055"
+	}
+	return serverAddress
+}
+
 func CommandCallRPC(subcmd string) {
 	callFlags := flag.NewFlagSet(subcmd, flag.ExitOnError)
+	pAddress := callFlags.String("c", "", "the server address to connect, default 127.0.0.1:50055")
 
-	serverAddress := callFlags.String("address", "localhost:50055", "the tube server address")
 	callFlags.Parse(os.Args[2:])
-	log.Infof("dial server %s", *serverAddress)
+
+	serverAddress := tryGetServerAddress(*pAddress)
+
+	log.Infof("dial server %s", serverAddress)
 
 	if callFlags.NArg() < 1 {
 		printHelp()
@@ -36,14 +50,13 @@ func CommandCallRPC(subcmd string) {
 		panic(err)
 	}
 
-	err = RunCallRPC(*serverAddress, method, params)
+	err = RunCallRPC(serverAddress, method, params)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func RunCallRPC(serverAddress string, method string, params []interface{}) error {
-
 	client := NewRPCClient(serverAddress)
 	err := client.Connect()
 	if err != nil {
@@ -67,11 +80,13 @@ func RunCallRPC(serverAddress string, method string, params []interface{}) error
 // Call ListMethods
 func CommandListMethods() {
 	listMethodsFlags := flag.NewFlagSet("listmethods", flag.ExitOnError)
-
-	serverAddress := listMethodsFlags.String("address", "localhost:50055", "the tube server address")
+	pAddress := listMethodsFlags.String("c", "", "the tube server address")
 	listMethodsFlags.Parse(os.Args[2:])
-	log.Infof("dial server %s", *serverAddress)
-	err := RunListMethods(*serverAddress)
+
+	serverAddress := tryGetServerAddress(*pAddress)
+
+	log.Infof("dial server %s", serverAddress)
+	err := RunListMethods(serverAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -83,13 +98,14 @@ func RunListMethods(serverAddress string) error {
 	if err != nil {
 		return err
 	}
-	methods, err := client.ListMethods()
+	methodInfos, err := client.ListMethods()
 	if err != nil {
 		return nil
 	}
 
-	for _, m := range methods {
-		fmt.Printf("%s\n", m)
+	fmt.Printf("available methods:\n")
+	for _, minfo := range methodInfos {
+		fmt.Printf("  %s\t%s\n", minfo.Name, minfo.Help)
 	}
 	return nil
 }

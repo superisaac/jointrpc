@@ -44,8 +44,8 @@ func (self *RPCClient) wrapHandlerResult(msg *jsonrpc.RPCMessage, res interface{
 
 func (self *RPCClient) updateMethods() {
 	upMethods := make([](*intf.MethodInfo), 0)
-	for m := range self.methodHandlers {
-		minfo := &intf.MethodInfo{Name: m}
+	for m, info := range self.methodHandlers {
+		minfo := &intf.MethodInfo{Name: m, Help: info.help}
 		upMethods = append(upMethods, minfo)
 	}
 	up := &intf.UpdateMethodsRequest{Methods: upMethods}
@@ -66,7 +66,7 @@ func (self *RPCClient) returnResult(resmsg *jsonrpc.RPCMessage) {
 }
 
 func (self *RPCClient) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
-	h := MethodHandler{function: handler, schema: "", concurrent: false}
+	h := MethodHandler{function: handler, concurrent: false}
 	for _, opt := range opts {
 		opt(&h)
 	}
@@ -74,7 +74,7 @@ func (self *RPCClient) On(method string, handler HandlerFunc, opts ...func(*Meth
 	_, found := self.methodHandlers[method]
 	self.methodHandlers[method] = h
 
-	if !found && self.sendUpChannel != nil {
+	if !found && self.TubeClient != nil {
 		self.updateMethods()
 	}
 }
@@ -83,11 +83,17 @@ func (self *RPCClient) UnHandle(method string) bool {
 	_, found := self.methodHandlers[method]
 	if found {
 		delete(self.methodHandlers, method)
-		if self.sendUpChannel != nil {
+		if self.TubeClient != nil {
 			self.updateMethods()
 		}
 	}
 	return found
+}
+
+func WithHelp(help string) func(*MethodHandler) {
+	return func(h *MethodHandler) {
+		h.help = help
+	}
 }
 
 func WithSchema(schema string) func(*MethodHandler) {
@@ -118,9 +124,10 @@ func WithDefaultConcurrent(c bool) func(*RPCClient) {
 	}
 }
 
-func (self *RPCClient) HandleRPC() error {
+func (self *RPCClient) RunHandlers() error {
 	for {
 		err := self.handleRPC()
+		log.Debugf("handle rpc %v", err)
 		if err != nil {
 			if grpc.Code(err) == codes.Unavailable {
 				log.Debugf("connect closed retrying")
@@ -162,9 +169,12 @@ func (self *RPCClient) handleRPC() error {
 	defer cancel()
 
 	stream, err := self.TubeClient.Handle(ctx, grpc_retry.WithMax(500))
+
 	if err != nil {
+		log.Debugf("error on handle %v", err)
 		return err
 	}
+	log.Debugf("connected")
 
 	sendCtx, sendCancel := context.WithCancel(context.Background())
 	defer sendCancel()
