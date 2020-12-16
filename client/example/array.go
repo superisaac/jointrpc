@@ -2,6 +2,7 @@ package example
 
 import (
 	client "github.com/superisaac/rpctube/client"
+	handler "github.com/superisaac/rpctube/handler"	
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
@@ -10,14 +11,14 @@ func ExampleArray(serverAddress string) error {
 
 	rpcClient := client.NewRPCClient(serverAddress)
 
-	rpcClient.On("array.push", func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
+	rpcClient.On("array.push", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		for _, elem := range params {
 			items = append(items, elem)
 		}
 		return "ok", nil
 	})
 
-	rpcClient.On("array.at", func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
+	rpcClient.On("array.at", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(params) != 1 {
 			return nil, &jsonrpc.RPCError{400, "params count not eq 1", false}
 		}
@@ -31,9 +32,9 @@ func ExampleArray(serverAddress string) error {
 			return nil, &jsonrpc.RPCError{10423, "index out of range", false}
 		}
 		return items[n], nil
-	}, client.WithSchema(``))
+	}, handler.WithSchema(``))
 
-	rpcClient.On("array.pophead", func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
+	rpcClient.On("array.pophead", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(items) > 0 {
 			elem := items[0]
 			items = items[1:]
@@ -41,9 +42,9 @@ func ExampleArray(serverAddress string) error {
 		} else {
 			return nil, nil
 		}
-	}, client.WithSchema(``))
+	}, handler.WithSchema(``))
 
-	rpcClient.On("array.poptail", func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
+	rpcClient.On("array.poptail", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(items) > 0 {
 			elem := items[len(items)-1]
 			items = items[:len(items)-1]
@@ -52,19 +53,19 @@ func ExampleArray(serverAddress string) error {
 			return nil, nil
 		}
 	},
-		client.WithSchema(``),
-		client.WithHelp("pop the last element from the array"),
-		client.WithConcurrent(true))
+		handler.WithSchema(``),
+		handler.WithHelp("pop the last element from the array"),
+		handler.WithConcurrent(true))
 
 	rpcClient.On("array.list",
-		func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
+		func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 			return items, nil
 		},
-		client.WithConcurrent(true),
-		client.WithHelp("list the array elements"))
+		handler.WithConcurrent(true),
+		handler.WithHelp("list the array elements"))
 
 	rpcClient.On("array.add",
-		func(req *client.RPCRequest, params []interface{}) (interface{}, error) {
+		func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 			if len(items) < 2 {
 				return nil, &jsonrpc.RPCError{10408, "items size < 2", false}
 			}
@@ -82,10 +83,10 @@ func ExampleArray(serverAddress string) error {
 			return v, nil
 
 		},
-		client.WithHelp("pop two integers from the array, add them and push the result to array"),
-		client.WithConcurrent(true))
+		handler.WithHelp("pop two integers from the array, add them and push the result to array"),
+		handler.WithConcurrent(true))
 
-	rpcClient.OnDefault(func(req *client.RPCRequest, method string, params []interface{}) (interface{}, error) {
+	rpcClient.OnDefault(func(req *handler.RPCRequest, method string, params []interface{}) (interface{}, error) {
 		return "I don't know how to respond", nil
 	})
 

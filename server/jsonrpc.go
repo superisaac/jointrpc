@@ -30,13 +30,17 @@ func leaveConn(conn *tube.ConnT) {
 
 func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
 	log.Debugf("called method %s", req.Method)
-	req_msg, err := RequestToMessage(req)
+	reqmsg, err := RequestToMessage(req)
 	if err != nil {
 		return nil, err
 	}
-	//s, _ := req_msg.EncodePretty()
+
+	if !reqmsg.IsRequest() && !reqmsg.IsNotify() {
+		return nil, tube.ErrRequestNotifyRequired
+	}
+
 	router := tube.Tube().Router
-	recvmsg, err := router.SingleCall(req_msg)
+	recvmsg, err := router.SingleCall(reqmsg)
 	if err != nil {
 		return nil, err
 	}

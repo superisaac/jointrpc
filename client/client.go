@@ -14,9 +14,10 @@ import (
 )
 
 func NewRPCClient(serverAddress string) *RPCClient {
-	methodHandlers := make(map[string](MethodHandler))
 	sendUpChannel := make(chan *intf.JSONRPCUpPacket)
-	return &RPCClient{ServerAddress: serverAddress, methodHandlers: methodHandlers, sendUpChannel: sendUpChannel}
+	c := &RPCClient{ServerAddress: serverAddress, sendUpChannel: sendUpChannel}
+	c.InitHandlerManager()
+	return c
 }
 
 func (self *RPCClient) Connect() error {
@@ -29,99 +30,24 @@ func (self *RPCClient) Connect() error {
 	return nil
 }
 
-func (self *RPCClient) wrapHandlerResult(msg *jsonrpc.RPCMessage, res interface{}, err error) (*jsonrpc.RPCMessage, error) {
-	if err != nil {
-		if rpcErr, ok := err.(*jsonrpc.RPCError); ok {
-			return rpcErr.ToMessage(msg.Id), nil
-		}
-		return nil, err
-	} else if msg.IsRequest() {
-		return jsonrpc.NewResultMessage(msg.Id, res), nil
-	} else {
-		return nil, nil
+
+// Override Handler.OnHandlerChanged
+func (self *RPCClient) OnHandlerChanged() {
+	if self.TubeClient != nil {
+		self.updateMethods()
 	}
 }
 
 func (self *RPCClient) updateMethods() {
 	upMethods := make([](*intf.MethodInfo), 0)
-	for m, info := range self.methodHandlers {
-		minfo := &intf.MethodInfo{Name: m, Help: info.help}
+	for m, info := range self.MethodHandlers {
+		minfo := &intf.MethodInfo{Name: m, Help: info.Help}
 		upMethods = append(upMethods, minfo)
 	}
 	up := &intf.UpdateMethodsRequest{Methods: upMethods}
 	payload := &intf.JSONRPCUpPacket_UpdateMethods{UpdateMethods: up}
 	uppac := &intf.JSONRPCUpPacket{Payload: payload}
 	self.sendUpChannel <- uppac
-}
-
-func (self *RPCClient) returnResult(resmsg *jsonrpc.RPCMessage) {
-	rst, err := server.MessageToResult(resmsg)
-	if err != nil {
-		panic(err)
-	}
-	payload := &intf.JSONRPCUpPacket_Result{Result: rst}
-	uppac := &intf.JSONRPCUpPacket{Payload: payload}
-
-	self.sendUpChannel <- uppac
-}
-
-func (self *RPCClient) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
-	h := MethodHandler{function: handler, concurrent: false}
-	for _, opt := range opts {
-		opt(&h)
-	}
-
-	_, found := self.methodHandlers[method]
-	self.methodHandlers[method] = h
-
-	if !found && self.TubeClient != nil {
-		self.updateMethods()
-	}
-}
-
-func (self *RPCClient) UnHandle(method string) bool {
-	_, found := self.methodHandlers[method]
-	if found {
-		delete(self.methodHandlers, method)
-		if self.TubeClient != nil {
-			self.updateMethods()
-		}
-	}
-	return found
-}
-
-func WithHelp(help string) func(*MethodHandler) {
-	return func(h *MethodHandler) {
-		h.help = help
-	}
-}
-
-func WithSchema(schema string) func(*MethodHandler) {
-	return func(h *MethodHandler) {
-		// TODO: parse schema
-		h.schema = schema
-	}
-}
-
-func WithConcurrent(c bool) func(*MethodHandler) {
-	return func(h *MethodHandler) {
-		// TODO: parse schema
-		h.concurrent = c
-	}
-}
-
-func (self *RPCClient) OnDefault(handler DefaultHandlerFunc, opts ...func(*RPCClient)) {
-	self.defaultHandler = handler
-	for _, opt := range opts {
-		opt(self)
-	}
-}
-
-func WithDefaultConcurrent(c bool) func(*RPCClient) {
-	return func(h *RPCClient) {
-		// TODO: parse schema
-		h.defaultConcurrent = c
-	}
 }
 
 func (self *RPCClient) RunHandlers() error {
@@ -141,11 +67,6 @@ func (self *RPCClient) RunHandlers() error {
 }
 
 func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JSONRPCTube_HandleClient) {
-	// self.sendUpChannel = make(chan *intf.JSONRPCUpPacket)
-	// defer func() {
-	// 	self.sendUpChannel = nil
-	// }()
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -156,6 +77,18 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JSONRPCTube
 				return
 			}
 			stream.Send(uppacket)
+		case resmsg, ok := <- self.ChResultMsg:
+			if !ok {
+				log.Warnf("result msg closed")
+				return
+			}
+			rst, err := server.MessageToResult(resmsg)
+			if err != nil {
+				panic(err)
+			}
+			payload := &intf.JSONRPCUpPacket_Result{Result: rst}
+			uppac := &intf.JSONRPCUpPacket{Payload: payload}
+			stream.Send(uppac)
 		}
 	}
 }
@@ -219,57 +152,14 @@ func (self *RPCClient) handleRPC() error {
 	return nil
 }
 
-func (self RPCClient) CanRunConcurrent(method string) bool {
-	handler, ok := self.methodHandlers[method]
-	if ok {
-		return handler.concurrent
-	} else if self.defaultConcurrent {
-		return true
-	}
-	return false
-}
-
 func (self *RPCClient) handleDownRequest(req *intf.JSONRPCRequest) {
 	msg, err := server.RequestToMessage(req)
 	if err != nil {
 		log.Warnf("parse request message error %w", err)
 		errmsg := jsonrpc.NewErrorMessage(req.Id, 10400, "parse message error", false)
-		self.returnResult(errmsg)
+		self.ReturnResultMessage(errmsg)
 		return
 	}
-	self.handleRequestMsg(msg)
+	self.HandleRequestMessage(msg)
 }
 
-func (self *RPCClient) handleRequestMsg(msg *jsonrpc.RPCMessage) {
-	handler, ok := self.methodHandlers[msg.Method]
-	var resmsg *jsonrpc.RPCMessage
-	var err error
-	if ok {
-		req := &RPCRequest{Message: msg}
-		params := msg.Params.MustArray()
-		res, err := handler.function(req, params)
-		resmsg, err = self.wrapHandlerResult(msg, res, err)
-	} else if self.defaultHandler != nil {
-		req := &RPCRequest{Message: msg}
-
-		params := msg.Params.MustArray()
-		res, err := self.defaultHandler(req, msg.Method, params)
-		resmsg, err = self.wrapHandlerResult(msg, res, err)
-	} else {
-		resmsg, err = jsonrpc.ErrNoSuchMethod.ToMessage(msg.Id), nil
-	}
-
-	if err != nil {
-		log.Warnf("bad up message %w", err)
-		errmsg := jsonrpc.NewErrorMessage(msg.Id, 10401, "bad handler res", false)
-		self.returnResult(errmsg)
-		return
-	}
-	if r := recover(); r != nil {
-		log.Fatalf("error on handling request msg %+v", r)
-		return
-	}
-	if resmsg != nil {
-		self.returnResult(resmsg)
-	}
-}

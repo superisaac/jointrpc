@@ -18,6 +18,7 @@ const (
 
 var (
 	ErrNotNotify = errors.New("json message is not notify")
+	ErrRequestNotifyRequired = errors.New("only request and notify message accepted")
 )
 
 type CID uint64

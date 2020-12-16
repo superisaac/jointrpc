@@ -3,7 +3,6 @@ package tube
 import (
 	//"fmt"
 	"context"
-	"errors"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	"sort"
@@ -361,19 +360,16 @@ func (self *Router) Leave(conn *ConnT) {
 	self.leaveConn(conn)
 }
 
-func (self *Router) SingleCall(req_msg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
-	if !req_msg.IsRequest() && !req_msg.IsNotify() {
-		return nil, errors.New("only request and notify message accepted")
-	}
-	if req_msg.IsRequest() {
+func (self *Router) SingleCall(reqmsg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
+	if reqmsg.IsRequest() {
 		conn := self.Join()
 		defer self.Leave(conn)
 
-		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: conn.ConnId}
-		recvmsg := <-conn.RecvChannel
+		self.ChMsg <- CmdMsg{Msg: reqmsg, FromConnId: conn.ConnId}
+		recvmsg := <- conn.RecvChannel
 		return recvmsg, nil
 	} else {
-		self.ChMsg <- CmdMsg{Msg: req_msg, FromConnId: 0}
+		self.ChMsg <- CmdMsg{Msg: reqmsg, FromConnId: 0}
 		return nil, nil
 	}
 }
