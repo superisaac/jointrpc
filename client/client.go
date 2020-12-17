@@ -17,6 +17,9 @@ func NewRPCClient(serverAddress string) *RPCClient {
 	sendUpChannel := make(chan *intf.JSONRPCUpPacket)
 	c := &RPCClient{ServerAddress: serverAddress, sendUpChannel: sendUpChannel}
 	c.InitHandlerManager()
+	c.OnChange(func() {
+		c.OnHandlerChanged()
+	})
 	return c
 }
 
@@ -29,7 +32,6 @@ func (self *RPCClient) Connect() error {
 	self.TubeClient = intf.NewJSONRPCTubeClient(conn)
 	return nil
 }
-
 
 // Override Handler.OnHandlerChanged
 func (self *RPCClient) OnHandlerChanged() {
@@ -77,7 +79,7 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JSONRPCTube
 				return
 			}
 			stream.Send(uppacket)
-		case resmsg, ok := <- self.ChResultMsg:
+		case resmsg, ok := <-self.ChResultMsg:
 			if !ok {
 				log.Warnf("result msg closed")
 				return
@@ -162,4 +164,3 @@ func (self *RPCClient) handleDownRequest(req *intf.JSONRPCRequest) {
 	}
 	self.HandleRequestMessage(msg)
 }
-

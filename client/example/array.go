@@ -2,7 +2,7 @@ package example
 
 import (
 	client "github.com/superisaac/rpctube/client"
-	handler "github.com/superisaac/rpctube/handler"	
+	handler "github.com/superisaac/rpctube/handler"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
@@ -23,16 +23,21 @@ func ExampleArray(serverAddress string) error {
 			return nil, &jsonrpc.RPCError{400, "params count not eq 1", false}
 		}
 
-		n, err := jsonrpc.ValidateInt(params[0])
+		n, err := jsonrpc.ValidateInt(params[0], "parameter 1")
 		if err != nil {
-			return nil, err
+			//return nil, err
+			panic(err)
 		}
 
 		if n < 0 || n >= int64(len(items)) {
-			return nil, &jsonrpc.RPCError{10423, "index out of range", false}
+			return nil, &jsonrpc.RPCError{10423, "parameter 1 index out of range", false}
 		}
 		return items[n], nil
 	}, handler.WithSchema(``))
+
+	rpcClient.On("array.size", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+		return len(items), nil
+	}, handler.WithHelp("get the size of array"))
 
 	rpcClient.On("array.pophead", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(items) > 0 {
@@ -67,13 +72,13 @@ func ExampleArray(serverAddress string) error {
 	rpcClient.On("array.add",
 		func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 			if len(items) < 2 {
-				return nil, &jsonrpc.RPCError{10408, "items size < 2", false}
+				return nil, &jsonrpc.RPCError{10408, "array size < 2", false}
 			}
-			a, err := jsonrpc.ValidateFloat(items[len(items)-2])
+			a, err := jsonrpc.ValidateFloat(items[len(items)-2], "array[-2]")
 			if err != nil {
 				return nil, err
 			}
-			b, err := jsonrpc.ValidateFloat(items[len(items)-1])
+			b, err := jsonrpc.ValidateFloat(items[len(items)-1], "array[-1]")
 			if err != nil {
 				return nil, err
 			}

@@ -13,6 +13,8 @@ type RPCRequest struct {
 type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)
 type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
 
+type OnChangeFunc func()
+
 type MethodHandler struct {
 	function HandlerFunc
 	//Options HandlerOption
@@ -22,8 +24,9 @@ type MethodHandler struct {
 }
 
 type HandlerManager struct {
-	ChResultMsg     chan *jsonrpc.RPCMessage
-	MethodHandlers   map[string]MethodHandler
-	defaultHandler   DefaultHandlerFunc
-	defaultConcurrent  bool
+	ChResultMsg       chan *jsonrpc.RPCMessage
+	MethodHandlers    map[string]MethodHandler
+	defaultHandler    DefaultHandlerFunc
+	defaultConcurrent bool
+	onChange          OnChangeFunc
 }

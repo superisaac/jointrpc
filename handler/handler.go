@@ -1,14 +1,14 @@
 package handler
 
 import (
-	"errors"
+	//"errors"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	//tube "github.com/superisaac/rpctube/tube"
 )
 
 func (self *HandlerManager) InitHandlerManager() {
-	self.ChResultMsg = make(chan *jsonrpc.RPCMessage)	
+	self.ChResultMsg = make(chan *jsonrpc.RPCMessage)
 	self.MethodHandlers = make(map[string](MethodHandler))
 }
 
@@ -21,24 +21,24 @@ func (self *HandlerManager) On(method string, handler HandlerFunc, opts ...func(
 	_, found := self.MethodHandlers[method]
 	self.MethodHandlers[method] = h
 
-	if !found {
-		self.OnHandlerChanged()
+	if !found && self.onChange != nil {
+		self.onChange()
 	}
+}
+
+func (self *HandlerManager) OnChange(onchange OnChangeFunc) {
+	self.onChange = onchange
 }
 
 func (self *HandlerManager) UnHandle(method string) bool {
 	_, found := self.MethodHandlers[method]
 	if found {
 		delete(self.MethodHandlers, method)
-		self.OnHandlerChanged()
+		if self.onChange != nil {
+			self.onChange()
+		}
 	}
 	return found
-}
-
-
-func (self *HandlerManager) OnHandlerChanged() {
-	err := errors.New("On Handler Changed not implemented")
-	panic(err)
 }
 
 func (self *HandlerManager) wrapHandlerResult(msg *jsonrpc.RPCMessage, res interface{}, err error) (*jsonrpc.RPCMessage, error) {
@@ -54,13 +54,27 @@ func (self *HandlerManager) wrapHandlerResult(msg *jsonrpc.RPCMessage, res inter
 	}
 }
 
-
 func (self *HandlerManager) ReturnResultMessage(resmsg *jsonrpc.RPCMessage) {
 	self.ChResultMsg <- resmsg
 }
 
 func (self *HandlerManager) HandleRequestMessage(msg *jsonrpc.RPCMessage) {
 	handler, ok := self.MethodHandlers[msg.Method]
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("Recovered ERROR on handling request msg %+v", r)
+			if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+				errmsg := rpcError.ToMessage(msg.Id)
+				self.ReturnResultMessage(errmsg)
+				return
+			} else {
+				errmsg := jsonrpc.ErrServerError.ToMessage(msg.Id)
+				self.ReturnResultMessage(errmsg)
+			}
+		}
+	}()
+
 	var resmsg *jsonrpc.RPCMessage
 	var err error
 	if ok {
@@ -84,15 +98,10 @@ func (self *HandlerManager) HandleRequestMessage(msg *jsonrpc.RPCMessage) {
 		self.ReturnResultMessage(errmsg)
 		return
 	}
-	if r := recover(); r != nil {
-		log.Fatalf("error on handling request msg %+v", r)
-		return
-	}
 	if resmsg != nil {
 		self.ReturnResultMessage(resmsg)
 	}
 }
-
 
 // MethodHandler Helper methods
 func WithHelp(help string) func(*MethodHandler) {
@@ -131,8 +140,6 @@ func (self HandlerManager) CanRunConcurrent(method string) bool {
 	}
 	return false
 }
-
-
 
 func WithDefaultConcurrent(c bool) func(*HandlerManager) {
 	return func(h *HandlerManager) {

@@ -366,7 +366,7 @@ func (self *Router) SingleCall(reqmsg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage,
 		defer self.Leave(conn)
 
 		self.ChMsg <- CmdMsg{Msg: reqmsg, FromConnId: conn.ConnId}
-		recvmsg := <- conn.RecvChannel
+		recvmsg := <-conn.RecvChannel
 		return recvmsg, nil
 	} else {
 		self.ChMsg <- CmdMsg{Msg: reqmsg, FromConnId: 0}
