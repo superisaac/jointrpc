@@ -57,6 +57,7 @@ type MethodInfo struct {
 	Help      string
 	Delegated bool
 }
+type MethodInfoMap map[string](interface{})
 
 // Channel commands
 type CmdMsg struct {

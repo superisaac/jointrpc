@@ -55,6 +55,19 @@ func (self MethodDesc) IsLocal() bool {
 	return !self.Delegated
 }
 
+func (self MethodInfo) ToMap() MethodInfoMap {
+	// infoMap := make(MethodInfoMap)
+	// infoMap["name"] = self.Name
+	// infoMap["help"] = self.Help
+	// infoMap["delegated"] = self.Delegated
+	// return infoMap
+	return MethodInfoMap{
+		"name":      self.Name,
+		"help":      self.Help,
+		"delegated": self.Delegated,
+	}
+}
+
 func (self Router) GetLocalMethods() []MethodInfo {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()

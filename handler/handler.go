@@ -8,7 +8,7 @@ import (
 )
 
 func (self *HandlerManager) InitHandlerManager() {
-	self.ChResultMsg = make(chan *jsonrpc.RPCMessage)
+	self.ChResultMsg = make(chan *jsonrpc.RPCMessage, 100)
 	self.MethodHandlers = make(map[string](MethodHandler))
 }
 
@@ -92,6 +92,7 @@ func (self *HandlerManager) HandleRequestMessage(msg *jsonrpc.RPCMessage) {
 		resmsg, err = jsonrpc.ErrNoSuchMethod.ToMessage(msg.Id), nil
 	}
 
+	log.Debugf("handle request method %v, resmsg %v, error %v", msg, resmsg, err)
 	if err != nil {
 		log.Warnf("bad up message %w", err)
 		errmsg := jsonrpc.NewErrorMessage(msg.Id, 10401, "bad handler res", false)

@@ -23,10 +23,11 @@ type JSONRPCTube struct {
 	intf.UnimplementedJSONRPCTubeServer
 }
 
-func leaveConn(conn *tube.ConnT) {
+/*func leaveConn(conn *tube.ConnT) {
 	//tube.Tube().Router.ChLeave <- tube.CmdLeave{ConnId: conn.ConnId}
 	tube.Tube().Router.Leave(conn)
 }
+*/
 
 func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
 	log.Debugf("called method %s", req.Method)
@@ -51,16 +52,28 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 	return res, nil
 }
 
+func encodeMethodInfo(minfo tube.MethodInfo) *intf.MethodInfo {
+	return &intf.MethodInfo{
+		Name:      minfo.Name,
+		Help:      minfo.Help,
+		Delegated: minfo.Delegated,
+	}
+}
+
+func decodeMethodInfo(iminfo *intf.MethodInfo) tube.MethodInfo {
+	return tube.MethodInfo{
+		Name:      iminfo.Name,
+		Help:      iminfo.Help,
+		Delegated: iminfo.Delegated,
+	}
+}
+
 func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
 	log.Debugf("begin list methods")
 	minfos := tube.Tube().Router.GetLocalMethods()
 	intfMInfos := make([]*intf.MethodInfo, 0)
 	for _, minfo := range minfos {
-		iminfo := &intf.MethodInfo{
-			Name:      minfo.Name,
-			Help:      minfo.Help,
-			Delegated: minfo.Delegated}
-		intfMInfos = append(intfMInfos, iminfo)
+		intfMInfos = append(intfMInfos, encodeMethodInfo(minfo))
 	}
 	resp := &intf.ListMethodsResponse{MethodInfos: intfMInfos}
 	log.Debugf("list methods resp %v", resp)
@@ -125,7 +138,8 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
 		cancel()
-		leaveConn(conn)
+		//leaveConn(conn)
+		router.Leave(conn)
 		//time.Sleep(1 * time.Second)
 	}()
 
@@ -184,8 +198,8 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			//log.Debugf("update methods %+v", update)
 			upMethods := make([]tube.MethodInfo, 0)
 
-			for _, m := range update.Methods {
-				minfo := tube.MethodInfo{m.Name, m.Help, m.Delegated}
+			for _, iminfo := range update.Methods {
+				minfo := decodeMethodInfo(iminfo)
 				upMethods = append(upMethods, minfo)
 			}
 			log.Debugf("conn %d, update methods %v", conn.ConnId, update.Methods)

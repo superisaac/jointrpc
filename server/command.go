@@ -8,6 +8,7 @@ import (
 	"os"
 	//"fmt"
 	datadir "github.com/superisaac/rpctube/datadir"
+	handler "github.com/superisaac/rpctube/handler"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	tube "github.com/superisaac/rpctube/tube"
 	grpc "google.golang.org/grpc"
@@ -45,6 +46,9 @@ func StartServer(ctx context.Context, bind string) {
 	}
 
 	tube.Tube().Start(ctx)
+
+	handlerCtx, _ := context.WithCancel(ctx)
+	handler.Builtin().Start(handlerCtx)
 
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
