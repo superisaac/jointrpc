@@ -1,8 +1,9 @@
 package server
 
 import (
-	context "context"
+	"context"
 	"errors"
+	"io"
 	//"time"
 	//json "encoding/json"
 	//"errors"
@@ -81,6 +82,12 @@ func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMeth
 }
 
 func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, recv_ch tube.MsgChannel) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Warnf("recovered ERROR %+v", r)
+			//stream.Close()
+		}
+	}()
 	for {
 		select {
 		case <-context.Done():
@@ -119,9 +126,6 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 
 		}
 	} // and for loop
-	if r := recover(); r != nil {
-		log.Fatalf("panic recovered %+v", r)
-	}
 }
 
 func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
@@ -150,8 +154,11 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	for {
 		up_pac, err := stream.Recv()
 		if err != nil {
-			if grpc.Code(err) == codes.Canceled {
-				log.Debugf("canceled")
+			if err == io.EOF {
+				log.Debugf("eof met")
+				return nil
+			} else if grpc.Code(err) == codes.Canceled {
+				log.Debugf("stream canceled")
 				return nil
 			}
 			log.Warnf("error on stream Recv() %s", err.Error())

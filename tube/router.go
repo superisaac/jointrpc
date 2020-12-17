@@ -117,7 +117,6 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 	conn.Methods = connMethods
 
 	// add methods
-	log.Debugf("update methods(), adding %v", newMethods)
 	for _, minfo := range newMethods {
 		method := minfo.Name
 		methodDesc := MethodDesc{
@@ -136,10 +135,7 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 		}
 		self.MethodConnMap[method] = methodDescArr
 	}
-	log.Debugf("conn map %v", self.MethodConnMap)
-
 	// delete methods
-	log.Debugf("update methods(), deleting %v", deletingMethods)
 	for _, method := range deletingMethods {
 		methodDescList, ok := self.MethodConnMap[method]
 		if !ok {
@@ -152,8 +148,6 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 			delete(self.MethodConnMap, method)
 		}
 	}
-	log.Debugf("after deleting conn map %v", self.MethodConnMap)
-
 	return len(newMethods) > 0 || len(deletingMethods) > 0
 }
 
@@ -163,9 +157,7 @@ func (self *Router) leaveConn(conn *ConnT) {
 		if !ok {
 			continue
 		}
-		//log.Printf("method desc pre remove %v", methodDescList)
 		methodDescList = RemoveConn(methodDescList, conn)
-		//log.Printf("method desc post remove %v", methodDescList)
 		if len(methodDescList) > 0 {
 			self.MethodConnMap[method] = methodDescList
 		} else {
@@ -282,7 +274,7 @@ func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *ConnT {
 
 func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 100)
-	self.ChLeave = make(chan CmdLeave, 100)
+	//self.ChLeave = make(chan CmdLeave, 100)
 	self.ChUpdate = make(chan CmdUpdate, 100)
 }
 
@@ -296,15 +288,15 @@ func (self *Router) Start(ctx context.Context) {
 				return
 				/*case cmd_join := <-self.ChJoin:
 				self.Join(cmd_join.ConnId, cmd_join.RecvChannel) */
-			case cmd_leave, ok := <-self.ChLeave:
-				if !ok {
-					log.Warnf("ChLeave channel not ok")
-					return
-				}
-				conn, found := self.ConnMap[cmd_leave.ConnId]
-				if found {
-					self.Leave(conn)
-				}
+			// case cmd_leave, ok := <-self.ChLeave:
+			// 	if !ok {
+			// 		log.Warnf("ChLeave channel not ok")
+			// 		return
+			// 	}
+			// 	conn, found := self.ConnMap[cmd_leave.ConnId]
+			// 	if found {
+			// 		self.Leave(conn)
+			// 	}
 			case cmd_update, ok := <-self.ChUpdate:
 				{
 					if !ok {

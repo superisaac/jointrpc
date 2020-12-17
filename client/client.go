@@ -55,7 +55,7 @@ func (self *RPCClient) updateMethods() {
 func (self *RPCClient) RunHandlers() error {
 	for {
 		err := self.handleRPC()
-		log.Debugf("handle rpc %v", err)
+		//log.Debugf("handle rpc %v", err)
 		if err != nil {
 			if grpc.Code(err) == codes.Unavailable {
 				log.Debugf("connect closed retrying")
@@ -106,7 +106,7 @@ func (self *RPCClient) handleRPC() error {
 	stream, err := self.TubeClient.Handle(ctx, grpc_retry.WithMax(500))
 
 	if err != nil {
-		log.Debugf("error on handle %v", err)
+		log.Warnf("error on handle %v", err)
 		return err
 	}
 	log.Debugf("connected")
@@ -120,7 +120,7 @@ func (self *RPCClient) handleRPC() error {
 	for {
 		downpac, err := stream.Recv()
 		if err == io.EOF {
-			log.Infof("eor close")
+			log.Infof("client stream closed")
 			return nil
 		} else if err != nil {
 			log.Debugf("down pack error %+v %d", err, grpc.Code(err))
@@ -157,7 +157,7 @@ func (self *RPCClient) handleRPC() error {
 func (self *RPCClient) handleDownRequest(req *intf.JSONRPCRequest) {
 	msg, err := server.RequestToMessage(req)
 	if err != nil {
-		log.Warnf("parse request message error %w", err)
+		log.Warnf("parse request message error %+v", err)
 		errmsg := jsonrpc.NewErrorMessage(req.Id, 10400, "parse message error", false)
 		self.ReturnResultMessage(errmsg)
 		return

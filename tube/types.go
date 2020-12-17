@@ -65,14 +65,14 @@ type CmdMsg struct {
 	FromConnId CID
 }
 
-type CmdJoin struct {
-	ConnId      CID
-	RecvChannel MsgChannel
-}
+// type CmdJoin struct {
+// 	ConnId      CID
+// 	RecvChannel MsgChannel
+// }
 
-type CmdLeave struct {
-	ConnId CID
-}
+// type CmdLeave struct {
+// 	ConnId CID
+// }
 
 type CmdUpdate struct {
 	ConnId  CID
@@ -91,7 +91,7 @@ type Router struct {
 	// channels
 	ChMsg chan CmdMsg
 	//ChJoin     chan CmdJoin
-	ChLeave  chan CmdLeave
+	//ChLeave  chan CmdLeave
 	ChUpdate chan CmdUpdate
 }
 

@@ -32,7 +32,7 @@ func TestJoinConn(t *testing.T) {
 	conn := router.Join() //cid, ch)
 	assert.Equal(1, len(router.ConnMap))
 
-	router.UpdateMethods(conn, []MethodInfo{{"abc", false}})
+	router.UpdateMethods(conn, []MethodInfo{{"abc", "method abc", false}})
 	methods := conn.GetMethods()
 	assert.Equal(1, len(methods))
 	assert.Equal("abc", methods[0])
@@ -47,13 +47,13 @@ func TestRouteMessage(t *testing.T) {
 	conn := router.Join()
 
 	assert.Equal(1, len(router.ConnMap))
-	router.UpdateMethods(conn, []MethodInfo{{"abc", false}, {"def", true}})
+	router.UpdateMethods(conn, []MethodInfo{{"abc", "", false}, {"def", "", true}})
 
 	methods := router.GetAllMethods()
 	assert.Equal([]string{"abc", "def"}, methods)
 
 	localMethods := router.GetLocalMethods()
-	assert.Equal([]string{"abc"}, localMethods)
+	assert.Equal([]MethodInfo{{"abc", "", false}}, localMethods)
 
 	_ = router.Join()
 
@@ -85,7 +85,7 @@ func TestRouteRoutine(t *testing.T) {
 	conn := router.Join()
 	cid := conn.ConnId
 	ch := conn.RecvChannel
-	router.ChUpdate <- CmdUpdate{ConnId: cid, Methods: []MethodInfo{{"abc", false}}}
+	router.ChUpdate <- CmdUpdate{ConnId: cid, Methods: []MethodInfo{{"abc", "method abc", false}}}
 
 	conn1 := router.Join()
 	cid1 := conn1.ConnId

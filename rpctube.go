@@ -18,6 +18,8 @@ var commands []string = []string{
 }
 
 func setupClientSideLogger(logLevel string) {
+	log.SetFormatter(&log.JSONFormatter{})
+	
 	envLogOutput := os.Getenv("LOG_OUTPUT")
 	if envLogOutput == "" || envLogOutput == "console" || envLogOutput == "stdout" {
 		log.SetOutput(os.Stdout)

@@ -75,6 +75,8 @@ func (self *Config) validateValues() error {
 }
 
 func (self *Config) setupLogger() {
+	log.SetFormatter(&log.JSONFormatter{})
+
 	logOutput := self.Logging.Output
 	if logOutput == "" || logOutput == "console" || logOutput == "stdout" {
 		log.SetOutput(os.Stdout)

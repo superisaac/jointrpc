@@ -31,16 +31,13 @@ func (self *BuiltinHandlerManager) Start(ctx context.Context) {
 				return
 			case msg, ok := <-self.conn.RecvChannel:
 				if !ok {
-					log.Debugf("builtin handlers, recv channel closed")
 					return
 				}
 				self.messageReceived(msg)
 			case resmsg, ok := <-self.ChResultMsg:
 				if !ok {
-					log.Debugf("builtin handlers, recv channel closed")
 					return
 				}
-				log.Debugf("ch result msg %v", resmsg)
 				router.ChMsg <- tube.CmdMsg{Msg: resmsg, FromConnId: self.conn.ConnId}
 			}
 		}
@@ -48,7 +45,6 @@ func (self *BuiltinHandlerManager) Start(ctx context.Context) {
 }
 
 func (self *BuiltinHandlerManager) messageReceived(msg *jsonrpc.RPCMessage) {
-	log.Debugf("message received %v", msg)
 	if msg.IsRequest() || msg.IsNotify() {
 		self.HandleRequestMessage(msg)
 	} else {
@@ -58,18 +54,14 @@ func (self *BuiltinHandlerManager) messageReceived(msg *jsonrpc.RPCMessage) {
 
 func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 	self.InitHandlerManager()
-
 	self.On(".listMethods", func(req *RPCRequest, params []interface{}) (interface{}, error) {
-		log.Debugf("list methods %v", params)
 		minfos := tube.Tube().Router.GetLocalMethods()
 		arr := make([](tube.MethodInfoMap), 0)
 		for _, minfo := range minfos {
 			arr = append(arr, minfo.ToMap())
 		}
-		log.Debugf("got lcoal methods %v", arr)
 		return arr, nil
 	})
-
 	self.OnChange(func() {
 		self.updateMethods()
 	})
