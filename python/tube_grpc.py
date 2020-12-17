@@ -23,6 +23,10 @@ class JSONRPCTubeBase(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def Notify(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCNotifyRequest, tube_pb2.JSONRPCNotifyResponse]') -> None:
+        pass
+
+    @abc.abstractmethod
     async def Handle(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCUpPacket, tube_pb2.JSONRPCDownPacket]') -> None:
         pass
 
@@ -39,6 +43,12 @@ class JSONRPCTubeBase(abc.ABC):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 tube_pb2.JSONRPCRequest,
                 tube_pb2.JSONRPCResult,
+            ),
+            '/JSONRPCTube/Notify': grpclib.const.Handler(
+                self.Notify,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                tube_pb2.JSONRPCNotifyRequest,
+                tube_pb2.JSONRPCNotifyResponse,
             ),
             '/JSONRPCTube/Handle': grpclib.const.Handler(
                 self.Handle,
@@ -63,6 +73,12 @@ class JSONRPCTubeStub:
             '/JSONRPCTube/Call',
             tube_pb2.JSONRPCRequest,
             tube_pb2.JSONRPCResult,
+        )
+        self.Notify = grpclib.client.UnaryUnaryMethod(
+            channel,
+            '/JSONRPCTube/Notify',
+            tube_pb2.JSONRPCNotifyRequest,
+            tube_pb2.JSONRPCNotifyResponse,
         )
         self.Handle = grpclib.client.StreamStreamMethod(
             channel,

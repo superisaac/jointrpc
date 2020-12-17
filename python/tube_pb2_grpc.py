@@ -24,6 +24,11 @@ class JSONRPCTubeStub(object):
                 request_serializer=tube__pb2.JSONRPCRequest.SerializeToString,
                 response_deserializer=tube__pb2.JSONRPCResult.FromString,
                 )
+        self.Notify = channel.unary_unary(
+                '/JSONRPCTube/Notify',
+                request_serializer=tube__pb2.JSONRPCNotifyRequest.SerializeToString,
+                response_deserializer=tube__pb2.JSONRPCNotifyResponse.FromString,
+                )
         self.Handle = channel.stream_stream(
                 '/JSONRPCTube/Handle',
                 request_serializer=tube__pb2.JSONRPCUpPacket.SerializeToString,
@@ -47,6 +52,12 @@ class JSONRPCTubeServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Notify(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def Handle(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -65,6 +76,11 @@ def add_JSONRPCTubeServicer_to_server(servicer, server):
                     servicer.Call,
                     request_deserializer=tube__pb2.JSONRPCRequest.FromString,
                     response_serializer=tube__pb2.JSONRPCResult.SerializeToString,
+            ),
+            'Notify': grpc.unary_unary_rpc_method_handler(
+                    servicer.Notify,
+                    request_deserializer=tube__pb2.JSONRPCNotifyRequest.FromString,
+                    response_serializer=tube__pb2.JSONRPCNotifyResponse.SerializeToString,
             ),
             'Handle': grpc.stream_stream_rpc_method_handler(
                     servicer.Handle,
@@ -112,6 +128,23 @@ class JSONRPCTube(object):
         return grpc.experimental.unary_unary(request, target, '/JSONRPCTube/Call',
             tube__pb2.JSONRPCRequest.SerializeToString,
             tube__pb2.JSONRPCResult.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Notify(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/JSONRPCTube/Notify',
+            tube__pb2.JSONRPCNotifyRequest.SerializeToString,
+            tube__pb2.JSONRPCNotifyResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

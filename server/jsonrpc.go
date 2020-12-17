@@ -46,11 +46,36 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 	if err != nil {
 		return nil, err
 	}
+	if recvmsg == nil {
+		res := &intf.JSONRPCResult{Id: ""}
+		res.Result = &intf.JSONRPCResult_Ok{Ok: ""}
+		return res, nil
+	}
 	res, err := MessageToResult(recvmsg)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
+}
+
+func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
+	log.Debugf("called method %s", req.Method)
+	notifymsg, err := NotifyToMessage(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if !notifymsg.IsNotify() {
+		return nil, tube.ErrRequestNotifyRequired
+	}
+
+	router := tube.Tube().Router
+	_, err = router.SingleCall(notifymsg)
+	if err != nil {
+		return nil, err
+	}
+	resp := &intf.JSONRPCNotifyResponse{}
+	return resp, nil
 }
 
 func encodeMethodInfo(minfo tube.MethodInfo) *intf.MethodInfo {
@@ -70,7 +95,6 @@ func decodeMethodInfo(iminfo *intf.MethodInfo) tube.MethodInfo {
 }
 
 func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
-	log.Debugf("begin list methods")
 	minfos := tube.Tube().Router.GetLocalMethods()
 	intfMInfos := make([]*intf.MethodInfo, 0)
 	for _, minfo := range minfos {

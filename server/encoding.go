@@ -3,8 +3,8 @@ package server
 import (
 	json "encoding/json"
 	"errors"
-	//"log"
 	simplejson "github.com/bitly/go-simplejson"
+	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
@@ -33,6 +33,22 @@ func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 		}
 	}
 	msg := jsonrpc.NewRequestMessage(id, req.Method, params)
+	return msg, nil
+}
+
+func NotifyToMessage(req *intf.JSONRPCNotifyRequest) (*jsonrpc.RPCMessage, error) {
+	params := [](interface{}){}
+	if len(req.Params) > 0 {
+		paramsJson, err := simplejson.NewJson([]byte(req.Params))
+		if err != nil {
+			return nil, err
+		}
+		paramInterface := paramsJson.Interface()
+		if paramInterface != nil {
+			params = paramInterface.([]interface{})
+		}
+	}
+	msg := jsonrpc.NewNotifyMessage(req.Method, params)
 	return msg, nil
 }
 
@@ -98,6 +114,7 @@ func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
 
 func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
 	if !msg.IsResult() && !msg.IsError() {
+		log.Debugf("msg is %+v", msg)
 		return nil, errors.New("msg is neither result nor error")
 	}
 	res := &intf.JSONRPCResult{}

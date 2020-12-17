@@ -48,6 +48,7 @@ func (self *HandlerManager) wrapHandlerResult(msg *jsonrpc.RPCMessage, res inter
 		}
 		return nil, err
 	} else if msg.IsRequest() {
+		log.Debugf("msg is request")
 		return jsonrpc.NewResultMessage(msg.Id, res), nil
 	} else {
 		return nil, nil
@@ -81,6 +82,7 @@ func (self *HandlerManager) HandleRequestMessage(msg *jsonrpc.RPCMessage) {
 		req := &RPCRequest{Message: msg}
 		params := msg.Params.MustArray()
 		res, err := handler.function(req, params)
+		log.Debugf("handler function returns %+v, %+v", msg, res)
 		resmsg, err = self.wrapHandlerResult(msg, res, err)
 	} else if self.defaultHandler != nil {
 		req := &RPCRequest{Message: msg}

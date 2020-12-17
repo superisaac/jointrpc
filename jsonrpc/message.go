@@ -182,7 +182,8 @@ func (self RPCMessage) IsNotify() bool {
 func (self RPCMessage) IsResult() bool {
 	return (self.Id != nil &&
 		self.Method == "" &&
-		self.Result.Interface() != nil)
+		self.Error.Interface() == nil)
+	//self.Result.Interface() != nil)
 }
 
 func (self RPCMessage) IsError() bool {

@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -36,6 +37,7 @@ func (self *Router) Init() *Router {
 	self.MethodConnMap = make(map[string]([]MethodDesc))
 	self.ConnMap = make(map[CID](*ConnT))
 	self.PendingMap = make(map[PendingKey]PendingValue)
+	self.localMethodsSig = ""
 	return self
 }
 
@@ -71,7 +73,10 @@ func (self MethodInfo) ToMap() MethodInfoMap {
 func (self Router) GetLocalMethods() []MethodInfo {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
+	return self.getLocalMethods()
+}
 
+func (self Router) getLocalMethods() []MethodInfo {
 	minfos := []MethodInfo{}
 	for method, descs := range self.MethodConnMap {
 		for _, desc := range descs {
@@ -89,6 +94,14 @@ func (self Router) GetLocalMethods() []MethodInfo {
 	return minfos
 }
 
+func (self Router) getLocalMethodsSig() string {
+	var arr []string
+	for _, minfo := range self.getLocalMethods() {
+		arr = append(arr, minfo.Name)
+	}
+	return strings.Join(arr, ",")
+}
+
 func (self *Router) UpdateMethods(conn *ConnT, methods []MethodInfo) bool {
 	self.lock("UpdateMethods")
 	defer self.unlock("UpdateMethods")
@@ -97,14 +110,14 @@ func (self *Router) UpdateMethods(conn *ConnT, methods []MethodInfo) bool {
 
 func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 	connMethods := make(map[string]bool)
-	newMethods := make([]MethodInfo, 0)
+	addingMethods := make([]MethodInfo, 0)
 	deletingMethods := make([]string, 0)
 
 	// Find new methods
 	for _, minfo := range methods {
 		connMethods[minfo.Name] = true
 		if _, found := conn.Methods[minfo.Name]; !found {
-			newMethods = append(newMethods, minfo)
+			addingMethods = append(addingMethods, minfo)
 		}
 	}
 	// find old methods to delete
@@ -115,9 +128,10 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 	}
 
 	conn.Methods = connMethods
+	maybeChanged := len(addingMethods) > 0 || len(deletingMethods) > 0
 
 	// add methods
-	for _, minfo := range newMethods {
+	for _, minfo := range addingMethods {
 		method := minfo.Name
 		methodDesc := MethodDesc{
 			Conn:      conn,
@@ -148,7 +162,20 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 			delete(self.MethodConnMap, method)
 		}
 	}
-	return len(newMethods) > 0 || len(deletingMethods) > 0
+	if maybeChanged {
+		sig := self.getLocalMethodsSig()
+		if self.localMethodsSig != sig {
+			// notify local methods change by broadcasting notification
+			log.Debugf("local methods sig changed %s, %s", self.localMethodsSig, sig)
+			self.localMethodsSig = sig
+			params := [](interface{}){sig}
+			notify := jsonrpc.NewNotifyMessage("localMethods.changed", params)
+			self.ChMsg <- CmdMsg{Msg: notify, FromConnId: 0, Broadcast: true}
+		}
+	}
+
+	return maybeChanged
+
 }
 
 func (self *Router) leaveConn(conn *ConnT) {
@@ -229,7 +256,9 @@ func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
 	self.PendingMap[pKey] = pValue
 }
 
-func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT {
+func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
+	msg := cmdMsg.Msg
+	fromConnId := cmdMsg.FromConnId
 	if msg.IsRequest() {
 		toConn, found := self.SelectConn(msg.Method)
 		if found {
@@ -244,9 +273,13 @@ func (self *Router) routeMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT
 			return self.deliverMessage(fromConnId, errMsg)
 		}
 	} else if msg.IsNotify() {
-		toConn, found := self.SelectConn(msg.Method)
-		if found {
-			return self.deliverMessage(toConn.ConnId, msg)
+		if cmdMsg.Broadcast {
+			self.broadcastMessage(msg)
+		} else {
+			toConn, found := self.SelectConn(msg.Method)
+			if found {
+				return self.deliverMessage(toConn.ConnId, msg)
+			}
 		}
 	} else if msg.IsResultOrError() {
 		for pKey, pValue := range self.PendingMap {
@@ -270,6 +303,19 @@ func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *ConnT {
 		return ct
 	}
 	return nil
+}
+
+func (self *Router) broadcastMessage(msg *jsonrpc.RPCMessage) int {
+	log.Debugf("broadcast message %+v", msg)
+	cnt := 0
+	for _, ct := range self.ConnMap {
+		_, ok := ct.Methods[msg.Method]
+		if ok {
+			cnt += 1
+			ct.RecvChannel <- msg
+		}
+	}
+	return cnt
 }
 
 func (self *Router) setupChannels() {
@@ -318,7 +364,7 @@ func (self *Router) Start(ctx context.Context) {
 						return
 					}
 
-					self.RouteMessage(cmd_msg.Msg, cmd_msg.FromConnId)
+					self.RouteMessage(cmd_msg)
 				}
 			}
 		}
@@ -326,13 +372,13 @@ func (self *Router) Start(ctx context.Context) {
 }
 
 // commands
-func (self *Router) RouteMessage(msg *jsonrpc.RPCMessage, fromConnId CID) *ConnT {
+func (self *Router) RouteMessage(cmdMsg CmdMsg) *ConnT {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
 	//msg.FromConnId = fromConnId
 	//self.ChMsg <- msg
-	return self.routeMessage(msg, fromConnId)
+	return self.routeMessage(cmdMsg)
 }
 
 func (self *Router) Join() *ConnT {

@@ -66,7 +66,7 @@ func TestRouteMessage(t *testing.T) {
 	msg, err := jsonrpc.ParseMessage([]byte(j1))
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.Id)
-	router.RouteMessage(msg, conn.ConnId)
+	router.RouteMessage(CmdMsg{msg, conn.ConnId, false})
 
 	rcvmsg := <-conn.RecvChannel
 	assert.Equal(msg.Id, rcvmsg.Id)

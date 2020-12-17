@@ -63,6 +63,7 @@ type MethodInfoMap map[string](interface{})
 type CmdMsg struct {
 	Msg        *jsonrpc.RPCMessage
 	FromConnId CID
+	Broadcast  bool
 }
 
 // type CmdJoin struct {
@@ -93,6 +94,8 @@ type Router struct {
 	//ChJoin     chan CmdJoin
 	//ChLeave  chan CmdLeave
 	ChUpdate chan CmdUpdate
+
+	localMethodsSig string
 }
 
 type TubeT struct {

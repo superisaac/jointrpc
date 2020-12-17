@@ -13,8 +13,10 @@ import (
 )
 
 var commands []string = []string{
-	"server", "listmethods", "rpc", "call",
-	"example.array", "help",
+	"server", "listmethods", "rpc","call",
+	"watch", "notify",
+	"example.array",
+	"help",
 }
 
 func setupClientSideLogger(logLevel string) {
@@ -74,6 +76,12 @@ func main() {
 	case "call":
 		setupClientSideLogger("")
 		client.CommandCallRPC("call")
+	case "notify":
+		setupClientSideLogger("")
+		client.CommandSendNotify()
+	case "watch":
+		setupClientSideLogger("")
+		client.CommandWatch()
 	case "example.array":
 		setupClientSideLogger("")
 		example.CommandExampleArray()

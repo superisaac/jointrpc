@@ -17,14 +17,16 @@ func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RP
 	if err != nil {
 		return nil, err
 	}
+
+	var msgId string = "1"
 	req := &intf.JSONRPCRequest{
-		Id:     "1",
+		Id:     msgId,
 		Method: method,
 		Params: paramsStr}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	res, err := self.TubeClient.Call(ctx, req)
-	log.Infof("res is %v", res)
+	log.Debugf("res is %v", res)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +36,30 @@ func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RP
 		return nil, err
 	}
 	return msg, err
+}
+
+func (self *RPCClient) SendNotify(method string, params []interface{}) error {
+	log.Infof("log methods %s, params %v", method, params)
+	paramsJson := simplejson.New()
+	paramsJson.SetPath(nil, params)
+	paramsStr, err := jsonrpc.MarshalJson(paramsJson)
+	if err != nil {
+		return err
+	}
+
+	req := &intf.JSONRPCNotifyRequest{
+		Method: method,
+		Params: paramsStr,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	res, err := self.TubeClient.Notify(ctx, req)
+
+	if err != nil {
+		return err
+	}
+	log.Debugf("not ify res is %v", res)
+	return nil
 }
 
 func (self *RPCClient) ListMethods() ([]*intf.MethodInfo, error) {

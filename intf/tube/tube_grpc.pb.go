@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 type JSONRPCTubeClient interface {
 	ListMethods(ctx context.Context, in *ListMethodsRequest, opts ...grpc.CallOption) (*ListMethodsResponse, error)
 	Call(ctx context.Context, in *JSONRPCRequest, opts ...grpc.CallOption) (*JSONRPCResult, error)
+	Notify(ctx context.Context, in *JSONRPCNotifyRequest, opts ...grpc.CallOption) (*JSONRPCNotifyResponse, error)
 	Handle(ctx context.Context, opts ...grpc.CallOption) (JSONRPCTube_HandleClient, error)
 }
 
@@ -42,6 +43,15 @@ func (c *jSONRPCTubeClient) ListMethods(ctx context.Context, in *ListMethodsRequ
 func (c *jSONRPCTubeClient) Call(ctx context.Context, in *JSONRPCRequest, opts ...grpc.CallOption) (*JSONRPCResult, error) {
 	out := new(JSONRPCResult)
 	err := c.cc.Invoke(ctx, "/JSONRPCTube/Call", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jSONRPCTubeClient) Notify(ctx context.Context, in *JSONRPCNotifyRequest, opts ...grpc.CallOption) (*JSONRPCNotifyResponse, error) {
+	out := new(JSONRPCNotifyResponse)
+	err := c.cc.Invoke(ctx, "/JSONRPCTube/Notify", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +95,7 @@ func (x *jSONRPCTubeHandleClient) Recv() (*JSONRPCDownPacket, error) {
 type JSONRPCTubeServer interface {
 	ListMethods(context.Context, *ListMethodsRequest) (*ListMethodsResponse, error)
 	Call(context.Context, *JSONRPCRequest) (*JSONRPCResult, error)
+	Notify(context.Context, *JSONRPCNotifyRequest) (*JSONRPCNotifyResponse, error)
 	Handle(JSONRPCTube_HandleServer) error
 	mustEmbedUnimplementedJSONRPCTubeServer()
 }
@@ -98,6 +109,9 @@ func (UnimplementedJSONRPCTubeServer) ListMethods(context.Context, *ListMethodsR
 }
 func (UnimplementedJSONRPCTubeServer) Call(context.Context, *JSONRPCRequest) (*JSONRPCResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Call not implemented")
+}
+func (UnimplementedJSONRPCTubeServer) Notify(context.Context, *JSONRPCNotifyRequest) (*JSONRPCNotifyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Notify not implemented")
 }
 func (UnimplementedJSONRPCTubeServer) Handle(JSONRPCTube_HandleServer) error {
 	return status.Errorf(codes.Unimplemented, "method Handle not implemented")
@@ -151,6 +165,24 @@ func _JSONRPCTube_Call_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JSONRPCTube_Notify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JSONRPCNotifyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JSONRPCTubeServer).Notify(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/JSONRPCTube/Notify",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JSONRPCTubeServer).Notify(ctx, req.(*JSONRPCNotifyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _JSONRPCTube_Handle_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(JSONRPCTubeServer).Handle(&jSONRPCTubeHandleServer{stream})
 }
@@ -188,6 +220,10 @@ var _JSONRPCTube_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Call",
 			Handler:    _JSONRPCTube_Call_Handler,
+		},
+		{
+			MethodName: "Notify",
+			Handler:    _JSONRPCTube_Notify_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
