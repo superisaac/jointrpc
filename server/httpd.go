@@ -39,7 +39,7 @@ func HandleHttp(w http.ResponseWriter, r *http.Request) {
 
 	router := tube.Tube().Router
 
-	result, err := router.SingleCall(msg)
+	result, err := router.SingleCall(msg, false)
 	if err != nil {
 		jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 		return

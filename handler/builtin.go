@@ -62,6 +62,26 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 		}
 		return arr, nil
 	})
+
+	self.On(".broadcast", func(req *RPCRequest, params []interface{}) (interface{}, error) {
+		if len(params) < 1 {
+			return nil, &jsonrpc.RPCError{Code: 400, Reason: "method must be specified"}
+		}
+
+		method, err := jsonrpc.ValidateString(params[0], "method")
+		if err != nil {
+			return nil, err
+		}
+		notify := jsonrpc.NewNotifyMessage(method, params[1:])
+
+		connId := tube.CID(0)
+		if self.conn != nil {
+			connId = self.conn.ConnId
+		}
+		tube.Tube().Router.ChMsg <- tube.CmdMsg{Msg: notify, FromConnId: connId, Broadcast: true}
+		return "ok", nil
+	}, WithHelp("broadcast a notify to all receivers"))
+
 	self.OnChange(func() {
 		self.updateMethods()
 	})

@@ -38,7 +38,7 @@ func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RP
 	return msg, err
 }
 
-func (self *RPCClient) SendNotify(method string, params []interface{}) error {
+func (self *RPCClient) SendNotify(method string, params []interface{}, broadcast bool) error {
 	log.Infof("log methods %s, params %v", method, params)
 	paramsJson := simplejson.New()
 	paramsJson.SetPath(nil, params)
@@ -48,8 +48,9 @@ func (self *RPCClient) SendNotify(method string, params []interface{}) error {
 	}
 
 	req := &intf.JSONRPCNotifyRequest{
-		Method: method,
-		Params: paramsStr,
+		Method:    method,
+		Params:    paramsStr,
+		Broadcast: broadcast,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -274,7 +274,7 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 		}
 	} else if msg.IsNotify() {
 		if cmdMsg.Broadcast {
-			self.broadcastMessage(msg)
+			self.broadcastMessage(msg, fromConnId)
 		} else {
 			toConn, found := self.SelectConn(msg.Method)
 			if found {
@@ -305,10 +305,14 @@ func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *ConnT {
 	return nil
 }
 
-func (self *Router) broadcastMessage(msg *jsonrpc.RPCMessage) int {
+func (self *Router) broadcastMessage(msg *jsonrpc.RPCMessage, fromConnId CID) int {
 	log.Debugf("broadcast message %+v", msg)
 	cnt := 0
 	for _, ct := range self.ConnMap {
+		if ct.ConnId == fromConnId {
+			// skip the from addr
+			continue
+		}
 		_, ok := ct.Methods[msg.Method]
 		if ok {
 			cnt += 1
@@ -411,7 +415,7 @@ func (self *Router) Leave(conn *ConnT) {
 	self.leaveConn(conn)
 }
 
-func (self *Router) SingleCall(reqmsg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage, error) {
+func (self *Router) SingleCall(reqmsg *jsonrpc.RPCMessage, broadcast bool) (*jsonrpc.RPCMessage, error) {
 	if reqmsg.IsRequest() {
 		conn := self.Join()
 		defer self.Leave(conn)
@@ -420,7 +424,7 @@ func (self *Router) SingleCall(reqmsg *jsonrpc.RPCMessage) (*jsonrpc.RPCMessage,
 		recvmsg := <-conn.RecvChannel
 		return recvmsg, nil
 	} else {
-		self.ChMsg <- CmdMsg{Msg: reqmsg, FromConnId: 0}
+		self.ChMsg <- CmdMsg{Msg: reqmsg, FromConnId: 0, Broadcast: broadcast}
 		return nil, nil
 	}
 }

@@ -45,3 +45,11 @@ func ValidateInt(v interface{}, prefix string) (int64, error) {
 	}
 	return i, nil
 }
+
+func ValidateString(v interface{}, prefix string) (string, error) {
+	if s, ok := v.(string); ok {
+		return s, nil
+	}
+	reason := fmt.Sprintf("%s require string", prefix)
+	return "", &RPCError{11403, reason, false}
+}

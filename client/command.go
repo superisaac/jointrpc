@@ -32,6 +32,7 @@ func tryGetServerAddress(serverAddress string) string {
 func CommandSendNotify() {
 	callFlags := flag.NewFlagSet("notify", flag.ExitOnError)
 	pAddress := callFlags.String("c", "", "the server address to connect, default 127.0.0.1:50055")
+	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
 
 	callFlags.Parse(os.Args[2:])
 
@@ -53,19 +54,19 @@ func CommandSendNotify() {
 		panic(err)
 	}
 
-	err = RunSendNotify(serverAddress, method, params)
+	err = RunSendNotify(serverAddress, method, params, *pBroadcast)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunSendNotify(serverAddress string, method string, params []interface{}) error {
+func RunSendNotify(serverAddress string, method string, params []interface{}, broadcast bool) error {
 	client := NewRPCClient(serverAddress)
 	err := client.Connect()
 	if err != nil {
 		return err
 	}
-	err = client.SendNotify(method, params)
+	err = client.SendNotify(method, params, broadcast)
 	if err != nil {
 		return err
 	}

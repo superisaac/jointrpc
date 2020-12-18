@@ -37,12 +37,12 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 		return nil, err
 	}
 
-	if !reqmsg.IsRequest() && !reqmsg.IsNotify() {
+	if !reqmsg.IsRequest() {
 		return nil, tube.ErrRequestNotifyRequired
 	}
 
 	router := tube.Tube().Router
-	recvmsg, err := router.SingleCall(reqmsg)
+	recvmsg, err := router.SingleCall(reqmsg, false)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 }
 
 func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
-	log.Debugf("called method %s", req.Method)
+	log.Debugf("notify %s", req.Method)
 	notifymsg, err := NotifyToMessage(req)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotify
 	}
 
 	router := tube.Tube().Router
-	_, err = router.SingleCall(notifymsg)
+	_, err = router.SingleCall(notifymsg, req.Broadcast)
 	if err != nil {
 		return nil, err
 	}
