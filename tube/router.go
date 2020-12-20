@@ -38,7 +38,14 @@ func (self *Router) Init() *Router {
 	self.ConnMap = make(map[CID](*ConnT))
 	self.PendingMap = make(map[PendingKey]PendingValue)
 	self.localMethodsSig = ""
+	self.setupChannels()
 	return self
+}
+
+func (self *Router) setupChannels() {
+	self.ChMsg = make(chan CmdMsg, 1000)
+	//self.ChLeave = make(chan CmdLeave, 100)
+	self.ChUpdate = make(chan CmdUpdate, 1000)
 }
 
 func (self Router) GetAllMethods() []string {
@@ -322,14 +329,8 @@ func (self *Router) broadcastMessage(msg *jsonrpc.RPCMessage, fromConnId CID) in
 	return cnt
 }
 
-func (self *Router) setupChannels() {
-	self.ChMsg = make(chan CmdMsg, 100)
-	//self.ChLeave = make(chan CmdLeave, 100)
-	self.ChUpdate = make(chan CmdUpdate, 100)
-}
-
 func (self *Router) Start(ctx context.Context) {
-	self.setupChannels()
+	//self.setupChannels()
 	go func() {
 		for {
 			select {

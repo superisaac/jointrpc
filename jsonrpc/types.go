@@ -25,3 +25,29 @@ type RPCError struct {
 	Reason    string
 	Retryable bool
 }
+
+// Schema builder
+type SchemaBuildError struct {
+	info string
+}
+
+type SchemaBuilder struct {
+}
+
+// Schema validator
+type SchemaValidator struct {
+	paths     []string
+	hint      string
+	errorPath string
+}
+
+type ErrorPos struct {
+	paths []string
+	hint  string
+}
+
+type Schema interface {
+	// returns the generated
+	Type() string
+	Scan(validator *SchemaValidator, data interface{}) *ErrorPos
+}

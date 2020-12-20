@@ -2,125 +2,171 @@ package jsonrpc
 
 import (
 	"fmt"
+	//"errors"
+	//"reflect"
+	json "encoding/json"
+	simplejson "github.com/bitly/go-simplejson"
 	"strings"
-	simplejson "github.com/bitly/go-simplejson"	
 )
 
-type SchemaValidator struct {
-	paths []string
-}
-type Schema interface {
-	// returns the generated
-	Type() String
-	IsValid(validator *SchemaValidator, data interface{}) bool
+func (self SchemaBuildError) Error() string {
+	return fmt.Sprintf("SchemaBuildError %s", self.info)
 }
 
-func (self *SchemaValidator) IsValid(schema Schema, path string, data interface{}) bool {
+func NewBuildError(info string) *SchemaBuildError {
+	return &SchemaBuildError{info: info}
+}
+
+// Schema Validator
+
+func (self ErrorPos) Path() string {
+	return strings.Join(self.paths, "")
+}
+
+func NewSchemaValidator() *SchemaValidator {
+	return &SchemaValidator{}
+}
+
+func (self *SchemaValidator) NewErrorPos(hint string) *ErrorPos {
+	var newPaths []string
+	for _, path := range self.paths {
+		newPaths = append(newPaths, path)
+	}
+	return &ErrorPos{paths: newPaths, hint: hint}
+}
+
+func (self *SchemaValidator) ValidateBytes(schema Schema, bytes []byte) *ErrorPos {
+	data, err := simplejson.NewJson(bytes)
+	if err != nil {
+		panic(err)
+	}
+	return self.Scan(schema, "", data.Interface())
+}
+
+func (self *SchemaValidator) Validate(schema Schema, data interface{}) *ErrorPos {
+	return self.Scan(schema, "", data)
+}
+
+func (self *SchemaValidator) pushPath(path string) {
 	if path != "" {
 		self.paths = append(self.paths, path)
 	}
-	isv := schema.IsValid(data)
+}
+
+func (self *SchemaValidator) popPath(path string) {
 	if path != "" {
-		self.paths = self.paths[:-1]
+		self.paths = self.paths[:len(self.paths)-1]
 	}
-	return isv
+}
+
+func (self *SchemaValidator) Scan(schema Schema, path string, data interface{}) *ErrorPos {
+	self.pushPath(path)
+	errPos := schema.Scan(self, data)
+	self.popPath(path)
+	return errPos
 }
 
 // type = "any"
 type AnySchema struct {
 }
+
 func (self AnySchema) Type() string {
 	return "any"
 }
-func (self *AnySchema) IsValid(validator *SchemaValidator, data interface{}) bool {
-	return true
+func (self *AnySchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
+	return nil
 }
 
-// type = "none"
-type NoneSchema struct {
+// type = "null"
+type NullSchema struct {
 }
-func (self NoneSchema) Type() string {
-	return "none"
+
+func (self NullSchema) Type() string {
+	return "null"
 }
-func (self *NoneSchema) IsValid(validator *SchemaValidator, data interface{}) bool {
+func (self *NullSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if data != nil {
-		return false
+		return validator.NewErrorPos("data is not null")
 	}
-	return true
+	return nil
 }
 
 // type= "bool"
 type BoolSchema struct {
 }
+
 func (self BoolSchema) Type() string {
 	return "bool"
 }
-func (self *BoolSchema) IsValid(validator *SchemaValidator, data interface{}) bool {
+func (self *BoolSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if _, ok := data.(bool); ok {
-		return true
+		return nil
 	}
-	return false
+	return validator.NewErrorPos("data is not bool")
 }
 
 // type = "number"
 type NumberSchema struct {
 }
+
+func NewNumberSchema() *NumberSchema {
+	return &NumberSchema{}
+}
 func (self NumberSchema) Type() string {
 	return "number"
 }
-func (self *NumberSchema) IsValid(validator *SchemaValidator, data interface{}) bool {
+func (self *NumberSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if _, ok := data.(json.Number); ok {
-		return true
+		return nil
 	}
 	if _, ok := data.(int); ok {
-		return true
+		return nil
 	}
-	if _, ok := data.(float); ok {
-		return true
+
+	if _, ok := data.(float64); ok {
+		return nil
 	}
-	return false
+	return validator.NewErrorPos("data is not number")
 }
 
 // type = "string"
 type StringSchema struct {
 }
+
 func (self StringSchema) Type() string {
 	return "string"
 }
-func (self *StringSchema) IsValid(validator *SchemaValidator, data interface{}) bool {
+func (self *StringSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if _, ok := data.(string); ok {
-		return true
+		return nil
 	}
-	return false
+	return validator.NewErrorPos("data is not string")
 }
 
 // type = "anyOf"
 type UnionSchema struct {
 	Choices []Schema
 }
-type NewUnionSchema() *UnionSchema {
-	return &UnionScheme{Choices: make([]Schema, 0)}
+
+func NewUnionSchema() *UnionSchema {
+	return &UnionSchema{Choices: make([]Schema, 0)}
 }
 
 func (self UnionSchema) Type() string {
-	var arr []string
-	for _, schema := self.Choices {
-		arr = append(arr, schema.Type())
-	}
-	return fmt.Sprintf("any of %s", strings.Join(arr, ", "))
+	return "anyOf"
 }
-func (self *UnionSchema) IsValid(validator *SchemaValidator, data interface{}) bool {
+func (self *UnionSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	for _, schema := range self.Choices {
-		if validator.IsValid(schema, schema.Type(), data) {
-			return true
+		if errPos := validator.Scan(schema, "", data); errPos == nil {
+			return nil
 		}
 	}
-	return false
+	return validator.NewErrorPos("data is not any of the types")
 }
 
 // type = "array", items is object
 type ListSchema struct {
-	Sub Schema
+	Item Schema
 }
 
 func NewListSchema() *ListSchema {
@@ -128,87 +174,209 @@ func NewListSchema() *ListSchema {
 }
 
 func (self ListSchema) Type() string {
-	return fmt.Sprintf("list of %s", self.Sub.Type())
+	return "list"
 }
-func (self *ListSchema) IsValid(validator *SchemaValidator, data interface{}) bool {
+func (self *ListSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	items, ok := data.([]interface{})
 	if !ok {
-		return false
+		return validator.NewErrorPos("data is not a list")
 	}
 	for i, item := range items {
-		if !validator.IsValid(self.Sub, fmt.Sprintf("[%d]", i), item) {
-			return false
+		if errPos := validator.Scan(self.Item, fmt.Sprintf("[%d]", i), item); errPos != nil {
+			return errPos
 		}
 	}
-	return true
+	return nil
 }
 
 // type = "array", items is list
 type TupleSchema struct {
 	Children []Schema
 }
-type NewTupleSchema() *TupleSchema {
+
+func NewTupleSchema() *TupleSchema {
 	return &TupleSchema{Children: make([]Schema, 0)}
 }
 func (self TupleSchema) Type() string {
-	var arr []string
-	for _, schema := range self.Children {
-		arr = append(arr, schema.Type())
-	}
-	return fmt.Sprintf("tuple of %s", strings.Join(arr, ", "))
+	return "list"
 }
 
-func (self *TupleSchema) IsValid(validator *SchemaValidator, data interface{}) bool {
+func (self *TupleSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	items, ok := data.([]interface{})
 	if !ok {
-		return false
+		return validator.NewErrorPos("data is not a list")
 	}
 	if len(items) != len(self.Children) {
-		return false
+		return validator.NewErrorPos("tuple length mismatch")
 	}
 
 	for i, item := range items {
 		schema := self.Children[i]
-		if !validator.IsValid(schema, fmt.Sprintf("[%d]", i), item) {
-			return false
+		if errPos := validator.Scan(schema, fmt.Sprintf("[%d]", i), item); errPos != nil {
+			return errPos
 		}
 	}
+	return nil
 }
 
 // type = "object"
 type ObjectSchema struct {
 	Properties map[string]Schema
-	Required map[string]bool
+	Requires   map[string]bool
 }
 
 func NewObjectSchema() *ObjectSchema {
 	return &ObjectSchema{
 		Properties: make(map[string]Schema),
-		Required: make(map[string]bool),
-	}		
+		Requires:   make(map[string]bool),
+	}
 }
 
 func (self ObjectSchema) Type() string {
 	return "object"
 }
 
-func (self *ObjectSchema) IsValid(validator *SchemaValidator, data interface{}) bool {
-	obj, ok := data.(map[string]Schema)
+func (self *ObjectSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
+	obj, ok := data.(map[string]interface{})
 	if !ok {
-		return false
+		return validator.NewErrorPos("data is not an object")
 	}
 	for prop, schema := range self.Properties {
-		if v, found := data[prop]; found {
-			if !validator.IsValid(schema, "." + prop, v) {
-				return false
+		if v, found := obj[prop]; found {
+			if errPos := validator.Scan(schema, "."+prop, v); errPos != nil {
+				return errPos
 			}
-			
+
 		} else {
-			if _, required := self.Required[prop]; required {
-				// prop is required
-				return false
+			if _, required := self.Requires[prop]; required {
+				validator.pushPath("." + prop)
+				errPos := validator.NewErrorPos("required prop is not present")
+				validator.popPath("." + prop)
+				return errPos
 			}
 		}
 	}
-	return true
+	return nil
+}
+
+// Builder
+func NewSchemaBuilder() *SchemaBuilder {
+	return &SchemaBuilder{}
+}
+
+func (self *SchemaBuilder) BuildBytes(bytes []byte) (Schema, error) {
+	js, err := simplejson.NewJson(bytes)
+	if err != nil {
+		return nil, err
+	}
+	return self.Build(js.Interface())
+}
+
+func (self *SchemaBuilder) Build(data interface{}) (Schema, error) {
+	if node, ok := data.(map[string](interface{})); ok {
+		return self.buildNode(node)
+	} else {
+		//fmt.Printf("data type is %+v", reflect.TypeOf(data))
+		return nil, NewBuildError("data is not a map")
+	}
+}
+
+func (self *SchemaBuilder) buildNode(node map[string](interface{})) (Schema, error) {
+	nodeType, ok := node["type"]
+	if !ok {
+		return nil, NewBuildError("no type presented")
+	}
+	switch nodeType {
+	case "number":
+		return NewNumberSchema(), nil
+	case "any":
+		return &AnySchema{}, nil
+	case "null":
+		return &NullSchema{}, nil
+	case "string":
+		return &StringSchema{}, nil
+	case "bool":
+		return &BoolSchema{}, nil
+	case "list":
+		return self.buildListSchema(node)
+	case "object":
+		return self.buildObjectSchema(node)
+	default:
+		return nil, NewBuildError("unknown type")
+	}
+}
+
+func (self *SchemaBuilder) buildListSchema(node map[string](interface{})) (Schema, error) {
+	items, ok := node["items"]
+	if !ok {
+		return nil, NewBuildError("no items")
+	}
+	if itemsMap, ok := items.(map[string](interface{})); ok {
+		itemSchema, err := self.buildNode(itemsMap)
+		if err != nil {
+			return nil, err
+		}
+		schema := NewListSchema()
+		schema.Item = itemSchema
+		return schema, nil
+	}
+	if itemsTuple, ok := items.([]interface{}); ok {
+		schema := NewTupleSchema()
+		for _, item := range itemsTuple {
+			itemNode, ok := item.(map[string]interface{})
+			if !ok {
+				return nil, NewBuildError("tuple item not a map")
+			}
+			childSchema, err := self.buildNode(itemNode)
+			if err != nil {
+				return nil, err
+			}
+			schema.Children = append(schema.Children, childSchema)
+		}
+		return schema, nil
+	}
+	return nil, NewBuildError("fail to build list schema")
+}
+
+func (self *SchemaBuilder) buildObjectSchema(node map[string](interface{})) (Schema, error) {
+	props, ok := node["properties"]
+	if !ok {
+		return nil, NewBuildError("no properties")
+	}
+	propNodes, ok := props.(map[string]interface{})
+	if !ok {
+		return nil, NewBuildError("wrong properties type")
+	}
+
+	schema := NewObjectSchema()
+	for propName, pv := range propNodes {
+		propNode, ok := pv.(map[string]interface{})
+		if !ok {
+			return nil, NewBuildError("wrong prop item type")
+		}
+		child, err := self.buildNode(propNode)
+		if err != nil {
+			return nil, err
+		}
+		schema.Properties[propName] = child
+	}
+
+	if req, ok := node["requires"]; ok {
+		requireList, ok := req.([]interface{})
+		if !ok {
+			return nil, NewBuildError("requires is not a list")
+		}
+		for _, r := range requireList {
+			reqProp, ok := r.(string)
+			if !ok {
+				return nil, NewBuildError("requires items is not string")
+			}
+			if _, found := schema.Properties[reqProp]; !found {
+				return nil, NewBuildError("cannot find required prop")
+			}
+
+			schema.Requires[reqProp] = true
+		}
+	}
+	return schema, nil
 }
