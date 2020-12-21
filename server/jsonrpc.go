@@ -24,12 +24,6 @@ type JSONRPCTube struct {
 	intf.UnimplementedJSONRPCTubeServer
 }
 
-/*func leaveConn(conn *tube.ConnT) {
-	//tube.Tube().Router.ChLeave <- tube.CmdLeave{ConnId: conn.ConnId}
-	tube.Tube().Router.Leave(conn)
-}
-*/
-
 func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
 	log.Debugf("called method %s", req.Method)
 	reqmsg, err := RequestToMessage(req)
@@ -105,7 +99,7 @@ func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMeth
 	return resp, nil
 }
 
-func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, recv_ch tube.MsgChannel) {
+func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, chRecv tube.MsgChannel) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Warnf("recovered ERROR %+v", r)
@@ -117,7 +111,8 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 		case <-context.Done():
 			log.Debugf("context done")
 			return
-		case msg, ok := <-recv_ch:
+		case msgvec, ok := <-chRecv:
+			msg := msgvec.Msg
 			if !ok {
 				log.Debugf("recv channel closed")
 				return
@@ -166,9 +161,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
 		cancel()
-		//leaveConn(conn)
 		router.Leave(conn)
-		//time.Sleep(1 * time.Second)
 	}()
 
 	log.Debugf("Handler connected, conn %d from ip %s", conn.ConnId, conn.PeerAddr.String())
@@ -207,8 +200,8 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 				log.Warnf("error on requesttomessage() %s", err.Error())
 				return err
 			}
-			cmd_msg := tube.CmdMsg{Msg: msg, FromConnId: conn.ConnId}
-			router.ChMsg <- cmd_msg
+			msgvec := tube.MsgVec{Msg: msg, FromConnId: conn.ConnId}
+			router.ChMsg <- tube.CmdMsg{MsgVec: msgvec}
 			continue
 		}
 
@@ -219,7 +212,8 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			if err != nil {
 				return err
 			}
-			cmd_msg := tube.CmdMsg{Msg: msg, FromConnId: conn.ConnId}
+			msgvec := tube.MsgVec{Msg: msg, FromConnId: conn.ConnId}
+			cmd_msg := tube.CmdMsg{MsgVec: msgvec}
 			router.ChMsg <- cmd_msg
 			continue
 		}

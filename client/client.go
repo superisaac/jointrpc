@@ -7,6 +7,7 @@ import (
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	server "github.com/superisaac/rpctube/server"
+	tube "github.com/superisaac/rpctube/tube"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	"io"
@@ -162,5 +163,6 @@ func (self *RPCClient) handleDownRequest(req *intf.JSONRPCRequest) {
 		self.ReturnResultMessage(errmsg)
 		return
 	}
-	self.HandleRequestMessage(msg)
+	msgvec := tube.MsgVec{Msg: msg, FromConnId: 0}
+	self.HandleRequestMessage(msgvec)
 }

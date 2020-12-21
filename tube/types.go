@@ -24,7 +24,11 @@ var (
 type CID uint64
 
 // Commands
-type MsgChannel chan *jsonrpc.RPCMessage
+type MsgVec struct {
+	Msg        *jsonrpc.RPCMessage
+	FromConnId CID
+}
+type MsgChannel chan MsgVec
 
 // Pending Struct
 type PendingKey struct {
@@ -61,9 +65,8 @@ type MethodInfoMap map[string](interface{})
 
 // Channel commands
 type CmdMsg struct {
-	Msg        *jsonrpc.RPCMessage
-	FromConnId CID
-	Broadcast  bool
+	MsgVec    MsgVec
+	Broadcast bool
 }
 
 // type CmdJoin struct {

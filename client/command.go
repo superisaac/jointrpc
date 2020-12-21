@@ -173,7 +173,8 @@ func CommandWatch() {
 
 	for _, notifyName := range notifyNames {
 		rpcClient.On(notifyName, func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
-			repr, err := req.Message.EncodePretty()
+			msg := req.MsgVec.Msg
+			repr, err := msg.EncodePretty()
 			if err != nil {
 				panic(err)
 			}

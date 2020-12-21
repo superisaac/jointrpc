@@ -4,7 +4,7 @@ import (
 	//"errors"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	//tube "github.com/superisaac/rpctube/tube"
+	tube "github.com/superisaac/rpctube/tube"
 )
 
 func (self *HandlerManager) InitHandlerManager() {
@@ -59,7 +59,8 @@ func (self *HandlerManager) ReturnResultMessage(resmsg *jsonrpc.RPCMessage) {
 	self.ChResultMsg <- resmsg
 }
 
-func (self *HandlerManager) HandleRequestMessage(msg *jsonrpc.RPCMessage) {
+func (self *HandlerManager) HandleRequestMessage(msgvec tube.MsgVec) {
+	msg := msgvec.Msg
 	handler, ok := self.MethodHandlers[msg.Method]
 
 	defer func() {
@@ -79,13 +80,13 @@ func (self *HandlerManager) HandleRequestMessage(msg *jsonrpc.RPCMessage) {
 	var resmsg *jsonrpc.RPCMessage
 	var err error
 	if ok {
-		req := &RPCRequest{Message: msg}
+		req := &RPCRequest{MsgVec: msgvec}
 		params := msg.Params.MustArray()
 		res, err := handler.function(req, params)
 		log.Debugf("handler function returns %+v, %+v", msg, res)
 		resmsg, err = self.wrapHandlerResult(msg, res, err)
 	} else if self.defaultHandler != nil {
-		req := &RPCRequest{Message: msg}
+		req := &RPCRequest{MsgVec: msgvec}
 
 		params := msg.Params.MustArray()
 		res, err := self.defaultHandler(req, msg.Method, params)

@@ -177,7 +177,10 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 			self.localMethodsSig = sig
 			params := [](interface{}){sig}
 			notify := jsonrpc.NewNotifyMessage("localMethods.changed", params)
-			self.ChMsg <- CmdMsg{Msg: notify, FromConnId: 0, Broadcast: true}
+			self.ChMsg <- CmdMsg{
+				MsgVec:    MsgVec{Msg: notify, FromConnId: 0},
+				Broadcast: true,
+			}
 		}
 	}
 
@@ -239,7 +242,8 @@ func (self *Router) ClearTimeoutRequests() {
 	for pKey, pValue := range self.PendingMap {
 		if now.After(pValue.Expire) {
 			errMsg := jsonrpc.NewErrorMessage(pKey.MsgId, 408, "request timeout", true)
-			_ = self.deliverMessage(pKey.ConnId, errMsg)
+			msgvec := MsgVec{errMsg, CID(0)}
+			_ = self.deliverMessage(pKey.ConnId, msgvec)
 		} else {
 			tmpMap[pKey] = pValue
 		}
@@ -264,8 +268,8 @@ func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
 }
 
 func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
-	msg := cmdMsg.Msg
-	fromConnId := cmdMsg.FromConnId
+	msg := cmdMsg.MsgVec.Msg
+	fromConnId := cmdMsg.MsgVec.FromConnId
 	if msg.IsRequest() {
 		toConn, found := self.SelectConn(msg.Method)
 		if found {
@@ -274,18 +278,20 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 			pValue := PendingValue{ConnId: toConn.ConnId, Expire: expireTime}
 
 			self.setPending(pKey, pValue)
-			return self.deliverMessage(toConn.ConnId, msg)
+			return self.deliverMessage(toConn.ConnId, cmdMsg.MsgVec)
 		} else {
 			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "method not found", false)
-			return self.deliverMessage(fromConnId, errMsg)
+			errMsgVec := MsgVec{errMsg, CID(0)}
+			return self.deliverMessage(fromConnId, errMsgVec)
 		}
 	} else if msg.IsNotify() {
 		if cmdMsg.Broadcast {
-			self.broadcastMessage(msg, fromConnId)
+			self.broadcastMessage(cmdMsg.MsgVec)
 		} else {
 			toConn, found := self.SelectConn(msg.Method)
 			if found {
-				return self.deliverMessage(toConn.ConnId, msg)
+				return self.deliverMessage(
+					toConn.ConnId, cmdMsg.MsgVec)
 			}
 		}
 	} else if msg.IsResultOrError() {
@@ -294,36 +300,35 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 				// delete key within a range loop is safe
 				// refer to https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-golang-map-within-a-range-loop
 				self.deletePending(pKey)
-				return self.deliverMessage(pKey.ConnId, msg)
+				return self.deliverMessage(
+					pKey.ConnId, cmdMsg.MsgVec)
 			}
 		} // end of for
 	}
 	return nil
 }
 
-func (self *Router) deliverMessage(connId CID, msg *jsonrpc.RPCMessage) *ConnT {
+func (self *Router) deliverMessage(connId CID, msgvec MsgVec) *ConnT {
 	ct, ok := self.ConnMap[connId]
-	//fmt.Printf("deliver message %v\n", msg)
 	if ok {
-		recv_ch := ct.RecvChannel
-		recv_ch <- msg
+		ct.RecvChannel <- msgvec
 		return ct
 	}
 	return nil
 }
 
-func (self *Router) broadcastMessage(msg *jsonrpc.RPCMessage, fromConnId CID) int {
-	log.Debugf("broadcast message %+v", msg)
+func (self *Router) broadcastMessage(msgvec MsgVec) int {
+	log.Debugf("broadcast message %+v", msgvec.Msg)
 	cnt := 0
 	for _, ct := range self.ConnMap {
-		if ct.ConnId == fromConnId {
+		if ct.ConnId == msgvec.FromConnId {
 			// skip the from addr
 			continue
 		}
-		_, ok := ct.Methods[msg.Method]
+		_, ok := ct.Methods[msgvec.Msg.Method]
 		if ok {
 			cnt += 1
-			ct.RecvChannel <- msg
+			ct.RecvChannel <- msgvec
 		}
 	}
 	return cnt
@@ -421,11 +426,14 @@ func (self *Router) SingleCall(reqmsg *jsonrpc.RPCMessage, broadcast bool) (*jso
 		conn := self.Join()
 		defer self.Leave(conn)
 
-		self.ChMsg <- CmdMsg{Msg: reqmsg, FromConnId: conn.ConnId}
-		recvmsg := <-conn.RecvChannel
-		return recvmsg, nil
+		self.ChMsg <- CmdMsg{
+			MsgVec: MsgVec{Msg: reqmsg, FromConnId: conn.ConnId}}
+		msgvec := <-conn.RecvChannel
+		return msgvec.Msg, nil
 	} else {
-		self.ChMsg <- CmdMsg{Msg: reqmsg, FromConnId: 0, Broadcast: broadcast}
+		self.ChMsg <- CmdMsg{
+			MsgVec:    MsgVec{Msg: reqmsg, FromConnId: 0},
+			Broadcast: broadcast}
 		return nil, nil
 	}
 }

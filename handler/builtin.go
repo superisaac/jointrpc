@@ -29,24 +29,26 @@ func (self *BuiltinHandlerManager) Start(ctx context.Context) {
 			case <-ctx.Done():
 				log.Debugf("builtin handlers, context done")
 				return
-			case msg, ok := <-self.conn.RecvChannel:
+			case msgvec, ok := <-self.conn.RecvChannel:
 				if !ok {
 					return
 				}
-				self.messageReceived(msg)
+				self.messageReceived(msgvec)
 			case resmsg, ok := <-self.ChResultMsg:
 				if !ok {
 					return
 				}
-				router.ChMsg <- tube.CmdMsg{Msg: resmsg, FromConnId: self.conn.ConnId}
+				router.ChMsg <- tube.CmdMsg{
+					MsgVec: tube.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
 			}
 		}
 	}()
 }
 
-func (self *BuiltinHandlerManager) messageReceived(msg *jsonrpc.RPCMessage) {
+func (self *BuiltinHandlerManager) messageReceived(msgvec tube.MsgVec) {
+	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		self.HandleRequestMessage(msg)
+		self.HandleRequestMessage(msgvec)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}
@@ -78,7 +80,11 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 		if self.conn != nil {
 			connId = self.conn.ConnId
 		}
-		tube.Tube().Router.ChMsg <- tube.CmdMsg{Msg: notify, FromConnId: connId, Broadcast: true}
+		msgvec := tube.MsgVec{Msg: notify, FromConnId: connId}
+		tube.Tube().Router.ChMsg <- tube.CmdMsg{
+			MsgVec:    msgvec,
+			Broadcast: true,
+		}
 		return "ok", nil
 	}, WithHelp("broadcast a notify to all receivers"))
 

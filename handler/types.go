@@ -3,10 +3,13 @@ package handler
 import (
 	//"github.com/gorilla/websocket"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	tube "github.com/superisaac/rpctube/tube"
 )
 
 type RPCRequest struct {
-	Message *jsonrpc.RPCMessage
+	MsgVec tube.MsgVec
+	//Message *jsonrpc.RPCMessage
+	//FromConnId tube.CID
 	// TODO: add more fields
 }
 
