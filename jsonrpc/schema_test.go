@@ -88,7 +88,7 @@ func TestBuildObjectSchema(t *testing.T) {
 	builder := NewSchemaBuilder()
 	_, err := builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError no properties", err.Error())
+	assert.Equal("SchemaBuildError properties is not a map of objects", err.Error())
 
 	s1 = []byte(`{
 "type": "object",
@@ -160,6 +160,54 @@ func TestBasicValidator(t *testing.T) {
 	assert.Equal("", errPos.Path())
 }
 
+func TestUnionValidator(t *testing.T) {
+	assert := assert.New(t)
+	s1 := []byte(`{"type": "union"}`)
+	builder := NewSchemaBuilder()
+	_, err := builder.BuildBytes(s1)
+	assert.NotNil(err)
+	assert.Equal("SchemaBuildError no valid anyOf attribute", err.Error())
+
+	s1 = []byte(`{
+"type": "union",
+"anyOf": [
+  {"type": "number"},
+  {"type": "string"}
+]
+}`)
+	builder = NewSchemaBuilder()
+	s, err := builder.BuildBytes(s1)
+	assert.Nil(err)
+
+	uschema, ok := s.(*UnionSchema)
+	assert.True(ok)
+
+	validator := NewSchemaValidator()
+	data := []byte(`true`)
+	errPos := validator.ValidateBytes(uschema, data)
+	assert.NotNil(errPos)
+	assert.Equal("", errPos.Path())
+	assert.Equal("data is not any of the types", errPos.hint)
+
+	validator = NewSchemaValidator()
+	data = []byte(`{}`)
+	errPos = validator.ValidateBytes(uschema, data)
+	assert.NotNil(errPos)
+	assert.Equal("", errPos.Path())
+	assert.Equal("data is not any of the types", errPos.hint)
+
+	validator = NewSchemaValidator()
+	data = []byte(`-3.88`)
+	errPos = validator.ValidateBytes(uschema, data)
+	assert.Nil(errPos)
+
+	validator = NewSchemaValidator()
+	data = []byte(`"a string"`)
+	errPos = validator.ValidateBytes(uschema, data)
+	assert.Nil(errPos)
+
+}
+
 func TestComplexValidator(t *testing.T) {
 	assert := assert.New(t)
 
@@ -199,4 +247,86 @@ func TestComplexValidator(t *testing.T) {
 	assert.NotNil(errPos)
 	assert.Equal("required prop is not present", errPos.hint)
 	assert.Equal("[1].abc", errPos.Path())
+}
+
+func TestMethodValidator(t *testing.T) {
+	assert := assert.New(t)
+
+	s1 := []byte(`{
+"type": "method"
+}`)
+	builder := NewSchemaBuilder()
+	_, err := builder.BuildBytes(s1)
+	assert.NotNil(err)
+	assert.Equal("SchemaBuildError params is not a list of objects", err.Error())
+
+	s1 = []byte(`{
+"type": "method",
+"params": [
+  {"type": "number", "name": "a"},
+  {"type": "string", "name": "b"},
+  {
+    "type": "object",
+    "name": "options",
+    "description": "calc options",
+    "properties": {"aaa": {"type": "string"}, "bbb": {"type": "number"}},
+    "requires": ["aaa"]
+  }
+],
+"result": {"type": "string"}
+}`)
+	builder = NewSchemaBuilder()
+	s, err := builder.BuildBytes(s1)
+	assert.Nil(err)
+
+	assert.Equal("method", s.Type())
+	methodSchema, ok := s.(*MethodSchema)
+	assert.True(ok)
+	assert.Equal("calc options", methodSchema.Params[2].GetDescription())
+
+	validator := NewSchemaValidator()
+	data := []byte(`["hello", 5, {"abc": 8}]`)
+	errPos := validator.ValidateBytes(s, data)
+	assert.NotNil(errPos)
+	assert.Equal("data is not object", errPos.hint)
+	assert.Equal("", errPos.Path())
+
+	validator = NewSchemaValidator()
+	data = []byte(`{"params": ["hello", 5, {"abc": 8}]}`)
+	errPos = validator.ValidateBytes(s, data)
+	assert.NotNil(errPos)
+	assert.Equal("data is not number", errPos.hint)
+	assert.Equal(".params[0]", errPos.Path())
+
+	validator = NewSchemaValidator()
+	data = []byte(`{"params": [5, "hello", {"abc": 8}]}`)
+	errPos = validator.ValidateBytes(s, data)
+	assert.NotNil(errPos)
+	assert.Equal("required prop is not present", errPos.hint)
+	assert.Equal(".params[2].aaa", errPos.Path())
+
+	validator = NewSchemaValidator()
+	data = []byte(`{"params": [5, "hello", {"aaa": 8}]}`)
+	errPos = validator.ValidateBytes(s, data)
+	assert.NotNil(errPos)
+	assert.Equal("data is not string", errPos.hint)
+	assert.Equal(".params[2].aaa", errPos.Path())
+
+	validator = NewSchemaValidator()
+	data = []byte(`{"params": [5, "hello", {"aaa": "a string"}]}`)
+	errPos = validator.ValidateBytes(s, data)
+	assert.Nil(errPos)
+
+	validator = NewSchemaValidator()
+	data = []byte(`{"result": 8}`)
+	errPos = validator.ValidateBytes(s, data)
+	assert.NotNil(errPos)
+	assert.Equal("data is not string", errPos.hint)
+	assert.Equal(".result", errPos.Path())
+
+	validator = NewSchemaValidator()
+	data = []byte(`{"result": "a string"}`)
+	errPos = validator.ValidateBytes(s, data)
+	assert.Nil(errPos)
+
 }
