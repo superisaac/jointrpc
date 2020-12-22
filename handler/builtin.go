@@ -54,6 +54,10 @@ func (self *BuiltinHandlerManager) messageReceived(msgvec tube.MsgVec) {
 	}
 }
 
+const (
+	echoSchema = `{"type": "method", "params": [{"type": "string"}]}`
+)
+
 func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 	self.InitHandlerManager()
 	self.On(".listMethods", func(req *RPCRequest, params []interface{}) (interface{}, error) {
@@ -64,6 +68,17 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 		}
 		return arr, nil
 	})
+
+	self.On(".echo", func(req *RPCRequest, params []interface{}) (interface{}, error) {
+		if len(params) < 1 {
+			return nil, &jsonrpc.RPCError{Code: 400, Reason: "len params should be at least 1"}
+		}
+		msg, ok := params[0].(string)
+		if !ok {
+			return nil, &jsonrpc.RPCError{Code: 400, Reason: "string params required"}
+		}
+		return map[string]string{"echo": msg}, nil
+	}, WithSchema(echoSchema))
 
 	self.On(".broadcast", func(req *RPCRequest, params []interface{}) (interface{}, error) {
 		if len(params) < 1 {
@@ -98,9 +113,20 @@ func (self *BuiltinHandlerManager) updateMethods() {
 	if self.conn != nil {
 		minfos := make([]tube.MethodInfo, 0)
 		for m, info := range self.MethodHandlers {
+			var schema jsonrpc.Schema
+			var err error
+			if info.Schema != "" {
+				builder := jsonrpc.NewSchemaBuilder()
+				schema, err = builder.BuildBytes([]byte(info.Schema))
+				log.Debugf("compiled schema %+v for %s", schema, info.Schema)
+				if err != nil {
+					panic(err)
+				}
+			}
 			minfo := tube.MethodInfo{
 				Name:      m,
 				Help:      info.Help,
+				Schema:    schema,
 				Delegated: false,
 			}
 			minfos = append(minfos, minfo)

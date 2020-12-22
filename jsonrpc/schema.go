@@ -161,11 +161,28 @@ func (self SchemaMixin) GetDescription() string {
 	return self.description
 }
 
+func (self SchemaMixin) rebuildType(nType string) map[string]interface{} {
+	tp := map[string]interface{}{
+		"type": nType,
+	}
+	if self.name != "" {
+		tp["name"] = self.name
+	}
+	if self.description != "" {
+		tp["description"] = self.description
+	}
+	return tp
+}
+
 // type = "any"
 
 func (self AnySchema) Type() string {
 	return "any"
 }
+func (self AnySchema) RebuildType() map[string]interface{} {
+	return self.rebuildType(self.Type())
+}
+
 func (self *AnySchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	return nil
 }
@@ -174,6 +191,10 @@ func (self *AnySchema) Scan(validator *SchemaValidator, data interface{}) *Error
 func (self NullSchema) Type() string {
 	return "null"
 }
+func (self NullSchema) RebuildType() map[string]interface{} {
+	return self.rebuildType(self.Type())
+}
+
 func (self *NullSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if data != nil {
 		return validator.NewErrorPos("data is not null")
@@ -185,6 +206,10 @@ func (self *NullSchema) Scan(validator *SchemaValidator, data interface{}) *Erro
 func (self BoolSchema) Type() string {
 	return "bool"
 }
+func (self BoolSchema) RebuildType() map[string]interface{} {
+	return self.rebuildType(self.Type())
+}
+
 func (self *BoolSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if _, ok := data.(bool); ok {
 		return nil
@@ -200,6 +225,10 @@ func NewNumberSchema() *NumberSchema {
 func (self NumberSchema) Type() string {
 	return "number"
 }
+func (self NumberSchema) RebuildType() map[string]interface{} {
+	return self.rebuildType(self.Type())
+}
+
 func (self *NumberSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if _, ok := data.(json.Number); ok {
 		return nil
@@ -218,6 +247,10 @@ func (self *NumberSchema) Scan(validator *SchemaValidator, data interface{}) *Er
 func (self StringSchema) Type() string {
 	return "string"
 }
+func (self StringSchema) RebuildType() map[string]interface{} {
+	return self.rebuildType(self.Type())
+}
+
 func (self *StringSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if _, ok := data.(string); ok {
 		return nil
@@ -228,6 +261,16 @@ func (self *StringSchema) Scan(validator *SchemaValidator, data interface{}) *Er
 // type = "anyOf"
 func NewUnionSchema() *UnionSchema {
 	return &UnionSchema{Choices: make([]Schema, 0)}
+}
+
+func (self UnionSchema) RebuildType() map[string]interface{} {
+	tp := self.rebuildType(self.Type())
+	arr := make([](map[string]interface{}), 0)
+	for _, choice := range self.Choices {
+		arr = append(arr, choice.RebuildType())
+	}
+	tp["anyOf"] = arr
+	return tp
 }
 
 func (self UnionSchema) Type() string {
@@ -251,6 +294,12 @@ func NewListSchema() *ListSchema {
 func (self ListSchema) Type() string {
 	return "list"
 }
+func (self ListSchema) RebuildType() map[string]interface{} {
+	tp := self.rebuildType(self.Type())
+	tp["items"] = self.Item.RebuildType()
+	return tp
+}
+
 func (self *ListSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	items, ok := data.([]interface{})
 	if !ok {
@@ -271,6 +320,16 @@ func NewTupleSchema() *TupleSchema {
 }
 func (self TupleSchema) Type() string {
 	return "list"
+}
+
+func (self TupleSchema) RebuildType() map[string]interface{} {
+	tp := self.rebuildType(self.Type())
+	arr := make([](map[string]interface{}), 0)
+	for _, child := range self.Children {
+		arr = append(arr, child.RebuildType())
+	}
+	tp["items"] = arr
+	return tp
 }
 
 func (self *TupleSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
@@ -297,6 +356,17 @@ func NewMethodSchema() *MethodSchema {
 }
 func (self MethodSchema) Type() string {
 	return "method"
+}
+
+func (self MethodSchema) RebuildType() map[string]interface{} {
+	tp := self.rebuildType(self.Type())
+	arr := make([](map[string]interface{}), 0)
+	for _, p := range self.Params {
+		arr = append(arr, p.RebuildType())
+	}
+	tp["params"] = arr
+	tp["result"] = self.Result
+	return tp
 }
 
 func (self *MethodSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
@@ -354,6 +424,20 @@ func NewObjectSchema() *ObjectSchema {
 
 func (self ObjectSchema) Type() string {
 	return "object"
+}
+
+func (self ObjectSchema) RebuildType() map[string]interface{} {
+	tp := self.rebuildType(self.Type())
+	props := make(map[string]interface{})
+	for name, p := range self.Properties {
+		props[name] = p.RebuildType()
+	}
+	arr := make([]string, 0)
+	for name, _ := range self.Requires {
+		arr = append(arr, name)
+	}
+	tp["requires"] = arr
+	return tp
 }
 
 func (self *ObjectSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {

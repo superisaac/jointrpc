@@ -59,6 +59,7 @@ type MethodDesc struct {
 type MethodInfo struct {
 	Name      string
 	Help      string
+	Schema    jsonrpc.Schema
 	Delegated bool
 }
 type MethodInfoMap map[string](interface{})

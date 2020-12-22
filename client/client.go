@@ -44,7 +44,7 @@ func (self *RPCClient) OnHandlerChanged() {
 func (self *RPCClient) updateMethods() {
 	upMethods := make([](*intf.MethodInfo), 0)
 	for m, info := range self.MethodHandlers {
-		minfo := &intf.MethodInfo{Name: m, Help: info.Help}
+		minfo := &intf.MethodInfo{Name: m, Help: info.Help, SchemaJson: info.Schema}
 		upMethods = append(upMethods, minfo)
 	}
 	up := &intf.UpdateMethodsRequest{Methods: upMethods}

@@ -81,7 +81,8 @@ message MethodInfo {
   string name = 1;
   //MethodLocation location = 2;
   string help = 2;
-  bool   delegated = 3;
+  string schema_json = 3;
+  bool   delegated = 4;
 }
 
 message UpdateMethodsRequest {

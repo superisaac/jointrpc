@@ -15,7 +15,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
-	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	tube "github.com/superisaac/rpctube/tube"
 	peer "google.golang.org/grpc/peer"
 )
@@ -72,6 +72,7 @@ func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotify
 	return resp, nil
 }
 
+// turn from tube's struct to protobuf message
 func encodeMethodInfo(minfo tube.MethodInfo) *intf.MethodInfo {
 	return &intf.MethodInfo{
 		Name:      minfo.Name,
@@ -80,12 +81,23 @@ func encodeMethodInfo(minfo tube.MethodInfo) *intf.MethodInfo {
 	}
 }
 
-func decodeMethodInfo(iminfo *intf.MethodInfo) tube.MethodInfo {
-	return tube.MethodInfo{
+// turn from protobuf to tube's struct
+func decodeMethodInfo(iminfo *intf.MethodInfo) (*tube.MethodInfo, error) {
+	var schema jsonrpc.Schema
+	var err error
+	if iminfo.SchemaJson != "" {
+		builder := jsonrpc.NewSchemaBuilder()
+		schema, err = builder.BuildBytes([]byte(iminfo.SchemaJson))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &tube.MethodInfo{
 		Name:      iminfo.Name,
 		Help:      iminfo.Help,
+		Schema:    schema,
 		Delegated: iminfo.Delegated,
-	}
+	}, nil
 }
 
 func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
@@ -224,15 +236,28 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			upMethods := make([]tube.MethodInfo, 0)
 
 			for _, iminfo := range update.Methods {
-				minfo := decodeMethodInfo(iminfo)
-				upMethods = append(upMethods, minfo)
+				minfo, err := decodeMethodInfo(iminfo)
+				if err != nil {
+					if buildError, ok := err.(*jsonrpc.SchemaBuildError); ok {
+						// parse schema error
+						log.Warnf("error build schema %s, %+v", buildError.Error(), iminfo)
+						resp := &intf.UpdateMethodsResponse{Text: buildError.Error()}
+						payload := &intf.JSONRPCDownPacket_UpdateMethods{UpdateMethods: resp}
+						down_pac := &intf.JSONRPCDownPacket{Payload: payload}
+						stream.Send(down_pac)
+						// close the handle
+						return nil
+					}
+					return err
+				}
+				upMethods = append(upMethods, *minfo)
 			}
 			log.Debugf("conn %d, update methods %v", conn.ConnId, update.Methods)
-			cmd_update := tube.CmdUpdate{
+			cmdUpdate := tube.CmdUpdate{
 				ConnId:  conn.ConnId,
 				Methods: upMethods,
 			}
-			router.ChUpdate <- cmd_update
+			router.ChUpdate <- cmdUpdate
 			continue
 		}
 
