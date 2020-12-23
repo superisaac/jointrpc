@@ -99,6 +99,15 @@ func (self ErrorPos) Path() string {
 	return strings.Join(self.paths, "")
 }
 
+func (self ErrorPos) Error() string {
+	return fmt.Sprintf("Validation Error: %s %s", self.Path(), self.hint)
+}
+
+func (self ErrorPos) ToMessage(id interface{}) *RPCMessage {
+	err := &RPCError{10401, self.Error(), false}
+	return err.ToMessage(id)
+}
+
 func NewSchemaValidator() *SchemaValidator {
 	return &SchemaValidator{}
 }

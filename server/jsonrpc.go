@@ -111,7 +111,49 @@ func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMeth
 	return resp, nil
 }
 
-func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, chRecv tube.MsgChannel) {
+func downMsgReceived(msgvec tube.MsgVec, stream intf.JSONRPCTube_HandleServer, conn *tube.ConnT) {
+	msg := msgvec.Msg
+	if msg.IsRequest() || msg.IsNotify() {
+		req, err := MessageToRequest(msg)
+		if err != nil {
+			panic(err)
+		}
+
+		// validate the schema o
+		validated, errmsg := conn.ValidateMsg(msg)
+		if !validated {
+			if errmsg != nil {
+				msgvec := tube.MsgVec{
+					Msg:        errmsg,
+					FromConnId: conn.ConnId,
+				}
+				router := tube.Tube().Router
+				router.ChMsg <- tube.CmdMsg{MsgVec: msgvec}
+			}
+		} else {
+			payload := &intf.JSONRPCDownPacket_Request{Request: req}
+			pac := &intf.JSONRPCDownPacket{Payload: payload}
+			err = stream.Send(pac)
+			if err != nil {
+				panic(err)
+			}
+		}
+	} else {
+		// msg.IsResult() || msg.IsError()
+		res, err := MessageToResult(msg)
+		if err != nil {
+			panic(err)
+		}
+		payload := &intf.JSONRPCDownPacket_Result{Result: res}
+		pac := &intf.JSONRPCDownPacket{Payload: payload}
+		err = stream.Send(pac)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, conn *tube.ConnT) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Warnf("recovered ERROR %+v", r)
@@ -123,38 +165,12 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 		case <-context.Done():
 			log.Debugf("context done")
 			return
-		case msgvec, ok := <-chRecv:
-			msg := msgvec.Msg
+		case msgvec, ok := <-conn.RecvChannel:
 			if !ok {
 				log.Debugf("recv channel closed")
 				return
 			}
-			if msg.IsRequest() || msg.IsNotify() {
-				req, err := MessageToRequest(msg)
-				if err != nil {
-					panic(err)
-				}
-				payload := &intf.JSONRPCDownPacket_Request{Request: req}
-				pac := &intf.JSONRPCDownPacket{Payload: payload}
-				err = stream.Send(pac)
-				if err != nil {
-					panic(err)
-				}
-			} else {
-				// msg.IsResult() || msg.IsError()
-				res, err := MessageToResult(msg)
-				if err != nil {
-					panic(err)
-				}
-				payload := &intf.JSONRPCDownPacket_Result{Result: res}
-				pac := &intf.JSONRPCDownPacket{Payload: payload}
-				err = stream.Send(pac)
-				if err != nil {
-					panic(err)
-				}
-
-			}
-
+			downMsgReceived(msgvec, stream, conn)
 		}
 	} // and for loop
 }
@@ -178,7 +194,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 
 	log.Debugf("Handler connected, conn %d from ip %s", conn.ConnId, conn.PeerAddr.String())
 
-	go relayMessages(ctx, stream, conn.RecvChannel)
+	go relayMessages(ctx, stream, conn)
 
 	for {
 		up_pac, err := stream.Recv()

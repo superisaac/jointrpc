@@ -48,6 +48,13 @@ func (self *BuiltinHandlerManager) Start(ctx context.Context) {
 func (self *BuiltinHandlerManager) messageReceived(msgvec tube.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
+		validated, errmsg := self.conn.ValidateMsg(msg)
+		if !validated {
+			if errmsg != nil {
+				self.ReturnResultMessage(errmsg)
+			}
+			return
+		}
 		self.HandleRequestMessage(msgvec)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)

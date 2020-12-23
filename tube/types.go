@@ -41,27 +41,27 @@ type PendingValue struct {
 	Expire time.Time
 }
 
-// Connect Struct
-type ConnT struct {
-	ConnId      CID
-	PeerAddr    net.Addr
-	RecvChannel MsgChannel
-	Methods     map[string]bool
-}
-
-type MethodDesc struct {
-	//ConnId  CID
-	Conn      *ConnT
-	Help      string
-	Delegated bool
-}
-
 type MethodInfo struct {
 	Name      string
 	Help      string
 	Schema    jsonrpc.Schema
 	Delegated bool
 }
+
+// Connect Struct
+type ConnT struct {
+	ConnId      CID
+	PeerAddr    net.Addr
+	RecvChannel MsgChannel
+	Methods     map[string]MethodInfo
+}
+
+type MethodDesc struct {
+	//ConnId  CID
+	Conn *ConnT
+	Info MethodInfo
+}
+
 type MethodInfoMap map[string](interface{})
 
 // Channel commands

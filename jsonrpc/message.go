@@ -149,6 +149,10 @@ func (self RPCMessage) EncodePretty() (string, error) {
 	return string(bytes), nil
 }
 
+func (self RPCMessage) Interface() interface{} {
+	return self.Raw.Interface()
+}
+
 func (self RPCMessage) MustString() string {
 	bytes, err := self.Raw.MarshalJSON()
 	if err != nil {

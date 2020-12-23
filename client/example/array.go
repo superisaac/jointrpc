@@ -33,7 +33,7 @@ func ExampleArray(serverAddress string) error {
 			return nil, &jsonrpc.RPCError{10423, "parameter 1 index out of range", false}
 		}
 		return items[n], nil
-	}, handler.WithSchema(``))
+	}, handler.WithSchema(`{"type": "method", "params": [{"type": "number"}]}`))
 
 	rpcClient.On("array.size", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		return len(items), nil

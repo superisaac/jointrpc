@@ -61,18 +61,18 @@ func (self Router) GetAllMethods() []string {
 }
 
 func (self MethodDesc) IsLocal() bool {
-	return !self.Delegated
+	return !self.Info.Delegated
 }
 
 func (self MethodInfo) ToMap() MethodInfoMap {
-	// infoMap := make(MethodInfoMap)
-	// infoMap["name"] = self.Name
-	// infoMap["help"] = self.Help
-	// infoMap["delegated"] = self.Delegated
-	// return infoMap
+	var schemaIntf interface{}
+	if self.Schema != nil {
+		schemaIntf = self.Schema.RebuildType()
+	}
 	return MethodInfoMap{
 		"name":      self.Name,
 		"help":      self.Help,
+		"schema":    schemaIntf,
 		"delegated": self.Delegated,
 	}
 }
@@ -85,15 +85,10 @@ func (self Router) GetLocalMethods() []MethodInfo {
 
 func (self Router) getLocalMethods() []MethodInfo {
 	minfos := []MethodInfo{}
-	for method, descs := range self.MethodConnMap {
+	for _, descs := range self.MethodConnMap {
 		for _, desc := range descs {
 			if desc.IsLocal() {
-				info := MethodInfo{
-					Name:      method,
-					Help:      desc.Help,
-					Delegated: desc.Delegated,
-				}
-				minfos = append(minfos, info)
+				minfos = append(minfos, desc.Info)
 			}
 		}
 	}
@@ -116,13 +111,13 @@ func (self *Router) UpdateMethods(conn *ConnT, methods []MethodInfo) bool {
 }
 
 func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
-	connMethods := make(map[string]bool)
+	connMethods := make(map[string]MethodInfo)
 	addingMethods := make([]MethodInfo, 0)
 	deletingMethods := make([]string, 0)
 
 	// Find new methods
 	for _, minfo := range methods {
-		connMethods[minfo.Name] = true
+		connMethods[minfo.Name] = minfo
 		if _, found := conn.Methods[minfo.Name]; !found {
 			addingMethods = append(addingMethods, minfo)
 		}
@@ -141,9 +136,8 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 	for _, minfo := range addingMethods {
 		method := minfo.Name
 		methodDesc := MethodDesc{
-			Conn:      conn,
-			Help:      minfo.Help,
-			Delegated: minfo.Delegated,
+			Conn: conn,
+			Info: minfo,
 		}
 		// bi direction map
 		methodDescArr, methodFound := self.MethodConnMap[method]
@@ -201,7 +195,7 @@ func (self *Router) leaveConn(conn *ConnT) {
 			delete(self.MethodConnMap, method)
 		}
 	}
-	conn.Methods = make(map[string]bool)
+	conn.Methods = make(map[string]MethodInfo)
 
 	ct, ok := self.ConnMap[conn.ConnId]
 	if ok {
