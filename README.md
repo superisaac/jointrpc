@@ -1,2 +1,2 @@
 # rpctube
-rpc tube server in go
+aggregated JSONRPC server in go

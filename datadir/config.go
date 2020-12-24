@@ -11,17 +11,16 @@ import (
 )
 
 var (
-	cfg       Config
-	cfgParsed bool = false
+	cfg       *Config
 )
 
-func GetConfig() Config {
-	if !cfgParsed {
+func GetConfig() *Config {
+	if cfg == nil {
+		cfg = new(Config)
 		err := cfg.ParseConfig()
 		if err != nil {
 			panic(err)
 		}
-		cfgParsed = true
 		cfg.setupLogger()
 	}
 	return cfg

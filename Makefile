@@ -3,16 +3,20 @@
 protofiles := $(shell find ./proto -name '*.proto')
 gofiles := $(shell find . -name '*.go')
 
-tmp/protoc.ts: ${protofiles}
-	mkdir -p tmp
+build: compile_proto bin/rpctube
 
-compile_proto: tmp/protoc.ts ./compileproto.sh
-	./compileproto.sh $<
+all: test build
+
+/tmp/protoc.ts: ${protofiles} ./compileproto.sh
+	./compileproto.sh
+	echo compile >/tmp/protoc.ts
+
+compile_proto: /tmp/protoc.ts
 
 bin/rpctube: ${gofiles}
 	go build -o $@ rpctube.go
 
-build: compile_proto bin/rpctube
+
 
 test:
 	go test -v github.com/superisaac/rpctube/jsonrpc
@@ -20,12 +24,9 @@ test:
 	go test -v github.com/superisaac/rpctube/tube
 	go test -v github.com/superisaac/rpctube/server
 
-all: test build
-	echo ${protofiles}
-
 clean:
 	rm -rf bin/rpctube
-	rm tmp/protoc.ts
+	rm /tmp/protoc.ts
 
 gofmt:
 	go fmt client/*.go
