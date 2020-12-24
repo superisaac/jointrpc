@@ -4,6 +4,7 @@ import (
 	"context"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	schema "github.com/superisaac/rpctube/jsonrpc/schema"
 	tube "github.com/superisaac/rpctube/tube"
 )
 
@@ -120,12 +121,12 @@ func (self *BuiltinHandlerManager) updateMethods() {
 	if self.conn != nil {
 		minfos := make([]tube.MethodInfo, 0)
 		for m, info := range self.MethodHandlers {
-			var schema jsonrpc.Schema
+			var s schema.Schema
 			var err error
 			if info.Schema != "" {
-				builder := jsonrpc.NewSchemaBuilder()
-				schema, err = builder.BuildBytes([]byte(info.Schema))
-				log.Debugf("compiled schema %+v for %s", schema, info.Schema)
+				builder := schema.NewSchemaBuilder()
+				s, err = builder.BuildBytes([]byte(info.Schema))
+				log.Debugf("compiled schema %+v for %s", s, info.Schema)
 				if err != nil {
 					panic(err)
 				}
@@ -133,7 +134,7 @@ func (self *BuiltinHandlerManager) updateMethods() {
 			minfo := tube.MethodInfo{
 				Name:      m,
 				Help:      info.Help,
-				Schema:    schema,
+				Schema:    s,
 				Delegated: false,
 			}
 			minfos = append(minfos, minfo)

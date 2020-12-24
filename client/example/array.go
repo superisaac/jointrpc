@@ -2,8 +2,8 @@ package example
 
 import (
 	client "github.com/superisaac/rpctube/client"
-	handler "github.com/superisaac/rpctube/tube/handler"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	handler "github.com/superisaac/rpctube/tube/handler"
 )
 
 func ExampleArray(serverAddress string) error {

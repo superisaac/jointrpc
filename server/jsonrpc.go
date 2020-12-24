@@ -15,7 +15,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	schema "github.com/superisaac/rpctube/jsonrpc/schema"
 	tube "github.com/superisaac/rpctube/tube"
 	peer "google.golang.org/grpc/peer"
 )
@@ -83,11 +84,11 @@ func encodeMethodInfo(minfo tube.MethodInfo) *intf.MethodInfo {
 
 // turn from protobuf to tube's struct
 func decodeMethodInfo(iminfo *intf.MethodInfo) (*tube.MethodInfo, error) {
-	var schema jsonrpc.Schema
+	var s schema.Schema
 	var err error
 	if iminfo.SchemaJson != "" {
-		builder := jsonrpc.NewSchemaBuilder()
-		schema, err = builder.BuildBytes([]byte(iminfo.SchemaJson))
+		builder := schema.NewSchemaBuilder()
+		s, err = builder.BuildBytes([]byte(iminfo.SchemaJson))
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +96,7 @@ func decodeMethodInfo(iminfo *intf.MethodInfo) (*tube.MethodInfo, error) {
 	return &tube.MethodInfo{
 		Name:      iminfo.Name,
 		Help:      iminfo.Help,
-		Schema:    schema,
+		Schema:    s,
 		Delegated: iminfo.Delegated,
 	}, nil
 }
@@ -254,7 +255,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			for _, iminfo := range update.Methods {
 				minfo, err := decodeMethodInfo(iminfo)
 				if err != nil {
-					if buildError, ok := err.(*jsonrpc.SchemaBuildError); ok {
+					if buildError, ok := err.(*schema.SchemaBuildError); ok {
 						// parse schema error
 						log.Warnf("error build schema %s, %+v", buildError.Error(), iminfo)
 						resp := &intf.UpdateMethodsResponse{Text: buildError.Error()}

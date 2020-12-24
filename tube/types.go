@@ -4,6 +4,7 @@ import (
 	//"github.com/gorilla/websocket"
 	"errors"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	schema "github.com/superisaac/rpctube/jsonrpc/schema"
 	"net"
 	"sync"
 	"time"
@@ -44,7 +45,7 @@ type PendingValue struct {
 type MethodInfo struct {
 	Name      string
 	Help      string
-	Schema    jsonrpc.Schema
+	Schema    schema.Schema
 	Delegated bool
 }
 

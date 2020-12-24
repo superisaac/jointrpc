@@ -3,6 +3,7 @@ package tube
 import (
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	schema "github.com/superisaac/rpctube/jsonrpc/schema"
 )
 
 func NewConn() *ConnT {
@@ -23,7 +24,7 @@ func (self ConnT) GetMethods() []string {
 
 func (self ConnT) ValidateMsg(msg *jsonrpc.RPCMessage) (bool, *jsonrpc.RPCMessage) {
 	if info, ok := self.Methods[msg.Method]; ok && info.Schema != nil {
-		validator := jsonrpc.NewSchemaValidator()
+		validator := schema.NewSchemaValidator()
 		errPos := validator.Validate(info.Schema, msg.Interface())
 		if errPos != nil {
 			if msg.IsRequest() {

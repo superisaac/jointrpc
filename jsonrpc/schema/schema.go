@@ -1,4 +1,4 @@
-package jsonrpc
+package schema
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	//"reflect"
 	json "encoding/json"
 	simplejson "github.com/bitly/go-simplejson"
+	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	"strings"
 )
 
@@ -103,8 +104,8 @@ func (self ErrorPos) Error() string {
 	return fmt.Sprintf("Validation Error: %s %s", self.Path(), self.hint)
 }
 
-func (self ErrorPos) ToMessage(id interface{}) *RPCMessage {
-	err := &RPCError{10401, self.Error(), false}
+func (self ErrorPos) ToMessage(id interface{}) *jsonrpc.RPCMessage {
+	err := &jsonrpc.RPCError{10401, self.Error(), false}
 	return err.ToMessage(id)
 }
 

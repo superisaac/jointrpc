@@ -1,4 +1,4 @@
-package jsonrpc
+package schema
 
 import (
 	//json "encoding/json"
