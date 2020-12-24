@@ -1,5 +1,6 @@
 #!/bin/bash
 
+tsfile=$1
 protofiles=$(find ./proto -name '*.proto')
 
 function exit_if() {
@@ -57,3 +58,8 @@ function compile_python() {
 
 compile_go
 compile_python
+
+if [ -n $tsfile ]; then
+    echo put compile timestamp to $tsfile
+    echo 'compiled' >$tsfile
+fi
