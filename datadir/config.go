@@ -2,6 +2,7 @@ package datadir
 
 import (
 	"errors"
+	"path/filepath"
 	log "github.com/sirupsen/logrus"
 	logsyslog "github.com/sirupsen/logrus/hooks/syslog"
 	yaml "gopkg.in/yaml.v2"
@@ -55,6 +56,24 @@ func (self *Config) validateValues() error {
 		self.Server.Bind = "127.0.0.1:50055"
 	}
 
+	// tls
+	if self.Server.TLS.CertFile != "" {
+		certFile := filepath.Join(Datapath("tls/"), self.Server.TLS.CertFile)
+		if _, err := os.Stat(certFile); os.IsNotExist(err) {
+			return errors.New("config, tls certification file does not exist")
+		}
+		self.Server.TLS.CertFile = certFile
+	}
+	if self.Server.TLS.KeyFile != "" {
+		keyFile := filepath.Join(Datapath("tls/"), self.Server.TLS.KeyFile)
+		if _, err := os.Stat(keyFile); os.IsNotExist(err) {
+			return errors.New("config, tls key file does not exist")
+		}
+		self.Server.TLS.KeyFile = keyFile
+	}
+
+	
+	// syslog
 	if self.Logging.Syslog.URL == "" {
 		self.Logging.Syslog.URL = "localhost:514"
 	}

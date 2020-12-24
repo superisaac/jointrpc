@@ -25,7 +25,7 @@ func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RP
 		Params: paramsStr}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	res, err := self.TubeClient.Call(ctx, req)
+	res, err := self.tubeClient.Call(ctx, req)
 	log.Debugf("res is %v", res)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (self *RPCClient) SendNotify(method string, params []interface{}, broadcast
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	res, err := self.TubeClient.Notify(ctx, req)
+	res, err := self.tubeClient.Notify(ctx, req)
 
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (self *RPCClient) ListMethods() ([]*intf.MethodInfo, error) {
 	req := &intf.ListMethodsRequest{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	res, err := self.TubeClient.ListMethods(ctx, req)
+	res, err := self.tubeClient.ListMethods(ctx, req)
 	if err != nil {
 		return [](*intf.MethodInfo){}, err
 	}

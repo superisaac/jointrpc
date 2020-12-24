@@ -13,7 +13,8 @@ type RPCRequest struct {
 
 type RPCClient struct {
 	handler.HandlerManager
-	ServerAddress string
-	TubeClient    intf.JSONRPCTubeClient
+	serverAddress string
+	certFile      string
+	tubeClient    intf.JSONRPCTubeClient
 	sendUpChannel chan *intf.JSONRPCUpPacket
 }

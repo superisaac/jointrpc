@@ -7,16 +7,15 @@ build: compile_proto bin/rpctube
 
 all: test build
 
-/tmp/protoc.ts: ${protofiles} ./compileproto.sh
+tmp/protoc.ts: ${protofiles} ./compileproto.sh
+	mkdir -p tmp
 	./compileproto.sh
-	echo compile >/tmp/protoc.ts
+	echo compile >tmp/protoc.ts
 
-compile_proto: /tmp/protoc.ts
+compile_proto: tmp/protoc.ts
 
 bin/rpctube: ${gofiles}
 	go build -o $@ rpctube.go
-
-
 
 test:
 	go test -v github.com/superisaac/rpctube/jsonrpc
@@ -26,7 +25,7 @@ test:
 
 clean:
 	rm -rf bin/rpctube
-	rm /tmp/protoc.ts
+	rm tmp/protoc.ts
 
 gofmt:
 	go fmt client/*.go
@@ -37,3 +36,5 @@ gofmt:
 	go fmt jsonrpc/*.go
 	go fmt jsonrpc/schema/*.go
 
+install: bin/rpctube
+	install $< /usr/local/bin

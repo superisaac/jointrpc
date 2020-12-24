@@ -1,8 +1,14 @@
 package datadir
 
+type ServerTLSConfig struct {
+	CertFile      string `yaml:"cert,omitempty"`
+	KeyFile       string `yaml:"key,omitempty"`
+}
+
 type ServerConfig struct {
 	Bind      string `yaml:"bind,omitempty"`
 	ProxyBind string `yaml:"proxy_bind,omitempty"`
+	TLS       ServerTLSConfig `yaml:"tls,omitempty"`
 }
 
 type SyslogConfig struct {

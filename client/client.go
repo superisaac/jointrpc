@@ -10,13 +10,19 @@ import (
 	tube "github.com/superisaac/rpctube/tube"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
+	credentials "google.golang.org/grpc/credentials"
 	"io"
+	"os"
 	"time"
 )
 
-func NewRPCClient(serverAddress string) *RPCClient {
+func NewRPCClient(serverAddress string, certFile string) *RPCClient {
 	sendUpChannel := make(chan *intf.JSONRPCUpPacket)
-	c := &RPCClient{ServerAddress: serverAddress, sendUpChannel: sendUpChannel}
+	c := &RPCClient{
+		serverAddress: serverAddress,
+		certFile:      certFile,
+		sendUpChannel: sendUpChannel,
+	}
 	c.InitHandlerManager()
 	c.OnChange(func() {
 		c.OnHandlerChanged()
@@ -25,18 +31,27 @@ func NewRPCClient(serverAddress string) *RPCClient {
 }
 
 func (self *RPCClient) Connect() error {
-	conn, err := grpc.Dial(self.ServerAddress,
-		grpc.WithInsecure())
+	var opts []grpc.DialOption
+	if self.certFile != "" {
+		creds, err := credentials.NewClientTLSFromFile(self.certFile, "")
+		if err != nil {
+			panic(err)
+		}
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+	}
+	conn, err := grpc.Dial(self.serverAddress, opts...)
 	if err != nil {
 		return err
 	}
-	self.TubeClient = intf.NewJSONRPCTubeClient(conn)
+	self.tubeClient = intf.NewJSONRPCTubeClient(conn)
 	return nil
 }
 
 // Override Handler.OnHandlerChanged
 func (self *RPCClient) OnHandlerChanged() {
-	if self.TubeClient != nil {
+	if self.tubeClient != nil {
 		self.updateMethods()
 	}
 }
@@ -104,7 +119,7 @@ func (self *RPCClient) handleRPC() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	stream, err := self.TubeClient.Handle(ctx, grpc_retry.WithMax(500))
+	stream, err := self.tubeClient.Handle(ctx, grpc_retry.WithMax(500))
 
 	if err != nil {
 		log.Warnf("error on handle %v", err)
@@ -165,4 +180,20 @@ func (self *RPCClient) handleDownRequest(req *intf.JSONRPCRequest) {
 	}
 	msgvec := tube.MsgVec{Msg: msg, FromConnId: 0}
 	self.HandleRequestMessage(msgvec)
+}
+
+// util functions
+func TryGetServerSettings(serverAddress string, certFile string) (string, string) {
+	if serverAddress == "" {
+		serverAddress = os.Getenv("TUBE_CONNECT")
+	}
+
+	if serverAddress == "" {
+		serverAddress = "localhost:50055"
+	}
+
+	if certFile == "" {
+		certFile = os.Getenv("TUBE_CONNECT")
+	}
+	return serverAddress, certFile
 }
