@@ -1,7 +1,7 @@
 package client
 
 import (
-	handler "github.com/superisaac/rpctube/handler"
+	handler "github.com/superisaac/rpctube/tube/handler"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )

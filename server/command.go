@@ -8,7 +8,7 @@ import (
 	"os"
 	//"fmt"
 	datadir "github.com/superisaac/rpctube/datadir"
-	handler "github.com/superisaac/rpctube/handler"
+	handler "github.com/superisaac/rpctube/tube/handler"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	tube "github.com/superisaac/rpctube/tube"
 	grpc "google.golang.org/grpc"

@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	//intf "github.com/superisaac/rpctube/intf/tube"
-	handler "github.com/superisaac/rpctube/handler"
+	handler "github.com/superisaac/rpctube/tube/handler"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	//example "github.com/superisaac/rpctube/client/example"
 	//grpc "google.golang.org/grpc"
