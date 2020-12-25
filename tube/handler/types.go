@@ -8,7 +8,7 @@ import (
 
 type RPCRequest struct {
 	MsgVec tube.MsgVec
-	//Message *jsonrpc.RPCMessage
+	//Message jsonrpc.IMessage
 	//FromConnId tube.CID
 	// TODO: add more fields
 }
@@ -27,7 +27,7 @@ type MethodHandler struct {
 }
 
 type HandlerManager struct {
-	ChResultMsg       chan *jsonrpc.RPCMessage
+	ChResultMsg       chan jsonrpc.IMessage
 	MethodHandlers    map[string]MethodHandler
 	defaultHandler    DefaultHandlerFunc
 	defaultConcurrent bool

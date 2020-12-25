@@ -22,13 +22,13 @@ func (self ConnT) GetMethods() []string {
 	return keys
 }
 
-func (self ConnT) ValidateMsg(msg *jsonrpc.RPCMessage) (bool, *jsonrpc.RPCMessage) {
-	if info, ok := self.Methods[msg.Method]; ok && info.Schema != nil {
+func (self ConnT) ValidateMsg(msg jsonrpc.IMessage) (bool, jsonrpc.IMessage) {
+	if info, ok := self.Methods[msg.MustMethod()]; ok && info.Schema != nil {
 		validator := schema.NewSchemaValidator()
 		errPos := validator.Validate(info.Schema, msg.Interface())
 		if errPos != nil {
 			if msg.IsRequest() {
-				errmsg := errPos.ToMessage(msg.Id)
+				errmsg := errPos.ToMessage(msg.MustId())
 				return false, errmsg
 				//self.ReturnResultMessage(errmsg)
 			} else {

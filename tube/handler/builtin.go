@@ -97,7 +97,7 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 		if err != nil {
 			return nil, err
 		}
-		notify := jsonrpc.NewNotifyMessage(method, params[1:])
+		notify := jsonrpc.NewNotifyMessage(method, params[1:], nil)
 
 		connId := tube.CID(0)
 		if self.conn != nil {

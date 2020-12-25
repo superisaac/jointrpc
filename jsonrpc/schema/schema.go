@@ -104,7 +104,7 @@ func (self ErrorPos) Error() string {
 	return fmt.Sprintf("Validation Error: %s %s", self.Path(), self.hint)
 }
 
-func (self ErrorPos) ToMessage(id interface{}) *jsonrpc.RPCMessage {
+func (self ErrorPos) ToMessage(id interface{}) *jsonrpc.ErrorMessage {
 	err := &jsonrpc.RPCError{10401, self.Error(), false}
 	return err.ToMessage(id)
 }

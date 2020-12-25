@@ -26,7 +26,7 @@ type CID uint64
 
 // Commands
 type MsgVec struct {
-	Msg        *jsonrpc.RPCMessage
+	Msg        jsonrpc.IMessage
 	FromConnId CID
 }
 type MsgChannel chan MsgVec

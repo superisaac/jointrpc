@@ -8,7 +8,7 @@ import (
 )
 
 func (self *HandlerManager) InitHandlerManager() {
-	self.ChResultMsg = make(chan *jsonrpc.RPCMessage, 100)
+	self.ChResultMsg = make(chan jsonrpc.IMessage, 100)
 	self.MethodHandlers = make(map[string](MethodHandler))
 }
 
@@ -41,64 +41,64 @@ func (self *HandlerManager) UnHandle(method string) bool {
 	return found
 }
 
-func (self *HandlerManager) wrapHandlerResult(msg *jsonrpc.RPCMessage, res interface{}, err error) (*jsonrpc.RPCMessage, error) {
+func (self *HandlerManager) wrapHandlerResult(msg jsonrpc.IMessage, res interface{}, err error) (jsonrpc.IMessage, error) {
 	if err != nil {
 		if rpcErr, ok := err.(*jsonrpc.RPCError); ok {
-			return rpcErr.ToMessage(msg.Id), nil
+			return rpcErr.ToMessage(msg.MustId()), nil
 		}
 		return nil, err
 	} else if msg.IsRequest() {
 		log.Debugf("msg is request")
-		return jsonrpc.NewResultMessage(msg.Id, res), nil
+		return jsonrpc.NewResultMessage(msg.MustId(), res, nil), nil
 	} else {
 		return nil, nil
 	}
 }
 
-func (self *HandlerManager) ReturnResultMessage(resmsg *jsonrpc.RPCMessage) {
+func (self *HandlerManager) ReturnResultMessage(resmsg jsonrpc.IMessage) {
 	self.ChResultMsg <- resmsg
 }
 
 func (self *HandlerManager) HandleRequestMessage(msgvec tube.MsgVec) {
 	msg := msgvec.Msg
-	handler, ok := self.MethodHandlers[msg.Method]
+	handler, ok := self.MethodHandlers[msg.MustMethod()]
 
 	defer func() {
 		if r := recover(); r != nil {
 			log.Errorf("Recovered ERROR on handling request msg %+v", r)
 			if rpcError, ok := r.(*jsonrpc.RPCError); ok {
-				errmsg := rpcError.ToMessage(msg.Id)
+				errmsg := rpcError.ToMessage(msg.MustId())
 				self.ReturnResultMessage(errmsg)
 				return
 			} else {
-				errmsg := jsonrpc.ErrServerError.ToMessage(msg.Id)
+				errmsg := jsonrpc.ErrServerError.ToMessage(msg.MustId())
 				self.ReturnResultMessage(errmsg)
 			}
 		}
 	}()
 
-	var resmsg *jsonrpc.RPCMessage
+	var resmsg jsonrpc.IMessage
 	var err error
 	if ok {
 		req := &RPCRequest{MsgVec: msgvec}
-		params := msg.Params.MustArray()
+		params := msg.MustParams()
 		res, err := handler.function(req, params)
 		log.Debugf("handler function returns %+v, %+v", msg, res)
 		resmsg, err = self.wrapHandlerResult(msg, res, err)
 	} else if self.defaultHandler != nil {
 		req := &RPCRequest{MsgVec: msgvec}
 
-		params := msg.Params.MustArray()
-		res, err := self.defaultHandler(req, msg.Method, params)
+		params := msg.MustParams()
+		res, err := self.defaultHandler(req, msg.MustMethod(), params)
 		resmsg, err = self.wrapHandlerResult(msg, res, err)
 	} else {
-		resmsg, err = jsonrpc.ErrNoSuchMethod.ToMessage(msg.Id), nil
+		resmsg, err = jsonrpc.ErrNoSuchMethod.ToMessage(msg.MustId()), nil
 	}
 
 	//log.Debugf("handle request method %+v, resmsg %+v, error %+v", msg, resmsg, err)
 	if err != nil {
 		log.Warnf("bad up message %w", err)
-		errmsg := jsonrpc.NewErrorMessage(msg.Id, 10401, "bad handler res", false)
+		errmsg := jsonrpc.RPCErrorMessage(msg.MustId(), 10401, "bad handler res", false)
 		self.ReturnResultMessage(errmsg)
 		return
 	}

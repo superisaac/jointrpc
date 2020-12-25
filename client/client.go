@@ -174,7 +174,7 @@ func (self *RPCClient) handleDownRequest(req *intf.JSONRPCRequest) {
 	msg, err := server.RequestToMessage(req)
 	if err != nil {
 		log.Warnf("parse request message error %+v", err)
-		errmsg := jsonrpc.NewErrorMessage(req.Id, 10400, "parse message error", false)
+		errmsg := jsonrpc.RPCErrorMessage(req.Id, 10400, "parse message error", false)
 		self.ReturnResultMessage(errmsg)
 		return
 	}

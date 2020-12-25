@@ -8,7 +8,7 @@ import (
 //type UID uint64
 type UID string
 
-type RPCMessage struct {
+/*type RPCMessage struct {
 	Initialized bool
 	//FromConnId  CID
 	Id interface{}
@@ -18,10 +18,72 @@ type RPCMessage struct {
 	Result *simplejson.Json
 	Error  *simplejson.Json
 	Raw    *simplejson.Json
-}
+} */
 
 type RPCError struct {
 	Code      int
 	Reason    string
 	Retryable bool
+}
+
+var (
+	ErrMessageType = &RPCError{10403, "wrong message type", false}
+)
+
+const (
+	MTRequest = 1
+	MTNotify  = 2
+	MTResult  = 3
+	MTError   = 4
+)
+
+type IMessage interface {
+	IsRequest() bool
+	IsNotify() bool
+	IsRequestOrNotify() bool
+	IsResult() bool
+	IsError() bool
+	IsResultOrError() bool
+
+	EncodePretty() (string, error)
+	Interface() interface{}
+	MustString() string
+	Bytes() ([]byte, error)
+
+	// upvote
+	MustId() interface{}
+	MustMethod() string
+	MustParams() []interface{}
+	MustResult() interface{}
+	MustError() interface{}
+}
+
+type BaseMessage struct {
+	messageType int
+	raw         *simplejson.Json
+}
+
+type RequestMessage struct {
+	BaseMessage
+	Id     interface{}
+	Method string
+	Params []interface{}
+}
+
+type NotifyMessage struct {
+	BaseMessage
+	Method string
+	Params []interface{}
+}
+
+type ResultMessage struct {
+	BaseMessage
+	Id     interface{}
+	Result interface{}
+}
+
+type ErrorMessage struct {
+	BaseMessage
+	Id    interface{}
+	Error interface{}
 }

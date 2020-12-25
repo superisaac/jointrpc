@@ -63,13 +63,13 @@ func TestRouteMessage(t *testing.T) {
 "params": [1, 3]
 }`
 
-	msg, err := jsonrpc.ParseMessage([]byte(j1))
+	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
-	assert.Equal(json.Number("100002"), msg.Id)
+	assert.Equal(json.Number("100002"), msg.MustId())
 	router.RouteMessage(CmdMsg{MsgVec{msg, conn.ConnId}, false})
 
 	rcvmsg := <-conn.RecvChannel
-	assert.Equal(msg.Id, rcvmsg.Msg.Id)
+	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
 }
 
@@ -96,9 +96,9 @@ func TestRouteRoutine(t *testing.T) {
 "params": [1, 3]
 }`
 	time.Sleep(1 * time.Second)
-	msg, err := jsonrpc.ParseMessage([]byte(j1))
+	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
-	assert.Equal(json.Number("100002"), msg.Id)
+	assert.Equal(json.Number("100002"), msg.MustId())
 
 	router.ChMsg <- CmdMsg{MsgVec{msg, cid1}, false}
 
@@ -106,6 +106,6 @@ func TestRouteRoutine(t *testing.T) {
 	rcvmsg := <-ch
 	//fmt.Printf("recved %v\n", rcvmsg)
 
-	assert.Equal(msg.Id, rcvmsg.Msg.Id)
+	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
 }

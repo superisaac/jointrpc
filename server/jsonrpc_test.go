@@ -21,10 +21,10 @@ func TestReqConvert(t *testing.T) {
 "method": "testAgain",
 "params": [3, "hello", "nice"]
 }`
-	msg, err := jsonrpc.ParseMessage([]byte(j1))
+	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
-	//assert.Equal(json.Number("100"), msg.Id)
-	assert.Equal(INT_100, msg.Id)
+	//assert.Equal(json.Number("100"), msg.MustId)
+	assert.Equal(INT_100, msg.MustId())
 
 	req, err := MessageToRequest(msg)
 	assert.Nil(err)
@@ -37,7 +37,7 @@ func TestReqConvert(t *testing.T) {
 	assert.Nil(err)
 
 	assert.True(msg1.IsRequest())
-	assert.Equal(INT_100, msg1.Id)
+	assert.Equal(INT_100, msg1.MustId())
 }
 
 func TestNotifyConvert(t *testing.T) {
@@ -48,10 +48,9 @@ func TestNotifyConvert(t *testing.T) {
 "method": "testAgain",
 "params": [3, "hello", "nice"]
 }`
-	msg, err := jsonrpc.ParseMessage([]byte(j1))
+	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.True(msg.IsNotify())
 	assert.Nil(err)
-	assert.Nil(msg.Id)
 
 	notify, err := MessageToRequest(msg)
 	assert.Nil(err)
@@ -64,7 +63,8 @@ func TestNotifyConvert(t *testing.T) {
 	assert.Nil(err)
 
 	assert.True(msg1.IsNotify())
-	assert.Nil(msg1.Id)
+	assert.False(msg1.IsRequest())
+	assert.True(msg1.IsRequestOrNotify())
 }
 
 func TestResultConvert(t *testing.T) {
@@ -75,9 +75,10 @@ func TestResultConvert(t *testing.T) {
 "id": 100,
 "result": "ok"
 }`
-	msg, err := jsonrpc.ParseMessage([]byte(j1))
+	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
-	assert.Equal(INT_100, msg.Id)
+	assert.True(msg.IsResult())
+	assert.Equal(INT_100, msg.MustId())
 
 	_, err = MessageToRequest(msg)
 	assert.Equal("msg is neither request nor notify", err.Error())
@@ -92,5 +93,5 @@ func TestResultConvert(t *testing.T) {
 	assert.Nil(err)
 
 	assert.True(msg1.IsResult())
-	assert.Equal(INT_100, msg1.Id)
+	assert.Equal(INT_100, msg1.MustId())
 }

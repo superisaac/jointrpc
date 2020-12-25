@@ -9,7 +9,7 @@ import (
 	server "github.com/superisaac/rpctube/server"
 )
 
-func (self *RPCClient) CallRPC(method string, params []interface{}) (*jsonrpc.RPCMessage, error) {
+func (self *RPCClient) CallRPC(method string, params []interface{}) (jsonrpc.IMessage, error) {
 	log.Infof("log methods %s, params %v", method, params)
 	paramsJson := simplejson.New()
 	paramsJson.SetPath(nil, params)

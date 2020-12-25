@@ -22,19 +22,16 @@ func TestRequestMsg(t *testing.T) {
 	assert.Equal(js.Get("id").MustInt(), 100)
 	assert.Equal(js.Get("id").MustString(), "")
 
-	msg := NewRPCMessage(js)
-
-	intMsgId, err := msg.GetIntId()
+	msg, err := Parse(js)
 	assert.Nil(err)
-	assert.Equal(int64(100), intMsgId)
 
-	assert.Equal(msg.Method, "abc::add")
-
-	assert.True(msg.IsValid())
 	assert.True(msg.IsRequest())
 	assert.False(msg.IsNotify())
 	assert.False(msg.IsError())
 	assert.False(msg.IsResult())
+
+	assert.Equal(json.Number("100"), msg.MustId())
+	assert.Equal("abc::add", msg.MustMethod())
 }
 
 func TestNotifyMsg(t *testing.T) {
@@ -50,29 +47,26 @@ func TestNotifyMsg(t *testing.T) {
 	assert.Equal(js.Get("id").MustInt(), 0)
 	assert.Equal(js.Get("id").MustString(), "")
 
-	msg := NewRPCMessage(js)
-	_, err := msg.GetIntId()
-	assert.NotNil(err)
-	assert.Equal("id is not a number", err.Error())
+	msg, err := Parse(js)
+	assert.Nil(err)
 
-	assert.Equal(msg.Method, "abc::add")
+	assert.Equal("abc::add", msg.MustMethod())
 
-	assert.True(msg.IsValid())
 	assert.False(msg.IsRequest())
 	assert.True(msg.IsNotify())
 	assert.False(msg.IsError())
 	assert.False(msg.IsResult())
 
-	params := msg.GetParams()
+	params := msg.MustParams()
 	assert.Equal(len(params), 3)
 	assert.Equal(params[0], json.Number("13"))
 	assert.Equal(params[1], json.Number("4"))
 	assert.Equal(params[2], "hello")
 
 	arr := [](interface{}){3, "uu"}
-	msg = NewNotifyMessage("hahaha", arr)
-	assert.Equal(msg.Method, "hahaha")
-	params = msg.GetParams()
+	msg = NewNotifyMessage("hahaha", arr, nil)
+	assert.Equal("hahaha", msg.MustMethod())
+	params = msg.MustParams()
 
 	assert.Equal(len(params), 2)
 	assert.Equal(params[1], "uu")

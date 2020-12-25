@@ -31,7 +31,7 @@ func HandleHttp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg, err := jsonrpc.ParseMessage(buffer.Bytes())
+	msg, err := jsonrpc.ParseBytes(buffer.Bytes())
 	if err != nil {
 		jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
 		return
@@ -45,7 +45,7 @@ func HandleHttp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if result != nil {
-		data, err1 := result.Raw.MarshalJSON()
+		data, err1 := result.Bytes()
 		if err1 != nil {
 			jsonrpc.ErrorResponse(w, r, err1, 500, "Server error")
 			return

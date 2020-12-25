@@ -9,7 +9,7 @@ import (
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 )
 
-func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
+func RequestToMessage(req *intf.JSONRPCRequest) (jsonrpc.IMessage, error) {
 
 	var id interface{} = nil
 	//if req.Id == 0 {
@@ -32,11 +32,14 @@ func RequestToMessage(req *intf.JSONRPCRequest) (*jsonrpc.RPCMessage, error) {
 			params = paramInterface.([]interface{})
 		}
 	}
-	msg := jsonrpc.NewRequestMessage(id, req.Method, params)
-	return msg, nil
+	if id != nil {
+		return jsonrpc.NewRequestMessage(id, req.Method, params, nil), nil
+	} else {
+		return jsonrpc.NewNotifyMessage(req.Method, params, nil), nil
+	}
 }
 
-func NotifyToMessage(req *intf.JSONRPCNotifyRequest) (*jsonrpc.RPCMessage, error) {
+func NotifyToMessage(req *intf.JSONRPCNotifyRequest) (jsonrpc.IMessage, error) {
 	params := [](interface{}){}
 	if len(req.Params) > 0 {
 		paramsJson, err := simplejson.NewJson([]byte(req.Params))
@@ -48,11 +51,11 @@ func NotifyToMessage(req *intf.JSONRPCNotifyRequest) (*jsonrpc.RPCMessage, error
 			params = paramInterface.([]interface{})
 		}
 	}
-	msg := jsonrpc.NewNotifyMessage(req.Method, params)
+	msg := jsonrpc.NewNotifyMessage(req.Method, params, nil)
 	return msg, nil
 }
 
-func ResultToMessage(res *intf.JSONRPCResult) (*jsonrpc.RPCMessage, error) {
+func ResultToMessage(res *intf.JSONRPCResult) (jsonrpc.IMessage, error) {
 	json_data := simplejson.New()
 	json_data.Set("version", "2.0")
 	//if res.Id != 0 {
@@ -75,27 +78,26 @@ func ResultToMessage(res *intf.JSONRPCResult) (*jsonrpc.RPCMessage, error) {
 		if err != nil {
 			return nil, err
 		}
-		json_data.Set("result", parsed)
+		json_data.Set("result", parsed.Interface())
 	} else {
 		res_error := res.GetError()
 		parsed, err := simplejson.NewJson([]byte(res_error))
 		if err != nil {
 			return nil, err
 		}
-		json_data.Set("error", parsed)
+		json_data.Set("error", parsed.Interface())
 	}
-	return jsonrpc.NewRPCMessage(json_data), nil
+	return jsonrpc.Parse(json_data)
 }
 
-func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
+func MessageToRequest(msg jsonrpc.IMessage) (*intf.JSONRPCRequest, error) {
 	if !msg.IsRequest() && !msg.IsNotify() {
 		return nil, errors.New("msg is neither request nor notify")
 	}
 	req := &intf.JSONRPCRequest{}
-	//req.Id = int64(msg.Id)
 
-	if msg.Id != nil {
-		idstr, err := json.Marshal(msg.Id)
+	if msg.IsRequest() {
+		idstr, err := json.Marshal(msg.MustId())
 		if err != nil {
 			return nil, err
 		}
@@ -103,8 +105,8 @@ func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
 	} else {
 		req.Id = ""
 	}
-	req.Method = msg.Method
-	params, err := jsonrpc.MarshalJson(msg.Params)
+	req.Method = msg.MustMethod()
+	params, err := jsonrpc.MarshalJson(msg.MustParams())
 	if err != nil {
 		return nil, err
 	}
@@ -112,14 +114,14 @@ func MessageToRequest(msg *jsonrpc.RPCMessage) (*intf.JSONRPCRequest, error) {
 	return req, nil
 }
 
-func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
+func MessageToResult(msg jsonrpc.IMessage) (*intf.JSONRPCResult, error) {
 	if !msg.IsResult() && !msg.IsError() {
 		log.Debugf("msg is %+v", msg)
 		return nil, errors.New("msg is neither result nor error")
 	}
 	res := &intf.JSONRPCResult{}
-	if msg.Id != nil {
-		iddata, err := json.Marshal(msg.Id)
+	if msg.IsResult() {
+		iddata, err := json.Marshal(msg.MustId())
 		if err != nil {
 			return nil, err
 		}
@@ -127,16 +129,14 @@ func MessageToResult(msg *jsonrpc.RPCMessage) (*intf.JSONRPCResult, error) {
 	} else {
 		res.Id = ""
 	}
-	//res.Id = int64(msg.Id)
-	//res.Id = fmt.Sprintf("%v", msg.Id)
 	if msg.IsError() {
-		r, err := jsonrpc.MarshalJson(msg.Error)
+		r, err := jsonrpc.MarshalJson(msg.MustError())
 		if err != nil {
 			return nil, err
 		}
 		res.Result = &intf.JSONRPCResult_Error{Error: r}
 	} else {
-		r, err := jsonrpc.MarshalJson(msg.Result)
+		r, err := jsonrpc.MarshalJson(msg.MustResult())
 		if err != nil {
 			return nil, err
 		}

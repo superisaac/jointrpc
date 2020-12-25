@@ -7,7 +7,7 @@ import (
 )
 
 type RPCRequest struct {
-	Message *jsonrpc.RPCMessage
+	Message jsonrpc.IMessage
 	// TODO: add more fields
 }
 

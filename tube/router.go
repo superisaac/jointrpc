@@ -170,7 +170,7 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 			log.Debugf("local methods sig changed %s, %s", self.localMethodsSig, sig)
 			self.localMethodsSig = sig
 			params := [](interface{}){sig}
-			notify := jsonrpc.NewNotifyMessage("localMethods.changed", params)
+			notify := jsonrpc.NewNotifyMessage("localMethods.changed", params, nil)
 			self.ChMsg <- CmdMsg{
 				MsgVec:    MsgVec{Msg: notify, FromConnId: 0},
 				Broadcast: true,
@@ -235,7 +235,7 @@ func (self *Router) ClearTimeoutRequests() {
 
 	for pKey, pValue := range self.PendingMap {
 		if now.After(pValue.Expire) {
-			errMsg := jsonrpc.NewErrorMessage(pKey.MsgId, 408, "request timeout", true)
+			errMsg := jsonrpc.RPCErrorMessage(pKey.MsgId, 408, "request timeout", true)
 			msgvec := MsgVec{errMsg, CID(0)}
 			_ = self.deliverMessage(pKey.ConnId, msgvec)
 		} else {
@@ -265,16 +265,16 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 	msg := cmdMsg.MsgVec.Msg
 	fromConnId := cmdMsg.MsgVec.FromConnId
 	if msg.IsRequest() {
-		toConn, found := self.SelectConn(msg.Method)
+		toConn, found := self.SelectConn(msg.MustMethod())
 		if found {
-			pKey := PendingKey{ConnId: fromConnId, MsgId: msg.Id}
+			pKey := PendingKey{ConnId: fromConnId, MsgId: msg.MustId()}
 			expireTime := time.Now().Add(DefaultRequestTimeout)
 			pValue := PendingValue{ConnId: toConn.ConnId, Expire: expireTime}
 
 			self.setPending(pKey, pValue)
 			return self.deliverMessage(toConn.ConnId, cmdMsg.MsgVec)
 		} else {
-			errMsg := jsonrpc.NewErrorMessage(msg.Id, 404, "method not found", false)
+			errMsg := jsonrpc.RPCErrorMessage(msg.MustId(), 404, "method not found", false)
 			errMsgVec := MsgVec{errMsg, CID(0)}
 			return self.deliverMessage(fromConnId, errMsgVec)
 		}
@@ -282,7 +282,7 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 		if cmdMsg.Broadcast {
 			self.broadcastMessage(cmdMsg.MsgVec)
 		} else {
-			toConn, found := self.SelectConn(msg.Method)
+			toConn, found := self.SelectConn(msg.MustMethod())
 			if found {
 				return self.deliverMessage(
 					toConn.ConnId, cmdMsg.MsgVec)
@@ -290,7 +290,7 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 		}
 	} else if msg.IsResultOrError() {
 		for pKey, pValue := range self.PendingMap {
-			if pKey.MsgId == msg.Id && pValue.ConnId == fromConnId {
+			if pKey.MsgId == msg.MustId() && pValue.ConnId == fromConnId {
 				// delete key within a range loop is safe
 				// refer to https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-golang-map-within-a-range-loop
 				self.deletePending(pKey)
@@ -319,7 +319,7 @@ func (self *Router) broadcastMessage(msgvec MsgVec) int {
 			// skip the from addr
 			continue
 		}
-		_, ok := ct.Methods[msgvec.Msg.Method]
+		_, ok := ct.Methods[msgvec.Msg.MustMethod()]
 		if ok {
 			cnt += 1
 			ct.RecvChannel <- msgvec
@@ -415,7 +415,7 @@ func (self *Router) Leave(conn *ConnT) {
 	self.leaveConn(conn)
 }
 
-func (self *Router) SingleCall(reqmsg *jsonrpc.RPCMessage, broadcast bool) (*jsonrpc.RPCMessage, error) {
+func (self *Router) SingleCall(reqmsg jsonrpc.IMessage, broadcast bool) (jsonrpc.IMessage, error) {
 	if reqmsg.IsRequest() {
 		conn := self.Join()
 		defer self.Leave(conn)
