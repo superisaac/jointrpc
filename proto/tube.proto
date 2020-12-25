@@ -8,7 +8,7 @@ service JSONRPCTube {
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
   //rpc SubscribeMethods(SubscribeMethodsRequest) returns (stream MethodUpdate);
 
-  rpc Call(JSONRPCRequest) returns (JSONRPCResult);
+  rpc Call(JSONRPCCallRequest) returns (JSONRPCCallResult);
   rpc Notify(JSONRPCNotifyRequest) returns (JSONRPCNotifyResponse);
   rpc Handle(stream JSONRPCUpPacket) returns (stream JSONRPCDownPacket);
 }
@@ -45,37 +45,27 @@ message RPCEntry {
   string help = 3;
 }
 
-message JSONRPCRequest {
-  string id = 1;  // empty id means notify
-  //int64 id = 1;
-  string method = 2;
-  string params = 3; // JSON encoded
+message JSONRPCEnvolope {
+  string body = 1;  // json encoded rpc message
+}
+
+message JSONRPCCallRequest {
+  JSONRPCEnvolope envolope = 1;
 }
 
 
-message JSONRPCResult {
-  string id = 1;
-  //int64 id = 1;
-  oneof result {
-    string ok = 10;  // JSON encoded
-    string error = 11;   // JSON encoded
-  }
+message JSONRPCCallResult {
+  JSONRPCEnvolope envolope = 1;
 }
 
 message JSONRPCNotifyRequest {
-  string method = 1;
-  string params = 2; // JSON encoded
-  bool   broadcast = 3;
+  JSONRPCEnvolope envolope = 1;
+  bool broadcast = 2;
 }
 
 message JSONRPCNotifyResponse {
+  string text = 1;
 }
-
-
-// enum MethodLocation {
-//   LOCAL = 0;
-//   REMOTE = 1;
-// }
 
 message MethodInfo {
   string name = 1;
@@ -107,9 +97,7 @@ message JSONRPCDownPacket {
 
     PING ping = 10;
     PONG pong = 11;
-    JSONRPCRequest request = 20;
-    JSONRPCResult result = 21;
-
+    JSONRPCEnvolope envolope = 20;    
   }
 }
 
@@ -120,7 +108,6 @@ message JSONRPCUpPacket {
     PING ping = 10;
     PONG pong = 11;
 
-    JSONRPCRequest request = 20;
-    JSONRPCResult result = 21;
+    JSONRPCEnvolope envolope = 20;
   }
 }

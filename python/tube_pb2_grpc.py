@@ -21,8 +21,8 @@ class JSONRPCTubeStub(object):
                 )
         self.Call = channel.unary_unary(
                 '/JSONRPCTube/Call',
-                request_serializer=tube__pb2.JSONRPCRequest.SerializeToString,
-                response_deserializer=tube__pb2.JSONRPCResult.FromString,
+                request_serializer=tube__pb2.JSONRPCCallRequest.SerializeToString,
+                response_deserializer=tube__pb2.JSONRPCCallResult.FromString,
                 )
         self.Notify = channel.unary_unary(
                 '/JSONRPCTube/Notify',
@@ -74,8 +74,8 @@ def add_JSONRPCTubeServicer_to_server(servicer, server):
             ),
             'Call': grpc.unary_unary_rpc_method_handler(
                     servicer.Call,
-                    request_deserializer=tube__pb2.JSONRPCRequest.FromString,
-                    response_serializer=tube__pb2.JSONRPCResult.SerializeToString,
+                    request_deserializer=tube__pb2.JSONRPCCallRequest.FromString,
+                    response_serializer=tube__pb2.JSONRPCCallResult.SerializeToString,
             ),
             'Notify': grpc.unary_unary_rpc_method_handler(
                     servicer.Notify,
@@ -126,8 +126,8 @@ class JSONRPCTube(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/JSONRPCTube/Call',
-            tube__pb2.JSONRPCRequest.SerializeToString,
-            tube__pb2.JSONRPCResult.FromString,
+            tube__pb2.JSONRPCCallRequest.SerializeToString,
+            tube__pb2.JSONRPCCallResult.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

@@ -15,7 +15,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
-	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	schema "github.com/superisaac/rpctube/jsonrpc/schema"
 	tube "github.com/superisaac/rpctube/tube"
 	peer "google.golang.org/grpc/peer"
@@ -25,9 +25,8 @@ type JSONRPCTube struct {
 	intf.UnimplementedJSONRPCTubeServer
 }
 
-func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest) (*intf.JSONRPCResult, error) {
-	log.Debugf("called method %s", req.Method)
-	reqmsg, err := RequestToMessage(req)
+func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCCallRequest) (*intf.JSONRPCCallResult, error) {
+	reqmsg, err := jsonrpc.ParseBytes([]byte(req.Envolope.Body))
 	if err != nil {
 		return nil, err
 	}
@@ -42,20 +41,20 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCRequest)
 		return nil, err
 	}
 	if recvmsg == nil {
-		res := &intf.JSONRPCResult{Id: ""}
-		res.Result = &intf.JSONRPCResult_Ok{Ok: ""}
-		return res, nil
+		recvmsg = jsonrpc.NewResultMessage(reqmsg.MustId(), nil, nil)
 	}
-	res, err := MessageToResult(recvmsg)
-	if err != nil {
-		return nil, err
+	if !recvmsg.IsResultOrError() {
+		log.Warnf("bad recvmsg is neither result nor error %+v", recvmsg)
+		return nil, errors.New("recv msg is neigher result or error")
 	}
+	res := &intf.JSONRPCCallResult{
+		Envolope: &intf.JSONRPCEnvolope{
+			Body: recvmsg.MustString()}}
 	return res, nil
 }
 
 func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
-	log.Debugf("notify %s", req.Method)
-	notifymsg, err := NotifyToMessage(req)
+	notifymsg, err := jsonrpc.ParseBytes([]byte(req.Envolope.Body))
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +68,7 @@ func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotify
 	if err != nil {
 		return nil, err
 	}
-	resp := &intf.JSONRPCNotifyResponse{}
+	resp := &intf.JSONRPCNotifyResponse{Text: "ok"}
 	return resp, nil
 }
 
@@ -114,13 +113,9 @@ func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMeth
 
 func downMsgReceived(msgvec tube.MsgVec, stream intf.JSONRPCTube_HandleServer, conn *tube.ConnT) {
 	msg := msgvec.Msg
-	if msg.IsRequest() || msg.IsNotify() {
-		req, err := MessageToRequest(msg)
-		if err != nil {
-			panic(err)
-		}
 
-		// validate the schema o
+	if msg.IsRequest() || msg.IsNotify() {
+		// validate params
 		validated, errmsg := conn.ValidateMsg(msg)
 		if !validated {
 			if errmsg != nil {
@@ -131,26 +126,15 @@ func downMsgReceived(msgvec tube.MsgVec, stream intf.JSONRPCTube_HandleServer, c
 				router := tube.Tube().Router
 				router.ChMsg <- tube.CmdMsg{MsgVec: msgvec}
 			}
-		} else {
-			payload := &intf.JSONRPCDownPacket_Request{Request: req}
-			pac := &intf.JSONRPCDownPacket{Payload: payload}
-			err = stream.Send(pac)
-			if err != nil {
-				panic(err)
-			}
 		}
-	} else {
-		// msg.IsResult() || msg.IsError()
-		res, err := MessageToResult(msg)
-		if err != nil {
-			panic(err)
-		}
-		payload := &intf.JSONRPCDownPacket_Result{Result: res}
-		pac := &intf.JSONRPCDownPacket{Payload: payload}
-		err = stream.Send(pac)
-		if err != nil {
-			panic(err)
-		}
+	}
+
+	env := &intf.JSONRPCEnvolope{Body: msg.MustString()}
+	payload := &intf.JSONRPCDownPacket_Envolope{Envolope: env}
+	pac := &intf.JSONRPCDownPacket{Payload: payload}
+	err := stream.Send(pac)
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -222,28 +206,15 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 		}
 
 		// Handle JSONRPC Request
-		req := up_pac.GetRequest()
-		if req != nil {
-			msg, err := RequestToMessage(req)
+		env := up_pac.GetEnvolope()
+		if env != nil {
+			msg, err := jsonrpc.ParseBytes([]byte(env.Body))
 			if err != nil {
 				log.Warnf("error on requesttomessage() %s", err.Error())
 				return err
 			}
 			msgvec := tube.MsgVec{Msg: msg, FromConnId: conn.ConnId}
 			router.ChMsg <- tube.CmdMsg{MsgVec: msgvec}
-			continue
-		}
-
-		// Handle JSONRPC Result
-		res := up_pac.GetResult()
-		if res != nil {
-			msg, err := ResultToMessage(res)
-			if err != nil {
-				return err
-			}
-			msgvec := tube.MsgVec{Msg: msg, FromConnId: conn.ConnId}
-			cmd_msg := tube.CmdMsg{MsgVec: msgvec}
-			router.ChMsg <- cmd_msg
 			continue
 		}
 

@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\tintf/tube',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\ntube.proto\"\x07\n\x05\x45mpty\"\x14\n\x12ListMethodsRequest\"8\n\x13ListMethodsResponse\x12!\n\x0cmethod_infos\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"\x19\n\x17SubscribeMethodsRequest\"\x1f\n\x0cMethodUpdate\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\r\n\x0bMetaRequest\"?\n\nMetaResult\x12\x1a\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\t.RPCEntry\x12\x15\n\rping_interval\x18\x03 \x01(\x05\"F\n\x08RPCEntry\x12\x1e\n\x08protocol\x18\x01 \x01(\x0e\x32\x0c.RPCProtocol\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04help\x18\x03 \x01(\t\"<\n\x0eJSONRPCRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x0e\n\x06params\x18\x03 \x01(\t\"D\n\rJSONRPCResult\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x02ok\x18\n \x01(\tH\x00\x12\x0f\n\x05\x65rror\x18\x0b \x01(\tH\x00\x42\x08\n\x06result\"I\n\x14JSONRPCNotifyRequest\x12\x0e\n\x06method\x18\x01 \x01(\t\x12\x0e\n\x06params\x18\x02 \x01(\t\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\"\x17\n\x15JSONRPCNotifyResponse\"P\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\x12\x11\n\tdelegated\x18\x04 \x01(\x08\"4\n\x14UpdateMethodsRequest\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"%\n\x15UpdateMethodsResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PING\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PONG\x12\x0c\n\x04text\x18\x01 \x01(\t\"\xc4\x01\n\x11JSONRPCDownPacket\x12\x30\n\x0eupdate_methods\x18\x01 \x01(\x0b\x32\x16.UpdateMethodsResponseH\x00\x12\x15\n\x04ping\x18\n \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x0b \x01(\x0b\x32\x05.PONGH\x00\x12\"\n\x07request\x18\x14 \x01(\x0b\x32\x0f.JSONRPCRequestH\x00\x12 \n\x06result\x18\x15 \x01(\x0b\x32\x0e.JSONRPCResultH\x00\x42\t\n\x07payload\"\xc1\x01\n\x0fJSONRPCUpPacket\x12/\n\x0eupdate_methods\x18\x01 \x01(\x0b\x32\x15.UpdateMethodsRequestH\x00\x12\x15\n\x04ping\x18\n \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x0b \x01(\x0b\x32\x05.PONGH\x00\x12\"\n\x07request\x18\x14 \x01(\x0b\x32\x0f.JSONRPCRequestH\x00\x12 \n\x06result\x18\x15 \x01(\x0b\x32\x0e.JSONRPCResultH\x00\x42\t\n\x07payload*\x1a\n\x0bRPCProtocol\x12\x0b\n\x07JSONRPC\x10\x00\x32\xdd\x01\n\x0bJSONRPCTube\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12\'\n\x04\x43\x61ll\x12\x0f.JSONRPCRequest\x1a\x0e.JSONRPCResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x32\n\x06Handle\x12\x10.JSONRPCUpPacket\x1a\x12.JSONRPCDownPacket(\x01\x30\x01\x42\x0bZ\tintf/tubeb\x06proto3'
+  serialized_pb=b'\n\ntube.proto\"\x07\n\x05\x45mpty\"\x14\n\x12ListMethodsRequest\"8\n\x13ListMethodsResponse\x12!\n\x0cmethod_infos\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"\x19\n\x17SubscribeMethodsRequest\"\x1f\n\x0cMethodUpdate\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\r\n\x0bMetaRequest\"?\n\nMetaResult\x12\x1a\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\t.RPCEntry\x12\x15\n\rping_interval\x18\x03 \x01(\x05\"F\n\x08RPCEntry\x12\x1e\n\x08protocol\x18\x01 \x01(\x0e\x32\x0c.RPCProtocol\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04help\x18\x03 \x01(\t\"\x1f\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\"8\n\x12JSONRPCCallRequest\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\"7\n\x11JSONRPCCallResult\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\"M\n\x14JSONRPCNotifyRequest\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x02 \x01(\x08\"%\n\x15JSONRPCNotifyResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"P\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\x12\x11\n\tdelegated\x18\x04 \x01(\x08\"4\n\x14UpdateMethodsRequest\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"%\n\x15UpdateMethodsResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PING\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PONG\x12\x0c\n\x04text\x18\x01 \x01(\t\"\xa4\x01\n\x11JSONRPCDownPacket\x12\x30\n\x0eupdate_methods\x18\x01 \x01(\x0b\x32\x16.UpdateMethodsResponseH\x00\x12\x15\n\x04ping\x18\n \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x0b \x01(\x0b\x32\x05.PONGH\x00\x12$\n\x08\x65nvolope\x18\x14 \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload\"\xa1\x01\n\x0fJSONRPCUpPacket\x12/\n\x0eupdate_methods\x18\x01 \x01(\x0b\x32\x15.UpdateMethodsRequestH\x00\x12\x15\n\x04ping\x18\n \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x0b \x01(\x0b\x32\x05.PONGH\x00\x12$\n\x08\x65nvolope\x18\x14 \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload*\x1a\n\x0bRPCProtocol\x12\x0b\n\x07JSONRPC\x10\x00\x32\xe5\x01\n\x0bJSONRPCTube\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x32\n\x06Handle\x12\x10.JSONRPCUpPacket\x1a\x12.JSONRPCDownPacket(\x01\x30\x01\x42\x0bZ\tintf/tubeb\x06proto3'
 )
 
 _RPCPROTOCOL = _descriptor.EnumDescriptor(
@@ -38,8 +38,8 @@ _RPCPROTOCOL = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1161,
-  serialized_end=1187,
+  serialized_start=1131,
+  serialized_end=1157,
 )
 _sym_db.RegisterEnumDescriptor(_RPCPROTOCOL)
 
@@ -297,31 +297,17 @@ _RPCENTRY = _descriptor.Descriptor(
 )
 
 
-_JSONRPCREQUEST = _descriptor.Descriptor(
-  name='JSONRPCRequest',
-  full_name='JSONRPCRequest',
+_JSONRPCENVOLOPE = _descriptor.Descriptor(
+  name='JSONRPCEnvolope',
+  full_name='JSONRPCEnvolope',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='id', full_name='JSONRPCRequest.id', index=0,
+      name='body', full_name='JSONRPCEnvolope.body', index=0,
       number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='method', full_name='JSONRPCRequest.method', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='params', full_name='JSONRPCRequest.params', index=2,
-      number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -339,36 +325,22 @@ _JSONRPCREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=315,
-  serialized_end=375,
+  serialized_end=346,
 )
 
 
-_JSONRPCRESULT = _descriptor.Descriptor(
-  name='JSONRPCResult',
-  full_name='JSONRPCResult',
+_JSONRPCCALLREQUEST = _descriptor.Descriptor(
+  name='JSONRPCCallRequest',
+  full_name='JSONRPCCallRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='id', full_name='JSONRPCResult.id', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='ok', full_name='JSONRPCResult.ok', index=1,
-      number=10, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='error', full_name='JSONRPCResult.error', index=2,
-      number=11, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='envolope', full_name='JSONRPCCallRequest.envolope', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -383,14 +355,41 @@ _JSONRPCRESULT = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
-    _descriptor.OneofDescriptor(
-      name='result', full_name='JSONRPCResult.result',
-      index=0, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
   ],
-  serialized_start=377,
-  serialized_end=445,
+  serialized_start=348,
+  serialized_end=404,
+)
+
+
+_JSONRPCCALLRESULT = _descriptor.Descriptor(
+  name='JSONRPCCallResult',
+  full_name='JSONRPCCallResult',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='envolope', full_name='JSONRPCCallResult.envolope', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=406,
+  serialized_end=461,
 )
 
 
@@ -403,22 +402,15 @@ _JSONRPCNOTIFYREQUEST = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='method', full_name='JSONRPCNotifyRequest.method', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='envolope', full_name='JSONRPCNotifyRequest.envolope', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='params', full_name='JSONRPCNotifyRequest.params', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='broadcast', full_name='JSONRPCNotifyRequest.broadcast', index=2,
-      number=3, type=8, cpp_type=7, label=1,
+      name='broadcast', full_name='JSONRPCNotifyRequest.broadcast', index=1,
+      number=2, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -435,8 +427,8 @@ _JSONRPCNOTIFYREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=447,
-  serialized_end=520,
+  serialized_start=463,
+  serialized_end=540,
 )
 
 
@@ -448,6 +440,13 @@ _JSONRPCNOTIFYRESPONSE = _descriptor.Descriptor(
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='text', full_name='JSONRPCNotifyResponse.text', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -460,8 +459,8 @@ _JSONRPCNOTIFYRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=522,
-  serialized_end=545,
+  serialized_start=542,
+  serialized_end=579,
 )
 
 
@@ -513,8 +512,8 @@ _METHODINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=547,
-  serialized_end=627,
+  serialized_start=581,
+  serialized_end=661,
 )
 
 
@@ -545,8 +544,8 @@ _UPDATEMETHODSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=629,
-  serialized_end=681,
+  serialized_start=663,
+  serialized_end=715,
 )
 
 
@@ -577,8 +576,8 @@ _UPDATEMETHODSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=683,
-  serialized_end=720,
+  serialized_start=717,
+  serialized_end=754,
 )
 
 
@@ -609,8 +608,8 @@ _PING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=722,
-  serialized_end=742,
+  serialized_start=756,
+  serialized_end=776,
 )
 
 
@@ -641,8 +640,8 @@ _PONG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=744,
-  serialized_end=764,
+  serialized_start=778,
+  serialized_end=798,
 )
 
 
@@ -676,15 +675,8 @@ _JSONRPCDOWNPACKET = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='request', full_name='JSONRPCDownPacket.request', index=3,
+      name='envolope', full_name='JSONRPCDownPacket.envolope', index=3,
       number=20, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='result', full_name='JSONRPCDownPacket.result', index=4,
-      number=21, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -706,8 +698,8 @@ _JSONRPCDOWNPACKET = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=767,
-  serialized_end=963,
+  serialized_start=801,
+  serialized_end=965,
 )
 
 
@@ -741,15 +733,8 @@ _JSONRPCUPPACKET = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='request', full_name='JSONRPCUpPacket.request', index=3,
+      name='envolope', full_name='JSONRPCUpPacket.envolope', index=3,
       number=20, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='result', full_name='JSONRPCUpPacket.result', index=4,
-      number=21, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -771,25 +756,21 @@ _JSONRPCUPPACKET = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=966,
-  serialized_end=1159,
+  serialized_start=968,
+  serialized_end=1129,
 )
 
 _LISTMETHODSRESPONSE.fields_by_name['method_infos'].message_type = _METHODINFO
 _METARESULT.fields_by_name['entries'].message_type = _RPCENTRY
 _RPCENTRY.fields_by_name['protocol'].enum_type = _RPCPROTOCOL
-_JSONRPCRESULT.oneofs_by_name['result'].fields.append(
-  _JSONRPCRESULT.fields_by_name['ok'])
-_JSONRPCRESULT.fields_by_name['ok'].containing_oneof = _JSONRPCRESULT.oneofs_by_name['result']
-_JSONRPCRESULT.oneofs_by_name['result'].fields.append(
-  _JSONRPCRESULT.fields_by_name['error'])
-_JSONRPCRESULT.fields_by_name['error'].containing_oneof = _JSONRPCRESULT.oneofs_by_name['result']
+_JSONRPCCALLREQUEST.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
+_JSONRPCCALLRESULT.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
+_JSONRPCNOTIFYREQUEST.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
 _UPDATEMETHODSREQUEST.fields_by_name['methods'].message_type = _METHODINFO
 _JSONRPCDOWNPACKET.fields_by_name['update_methods'].message_type = _UPDATEMETHODSRESPONSE
 _JSONRPCDOWNPACKET.fields_by_name['ping'].message_type = _PING
 _JSONRPCDOWNPACKET.fields_by_name['pong'].message_type = _PONG
-_JSONRPCDOWNPACKET.fields_by_name['request'].message_type = _JSONRPCREQUEST
-_JSONRPCDOWNPACKET.fields_by_name['result'].message_type = _JSONRPCRESULT
+_JSONRPCDOWNPACKET.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
 _JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
   _JSONRPCDOWNPACKET.fields_by_name['update_methods'])
 _JSONRPCDOWNPACKET.fields_by_name['update_methods'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
@@ -800,16 +781,12 @@ _JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
   _JSONRPCDOWNPACKET.fields_by_name['pong'])
 _JSONRPCDOWNPACKET.fields_by_name['pong'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
 _JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCDOWNPACKET.fields_by_name['request'])
-_JSONRPCDOWNPACKET.fields_by_name['request'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
-_JSONRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCDOWNPACKET.fields_by_name['result'])
-_JSONRPCDOWNPACKET.fields_by_name['result'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
+  _JSONRPCDOWNPACKET.fields_by_name['envolope'])
+_JSONRPCDOWNPACKET.fields_by_name['envolope'].containing_oneof = _JSONRPCDOWNPACKET.oneofs_by_name['payload']
 _JSONRPCUPPACKET.fields_by_name['update_methods'].message_type = _UPDATEMETHODSREQUEST
 _JSONRPCUPPACKET.fields_by_name['ping'].message_type = _PING
 _JSONRPCUPPACKET.fields_by_name['pong'].message_type = _PONG
-_JSONRPCUPPACKET.fields_by_name['request'].message_type = _JSONRPCREQUEST
-_JSONRPCUPPACKET.fields_by_name['result'].message_type = _JSONRPCRESULT
+_JSONRPCUPPACKET.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
 _JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
   _JSONRPCUPPACKET.fields_by_name['update_methods'])
 _JSONRPCUPPACKET.fields_by_name['update_methods'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
@@ -820,11 +797,8 @@ _JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
   _JSONRPCUPPACKET.fields_by_name['pong'])
 _JSONRPCUPPACKET.fields_by_name['pong'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
 _JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCUPPACKET.fields_by_name['request'])
-_JSONRPCUPPACKET.fields_by_name['request'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
-_JSONRPCUPPACKET.oneofs_by_name['payload'].fields.append(
-  _JSONRPCUPPACKET.fields_by_name['result'])
-_JSONRPCUPPACKET.fields_by_name['result'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
+  _JSONRPCUPPACKET.fields_by_name['envolope'])
+_JSONRPCUPPACKET.fields_by_name['envolope'].containing_oneof = _JSONRPCUPPACKET.oneofs_by_name['payload']
 DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
 DESCRIPTOR.message_types_by_name['ListMethodsRequest'] = _LISTMETHODSREQUEST
 DESCRIPTOR.message_types_by_name['ListMethodsResponse'] = _LISTMETHODSRESPONSE
@@ -833,8 +807,9 @@ DESCRIPTOR.message_types_by_name['MethodUpdate'] = _METHODUPDATE
 DESCRIPTOR.message_types_by_name['MetaRequest'] = _METAREQUEST
 DESCRIPTOR.message_types_by_name['MetaResult'] = _METARESULT
 DESCRIPTOR.message_types_by_name['RPCEntry'] = _RPCENTRY
-DESCRIPTOR.message_types_by_name['JSONRPCRequest'] = _JSONRPCREQUEST
-DESCRIPTOR.message_types_by_name['JSONRPCResult'] = _JSONRPCRESULT
+DESCRIPTOR.message_types_by_name['JSONRPCEnvolope'] = _JSONRPCENVOLOPE
+DESCRIPTOR.message_types_by_name['JSONRPCCallRequest'] = _JSONRPCCALLREQUEST
+DESCRIPTOR.message_types_by_name['JSONRPCCallResult'] = _JSONRPCCALLRESULT
 DESCRIPTOR.message_types_by_name['JSONRPCNotifyRequest'] = _JSONRPCNOTIFYREQUEST
 DESCRIPTOR.message_types_by_name['JSONRPCNotifyResponse'] = _JSONRPCNOTIFYRESPONSE
 DESCRIPTOR.message_types_by_name['MethodInfo'] = _METHODINFO
@@ -903,19 +878,26 @@ RPCEntry = _reflection.GeneratedProtocolMessageType('RPCEntry', (_message.Messag
   })
 _sym_db.RegisterMessage(RPCEntry)
 
-JSONRPCRequest = _reflection.GeneratedProtocolMessageType('JSONRPCRequest', (_message.Message,), {
-  'DESCRIPTOR' : _JSONRPCREQUEST,
+JSONRPCEnvolope = _reflection.GeneratedProtocolMessageType('JSONRPCEnvolope', (_message.Message,), {
+  'DESCRIPTOR' : _JSONRPCENVOLOPE,
   '__module__' : 'tube_pb2'
-  # @@protoc_insertion_point(class_scope:JSONRPCRequest)
+  # @@protoc_insertion_point(class_scope:JSONRPCEnvolope)
   })
-_sym_db.RegisterMessage(JSONRPCRequest)
+_sym_db.RegisterMessage(JSONRPCEnvolope)
 
-JSONRPCResult = _reflection.GeneratedProtocolMessageType('JSONRPCResult', (_message.Message,), {
-  'DESCRIPTOR' : _JSONRPCRESULT,
+JSONRPCCallRequest = _reflection.GeneratedProtocolMessageType('JSONRPCCallRequest', (_message.Message,), {
+  'DESCRIPTOR' : _JSONRPCCALLREQUEST,
   '__module__' : 'tube_pb2'
-  # @@protoc_insertion_point(class_scope:JSONRPCResult)
+  # @@protoc_insertion_point(class_scope:JSONRPCCallRequest)
   })
-_sym_db.RegisterMessage(JSONRPCResult)
+_sym_db.RegisterMessage(JSONRPCCallRequest)
+
+JSONRPCCallResult = _reflection.GeneratedProtocolMessageType('JSONRPCCallResult', (_message.Message,), {
+  'DESCRIPTOR' : _JSONRPCCALLRESULT,
+  '__module__' : 'tube_pb2'
+  # @@protoc_insertion_point(class_scope:JSONRPCCallResult)
+  })
+_sym_db.RegisterMessage(JSONRPCCallResult)
 
 JSONRPCNotifyRequest = _reflection.GeneratedProtocolMessageType('JSONRPCNotifyRequest', (_message.Message,), {
   'DESCRIPTOR' : _JSONRPCNOTIFYREQUEST,
@@ -990,8 +972,8 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1190,
-  serialized_end=1411,
+  serialized_start=1160,
+  serialized_end=1389,
   methods=[
   _descriptor.MethodDescriptor(
     name='ListMethods',
@@ -1008,8 +990,8 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
     full_name='JSONRPCTube.Call',
     index=1,
     containing_service=None,
-    input_type=_JSONRPCREQUEST,
-    output_type=_JSONRPCRESULT,
+    input_type=_JSONRPCCALLREQUEST,
+    output_type=_JSONRPCCALLRESULT,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

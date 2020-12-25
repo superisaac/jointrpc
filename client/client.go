@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	server "github.com/superisaac/rpctube/server"
+	//server "github.com/superisaac/rpctube/server"
 	tube "github.com/superisaac/rpctube/tube"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -100,11 +100,9 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JSONRPCTube
 				log.Warnf("result msg closed")
 				return
 			}
-			rst, err := server.MessageToResult(resmsg)
-			if err != nil {
-				panic(err)
-			}
-			payload := &intf.JSONRPCUpPacket_Result{Result: rst}
+
+			envo := &intf.JSONRPCEnvolope{Body: resmsg.MustString()}
+			payload := &intf.JSONRPCUpPacket_Envolope{Envolope: envo}
 			uppac := &intf.JSONRPCUpPacket{Payload: payload}
 			stream.Send(uppac)
 		}
@@ -157,12 +155,21 @@ func (self *RPCClient) handleRPC() error {
 		}
 
 		// Handle JSONRPC Request
-		req := downpac.GetRequest()
-		if req != nil {
-			if self.CanRunConcurrent(req.Method) {
-				go self.handleDownRequest(req)
+		//req := downpac.GetRequest()
+		envo := downpac.GetEnvolope()
+		if envo != nil {
+			msg, err := jsonrpc.ParseBytes([]byte(envo.Body))
+			if err != nil {
+				return err
+			}
+			if !msg.IsRequestOrNotify() {
+				log.Warnf("msg is none of reques|notify %+v ", msg)
+				continue
+			}
+			if self.CanRunConcurrent(msg.MustMethod()) {
+				go self.handleDownRequest(msg)
 			} else {
-				self.handleDownRequest(req)
+				self.handleDownRequest(msg)
 			}
 			continue
 		}
@@ -170,14 +177,14 @@ func (self *RPCClient) handleRPC() error {
 	return nil
 }
 
-func (self *RPCClient) handleDownRequest(req *intf.JSONRPCRequest) {
-	msg, err := server.RequestToMessage(req)
-	if err != nil {
-		log.Warnf("parse request message error %+v", err)
-		errmsg := jsonrpc.RPCErrorMessage(req.Id, 10400, "parse message error", false)
-		self.ReturnResultMessage(errmsg)
-		return
-	}
+func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage) {
+	//msg, err := server.RequestToMessage(req)
+	// if err != nil {
+	// 	log.Warnf("parse request message error %+v", err)
+	// 	errmsg := jsonrpc.RPCErrorMessage(req.Id, 10400, "parse message error", false)
+	// 	self.ReturnResultMessage(errmsg)
+	// 	return
+	// }
 	msgvec := tube.MsgVec{Msg: msg, FromConnId: 0}
 	self.HandleRequestMessage(msgvec)
 }

@@ -19,7 +19,7 @@ class JSONRPCTubeBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def Call(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCRequest, tube_pb2.JSONRPCResult]') -> None:
+    async def Call(self, stream: 'grpclib.server.Stream[tube_pb2.JSONRPCCallRequest, tube_pb2.JSONRPCCallResult]') -> None:
         pass
 
     @abc.abstractmethod
@@ -41,8 +41,8 @@ class JSONRPCTubeBase(abc.ABC):
             '/JSONRPCTube/Call': grpclib.const.Handler(
                 self.Call,
                 grpclib.const.Cardinality.UNARY_UNARY,
-                tube_pb2.JSONRPCRequest,
-                tube_pb2.JSONRPCResult,
+                tube_pb2.JSONRPCCallRequest,
+                tube_pb2.JSONRPCCallResult,
             ),
             '/JSONRPCTube/Notify': grpclib.const.Handler(
                 self.Notify,
@@ -71,8 +71,8 @@ class JSONRPCTubeStub:
         self.Call = grpclib.client.UnaryUnaryMethod(
             channel,
             '/JSONRPCTube/Call',
-            tube_pb2.JSONRPCRequest,
-            tube_pb2.JSONRPCResult,
+            tube_pb2.JSONRPCCallRequest,
+            tube_pb2.JSONRPCCallResult,
         )
         self.Notify = grpclib.client.UnaryUnaryMethod(
             channel,

@@ -2,27 +2,21 @@ package client
 
 import (
 	"context"
-	simplejson "github.com/bitly/go-simplejson"
+	//simplejson "github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	server "github.com/superisaac/rpctube/server"
+	//server "github.com/superisaac/rpctube/server"
 )
 
 func (self *RPCClient) CallRPC(method string, params []interface{}) (jsonrpc.IMessage, error) {
-	log.Infof("log methods %s, params %v", method, params)
-	paramsJson := simplejson.New()
-	paramsJson.SetPath(nil, params)
-	paramsStr, err := jsonrpc.MarshalJson(paramsJson)
-	if err != nil {
-		return nil, err
-	}
+	msgId := 1
 
-	var msgId string = "1"
-	req := &intf.JSONRPCRequest{
-		Id:     msgId,
-		Method: method,
-		Params: paramsStr}
+	msg := jsonrpc.NewRequestMessage(msgId, method, params, nil)
+
+	envolope := &intf.JSONRPCEnvolope{Body: msg.MustString()}
+	req := &intf.JSONRPCCallRequest{Envolope: envolope}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	res, err := self.tubeClient.Call(ctx, req)
@@ -31,35 +25,32 @@ func (self *RPCClient) CallRPC(method string, params []interface{}) (jsonrpc.IMe
 		return nil, err
 	}
 
-	msg, err := server.ResultToMessage(res)
+	resmsg, err := jsonrpc.ParseBytes([]byte(res.Envolope.Body))
 	if err != nil {
 		return nil, err
 	}
-	return msg, err
+	if !resmsg.IsResultOrError() {
+		log.Warnf("bad result or error message %+v", res.Envolope.Body)
+		return nil, &jsonrpc.RPCError{10409, "msg is neither result nor error", false}
+	}
+	return resmsg, nil
 }
 
 func (self *RPCClient) SendNotify(method string, params []interface{}, broadcast bool) error {
-	log.Infof("log methods %s, params %v", method, params)
-	paramsJson := simplejson.New()
-	paramsJson.SetPath(nil, params)
-	paramsStr, err := jsonrpc.MarshalJson(paramsJson)
-	if err != nil {
-		return err
-	}
+	notify := jsonrpc.NewNotifyMessage(method, params, nil)
 
+	env := &intf.JSONRPCEnvolope{Body: notify.MustString()}
 	req := &intf.JSONRPCNotifyRequest{
-		Method:    method,
-		Params:    paramsStr,
+		Envolope:  env,
 		Broadcast: broadcast,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	res, err := self.tubeClient.Notify(ctx, req)
-
 	if err != nil {
 		return err
 	}
-	log.Debugf("not ify res is %v", res)
+	log.Debugf("send notify result %s", res.Text)
 	return nil
 }
 
