@@ -5,6 +5,7 @@ import (
 	"context"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	"math/rand"
 	"sort"
 	"strings"
 	"sync"
@@ -34,9 +35,10 @@ func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
 
 func (self *Router) Init() *Router {
 	self.routerLock = new(sync.RWMutex)
-	self.MethodConnMap = make(map[string]([]MethodDesc))
-	self.ConnMap = make(map[CID](*ConnT))
-	self.PendingMap = make(map[PendingKey]PendingValue)
+	self.methodConnMap = make(map[string]([]MethodDesc))
+	self.fallbackConns = make([]*ConnT, 0)
+	self.connMap = make(map[CID](*ConnT))
+	self.pendingMap = make(map[PendingKey]PendingValue)
 	self.localMethodsSig = ""
 	self.setupChannels()
 	return self
@@ -53,7 +55,7 @@ func (self Router) GetAllMethods() []string {
 	defer self.routerLock.RUnlock()
 
 	methods := []string{}
-	for method, _ := range self.MethodConnMap {
+	for method, _ := range self.methodConnMap {
 		methods = append(methods, method)
 	}
 	sort.Strings(methods)
@@ -85,7 +87,7 @@ func (self Router) GetLocalMethods() []MethodInfo {
 
 func (self Router) getLocalMethods() []MethodInfo {
 	minfos := []MethodInfo{}
-	for _, descs := range self.MethodConnMap {
+	for _, descs := range self.methodConnMap {
 		for _, desc := range descs {
 			if desc.IsLocal() {
 				minfos = append(minfos, desc.Info)
@@ -140,7 +142,7 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 			Info: minfo,
 		}
 		// bi direction map
-		methodDescArr, methodFound := self.MethodConnMap[method]
+		methodDescArr, methodFound := self.methodConnMap[method]
 
 		if methodFound {
 			methodDescArr = append(methodDescArr, methodDesc)
@@ -148,19 +150,19 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 			var tmp []MethodDesc
 			methodDescArr = append(tmp, methodDesc)
 		}
-		self.MethodConnMap[method] = methodDescArr
+		self.methodConnMap[method] = methodDescArr
 	}
 	// delete methods
 	for _, method := range deletingMethods {
-		methodDescList, ok := self.MethodConnMap[method]
+		methodDescList, ok := self.methodConnMap[method]
 		if !ok {
 			continue
 		}
 		methodDescList = RemoveConn(methodDescList, conn)
 		if len(methodDescList) > 0 {
-			self.MethodConnMap[method] = methodDescList
+			self.methodConnMap[method] = methodDescList
 		} else {
-			delete(self.MethodConnMap, method)
+			delete(self.methodConnMap, method)
 		}
 	}
 	if maybeChanged {
@@ -184,23 +186,40 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 
 func (self *Router) leaveConn(conn *ConnT) {
 	for method, _ := range conn.Methods {
-		methodDescList, ok := self.MethodConnMap[method]
+		methodDescList, ok := self.methodConnMap[method]
 		if !ok {
 			continue
 		}
 		methodDescList = RemoveConn(methodDescList, conn)
 		if len(methodDescList) > 0 {
-			self.MethodConnMap[method] = methodDescList
+			self.methodConnMap[method] = methodDescList
 		} else {
-			delete(self.MethodConnMap, method)
+			delete(self.methodConnMap, method)
 		}
 	}
 	conn.Methods = make(map[string]MethodInfo)
 
-	ct, ok := self.ConnMap[conn.ConnId]
+	ct, ok := self.connMap[conn.ConnId]
 	if ok {
-		delete(self.ConnMap, conn.ConnId)
+		delete(self.connMap, conn.ConnId)
 		close(ct.RecvChannel)
+	}
+
+	// remove conn from fallbackConns
+	if conn.AsFallback {
+		var fbIndex = -1
+		for i, c := range self.fallbackConns {
+			if c.ConnId == conn.ConnId {
+				//conn found in fallback conns
+				fbIndex = i
+				break
+			}
+		}
+		if fbIndex >= 0 {
+			self.fallbackConns = append(
+				self.fallbackConns[:fbIndex],
+				self.fallbackConns[fbIndex+1:]...)
+		}
 	}
 }
 
@@ -208,10 +227,19 @@ func (self *Router) SelectConn(method string) (*ConnT, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
-	descs, ok := self.MethodConnMap[method]
+	descs, ok := self.methodConnMap[method]
 	if ok && len(descs) > 0 {
 		// or random or round-robin
-		return descs[0].Conn, true
+		//return descs[0].Conn, true
+		// Select conn by random
+		index := rand.Intn(len(descs))
+		return descs[index].Conn, true
+
+	}
+	// fallback conns
+	if len(self.fallbackConns) > 0 {
+		index := rand.Intn(len(self.fallbackConns))
+		return self.fallbackConns[index], true
 	}
 	return nil, false
 }
@@ -220,7 +248,7 @@ func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
-	descs, ok := self.MethodConnMap[method]
+	descs, ok := self.methodConnMap[method]
 	if ok && len(descs) > 0 {
 		// or random or round-robin
 		conn := descs[0].Conn
@@ -233,7 +261,7 @@ func (self *Router) ClearTimeoutRequests() {
 	now := time.Now()
 	tmpMap := make(map[PendingKey]PendingValue)
 
-	for pKey, pValue := range self.PendingMap {
+	for pKey, pValue := range self.pendingMap {
 		if now.After(pValue.Expire) {
 			errMsg := jsonrpc.RPCErrorMessage(pKey.MsgId, 408, "request timeout", true)
 			msgvec := MsgVec{errMsg, CID(0)}
@@ -242,11 +270,11 @@ func (self *Router) ClearTimeoutRequests() {
 			tmpMap[pKey] = pValue
 		}
 	}
-	self.PendingMap = tmpMap
+	self.pendingMap = tmpMap
 }
 
 func (self *Router) ClearPending(connId CID) {
-	for pKey, pValue := range self.PendingMap {
+	for pKey, pValue := range self.pendingMap {
 		if pKey.ConnId == connId || pValue.ConnId == connId {
 			self.deletePending(pKey)
 		}
@@ -254,11 +282,11 @@ func (self *Router) ClearPending(connId CID) {
 }
 
 func (self *Router) deletePending(pKey PendingKey) {
-	delete(self.PendingMap, pKey)
+	delete(self.pendingMap, pKey)
 }
 
 func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
-	self.PendingMap[pKey] = pValue
+	self.pendingMap[pKey] = pValue
 }
 
 func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
@@ -289,7 +317,7 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 			}
 		}
 	} else if msg.IsResultOrError() {
-		for pKey, pValue := range self.PendingMap {
+		for pKey, pValue := range self.pendingMap {
 			if pKey.MsgId == msg.MustId() && pValue.ConnId == fromConnId {
 				// delete key within a range loop is safe
 				// refer to https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-golang-map-within-a-range-loop
@@ -303,7 +331,7 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 }
 
 func (self *Router) deliverMessage(connId CID, msgvec MsgVec) *ConnT {
-	ct, ok := self.ConnMap[connId]
+	ct, ok := self.connMap[connId]
 	if ok {
 		ct.RecvChannel <- msgvec
 		return ct
@@ -314,7 +342,7 @@ func (self *Router) deliverMessage(connId CID, msgvec MsgVec) *ConnT {
 func (self *Router) broadcastMessage(msgvec MsgVec) int {
 	log.Debugf("broadcast message %+v", msgvec.Msg)
 	cnt := 0
-	for _, ct := range self.ConnMap {
+	for _, ct := range self.connMap {
 		if ct.ConnId == msgvec.FromConnId {
 			// skip the from addr
 			continue
@@ -343,7 +371,7 @@ func (self *Router) Start(ctx context.Context) {
 			// 		log.Warnf("ChLeave channel not ok")
 			// 		return
 			// 	}
-			// 	conn, found := self.ConnMap[cmd_leave.ConnId]
+			// 	conn, found := self.connMap[cmd_leave.ConnId]
 			// 	if found {
 			// 		self.Leave(conn)
 			// 	}
@@ -353,7 +381,7 @@ func (self *Router) Start(ctx context.Context) {
 						log.Warnf("ChUpdate channel not ok")
 						return
 					}
-					conn, found := self.ConnMap[cmd_update.ConnId]
+					conn, found := self.connMap[cmd_update.ConnId]
 					if found {
 						self.UpdateMethods(conn, cmd_update.Methods)
 					} else {
@@ -379,22 +407,33 @@ func (self *Router) Start(ctx context.Context) {
 func (self *Router) RouteMessage(cmdMsg CmdMsg) *ConnT {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
-
-	//msg.FromConnId = fromConnId
-	//self.ChMsg <- msg
 	return self.routeMessage(cmdMsg)
 }
 
 func (self *Router) Join() *ConnT {
 	conn := NewConn()
-	self.JoinConn(conn)
+	self.joinConn(conn)
 	return conn
 }
 
-func (self *Router) JoinConn(conn *ConnT) {
+func (self *Router) JoinFallback() *ConnT {
+	conn := NewConn()
+	self.joinFallbackConn(conn)
+	return conn
+}
+
+func (self *Router) joinConn(conn *ConnT) {
 	self.lock("JoinConn")
 	defer self.unlock("JoinConn")
-	self.ConnMap[conn.ConnId] = conn
+	self.connMap[conn.ConnId] = conn
+}
+
+func (self *Router) joinFallbackConn(conn *ConnT) {
+	self.lock("JoinConnFallback")
+	defer self.unlock("JoinConnFallback")
+	self.connMap[conn.ConnId] = conn
+	conn.AsFallback = true
+	self.fallbackConns = append(self.fallbackConns, conn)
 }
 
 func (self *Router) lock(wrapper string) {

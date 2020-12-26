@@ -10,7 +10,11 @@ func NewConn() *ConnT {
 	connId := NextCID()
 	ch := make(MsgChannel, 100)
 	methods := make(map[string]MethodInfo)
-	conn := &ConnT{ConnId: connId, RecvChannel: ch, Methods: methods}
+	conn := &ConnT{ConnId: connId,
+		RecvChannel: ch,
+		Methods:     methods,
+		AsFallback:  false,
+	}
 	return conn
 }
 

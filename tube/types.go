@@ -55,6 +55,7 @@ type ConnT struct {
 	PeerAddr    net.Addr
 	RecvChannel MsgChannel
 	Methods     map[string]MethodInfo
+	AsFallback  bool
 }
 
 type MethodDesc struct {
@@ -88,11 +89,11 @@ type CmdUpdate struct {
 type Router struct {
 	// channels
 	routerLock    *sync.RWMutex
-	MethodConnMap map[string]([]MethodDesc)
-	//ConnMethodMap map[CID]([]string)
+	methodConnMap map[string]([]MethodDesc)
+	fallbackConns []*ConnT
 
-	ConnMap    map[CID](*ConnT)
-	PendingMap map[PendingKey]PendingValue
+	connMap    map[CID](*ConnT)
+	pendingMap map[PendingKey]PendingValue
 
 	// channels
 	ChMsg chan CmdMsg

@@ -30,7 +30,7 @@ func TestJoinConn(t *testing.T) {
 	//cid := CID(1002)
 	//ch := make(MsgChannel, 100)
 	conn := router.Join() //cid, ch)
-	assert.Equal(1, len(router.ConnMap))
+	assert.Equal(1, len(router.connMap))
 
 	router.UpdateMethods(conn, []MethodInfo{{"abc", "method abc", nil, false}})
 	methods := conn.GetMethods()
@@ -46,7 +46,7 @@ func TestRouteMessage(t *testing.T) {
 	//ch := make(MsgChannel, 100)
 	conn := router.Join()
 
-	assert.Equal(1, len(router.ConnMap))
+	assert.Equal(1, len(router.connMap))
 	router.UpdateMethods(conn, []MethodInfo{{"abc", "", nil, false}, {"def", "", nil, true}})
 
 	methods := router.GetAllMethods()
