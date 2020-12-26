@@ -52,6 +52,11 @@ function compile_python() {
     else
         echo 'No plugin for grpclib installed, skip the go installation' >&2
     fi
+
+    for dir in $(find ./python -type d)
+    do
+        touch $dir/__init__.py
+    done
     echo Done
 }
 
