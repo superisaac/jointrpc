@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\tintf/tube',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\ntube.proto\"\x07\n\x05\x45mpty\"\x14\n\x12ListMethodsRequest\"8\n\x13ListMethodsResponse\x12!\n\x0cmethod_infos\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"\x19\n\x17SubscribeMethodsRequest\"\x1f\n\x0cMethodUpdate\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\r\n\x0bMetaRequest\"?\n\nMetaResult\x12\x1a\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\t.RPCEntry\x12\x15\n\rping_interval\x18\x03 \x01(\x05\"F\n\x08RPCEntry\x12\x1e\n\x08protocol\x18\x01 \x01(\x0e\x32\x0c.RPCProtocol\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04help\x18\x03 \x01(\t\"\x1f\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\"8\n\x12JSONRPCCallRequest\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\"7\n\x11JSONRPCCallResult\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\"M\n\x14JSONRPCNotifyRequest\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x02 \x01(\x08\"%\n\x15JSONRPCNotifyResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"P\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\x12\x11\n\tdelegated\x18\x04 \x01(\x08\"4\n\x14UpdateMethodsRequest\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"%\n\x15UpdateMethodsResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PING\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PONG\x12\x0c\n\x04text\x18\x01 \x01(\t\"\xa4\x01\n\x11JSONRPCDownPacket\x12\x30\n\x0eupdate_methods\x18\x01 \x01(\x0b\x32\x16.UpdateMethodsResponseH\x00\x12\x15\n\x04ping\x18\n \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x0b \x01(\x0b\x32\x05.PONGH\x00\x12$\n\x08\x65nvolope\x18\x14 \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload\"\xa1\x01\n\x0fJSONRPCUpPacket\x12/\n\x0eupdate_methods\x18\x01 \x01(\x0b\x32\x15.UpdateMethodsRequestH\x00\x12\x15\n\x04ping\x18\n \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x0b \x01(\x0b\x32\x05.PONGH\x00\x12$\n\x08\x65nvolope\x18\x14 \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload*\x1a\n\x0bRPCProtocol\x12\x0b\n\x07JSONRPC\x10\x00\x32\xe5\x01\n\x0bJSONRPCTube\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x32\n\x06Handle\x12\x10.JSONRPCUpPacket\x1a\x12.JSONRPCDownPacket(\x01\x30\x01\x42\x0bZ\tintf/tubeb\x06proto3'
+  serialized_pb=b'\n\ntube.proto\"\x07\n\x05\x45mpty\"\x14\n\x12ListMethodsRequest\"8\n\x13ListMethodsResponse\x12!\n\x0cmethod_infos\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"\x15\n\x13WatchMethodsRequest\"\x1f\n\x0cMethodUpdate\x12\x0f\n\x07methods\x18\x01 \x03(\t\"\r\n\x0bMetaRequest\"?\n\nMetaResult\x12\x1a\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\t.RPCEntry\x12\x15\n\rping_interval\x18\x03 \x01(\x05\"F\n\x08RPCEntry\x12\x1e\n\x08protocol\x18\x01 \x01(\x0e\x32\x0c.RPCProtocol\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04help\x18\x03 \x01(\t\"\x1f\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\"8\n\x12JSONRPCCallRequest\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\"7\n\x11JSONRPCCallResult\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\"M\n\x14JSONRPCNotifyRequest\x12\"\n\x08\x65nvolope\x18\x01 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x02 \x01(\x08\"%\n\x15JSONRPCNotifyResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"P\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\x12\x11\n\tdelegated\x18\x04 \x01(\x08\"4\n\x14UpdateMethodsRequest\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"%\n\x15UpdateMethodsResponse\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PING\x12\x0c\n\x04text\x18\x01 \x01(\t\"\x14\n\x04PONG\x12\x0c\n\x04text\x18\x01 \x01(\t\"\xa4\x01\n\x11JSONRPCDownPacket\x12\x30\n\x0eupdate_methods\x18\x01 \x01(\x0b\x32\x16.UpdateMethodsResponseH\x00\x12\x15\n\x04ping\x18\n \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x0b \x01(\x0b\x32\x05.PONGH\x00\x12$\n\x08\x65nvolope\x18\x14 \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload\"\xa1\x01\n\x0fJSONRPCUpPacket\x12/\n\x0eupdate_methods\x18\x01 \x01(\x0b\x32\x15.UpdateMethodsRequestH\x00\x12\x15\n\x04ping\x18\n \x01(\x0b\x32\x05.PINGH\x00\x12\x15\n\x04pong\x18\x0b \x01(\x0b\x32\x05.PONGH\x00\x12$\n\x08\x65nvolope\x18\x14 \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload*\x1a\n\x0bRPCProtocol\x12\x0b\n\x07JSONRPC\x10\x00\x32\x9c\x02\n\x0bJSONRPCTube\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12\x35\n\x0cWatchMethods\x12\x14.WatchMethodsRequest\x1a\r.MethodUpdate0\x01\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x32\n\x06Handle\x12\x10.JSONRPCUpPacket\x1a\x12.JSONRPCDownPacket(\x01\x30\x01\x42\x0bZ\tintf/tubeb\x06proto3'
 )
 
 _RPCPROTOCOL = _descriptor.EnumDescriptor(
@@ -38,8 +38,8 @@ _RPCPROTOCOL = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1131,
-  serialized_end=1157,
+  serialized_start=1127,
+  serialized_end=1153,
 )
 _sym_db.RegisterEnumDescriptor(_RPCPROTOCOL)
 
@@ -130,9 +130,9 @@ _LISTMETHODSRESPONSE = _descriptor.Descriptor(
 )
 
 
-_SUBSCRIBEMETHODSREQUEST = _descriptor.Descriptor(
-  name='SubscribeMethodsRequest',
-  full_name='SubscribeMethodsRequest',
+_WATCHMETHODSREQUEST = _descriptor.Descriptor(
+  name='WatchMethodsRequest',
+  full_name='WatchMethodsRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -151,7 +151,7 @@ _SUBSCRIBEMETHODSREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=103,
-  serialized_end=128,
+  serialized_end=124,
 )
 
 
@@ -182,8 +182,8 @@ _METHODUPDATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=130,
-  serialized_end=161,
+  serialized_start=126,
+  serialized_end=157,
 )
 
 
@@ -207,8 +207,8 @@ _METAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=163,
-  serialized_end=176,
+  serialized_start=159,
+  serialized_end=172,
 )
 
 
@@ -246,8 +246,8 @@ _METARESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=178,
-  serialized_end=241,
+  serialized_start=174,
+  serialized_end=237,
 )
 
 
@@ -292,8 +292,8 @@ _RPCENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=243,
-  serialized_end=313,
+  serialized_start=239,
+  serialized_end=309,
 )
 
 
@@ -324,8 +324,8 @@ _JSONRPCENVOLOPE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=315,
-  serialized_end=346,
+  serialized_start=311,
+  serialized_end=342,
 )
 
 
@@ -356,8 +356,8 @@ _JSONRPCCALLREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=348,
-  serialized_end=404,
+  serialized_start=344,
+  serialized_end=400,
 )
 
 
@@ -388,8 +388,8 @@ _JSONRPCCALLRESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=406,
-  serialized_end=461,
+  serialized_start=402,
+  serialized_end=457,
 )
 
 
@@ -427,8 +427,8 @@ _JSONRPCNOTIFYREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=463,
-  serialized_end=540,
+  serialized_start=459,
+  serialized_end=536,
 )
 
 
@@ -459,8 +459,8 @@ _JSONRPCNOTIFYRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=542,
-  serialized_end=579,
+  serialized_start=538,
+  serialized_end=575,
 )
 
 
@@ -512,8 +512,8 @@ _METHODINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=581,
-  serialized_end=661,
+  serialized_start=577,
+  serialized_end=657,
 )
 
 
@@ -544,8 +544,8 @@ _UPDATEMETHODSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=663,
-  serialized_end=715,
+  serialized_start=659,
+  serialized_end=711,
 )
 
 
@@ -576,8 +576,8 @@ _UPDATEMETHODSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=717,
-  serialized_end=754,
+  serialized_start=713,
+  serialized_end=750,
 )
 
 
@@ -608,8 +608,8 @@ _PING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=756,
-  serialized_end=776,
+  serialized_start=752,
+  serialized_end=772,
 )
 
 
@@ -640,8 +640,8 @@ _PONG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=778,
-  serialized_end=798,
+  serialized_start=774,
+  serialized_end=794,
 )
 
 
@@ -698,8 +698,8 @@ _JSONRPCDOWNPACKET = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=801,
-  serialized_end=965,
+  serialized_start=797,
+  serialized_end=961,
 )
 
 
@@ -756,8 +756,8 @@ _JSONRPCUPPACKET = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=968,
-  serialized_end=1129,
+  serialized_start=964,
+  serialized_end=1125,
 )
 
 _LISTMETHODSRESPONSE.fields_by_name['method_infos'].message_type = _METHODINFO
@@ -802,7 +802,7 @@ _JSONRPCUPPACKET.fields_by_name['envolope'].containing_oneof = _JSONRPCUPPACKET.
 DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
 DESCRIPTOR.message_types_by_name['ListMethodsRequest'] = _LISTMETHODSREQUEST
 DESCRIPTOR.message_types_by_name['ListMethodsResponse'] = _LISTMETHODSRESPONSE
-DESCRIPTOR.message_types_by_name['SubscribeMethodsRequest'] = _SUBSCRIBEMETHODSREQUEST
+DESCRIPTOR.message_types_by_name['WatchMethodsRequest'] = _WATCHMETHODSREQUEST
 DESCRIPTOR.message_types_by_name['MethodUpdate'] = _METHODUPDATE
 DESCRIPTOR.message_types_by_name['MetaRequest'] = _METAREQUEST
 DESCRIPTOR.message_types_by_name['MetaResult'] = _METARESULT
@@ -843,12 +843,12 @@ ListMethodsResponse = _reflection.GeneratedProtocolMessageType('ListMethodsRespo
   })
 _sym_db.RegisterMessage(ListMethodsResponse)
 
-SubscribeMethodsRequest = _reflection.GeneratedProtocolMessageType('SubscribeMethodsRequest', (_message.Message,), {
-  'DESCRIPTOR' : _SUBSCRIBEMETHODSREQUEST,
+WatchMethodsRequest = _reflection.GeneratedProtocolMessageType('WatchMethodsRequest', (_message.Message,), {
+  'DESCRIPTOR' : _WATCHMETHODSREQUEST,
   '__module__' : 'tube_pb2'
-  # @@protoc_insertion_point(class_scope:SubscribeMethodsRequest)
+  # @@protoc_insertion_point(class_scope:WatchMethodsRequest)
   })
-_sym_db.RegisterMessage(SubscribeMethodsRequest)
+_sym_db.RegisterMessage(WatchMethodsRequest)
 
 MethodUpdate = _reflection.GeneratedProtocolMessageType('MethodUpdate', (_message.Message,), {
   'DESCRIPTOR' : _METHODUPDATE,
@@ -972,8 +972,8 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1160,
-  serialized_end=1389,
+  serialized_start=1156,
+  serialized_end=1440,
   methods=[
   _descriptor.MethodDescriptor(
     name='ListMethods',
@@ -986,9 +986,19 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
+    name='WatchMethods',
+    full_name='JSONRPCTube.WatchMethods',
+    index=1,
+    containing_service=None,
+    input_type=_WATCHMETHODSREQUEST,
+    output_type=_METHODUPDATE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
     name='Call',
     full_name='JSONRPCTube.Call',
-    index=1,
+    index=2,
     containing_service=None,
     input_type=_JSONRPCCALLREQUEST,
     output_type=_JSONRPCCALLRESULT,
@@ -998,7 +1008,7 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='Notify',
     full_name='JSONRPCTube.Notify',
-    index=2,
+    index=3,
     containing_service=None,
     input_type=_JSONRPCNOTIFYREQUEST,
     output_type=_JSONRPCNOTIFYRESPONSE,
@@ -1008,7 +1018,7 @@ _JSONRPCTUBE = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='Handle',
     full_name='JSONRPCTube.Handle',
-    index=3,
+    index=4,
     containing_service=None,
     input_type=_JSONRPCUPPACKET,
     output_type=_JSONRPCDOWNPACKET,

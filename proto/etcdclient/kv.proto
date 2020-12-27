@@ -1,7 +1,8 @@
 syntax = "proto3";
-package etcd.mvccpb;
 
-option go_package = "intf/etcd";
+package etcdclient.mvccpb;
+
+option go_package = "intf/etcdclient";
 
 message KeyValue {
   // key is the key in bytes. An empty key is not allowed.

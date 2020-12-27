@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from etcd import rpc_pb2 as etcd_dot_rpc__pb2
+from etcdclient import rpc_pb2 as etcdclient_dot_rpc__pb2
 
 
 class KVStub(object):
@@ -15,29 +15,29 @@ class KVStub(object):
             channel: A grpc.Channel.
         """
         self.Range = channel.unary_unary(
-                '/etcd.etcdserverpb.KV/Range',
-                request_serializer=etcd_dot_rpc__pb2.RangeRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.RangeResponse.FromString,
+                '/etcdclient.etcdserverpb.KV/Range',
+                request_serializer=etcdclient_dot_rpc__pb2.RangeRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.RangeResponse.FromString,
                 )
         self.Put = channel.unary_unary(
-                '/etcd.etcdserverpb.KV/Put',
-                request_serializer=etcd_dot_rpc__pb2.PutRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.PutResponse.FromString,
+                '/etcdclient.etcdserverpb.KV/Put',
+                request_serializer=etcdclient_dot_rpc__pb2.PutRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.PutResponse.FromString,
                 )
         self.DeleteRange = channel.unary_unary(
-                '/etcd.etcdserverpb.KV/DeleteRange',
-                request_serializer=etcd_dot_rpc__pb2.DeleteRangeRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.DeleteRangeResponse.FromString,
+                '/etcdclient.etcdserverpb.KV/DeleteRange',
+                request_serializer=etcdclient_dot_rpc__pb2.DeleteRangeRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.DeleteRangeResponse.FromString,
                 )
         self.Txn = channel.unary_unary(
-                '/etcd.etcdserverpb.KV/Txn',
-                request_serializer=etcd_dot_rpc__pb2.TxnRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.TxnResponse.FromString,
+                '/etcdclient.etcdserverpb.KV/Txn',
+                request_serializer=etcdclient_dot_rpc__pb2.TxnRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.TxnResponse.FromString,
                 )
         self.Compact = channel.unary_unary(
-                '/etcd.etcdserverpb.KV/Compact',
-                request_serializer=etcd_dot_rpc__pb2.CompactionRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.CompactionResponse.FromString,
+                '/etcdclient.etcdserverpb.KV/Compact',
+                request_serializer=etcdclient_dot_rpc__pb2.CompactionRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.CompactionResponse.FromString,
                 )
 
 
@@ -93,32 +93,32 @@ def add_KVServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Range': grpc.unary_unary_rpc_method_handler(
                     servicer.Range,
-                    request_deserializer=etcd_dot_rpc__pb2.RangeRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.RangeResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.RangeRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.RangeResponse.SerializeToString,
             ),
             'Put': grpc.unary_unary_rpc_method_handler(
                     servicer.Put,
-                    request_deserializer=etcd_dot_rpc__pb2.PutRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.PutResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.PutRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.PutResponse.SerializeToString,
             ),
             'DeleteRange': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteRange,
-                    request_deserializer=etcd_dot_rpc__pb2.DeleteRangeRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.DeleteRangeResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.DeleteRangeRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.DeleteRangeResponse.SerializeToString,
             ),
             'Txn': grpc.unary_unary_rpc_method_handler(
                     servicer.Txn,
-                    request_deserializer=etcd_dot_rpc__pb2.TxnRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.TxnResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.TxnRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.TxnResponse.SerializeToString,
             ),
             'Compact': grpc.unary_unary_rpc_method_handler(
                     servicer.Compact,
-                    request_deserializer=etcd_dot_rpc__pb2.CompactionRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.CompactionResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.CompactionRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.CompactionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'etcd.etcdserverpb.KV', rpc_method_handlers)
+            'etcdclient.etcdserverpb.KV', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -137,9 +137,9 @@ class KV(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.KV/Range',
-            etcd_dot_rpc__pb2.RangeRequest.SerializeToString,
-            etcd_dot_rpc__pb2.RangeResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.KV/Range',
+            etcdclient_dot_rpc__pb2.RangeRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.RangeResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -154,9 +154,9 @@ class KV(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.KV/Put',
-            etcd_dot_rpc__pb2.PutRequest.SerializeToString,
-            etcd_dot_rpc__pb2.PutResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.KV/Put',
+            etcdclient_dot_rpc__pb2.PutRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.PutResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -171,9 +171,9 @@ class KV(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.KV/DeleteRange',
-            etcd_dot_rpc__pb2.DeleteRangeRequest.SerializeToString,
-            etcd_dot_rpc__pb2.DeleteRangeResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.KV/DeleteRange',
+            etcdclient_dot_rpc__pb2.DeleteRangeRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.DeleteRangeResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -188,9 +188,9 @@ class KV(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.KV/Txn',
-            etcd_dot_rpc__pb2.TxnRequest.SerializeToString,
-            etcd_dot_rpc__pb2.TxnResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.KV/Txn',
+            etcdclient_dot_rpc__pb2.TxnRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.TxnResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -205,9 +205,9 @@ class KV(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.KV/Compact',
-            etcd_dot_rpc__pb2.CompactionRequest.SerializeToString,
-            etcd_dot_rpc__pb2.CompactionResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.KV/Compact',
+            etcdclient_dot_rpc__pb2.CompactionRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.CompactionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -222,9 +222,9 @@ class WatchStub(object):
             channel: A grpc.Channel.
         """
         self.Watch = channel.stream_stream(
-                '/etcd.etcdserverpb.Watch/Watch',
-                request_serializer=etcd_dot_rpc__pb2.WatchRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.WatchResponse.FromString,
+                '/etcdclient.etcdserverpb.Watch/Watch',
+                request_serializer=etcdclient_dot_rpc__pb2.WatchRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.WatchResponse.FromString,
                 )
 
 
@@ -247,12 +247,12 @@ def add_WatchServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Watch': grpc.stream_stream_rpc_method_handler(
                     servicer.Watch,
-                    request_deserializer=etcd_dot_rpc__pb2.WatchRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.WatchResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.WatchRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.WatchResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'etcd.etcdserverpb.Watch', rpc_method_handlers)
+            'etcdclient.etcdserverpb.Watch', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -271,9 +271,9 @@ class Watch(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/etcd.etcdserverpb.Watch/Watch',
-            etcd_dot_rpc__pb2.WatchRequest.SerializeToString,
-            etcd_dot_rpc__pb2.WatchResponse.FromString,
+        return grpc.experimental.stream_stream(request_iterator, target, '/etcdclient.etcdserverpb.Watch/Watch',
+            etcdclient_dot_rpc__pb2.WatchRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.WatchResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -288,29 +288,29 @@ class LeaseStub(object):
             channel: A grpc.Channel.
         """
         self.LeaseGrant = channel.unary_unary(
-                '/etcd.etcdserverpb.Lease/LeaseGrant',
-                request_serializer=etcd_dot_rpc__pb2.LeaseGrantRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.LeaseGrantResponse.FromString,
+                '/etcdclient.etcdserverpb.Lease/LeaseGrant',
+                request_serializer=etcdclient_dot_rpc__pb2.LeaseGrantRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.LeaseGrantResponse.FromString,
                 )
         self.LeaseRevoke = channel.unary_unary(
-                '/etcd.etcdserverpb.Lease/LeaseRevoke',
-                request_serializer=etcd_dot_rpc__pb2.LeaseRevokeRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.LeaseRevokeResponse.FromString,
+                '/etcdclient.etcdserverpb.Lease/LeaseRevoke',
+                request_serializer=etcdclient_dot_rpc__pb2.LeaseRevokeRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.LeaseRevokeResponse.FromString,
                 )
         self.LeaseKeepAlive = channel.stream_stream(
-                '/etcd.etcdserverpb.Lease/LeaseKeepAlive',
-                request_serializer=etcd_dot_rpc__pb2.LeaseKeepAliveRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.LeaseKeepAliveResponse.FromString,
+                '/etcdclient.etcdserverpb.Lease/LeaseKeepAlive',
+                request_serializer=etcdclient_dot_rpc__pb2.LeaseKeepAliveRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.LeaseKeepAliveResponse.FromString,
                 )
         self.LeaseTimeToLive = channel.unary_unary(
-                '/etcd.etcdserverpb.Lease/LeaseTimeToLive',
-                request_serializer=etcd_dot_rpc__pb2.LeaseTimeToLiveRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.LeaseTimeToLiveResponse.FromString,
+                '/etcdclient.etcdserverpb.Lease/LeaseTimeToLive',
+                request_serializer=etcdclient_dot_rpc__pb2.LeaseTimeToLiveRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.LeaseTimeToLiveResponse.FromString,
                 )
         self.LeaseLeases = channel.unary_unary(
-                '/etcd.etcdserverpb.Lease/LeaseLeases',
-                request_serializer=etcd_dot_rpc__pb2.LeaseLeasesRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.LeaseLeasesResponse.FromString,
+                '/etcdclient.etcdserverpb.Lease/LeaseLeases',
+                request_serializer=etcdclient_dot_rpc__pb2.LeaseLeasesRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.LeaseLeasesResponse.FromString,
                 )
 
 
@@ -360,32 +360,32 @@ def add_LeaseServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'LeaseGrant': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaseGrant,
-                    request_deserializer=etcd_dot_rpc__pb2.LeaseGrantRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.LeaseGrantResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.LeaseGrantRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.LeaseGrantResponse.SerializeToString,
             ),
             'LeaseRevoke': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaseRevoke,
-                    request_deserializer=etcd_dot_rpc__pb2.LeaseRevokeRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.LeaseRevokeResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.LeaseRevokeRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.LeaseRevokeResponse.SerializeToString,
             ),
             'LeaseKeepAlive': grpc.stream_stream_rpc_method_handler(
                     servicer.LeaseKeepAlive,
-                    request_deserializer=etcd_dot_rpc__pb2.LeaseKeepAliveRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.LeaseKeepAliveResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.LeaseKeepAliveRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.LeaseKeepAliveResponse.SerializeToString,
             ),
             'LeaseTimeToLive': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaseTimeToLive,
-                    request_deserializer=etcd_dot_rpc__pb2.LeaseTimeToLiveRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.LeaseTimeToLiveResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.LeaseTimeToLiveRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.LeaseTimeToLiveResponse.SerializeToString,
             ),
             'LeaseLeases': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaseLeases,
-                    request_deserializer=etcd_dot_rpc__pb2.LeaseLeasesRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.LeaseLeasesResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.LeaseLeasesRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.LeaseLeasesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'etcd.etcdserverpb.Lease', rpc_method_handlers)
+            'etcdclient.etcdserverpb.Lease', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -404,9 +404,9 @@ class Lease(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Lease/LeaseGrant',
-            etcd_dot_rpc__pb2.LeaseGrantRequest.SerializeToString,
-            etcd_dot_rpc__pb2.LeaseGrantResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Lease/LeaseGrant',
+            etcdclient_dot_rpc__pb2.LeaseGrantRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.LeaseGrantResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -421,9 +421,9 @@ class Lease(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Lease/LeaseRevoke',
-            etcd_dot_rpc__pb2.LeaseRevokeRequest.SerializeToString,
-            etcd_dot_rpc__pb2.LeaseRevokeResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Lease/LeaseRevoke',
+            etcdclient_dot_rpc__pb2.LeaseRevokeRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.LeaseRevokeResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -438,9 +438,9 @@ class Lease(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/etcd.etcdserverpb.Lease/LeaseKeepAlive',
-            etcd_dot_rpc__pb2.LeaseKeepAliveRequest.SerializeToString,
-            etcd_dot_rpc__pb2.LeaseKeepAliveResponse.FromString,
+        return grpc.experimental.stream_stream(request_iterator, target, '/etcdclient.etcdserverpb.Lease/LeaseKeepAlive',
+            etcdclient_dot_rpc__pb2.LeaseKeepAliveRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.LeaseKeepAliveResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -455,9 +455,9 @@ class Lease(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Lease/LeaseTimeToLive',
-            etcd_dot_rpc__pb2.LeaseTimeToLiveRequest.SerializeToString,
-            etcd_dot_rpc__pb2.LeaseTimeToLiveResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Lease/LeaseTimeToLive',
+            etcdclient_dot_rpc__pb2.LeaseTimeToLiveRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.LeaseTimeToLiveResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -472,9 +472,9 @@ class Lease(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Lease/LeaseLeases',
-            etcd_dot_rpc__pb2.LeaseLeasesRequest.SerializeToString,
-            etcd_dot_rpc__pb2.LeaseLeasesResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Lease/LeaseLeases',
+            etcdclient_dot_rpc__pb2.LeaseLeasesRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.LeaseLeasesResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -489,29 +489,29 @@ class ClusterStub(object):
             channel: A grpc.Channel.
         """
         self.MemberAdd = channel.unary_unary(
-                '/etcd.etcdserverpb.Cluster/MemberAdd',
-                request_serializer=etcd_dot_rpc__pb2.MemberAddRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.MemberAddResponse.FromString,
+                '/etcdclient.etcdserverpb.Cluster/MemberAdd',
+                request_serializer=etcdclient_dot_rpc__pb2.MemberAddRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.MemberAddResponse.FromString,
                 )
         self.MemberRemove = channel.unary_unary(
-                '/etcd.etcdserverpb.Cluster/MemberRemove',
-                request_serializer=etcd_dot_rpc__pb2.MemberRemoveRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.MemberRemoveResponse.FromString,
+                '/etcdclient.etcdserverpb.Cluster/MemberRemove',
+                request_serializer=etcdclient_dot_rpc__pb2.MemberRemoveRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.MemberRemoveResponse.FromString,
                 )
         self.MemberUpdate = channel.unary_unary(
-                '/etcd.etcdserverpb.Cluster/MemberUpdate',
-                request_serializer=etcd_dot_rpc__pb2.MemberUpdateRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.MemberUpdateResponse.FromString,
+                '/etcdclient.etcdserverpb.Cluster/MemberUpdate',
+                request_serializer=etcdclient_dot_rpc__pb2.MemberUpdateRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.MemberUpdateResponse.FromString,
                 )
         self.MemberList = channel.unary_unary(
-                '/etcd.etcdserverpb.Cluster/MemberList',
-                request_serializer=etcd_dot_rpc__pb2.MemberListRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.MemberListResponse.FromString,
+                '/etcdclient.etcdserverpb.Cluster/MemberList',
+                request_serializer=etcdclient_dot_rpc__pb2.MemberListRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.MemberListResponse.FromString,
                 )
         self.MemberPromote = channel.unary_unary(
-                '/etcd.etcdserverpb.Cluster/MemberPromote',
-                request_serializer=etcd_dot_rpc__pb2.MemberPromoteRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.MemberPromoteResponse.FromString,
+                '/etcdclient.etcdserverpb.Cluster/MemberPromote',
+                request_serializer=etcdclient_dot_rpc__pb2.MemberPromoteRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.MemberPromoteResponse.FromString,
                 )
 
 
@@ -558,32 +558,32 @@ def add_ClusterServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'MemberAdd': grpc.unary_unary_rpc_method_handler(
                     servicer.MemberAdd,
-                    request_deserializer=etcd_dot_rpc__pb2.MemberAddRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.MemberAddResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.MemberAddRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.MemberAddResponse.SerializeToString,
             ),
             'MemberRemove': grpc.unary_unary_rpc_method_handler(
                     servicer.MemberRemove,
-                    request_deserializer=etcd_dot_rpc__pb2.MemberRemoveRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.MemberRemoveResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.MemberRemoveRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.MemberRemoveResponse.SerializeToString,
             ),
             'MemberUpdate': grpc.unary_unary_rpc_method_handler(
                     servicer.MemberUpdate,
-                    request_deserializer=etcd_dot_rpc__pb2.MemberUpdateRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.MemberUpdateResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.MemberUpdateRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.MemberUpdateResponse.SerializeToString,
             ),
             'MemberList': grpc.unary_unary_rpc_method_handler(
                     servicer.MemberList,
-                    request_deserializer=etcd_dot_rpc__pb2.MemberListRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.MemberListResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.MemberListRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.MemberListResponse.SerializeToString,
             ),
             'MemberPromote': grpc.unary_unary_rpc_method_handler(
                     servicer.MemberPromote,
-                    request_deserializer=etcd_dot_rpc__pb2.MemberPromoteRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.MemberPromoteResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.MemberPromoteRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.MemberPromoteResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'etcd.etcdserverpb.Cluster', rpc_method_handlers)
+            'etcdclient.etcdserverpb.Cluster', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -602,9 +602,9 @@ class Cluster(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Cluster/MemberAdd',
-            etcd_dot_rpc__pb2.MemberAddRequest.SerializeToString,
-            etcd_dot_rpc__pb2.MemberAddResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Cluster/MemberAdd',
+            etcdclient_dot_rpc__pb2.MemberAddRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.MemberAddResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -619,9 +619,9 @@ class Cluster(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Cluster/MemberRemove',
-            etcd_dot_rpc__pb2.MemberRemoveRequest.SerializeToString,
-            etcd_dot_rpc__pb2.MemberRemoveResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Cluster/MemberRemove',
+            etcdclient_dot_rpc__pb2.MemberRemoveRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.MemberRemoveResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -636,9 +636,9 @@ class Cluster(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Cluster/MemberUpdate',
-            etcd_dot_rpc__pb2.MemberUpdateRequest.SerializeToString,
-            etcd_dot_rpc__pb2.MemberUpdateResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Cluster/MemberUpdate',
+            etcdclient_dot_rpc__pb2.MemberUpdateRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.MemberUpdateResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -653,9 +653,9 @@ class Cluster(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Cluster/MemberList',
-            etcd_dot_rpc__pb2.MemberListRequest.SerializeToString,
-            etcd_dot_rpc__pb2.MemberListResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Cluster/MemberList',
+            etcdclient_dot_rpc__pb2.MemberListRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.MemberListResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -670,9 +670,9 @@ class Cluster(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Cluster/MemberPromote',
-            etcd_dot_rpc__pb2.MemberPromoteRequest.SerializeToString,
-            etcd_dot_rpc__pb2.MemberPromoteResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Cluster/MemberPromote',
+            etcdclient_dot_rpc__pb2.MemberPromoteRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.MemberPromoteResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -687,44 +687,44 @@ class MaintenanceStub(object):
             channel: A grpc.Channel.
         """
         self.Alarm = channel.unary_unary(
-                '/etcd.etcdserverpb.Maintenance/Alarm',
-                request_serializer=etcd_dot_rpc__pb2.AlarmRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AlarmResponse.FromString,
+                '/etcdclient.etcdserverpb.Maintenance/Alarm',
+                request_serializer=etcdclient_dot_rpc__pb2.AlarmRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AlarmResponse.FromString,
                 )
         self.Status = channel.unary_unary(
-                '/etcd.etcdserverpb.Maintenance/Status',
-                request_serializer=etcd_dot_rpc__pb2.StatusRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.StatusResponse.FromString,
+                '/etcdclient.etcdserverpb.Maintenance/Status',
+                request_serializer=etcdclient_dot_rpc__pb2.StatusRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.StatusResponse.FromString,
                 )
         self.Defragment = channel.unary_unary(
-                '/etcd.etcdserverpb.Maintenance/Defragment',
-                request_serializer=etcd_dot_rpc__pb2.DefragmentRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.DefragmentResponse.FromString,
+                '/etcdclient.etcdserverpb.Maintenance/Defragment',
+                request_serializer=etcdclient_dot_rpc__pb2.DefragmentRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.DefragmentResponse.FromString,
                 )
         self.Hash = channel.unary_unary(
-                '/etcd.etcdserverpb.Maintenance/Hash',
-                request_serializer=etcd_dot_rpc__pb2.HashRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.HashResponse.FromString,
+                '/etcdclient.etcdserverpb.Maintenance/Hash',
+                request_serializer=etcdclient_dot_rpc__pb2.HashRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.HashResponse.FromString,
                 )
         self.HashKV = channel.unary_unary(
-                '/etcd.etcdserverpb.Maintenance/HashKV',
-                request_serializer=etcd_dot_rpc__pb2.HashKVRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.HashKVResponse.FromString,
+                '/etcdclient.etcdserverpb.Maintenance/HashKV',
+                request_serializer=etcdclient_dot_rpc__pb2.HashKVRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.HashKVResponse.FromString,
                 )
         self.Snapshot = channel.unary_stream(
-                '/etcd.etcdserverpb.Maintenance/Snapshot',
-                request_serializer=etcd_dot_rpc__pb2.SnapshotRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.SnapshotResponse.FromString,
+                '/etcdclient.etcdserverpb.Maintenance/Snapshot',
+                request_serializer=etcdclient_dot_rpc__pb2.SnapshotRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.SnapshotResponse.FromString,
                 )
         self.MoveLeader = channel.unary_unary(
-                '/etcd.etcdserverpb.Maintenance/MoveLeader',
-                request_serializer=etcd_dot_rpc__pb2.MoveLeaderRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.MoveLeaderResponse.FromString,
+                '/etcdclient.etcdserverpb.Maintenance/MoveLeader',
+                request_serializer=etcdclient_dot_rpc__pb2.MoveLeaderRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.MoveLeaderResponse.FromString,
                 )
         self.Downgrade = channel.unary_unary(
-                '/etcd.etcdserverpb.Maintenance/Downgrade',
-                request_serializer=etcd_dot_rpc__pb2.DowngradeRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.DowngradeResponse.FromString,
+                '/etcdclient.etcdserverpb.Maintenance/Downgrade',
+                request_serializer=etcdclient_dot_rpc__pb2.DowngradeRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.DowngradeResponse.FromString,
                 )
 
 
@@ -798,47 +798,47 @@ def add_MaintenanceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Alarm': grpc.unary_unary_rpc_method_handler(
                     servicer.Alarm,
-                    request_deserializer=etcd_dot_rpc__pb2.AlarmRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AlarmResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AlarmRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AlarmResponse.SerializeToString,
             ),
             'Status': grpc.unary_unary_rpc_method_handler(
                     servicer.Status,
-                    request_deserializer=etcd_dot_rpc__pb2.StatusRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.StatusResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.StatusRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.StatusResponse.SerializeToString,
             ),
             'Defragment': grpc.unary_unary_rpc_method_handler(
                     servicer.Defragment,
-                    request_deserializer=etcd_dot_rpc__pb2.DefragmentRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.DefragmentResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.DefragmentRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.DefragmentResponse.SerializeToString,
             ),
             'Hash': grpc.unary_unary_rpc_method_handler(
                     servicer.Hash,
-                    request_deserializer=etcd_dot_rpc__pb2.HashRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.HashResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.HashRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.HashResponse.SerializeToString,
             ),
             'HashKV': grpc.unary_unary_rpc_method_handler(
                     servicer.HashKV,
-                    request_deserializer=etcd_dot_rpc__pb2.HashKVRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.HashKVResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.HashKVRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.HashKVResponse.SerializeToString,
             ),
             'Snapshot': grpc.unary_stream_rpc_method_handler(
                     servicer.Snapshot,
-                    request_deserializer=etcd_dot_rpc__pb2.SnapshotRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.SnapshotResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.SnapshotRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.SnapshotResponse.SerializeToString,
             ),
             'MoveLeader': grpc.unary_unary_rpc_method_handler(
                     servicer.MoveLeader,
-                    request_deserializer=etcd_dot_rpc__pb2.MoveLeaderRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.MoveLeaderResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.MoveLeaderRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.MoveLeaderResponse.SerializeToString,
             ),
             'Downgrade': grpc.unary_unary_rpc_method_handler(
                     servicer.Downgrade,
-                    request_deserializer=etcd_dot_rpc__pb2.DowngradeRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.DowngradeResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.DowngradeRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.DowngradeResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'etcd.etcdserverpb.Maintenance', rpc_method_handlers)
+            'etcdclient.etcdserverpb.Maintenance', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -857,9 +857,9 @@ class Maintenance(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Maintenance/Alarm',
-            etcd_dot_rpc__pb2.AlarmRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AlarmResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Maintenance/Alarm',
+            etcdclient_dot_rpc__pb2.AlarmRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AlarmResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -874,9 +874,9 @@ class Maintenance(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Maintenance/Status',
-            etcd_dot_rpc__pb2.StatusRequest.SerializeToString,
-            etcd_dot_rpc__pb2.StatusResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Maintenance/Status',
+            etcdclient_dot_rpc__pb2.StatusRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -891,9 +891,9 @@ class Maintenance(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Maintenance/Defragment',
-            etcd_dot_rpc__pb2.DefragmentRequest.SerializeToString,
-            etcd_dot_rpc__pb2.DefragmentResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Maintenance/Defragment',
+            etcdclient_dot_rpc__pb2.DefragmentRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.DefragmentResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -908,9 +908,9 @@ class Maintenance(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Maintenance/Hash',
-            etcd_dot_rpc__pb2.HashRequest.SerializeToString,
-            etcd_dot_rpc__pb2.HashResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Maintenance/Hash',
+            etcdclient_dot_rpc__pb2.HashRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.HashResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -925,9 +925,9 @@ class Maintenance(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Maintenance/HashKV',
-            etcd_dot_rpc__pb2.HashKVRequest.SerializeToString,
-            etcd_dot_rpc__pb2.HashKVResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Maintenance/HashKV',
+            etcdclient_dot_rpc__pb2.HashKVRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.HashKVResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -942,9 +942,9 @@ class Maintenance(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/etcd.etcdserverpb.Maintenance/Snapshot',
-            etcd_dot_rpc__pb2.SnapshotRequest.SerializeToString,
-            etcd_dot_rpc__pb2.SnapshotResponse.FromString,
+        return grpc.experimental.unary_stream(request, target, '/etcdclient.etcdserverpb.Maintenance/Snapshot',
+            etcdclient_dot_rpc__pb2.SnapshotRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.SnapshotResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -959,9 +959,9 @@ class Maintenance(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Maintenance/MoveLeader',
-            etcd_dot_rpc__pb2.MoveLeaderRequest.SerializeToString,
-            etcd_dot_rpc__pb2.MoveLeaderResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Maintenance/MoveLeader',
+            etcdclient_dot_rpc__pb2.MoveLeaderRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.MoveLeaderResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -976,9 +976,9 @@ class Maintenance(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Maintenance/Downgrade',
-            etcd_dot_rpc__pb2.DowngradeRequest.SerializeToString,
-            etcd_dot_rpc__pb2.DowngradeResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Maintenance/Downgrade',
+            etcdclient_dot_rpc__pb2.DowngradeRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.DowngradeResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -993,89 +993,89 @@ class AuthStub(object):
             channel: A grpc.Channel.
         """
         self.AuthEnable = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/AuthEnable',
-                request_serializer=etcd_dot_rpc__pb2.AuthEnableRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthEnableResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/AuthEnable',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthEnableRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthEnableResponse.FromString,
                 )
         self.AuthDisable = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/AuthDisable',
-                request_serializer=etcd_dot_rpc__pb2.AuthDisableRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthDisableResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/AuthDisable',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthDisableRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthDisableResponse.FromString,
                 )
         self.AuthStatus = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/AuthStatus',
-                request_serializer=etcd_dot_rpc__pb2.AuthStatusRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthStatusResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/AuthStatus',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthStatusRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthStatusResponse.FromString,
                 )
         self.Authenticate = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/Authenticate',
-                request_serializer=etcd_dot_rpc__pb2.AuthenticateRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthenticateResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/Authenticate',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthenticateRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthenticateResponse.FromString,
                 )
         self.UserAdd = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/UserAdd',
-                request_serializer=etcd_dot_rpc__pb2.AuthUserAddRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthUserAddResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/UserAdd',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthUserAddRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthUserAddResponse.FromString,
                 )
         self.UserGet = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/UserGet',
-                request_serializer=etcd_dot_rpc__pb2.AuthUserGetRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthUserGetResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/UserGet',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthUserGetRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthUserGetResponse.FromString,
                 )
         self.UserList = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/UserList',
-                request_serializer=etcd_dot_rpc__pb2.AuthUserListRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthUserListResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/UserList',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthUserListRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthUserListResponse.FromString,
                 )
         self.UserDelete = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/UserDelete',
-                request_serializer=etcd_dot_rpc__pb2.AuthUserDeleteRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthUserDeleteResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/UserDelete',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthUserDeleteRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthUserDeleteResponse.FromString,
                 )
         self.UserChangePassword = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/UserChangePassword',
-                request_serializer=etcd_dot_rpc__pb2.AuthUserChangePasswordRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthUserChangePasswordResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/UserChangePassword',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthUserChangePasswordRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthUserChangePasswordResponse.FromString,
                 )
         self.UserGrantRole = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/UserGrantRole',
-                request_serializer=etcd_dot_rpc__pb2.AuthUserGrantRoleRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthUserGrantRoleResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/UserGrantRole',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthUserGrantRoleRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthUserGrantRoleResponse.FromString,
                 )
         self.UserRevokeRole = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/UserRevokeRole',
-                request_serializer=etcd_dot_rpc__pb2.AuthUserRevokeRoleRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthUserRevokeRoleResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/UserRevokeRole',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthUserRevokeRoleRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthUserRevokeRoleResponse.FromString,
                 )
         self.RoleAdd = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/RoleAdd',
-                request_serializer=etcd_dot_rpc__pb2.AuthRoleAddRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthRoleAddResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/RoleAdd',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthRoleAddRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthRoleAddResponse.FromString,
                 )
         self.RoleGet = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/RoleGet',
-                request_serializer=etcd_dot_rpc__pb2.AuthRoleGetRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthRoleGetResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/RoleGet',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthRoleGetRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthRoleGetResponse.FromString,
                 )
         self.RoleList = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/RoleList',
-                request_serializer=etcd_dot_rpc__pb2.AuthRoleListRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthRoleListResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/RoleList',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthRoleListRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthRoleListResponse.FromString,
                 )
         self.RoleDelete = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/RoleDelete',
-                request_serializer=etcd_dot_rpc__pb2.AuthRoleDeleteRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthRoleDeleteResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/RoleDelete',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthRoleDeleteRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthRoleDeleteResponse.FromString,
                 )
         self.RoleGrantPermission = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/RoleGrantPermission',
-                request_serializer=etcd_dot_rpc__pb2.AuthRoleGrantPermissionRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthRoleGrantPermissionResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/RoleGrantPermission',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthRoleGrantPermissionRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthRoleGrantPermissionResponse.FromString,
                 )
         self.RoleRevokePermission = channel.unary_unary(
-                '/etcd.etcdserverpb.Auth/RoleRevokePermission',
-                request_serializer=etcd_dot_rpc__pb2.AuthRoleRevokePermissionRequest.SerializeToString,
-                response_deserializer=etcd_dot_rpc__pb2.AuthRoleRevokePermissionResponse.FromString,
+                '/etcdclient.etcdserverpb.Auth/RoleRevokePermission',
+                request_serializer=etcdclient_dot_rpc__pb2.AuthRoleRevokePermissionRequest.SerializeToString,
+                response_deserializer=etcdclient_dot_rpc__pb2.AuthRoleRevokePermissionResponse.FromString,
                 )
 
 
@@ -1206,92 +1206,92 @@ def add_AuthServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'AuthEnable': grpc.unary_unary_rpc_method_handler(
                     servicer.AuthEnable,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthEnableRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthEnableResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthEnableRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthEnableResponse.SerializeToString,
             ),
             'AuthDisable': grpc.unary_unary_rpc_method_handler(
                     servicer.AuthDisable,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthDisableRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthDisableResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthDisableRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthDisableResponse.SerializeToString,
             ),
             'AuthStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.AuthStatus,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthStatusRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthStatusResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthStatusRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthStatusResponse.SerializeToString,
             ),
             'Authenticate': grpc.unary_unary_rpc_method_handler(
                     servicer.Authenticate,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthenticateRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthenticateResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthenticateRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthenticateResponse.SerializeToString,
             ),
             'UserAdd': grpc.unary_unary_rpc_method_handler(
                     servicer.UserAdd,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthUserAddRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthUserAddResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthUserAddRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthUserAddResponse.SerializeToString,
             ),
             'UserGet': grpc.unary_unary_rpc_method_handler(
                     servicer.UserGet,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthUserGetRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthUserGetResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthUserGetRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthUserGetResponse.SerializeToString,
             ),
             'UserList': grpc.unary_unary_rpc_method_handler(
                     servicer.UserList,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthUserListRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthUserListResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthUserListRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthUserListResponse.SerializeToString,
             ),
             'UserDelete': grpc.unary_unary_rpc_method_handler(
                     servicer.UserDelete,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthUserDeleteRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthUserDeleteResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthUserDeleteRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthUserDeleteResponse.SerializeToString,
             ),
             'UserChangePassword': grpc.unary_unary_rpc_method_handler(
                     servicer.UserChangePassword,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthUserChangePasswordRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthUserChangePasswordResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthUserChangePasswordRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthUserChangePasswordResponse.SerializeToString,
             ),
             'UserGrantRole': grpc.unary_unary_rpc_method_handler(
                     servicer.UserGrantRole,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthUserGrantRoleRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthUserGrantRoleResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthUserGrantRoleRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthUserGrantRoleResponse.SerializeToString,
             ),
             'UserRevokeRole': grpc.unary_unary_rpc_method_handler(
                     servicer.UserRevokeRole,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthUserRevokeRoleRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthUserRevokeRoleResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthUserRevokeRoleRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthUserRevokeRoleResponse.SerializeToString,
             ),
             'RoleAdd': grpc.unary_unary_rpc_method_handler(
                     servicer.RoleAdd,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthRoleAddRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthRoleAddResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthRoleAddRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthRoleAddResponse.SerializeToString,
             ),
             'RoleGet': grpc.unary_unary_rpc_method_handler(
                     servicer.RoleGet,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthRoleGetRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthRoleGetResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthRoleGetRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthRoleGetResponse.SerializeToString,
             ),
             'RoleList': grpc.unary_unary_rpc_method_handler(
                     servicer.RoleList,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthRoleListRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthRoleListResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthRoleListRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthRoleListResponse.SerializeToString,
             ),
             'RoleDelete': grpc.unary_unary_rpc_method_handler(
                     servicer.RoleDelete,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthRoleDeleteRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthRoleDeleteResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthRoleDeleteRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthRoleDeleteResponse.SerializeToString,
             ),
             'RoleGrantPermission': grpc.unary_unary_rpc_method_handler(
                     servicer.RoleGrantPermission,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthRoleGrantPermissionRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthRoleGrantPermissionResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthRoleGrantPermissionRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthRoleGrantPermissionResponse.SerializeToString,
             ),
             'RoleRevokePermission': grpc.unary_unary_rpc_method_handler(
                     servicer.RoleRevokePermission,
-                    request_deserializer=etcd_dot_rpc__pb2.AuthRoleRevokePermissionRequest.FromString,
-                    response_serializer=etcd_dot_rpc__pb2.AuthRoleRevokePermissionResponse.SerializeToString,
+                    request_deserializer=etcdclient_dot_rpc__pb2.AuthRoleRevokePermissionRequest.FromString,
+                    response_serializer=etcdclient_dot_rpc__pb2.AuthRoleRevokePermissionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'etcd.etcdserverpb.Auth', rpc_method_handlers)
+            'etcdclient.etcdserverpb.Auth', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -1310,9 +1310,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/AuthEnable',
-            etcd_dot_rpc__pb2.AuthEnableRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthEnableResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/AuthEnable',
+            etcdclient_dot_rpc__pb2.AuthEnableRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthEnableResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1327,9 +1327,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/AuthDisable',
-            etcd_dot_rpc__pb2.AuthDisableRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthDisableResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/AuthDisable',
+            etcdclient_dot_rpc__pb2.AuthDisableRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthDisableResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1344,9 +1344,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/AuthStatus',
-            etcd_dot_rpc__pb2.AuthStatusRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthStatusResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/AuthStatus',
+            etcdclient_dot_rpc__pb2.AuthStatusRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthStatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1361,9 +1361,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/Authenticate',
-            etcd_dot_rpc__pb2.AuthenticateRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthenticateResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/Authenticate',
+            etcdclient_dot_rpc__pb2.AuthenticateRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthenticateResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1378,9 +1378,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/UserAdd',
-            etcd_dot_rpc__pb2.AuthUserAddRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthUserAddResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/UserAdd',
+            etcdclient_dot_rpc__pb2.AuthUserAddRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthUserAddResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1395,9 +1395,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/UserGet',
-            etcd_dot_rpc__pb2.AuthUserGetRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthUserGetResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/UserGet',
+            etcdclient_dot_rpc__pb2.AuthUserGetRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthUserGetResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1412,9 +1412,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/UserList',
-            etcd_dot_rpc__pb2.AuthUserListRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthUserListResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/UserList',
+            etcdclient_dot_rpc__pb2.AuthUserListRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthUserListResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1429,9 +1429,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/UserDelete',
-            etcd_dot_rpc__pb2.AuthUserDeleteRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthUserDeleteResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/UserDelete',
+            etcdclient_dot_rpc__pb2.AuthUserDeleteRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthUserDeleteResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1446,9 +1446,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/UserChangePassword',
-            etcd_dot_rpc__pb2.AuthUserChangePasswordRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthUserChangePasswordResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/UserChangePassword',
+            etcdclient_dot_rpc__pb2.AuthUserChangePasswordRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthUserChangePasswordResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1463,9 +1463,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/UserGrantRole',
-            etcd_dot_rpc__pb2.AuthUserGrantRoleRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthUserGrantRoleResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/UserGrantRole',
+            etcdclient_dot_rpc__pb2.AuthUserGrantRoleRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthUserGrantRoleResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1480,9 +1480,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/UserRevokeRole',
-            etcd_dot_rpc__pb2.AuthUserRevokeRoleRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthUserRevokeRoleResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/UserRevokeRole',
+            etcdclient_dot_rpc__pb2.AuthUserRevokeRoleRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthUserRevokeRoleResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1497,9 +1497,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/RoleAdd',
-            etcd_dot_rpc__pb2.AuthRoleAddRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthRoleAddResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/RoleAdd',
+            etcdclient_dot_rpc__pb2.AuthRoleAddRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthRoleAddResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1514,9 +1514,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/RoleGet',
-            etcd_dot_rpc__pb2.AuthRoleGetRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthRoleGetResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/RoleGet',
+            etcdclient_dot_rpc__pb2.AuthRoleGetRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthRoleGetResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1531,9 +1531,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/RoleList',
-            etcd_dot_rpc__pb2.AuthRoleListRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthRoleListResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/RoleList',
+            etcdclient_dot_rpc__pb2.AuthRoleListRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthRoleListResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1548,9 +1548,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/RoleDelete',
-            etcd_dot_rpc__pb2.AuthRoleDeleteRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthRoleDeleteResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/RoleDelete',
+            etcdclient_dot_rpc__pb2.AuthRoleDeleteRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthRoleDeleteResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1565,9 +1565,9 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/RoleGrantPermission',
-            etcd_dot_rpc__pb2.AuthRoleGrantPermissionRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthRoleGrantPermissionResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/RoleGrantPermission',
+            etcdclient_dot_rpc__pb2.AuthRoleGrantPermissionRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthRoleGrantPermissionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -1582,8 +1582,8 @@ class Auth(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/etcd.etcdserverpb.Auth/RoleRevokePermission',
-            etcd_dot_rpc__pb2.AuthRoleRevokePermissionRequest.SerializeToString,
-            etcd_dot_rpc__pb2.AuthRoleRevokePermissionResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/etcdclient.etcdserverpb.Auth/RoleRevokePermission',
+            etcdclient_dot_rpc__pb2.AuthRoleRevokePermissionRequest.SerializeToString,
+            etcdclient_dot_rpc__pb2.AuthRoleRevokePermissionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

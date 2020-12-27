@@ -172,7 +172,8 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 			log.Debugf("local methods sig changed %s, %s", self.localMethodsSig, sig)
 			self.localMethodsSig = sig
 			params := [](interface{}){sig}
-			notify := jsonrpc.NewNotifyMessage("localMethods.changed", params, nil)
+			// broadcast the method changing
+			notify := jsonrpc.NewNotifyMessage("methods.changed", params, nil)
 			self.ChMsg <- CmdMsg{
 				MsgVec:    MsgVec{Msg: notify, FromConnId: 0},
 				Broadcast: true,

@@ -18,6 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type JSONRPCTubeClient interface {
 	ListMethods(ctx context.Context, in *ListMethodsRequest, opts ...grpc.CallOption) (*ListMethodsResponse, error)
+	WatchMethods(ctx context.Context, in *WatchMethodsRequest, opts ...grpc.CallOption) (JSONRPCTube_WatchMethodsClient, error)
 	Call(ctx context.Context, in *JSONRPCCallRequest, opts ...grpc.CallOption) (*JSONRPCCallResult, error)
 	Notify(ctx context.Context, in *JSONRPCNotifyRequest, opts ...grpc.CallOption) (*JSONRPCNotifyResponse, error)
 	Handle(ctx context.Context, opts ...grpc.CallOption) (JSONRPCTube_HandleClient, error)
@@ -40,6 +41,38 @@ func (c *jSONRPCTubeClient) ListMethods(ctx context.Context, in *ListMethodsRequ
 	return out, nil
 }
 
+func (c *jSONRPCTubeClient) WatchMethods(ctx context.Context, in *WatchMethodsRequest, opts ...grpc.CallOption) (JSONRPCTube_WatchMethodsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_JSONRPCTube_serviceDesc.Streams[0], "/JSONRPCTube/WatchMethods", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &jSONRPCTubeWatchMethodsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type JSONRPCTube_WatchMethodsClient interface {
+	Recv() (*MethodUpdate, error)
+	grpc.ClientStream
+}
+
+type jSONRPCTubeWatchMethodsClient struct {
+	grpc.ClientStream
+}
+
+func (x *jSONRPCTubeWatchMethodsClient) Recv() (*MethodUpdate, error) {
+	m := new(MethodUpdate)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *jSONRPCTubeClient) Call(ctx context.Context, in *JSONRPCCallRequest, opts ...grpc.CallOption) (*JSONRPCCallResult, error) {
 	out := new(JSONRPCCallResult)
 	err := c.cc.Invoke(ctx, "/JSONRPCTube/Call", in, out, opts...)
@@ -59,7 +92,7 @@ func (c *jSONRPCTubeClient) Notify(ctx context.Context, in *JSONRPCNotifyRequest
 }
 
 func (c *jSONRPCTubeClient) Handle(ctx context.Context, opts ...grpc.CallOption) (JSONRPCTube_HandleClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_JSONRPCTube_serviceDesc.Streams[0], "/JSONRPCTube/Handle", opts...)
+	stream, err := c.cc.NewStream(ctx, &_JSONRPCTube_serviceDesc.Streams[1], "/JSONRPCTube/Handle", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -94,6 +127,7 @@ func (x *jSONRPCTubeHandleClient) Recv() (*JSONRPCDownPacket, error) {
 // for forward compatibility
 type JSONRPCTubeServer interface {
 	ListMethods(context.Context, *ListMethodsRequest) (*ListMethodsResponse, error)
+	WatchMethods(*WatchMethodsRequest, JSONRPCTube_WatchMethodsServer) error
 	Call(context.Context, *JSONRPCCallRequest) (*JSONRPCCallResult, error)
 	Notify(context.Context, *JSONRPCNotifyRequest) (*JSONRPCNotifyResponse, error)
 	Handle(JSONRPCTube_HandleServer) error
@@ -106,6 +140,9 @@ type UnimplementedJSONRPCTubeServer struct {
 
 func (UnimplementedJSONRPCTubeServer) ListMethods(context.Context, *ListMethodsRequest) (*ListMethodsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMethods not implemented")
+}
+func (UnimplementedJSONRPCTubeServer) WatchMethods(*WatchMethodsRequest, JSONRPCTube_WatchMethodsServer) error {
+	return status.Errorf(codes.Unimplemented, "method WatchMethods not implemented")
 }
 func (UnimplementedJSONRPCTubeServer) Call(context.Context, *JSONRPCCallRequest) (*JSONRPCCallResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Call not implemented")
@@ -145,6 +182,27 @@ func _JSONRPCTube_ListMethods_Handler(srv interface{}, ctx context.Context, dec 
 		return srv.(JSONRPCTubeServer).ListMethods(ctx, req.(*ListMethodsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _JSONRPCTube_WatchMethods_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(WatchMethodsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(JSONRPCTubeServer).WatchMethods(m, &jSONRPCTubeWatchMethodsServer{stream})
+}
+
+type JSONRPCTube_WatchMethodsServer interface {
+	Send(*MethodUpdate) error
+	grpc.ServerStream
+}
+
+type jSONRPCTubeWatchMethodsServer struct {
+	grpc.ServerStream
+}
+
+func (x *jSONRPCTubeWatchMethodsServer) Send(m *MethodUpdate) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _JSONRPCTube_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -227,6 +285,11 @@ var _JSONRPCTube_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "WatchMethods",
+			Handler:       _JSONRPCTube_WatchMethods_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "Handle",
 			Handler:       _JSONRPCTube_Handle_Handler,

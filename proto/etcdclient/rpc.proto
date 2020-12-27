@@ -1,10 +1,11 @@
 syntax = "proto3";
-package etcd.etcdserverpb;
 
-option go_package = "intf/etcd";
+package etcdclient.etcdserverpb;
 
-import "etcd/kv.proto";
-import "etcd/auth.proto";
+option go_package = "intf/etcdclient";
+
+import "etcdclient/kv.proto";
+import "etcdclient/auth.proto";
 
 service KV {
   // Range gets the keys in the range from the key-value store.

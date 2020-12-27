@@ -6,7 +6,7 @@ message Empty {}
 
 service JSONRPCTube {
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
-  //rpc SubscribeMethods(SubscribeMethodsRequest) returns (stream MethodUpdate);
+  rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
 
   rpc Call(JSONRPCCallRequest) returns (JSONRPCCallResult);
   rpc Notify(JSONRPCNotifyRequest) returns (JSONRPCNotifyResponse);
@@ -20,7 +20,7 @@ message ListMethodsResponse {
   repeated MethodInfo method_infos = 1;
 }
 
-message SubscribeMethodsRequest {
+message WatchMethodsRequest {
 }
 
 message MethodUpdate {
