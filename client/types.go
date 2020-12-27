@@ -18,3 +18,5 @@ type RPCClient struct {
 	tubeClient    intf.JSONRPCTubeClient
 	sendUpChannel chan *intf.JSONRPCUpPacket
 }
+
+type MethodUpdateReceiver chan []*intf.MethodInfo

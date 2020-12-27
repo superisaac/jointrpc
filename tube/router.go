@@ -39,6 +39,7 @@ func (self *Router) Init() *Router {
 	self.fallbackConns = make([]*ConnT, 0)
 	self.connMap = make(map[CID](*ConnT))
 	self.pendingMap = make(map[PendingKey]PendingValue)
+	self.watchers = make([]*MethodWatcher, 0)
 	self.localMethodsSig = ""
 	self.setupChannels()
 	return self
@@ -100,8 +101,12 @@ func (self Router) getLocalMethods() []MethodInfo {
 
 func (self Router) getLocalMethodsSig() string {
 	var arr []string
+	var dup map[string]bool = map[string]bool{}
 	for _, minfo := range self.getLocalMethods() {
-		arr = append(arr, minfo.Name)
+		if _, ok := dup[minfo.Name]; !ok {
+			arr = append(arr, minfo.Name)
+			dup[minfo.Name] = true
+		}
 	}
 	return strings.Join(arr, ",")
 }
@@ -166,23 +171,21 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 		}
 	}
 	if maybeChanged {
-		sig := self.getLocalMethodsSig()
-		if self.localMethodsSig != sig {
-			// notify local methods change by broadcasting notification
-			log.Debugf("local methods sig changed %s, %s", self.localMethodsSig, sig)
-			self.localMethodsSig = sig
-			params := [](interface{}){sig}
-			// broadcast the method changing
-			notify := jsonrpc.NewNotifyMessage("methods.changed", params, nil)
-			self.ChMsg <- CmdMsg{
-				MsgVec:    MsgVec{Msg: notify, FromConnId: 0},
-				Broadcast: true,
-			}
-		}
+		self.probeMethodChange()
 	}
 
 	return maybeChanged
+}
 
+func (self *Router) probeMethodChange() {
+	sig := self.getLocalMethodsSig()
+	if self.localMethodsSig != sig {
+		// notify local methods change by broadcasting notification
+		log.Debugf("local methods sig changed from %s to %s", self.localMethodsSig, sig)
+		self.localMethodsSig = sig
+
+		go self.NotifyMethodUpdate()
+	}
 }
 
 func (self *Router) leaveConn(conn *ConnT) {
@@ -222,6 +225,7 @@ func (self *Router) leaveConn(conn *ConnT) {
 				self.fallbackConns[fbIndex+1:]...)
 		}
 	}
+	self.probeMethodChange()
 }
 
 func (self *Router) SelectConn(method string) (*ConnT, bool) {

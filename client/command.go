@@ -1,14 +1,17 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
+	//"strings"
+	simplejson "github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
-	"os"
-	//intf "github.com/superisaac/rpctube/intf/tube"
+	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	handler "github.com/superisaac/rpctube/tube/handler"
+	"os"
 	//example "github.com/superisaac/rpctube/client/example"
 	//grpc "google.golang.org/grpc"
 )
@@ -56,7 +59,7 @@ func RunSendNotify(serverAddress string, certFile string, method string, params 
 	if err != nil {
 		return err
 	}
-	err = client.SendNotify(method, params, broadcast)
+	err = client.SendNotify(context.Background(), method, params, broadcast)
 	if err != nil {
 		return err
 	}
@@ -101,7 +104,7 @@ func RunCallRPC(serverAddress string, certFile string, method string, params []i
 	if err != nil {
 		return err
 	}
-	res, err := client.CallRPC(method, params)
+	res, err := client.CallRPC(context.Background(), method, params)
 	if err != nil {
 		return err
 	}
@@ -138,7 +141,7 @@ func RunListMethods(serverAddress string, certFile string) error {
 	if err != nil {
 		return err
 	}
-	methodInfos, err := client.ListMethods()
+	methodInfos, err := client.ListMethods(context.Background())
 	if err != nil {
 		return nil
 	}
@@ -179,8 +182,83 @@ func CommandWatch() {
 	if err != nil {
 		panic(err)
 	}
-	err = rpcClient.RunHandlers()
+
+	err = rpcClient.Handle(context.Background())
 	if err != nil {
 		panic(err)
 	}
+}
+
+// Watch methods update
+func CommandWatchMethods() {
+	subFlags := flag.NewFlagSet("watchmethods", flag.ExitOnError)
+	pAddress := subFlags.String("c", "", "the tube server address")
+	pCertFile := subFlags.String("cert", "", "the cert file, default empty")
+	pVerbose := subFlags.Bool("verbose", false, "show method info")
+	subFlags.Parse(os.Args[2:])
+
+	serverAddress, certFile := TryGetServerSettings(*pAddress, *pCertFile)
+	rpcClient := NewRPCClient(serverAddress, certFile)
+
+	rpcClient.Connect()
+
+	ch, err := rpcClient.WatchMethods(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	for {
+		select {
+		case update, ok := <-ch:
+			if !ok {
+				return
+			}
+			if *pVerbose {
+				printMethodInfos(update)
+			} else {
+				printMethodNames(update)
+			}
+		}
+	}
+}
+
+func printMethodInfos(update []*intf.MethodInfo) {
+	var arr [](map[string](interface{}))
+	for _, info := range update {
+		mapInfo := map[string](interface{}){
+			"name": info.Name,
+		}
+		if info.Help != "" {
+			mapInfo["help"] = info.Help
+		}
+		if info.SchemaJson != "" {
+			schemaJson, err := simplejson.NewJson([]byte(info.SchemaJson))
+			if err != nil {
+				panic(err)
+			}
+			mapInfo["schema"] = schemaJson.Interface()
+		}
+		// TODO: schema
+		arr = append(arr, mapInfo)
+	}
+	jarr := simplejson.New()
+	jarr.SetPath(nil, arr)
+	repr, err := jarr.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\n", string(repr))
+}
+
+func printMethodNames(update []*intf.MethodInfo) {
+	var arr []string
+	for _, info := range update {
+		arr = append(arr, info.Name)
+	}
+	jarr := simplejson.New()
+	jarr.SetPath(nil, arr)
+	repr, err := jarr.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\n", string(repr))
 }

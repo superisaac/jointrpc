@@ -660,3 +660,14 @@ func (self *SchemaBuilder) buildObjectSchema(node map[string](interface{})) (*Ob
 	}
 	return schema, nil
 }
+
+func SchemaToString(schema Schema) string {
+	s := schema.RebuildType()
+	schemaJson := simplejson.New()
+	schemaJson.SetPath(nil, s)
+	schemaBytes, err := schemaJson.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	return string(schemaBytes)
+}

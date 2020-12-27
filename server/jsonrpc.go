@@ -74,11 +74,15 @@ func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotify
 
 // turn from tube's struct to protobuf message
 func encodeMethodInfo(minfo tube.MethodInfo) *intf.MethodInfo {
-	return &intf.MethodInfo{
+	intfInfo := &intf.MethodInfo{
 		Name:      minfo.Name,
 		Help:      minfo.Help,
 		Delegated: minfo.Delegated,
 	}
+	if minfo.Schema != nil {
+		intfInfo.SchemaJson = schema.SchemaToString(minfo.Schema)
+	}
+	return intfInfo
 }
 
 // turn from protobuf to tube's struct
@@ -100,17 +104,57 @@ func decodeMethodInfo(iminfo *intf.MethodInfo) (*tube.MethodInfo, error) {
 	}, nil
 }
 
-func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
-	minfos := tube.Tube().Router.GetLocalMethods()
+func buildMethodInfos(minfos []tube.MethodInfo) []*intf.MethodInfo {
 	intfMInfos := make([]*intf.MethodInfo, 0)
 	for _, minfo := range minfos {
 		intfMInfos = append(intfMInfos, encodeMethodInfo(minfo))
 	}
+	return intfMInfos
+}
+
+func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
+	minfos := tube.Tube().Router.GetLocalMethods()
+	intfMInfos := buildMethodInfos(minfos)
 	resp := &intf.ListMethodsResponse{MethodInfos: intfMInfos}
 	log.Debugf("list methods resp %v", resp)
 	return resp, nil
 }
 
+func buildMethodUpdate(minfos []tube.MethodInfo) *intf.MethodUpdate {
+	intfMInfos := buildMethodInfos(minfos)
+	return &intf.MethodUpdate{MethodInfos: intfMInfos}
+}
+
+func (self *JSONRPCTube) WatchMethods(req *intf.WatchMethodsRequest, stream intf.JSONRPCTube_WatchMethodsServer) error {
+	router := tube.Tube().Router
+	watcher := router.WatchMethods()
+	intfUpdate := buildMethodUpdate(router.GetLocalMethods())
+	err := stream.Send(intfUpdate)
+	if err != nil {
+		log.Debugf("error on send to stream %+v", err)
+		return err
+	}
+	for {
+		select {
+		case <-stream.Context().Done():
+			log.Debugf("watch methods stream zclosed")
+			return nil
+		case update, ok := <-watcher.ChUpdate:
+			if !ok {
+				log.Infof("watcher channel of update closed")
+				return nil
+			}
+			iUpdate := buildMethodUpdate(update.Methods)
+			err := stream.Send(iUpdate)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// Handler
 func downMsgReceived(msgvec tube.MsgVec, stream intf.JSONRPCTube_HandleServer, conn *tube.ConnT) {
 	msg := msgvec.Msg
 

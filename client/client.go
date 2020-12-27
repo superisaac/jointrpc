@@ -68,9 +68,9 @@ func (self *RPCClient) updateMethods() {
 	self.sendUpChannel <- uppac
 }
 
-func (self *RPCClient) RunHandlers() error {
+func (self *RPCClient) Handle(rootCtx context.Context) error {
 	for {
-		err := self.handleRPC()
+		err := self.handleRPC(rootCtx)
 		//log.Debugf("handle rpc %v", err)
 		if err != nil {
 			if grpc.Code(err) == codes.Unavailable {
@@ -113,8 +113,8 @@ func (self *RPCClient) DeliverUpPacket(uppack *intf.JSONRPCUpPacket) {
 	self.sendUpChannel <- uppack
 }
 
-func (self *RPCClient) handleRPC() error {
-	ctx, cancel := context.WithCancel(context.Background())
+func (self *RPCClient) handleRPC(rootCtx context.Context) error {
+	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
 	stream, err := self.tubeClient.Handle(ctx, grpc_retry.WithMax(500))
@@ -125,7 +125,7 @@ func (self *RPCClient) handleRPC() error {
 	}
 	log.Debugf("connected")
 
-	sendCtx, sendCancel := context.WithCancel(context.Background())
+	sendCtx, sendCancel := context.WithCancel(rootCtx)
 	defer sendCancel()
 
 	go self.sendUpResult(sendCtx, stream)

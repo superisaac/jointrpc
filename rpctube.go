@@ -13,15 +13,16 @@ import (
 )
 
 var commands []string = []string{
-	"server", "listmethods", "rpc","call",
+	"server", "rpc", "call",
 	"watch", "notify",
+	"listmethods", "watchmethods",
 	"example.array",
 	"help",
 }
 
 func setupClientSideLogger(logLevel string) {
 	log.SetFormatter(&log.JSONFormatter{})
-	
+
 	envLogOutput := os.Getenv("LOG_OUTPUT")
 	if envLogOutput == "" || envLogOutput == "console" || envLogOutput == "stdout" {
 		log.SetOutput(os.Stdout)
@@ -35,7 +36,6 @@ func setupClientSideLogger(logLevel string) {
 		log.SetOutput(file)
 	}
 
-	
 	if logLevel == "" {
 		logLevel = os.Getenv("LOG_LEVEL")
 	}
@@ -70,6 +70,9 @@ func main() {
 	case "listmethods":
 		setupClientSideLogger("")
 		client.CommandListMethods()
+	case "watchmethods":
+		setupClientSideLogger("")
+		client.CommandWatchMethods()
 	case "rpc":
 		setupClientSideLogger("")
 		client.CommandCallRPC("rpc")

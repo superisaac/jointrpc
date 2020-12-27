@@ -1,6 +1,7 @@
 package example
 
 import (
+	"context"
 	client "github.com/superisaac/rpctube/client"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	handler "github.com/superisaac/rpctube/tube/handler"
@@ -99,5 +100,5 @@ func ExampleArray(serverAddress string, certFile string) error {
 	if err != nil {
 		return err
 	}
-	return rpcClient.RunHandlers()
+	return rpcClient.Handle(context.Background())
 } // end of ExampleArray

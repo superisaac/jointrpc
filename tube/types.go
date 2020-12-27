@@ -64,6 +64,14 @@ type MethodDesc struct {
 	Info MethodInfo
 }
 
+// Method update watcher
+type MethodUpdate struct {
+	Methods []MethodInfo
+}
+type MethodWatcher struct {
+	ChUpdate chan MethodUpdate
+}
+
 type MethodInfoMap map[string](interface{})
 
 // Channel commands
@@ -94,6 +102,8 @@ type Router struct {
 
 	connMap    map[CID](*ConnT)
 	pendingMap map[PendingKey]PendingValue
+
+	watchers []*MethodWatcher
 
 	// channels
 	ChMsg chan CmdMsg

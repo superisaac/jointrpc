@@ -24,7 +24,7 @@ message WatchMethodsRequest {
 }
 
 message MethodUpdate {
-  repeated string methods = 1;
+  repeated MethodInfo method_infos = 1;
 }
 
 message MetaRequest {
