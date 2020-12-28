@@ -7,11 +7,12 @@ import (
 	handler "github.com/superisaac/rpctube/tube/handler"
 )
 
-func ExampleArray(serverAddress string, certFile string) error {
+func ExampleArray(serverEntry client.ServerEntry) error {
 	items := make([]interface{}, 0)
 
-	rpcClient := client.NewRPCClient(serverAddress, certFile)
+	rpcClient := client.NewRPCClient(serverEntry)
 
+	// hooked methods
 	rpcClient.On("array.push", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		for _, elem := range params {
 			items = append(items, elem)

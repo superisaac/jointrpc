@@ -7,7 +7,7 @@ import (
 	"fmt"
 	//"strings"
 	simplejson "github.com/bitly/go-simplejson"
-	log "github.com/sirupsen/logrus"
+	//log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	handler "github.com/superisaac/rpctube/tube/handler"
@@ -23,15 +23,10 @@ func printHelp() {
 // Send Notify
 func CommandSendNotify() {
 	callFlags := flag.NewFlagSet("notify", flag.ExitOnError)
-	pAddress := callFlags.String("c", "", "the server address to connect, default 127.0.0.1:50055")
-	pCertFile := callFlags.String("cert", "", "the cert file, default empty")
+	serverFlag := NewServerFlag(callFlags)	
 	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
 
 	callFlags.Parse(os.Args[2:])
-
-	serverAddress, certFile := TryGetServerSettings(*pAddress, *pCertFile)
-
-	log.Infof("dial server %s", serverAddress)
 
 	if callFlags.NArg() < 1 {
 		printHelp()
@@ -47,14 +42,14 @@ func CommandSendNotify() {
 		panic(err)
 	}
 
-	err = RunSendNotify(serverAddress, certFile, method, params, *pBroadcast)
+	err = RunSendNotify(serverFlag.Get(), method, params, *pBroadcast)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunSendNotify(serverAddress string, certFile string, method string, params []interface{}, broadcast bool) error {
-	client := NewRPCClient(serverAddress, certFile)
+func RunSendNotify(serverEntry ServerEntry, method string, params []interface{}, broadcast bool) error {
+	client := NewRPCClient(serverEntry)
 	err := client.Connect()
 	if err != nil {
 		return err
@@ -69,14 +64,8 @@ func RunSendNotify(serverAddress string, certFile string, method string, params 
 // Call RPC
 func CommandCallRPC(subcmd string) {
 	callFlags := flag.NewFlagSet(subcmd, flag.ExitOnError)
-	pAddress := callFlags.String("c", "", "the server address to connect, default 127.0.0.1:50055")
-	pCertFile := callFlags.String("cert", "", "the cert file, default empty")
-
+	serverFlag := NewServerFlag(callFlags)	
 	callFlags.Parse(os.Args[2:])
-
-	serverAddress, certFile := TryGetServerSettings(*pAddress, *pCertFile)
-
-	log.Infof("dial server %s", serverAddress)
 
 	if callFlags.NArg() < 1 {
 		printHelp()
@@ -92,14 +81,14 @@ func CommandCallRPC(subcmd string) {
 		panic(err)
 	}
 
-	err = RunCallRPC(serverAddress, certFile, method, params)
+	err = RunCallRPC(serverFlag.Get(), method, params)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunCallRPC(serverAddress string, certFile string, method string, params []interface{}) error {
-	client := NewRPCClient(serverAddress, certFile)
+func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}) error {
+	client := NewRPCClient(serverEntry)
 	err := client.Connect()
 	if err != nil {
 		return err
@@ -122,21 +111,17 @@ func RunCallRPC(serverAddress string, certFile string, method string, params []i
 // Call ListMethods
 func CommandListMethods() {
 	listMethodsFlags := flag.NewFlagSet("listmethods", flag.ExitOnError)
-	pAddress := listMethodsFlags.String("c", "", "the tube server address")
-	pCertFile := listMethodsFlags.String("cert", "", "the cert file, default empty")
+	serverFlag := NewServerFlag(listMethodsFlags)
 	listMethodsFlags.Parse(os.Args[2:])
 
-	serverAddress, certFile := TryGetServerSettings(*pAddress, *pCertFile)
-
-	log.Infof("dial server %s", serverAddress)
-	err := RunListMethods(serverAddress, certFile)
+	err := RunListMethods(serverFlag.Get())
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunListMethods(serverAddress string, certFile string) error {
-	client := NewRPCClient(serverAddress, certFile)
+func RunListMethods(serverEntry ServerEntry) error {
+	client := NewRPCClient(serverEntry)
 	err := client.Connect()
 	if err != nil {
 		return err
@@ -156,16 +141,15 @@ func RunListMethods(serverAddress string, certFile string) error {
 // Watch notify
 func CommandWatch() {
 	subFlags := flag.NewFlagSet("watchnotify", flag.ExitOnError)
-	pAddress := subFlags.String("c", "", "the tube server address")
-	pCertFile := subFlags.String("cert", "", "the cert file, default empty")
+	serverFlag := NewServerFlag(subFlags)	
 	subFlags.Parse(os.Args[2:])
 
 	notifyNames := subFlags.Args()
 	if len(notifyNames) < 1 {
 		panic(errors.New("No notify methods specified to watch"))
 	}
-	serverAddress, certFile := TryGetServerSettings(*pAddress, *pCertFile)
-	rpcClient := NewRPCClient(serverAddress, certFile)
+
+	rpcClient := NewRPCClient(serverFlag.Get())
 
 	for _, notifyName := range notifyNames {
 		rpcClient.On(notifyName, func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
@@ -192,13 +176,13 @@ func CommandWatch() {
 // Watch methods update
 func CommandWatchMethods() {
 	subFlags := flag.NewFlagSet("watchmethods", flag.ExitOnError)
-	pAddress := subFlags.String("c", "", "the tube server address")
-	pCertFile := subFlags.String("cert", "", "the cert file, default empty")
+	serverFlag := NewServerFlag(subFlags)
+	//pAddress := subFlags.String("c", "", "the tube server address")
+	//pCertFile := subFlags.String("cert", "", "the cert file, default empty")
 	pVerbose := subFlags.Bool("verbose", false, "show method info")
 	subFlags.Parse(os.Args[2:])
 
-	serverAddress, certFile := TryGetServerSettings(*pAddress, *pCertFile)
-	rpcClient := NewRPCClient(serverAddress, certFile)
+	rpcClient := NewRPCClient(serverFlag.Get())
 
 	rpcClient.Connect()
 

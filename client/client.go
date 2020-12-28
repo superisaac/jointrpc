@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"flag"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/rpctube/intf/tube"
@@ -16,11 +17,10 @@ import (
 	"time"
 )
 
-func NewRPCClient(serverAddress string, certFile string) *RPCClient {
+func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	sendUpChannel := make(chan *intf.JSONRPCUpPacket)
 	c := &RPCClient{
-		serverAddress: serverAddress,
-		certFile:      certFile,
+		serverEntry: serverEntry,
 		sendUpChannel: sendUpChannel,
 	}
 	c.InitHandlerManager()
@@ -32,8 +32,8 @@ func NewRPCClient(serverAddress string, certFile string) *RPCClient {
 
 func (self *RPCClient) Connect() error {
 	var opts []grpc.DialOption
-	if self.certFile != "" {
-		creds, err := credentials.NewClientTLSFromFile(self.certFile, "")
+	if self.serverEntry.CertFile != "" {
+		creds, err := credentials.NewClientTLSFromFile(self.serverEntry.CertFile, "")
 		if err != nil {
 			panic(err)
 		}
@@ -41,7 +41,7 @@ func (self *RPCClient) Connect() error {
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
-	conn, err := grpc.Dial(self.serverAddress, opts...)
+	conn, err := grpc.Dial(self.serverEntry.Address, opts...)
 	if err != nil {
 		return err
 	}
@@ -189,18 +189,34 @@ func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage) {
 	self.HandleRequestMessage(msgvec)
 }
 
-// util functions
-func TryGetServerSettings(serverAddress string, certFile string) (string, string) {
-	if serverAddress == "" {
-		serverAddress = os.Getenv("TUBE_CONNECT")
+// misc functions
+
+func NewServerFlag(flagSet *flag.FlagSet) *ServerFlag {
+	seflag := new(ServerFlag)
+	seflag.pAddress = flagSet.String("c", "", "the tube server address")
+	seflag.pCertFile = flagSet.String("cert", "", "the cert file, default empty")
+	return seflag
+}
+
+func (self *ServerFlag) ptrValue() ServerEntry {
+	return ServerEntry{
+		Address: *self.pAddress,
+		CertFile: *self.pCertFile,
+	}
+}
+
+func (self *ServerFlag) Get() ServerEntry {
+	value := self.ptrValue()
+	if value.Address == "" {
+		value.Address = os.Getenv("TUBE_CONNECT")
 	}
 
-	if serverAddress == "" {
-		serverAddress = "localhost:50055"
+	if value.Address == "" {
+		value.Address = "localhost:50055"
 	}
 
-	if certFile == "" {
-		certFile = os.Getenv("TUBE_CONNECT")
+	if value.CertFile == "" {
+		value.CertFile = os.Getenv("TUBE_CONNECT")
 	}
-	return serverAddress, certFile
+	return value
 }
