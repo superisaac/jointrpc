@@ -4,6 +4,7 @@ import (
 	//"errors"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	schema "github.com/superisaac/rpctube/jsonrpc/schema"
 	tube "github.com/superisaac/rpctube/tube"
 )
 
@@ -26,8 +27,12 @@ func (self *HandlerManager) On(method string, handler HandlerFunc, opts ...func(
 	}
 }
 
-func (self *HandlerManager) OnChange(onchange OnChangeFunc) {
-	self.onChange = onchange
+func (self *HandlerManager) OnChange(onChange OnChangeFunc) {
+	self.onChange = onChange
+}
+
+func (self *HandlerManager) OnStateChange(onChange StateHandlerFunc) {
+	self.StateHandler = onChange
 }
 
 func (self *HandlerManager) UnHandle(method string) bool {
@@ -114,10 +119,17 @@ func WithHelp(help string) func(*MethodHandler) {
 	}
 }
 
-func WithSchema(schema string) func(*MethodHandler) {
+func WithSchema(schemaJson string) func(*MethodHandler) {
 	return func(h *MethodHandler) {
-		// TODO: parse schema
-		h.Schema = schema
+		if schemaJson != "" {
+			// TODO: build schema
+			builder := schema.NewSchemaBuilder()
+			_, err := builder.BuildBytes([]byte(schemaJson))
+			if err != nil {
+				panic(err)
+			}
+		}
+		h.SchemaJson = schemaJson
 	}
 }
 

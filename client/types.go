@@ -7,12 +7,12 @@ import (
 )
 
 type ServerEntry struct {
-	Address string
+	Address  string
 	CertFile string
 }
 
 type ServerFlag struct {
-	pAddress *string
+	pAddress  *string
 	pCertFile *string
 }
 

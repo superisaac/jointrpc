@@ -9,6 +9,7 @@ import (
 func NewConn() *ConnT {
 	connId := NextCID()
 	ch := make(MsgChannel, 100)
+	//chState := make(chan TuebState, 100)
 	methods := make(map[string]MethodInfo)
 	conn := &ConnT{ConnId: connId,
 		RecvChannel: ch,
@@ -27,14 +28,14 @@ func (self ConnT) GetMethods() []string {
 }
 
 func (self ConnT) ValidateMsg(msg jsonrpc.IMessage) (bool, jsonrpc.IMessage) {
-	if info, ok := self.Methods[msg.MustMethod()]; ok && info.Schema != nil {
+	if info, ok := self.Methods[msg.MustMethod()]; ok && info.Schema() != nil {
+		s := info.Schema()
 		validator := schema.NewSchemaValidator()
-		errPos := validator.Validate(info.Schema, msg.Interface())
+		errPos := validator.Validate(s, msg.Interface())
 		if errPos != nil {
 			if msg.IsRequest() {
 				errmsg := errPos.ToMessage(msg.MustId())
 				return false, errmsg
-				//self.ReturnResultMessage(errmsg)
 			} else {
 				log.Warnf("validate error %s", errPos.Error())
 				return false, nil
@@ -42,4 +43,15 @@ func (self ConnT) ValidateMsg(msg jsonrpc.IMessage) (bool, jsonrpc.IMessage) {
 		}
 	}
 	return true, nil
+}
+
+func (self *ConnT) SetWatchState(w bool) {
+	self.watchState = w
+}
+
+func (self *ConnT) StateChannel() chan *TubeState {
+	if self.stateChannel == nil {
+		self.stateChannel = make(chan *TubeState, 100)
+	}
+	return self.stateChannel
 }

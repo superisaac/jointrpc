@@ -43,10 +43,16 @@ type PendingValue struct {
 }
 
 type MethodInfo struct {
-	Name      string
-	Help      string
-	Schema    schema.Schema
-	Delegated bool
+	Name       string
+	Help       string
+	SchemaJson string
+	Delegated  bool
+	schemaObj  schema.Schema
+}
+
+// tube state
+type TubeState struct {
+	Methods []MethodInfo
 }
 
 // Connect Struct
@@ -54,8 +60,12 @@ type ConnT struct {
 	ConnId      CID
 	PeerAddr    net.Addr
 	RecvChannel MsgChannel
-	Methods     map[string]MethodInfo
-	AsFallback  bool
+
+	Methods    map[string]MethodInfo
+	AsFallback bool
+	watchState bool
+
+	stateChannel chan *TubeState
 }
 
 type MethodDesc struct {
@@ -102,8 +112,6 @@ type Router struct {
 
 	connMap    map[CID](*ConnT)
 	pendingMap map[PendingKey]PendingValue
-
-	watchers []*MethodWatcher
 
 	// channels
 	ChMsg chan CmdMsg

@@ -8,8 +8,9 @@ import (
 	//"strings"
 	simplejson "github.com/bitly/go-simplejson"
 	//log "github.com/sirupsen/logrus"
-	intf "github.com/superisaac/rpctube/intf/tube"
+	//intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	tube "github.com/superisaac/rpctube/tube"
 	handler "github.com/superisaac/rpctube/tube/handler"
 	"os"
 	//example "github.com/superisaac/rpctube/client/example"
@@ -23,7 +24,7 @@ func printHelp() {
 // Send Notify
 func CommandSendNotify() {
 	callFlags := flag.NewFlagSet("notify", flag.ExitOnError)
-	serverFlag := NewServerFlag(callFlags)	
+	serverFlag := NewServerFlag(callFlags)
 	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
 
 	callFlags.Parse(os.Args[2:])
@@ -64,7 +65,7 @@ func RunSendNotify(serverEntry ServerEntry, method string, params []interface{},
 // Call RPC
 func CommandCallRPC(subcmd string) {
 	callFlags := flag.NewFlagSet(subcmd, flag.ExitOnError)
-	serverFlag := NewServerFlag(callFlags)	
+	serverFlag := NewServerFlag(callFlags)
 	callFlags.Parse(os.Args[2:])
 
 	if callFlags.NArg() < 1 {
@@ -141,7 +142,7 @@ func RunListMethods(serverEntry ServerEntry) error {
 // Watch notify
 func CommandWatch() {
 	subFlags := flag.NewFlagSet("watchnotify", flag.ExitOnError)
-	serverFlag := NewServerFlag(subFlags)	
+	serverFlag := NewServerFlag(subFlags)
 	subFlags.Parse(os.Args[2:])
 
 	notifyNames := subFlags.Args()
@@ -174,52 +175,36 @@ func CommandWatch() {
 }
 
 // Watch methods update
-func CommandWatchMethods() {
-	subFlags := flag.NewFlagSet("watchmethods", flag.ExitOnError)
+func CommandWatchState() {
+	subFlags := flag.NewFlagSet("watchstate", flag.ExitOnError)
 	serverFlag := NewServerFlag(subFlags)
-	//pAddress := subFlags.String("c", "", "the tube server address")
-	//pCertFile := subFlags.String("cert", "", "the cert file, default empty")
 	pVerbose := subFlags.Bool("verbose", false, "show method info")
 	subFlags.Parse(os.Args[2:])
 
 	rpcClient := NewRPCClient(serverFlag.Get())
 
-	rpcClient.Connect()
+	if *pVerbose {
+		rpcClient.OnStateChange(printMethodInfos)
+	} else {
+		rpcClient.OnStateChange(printMethodNames)
+	}
 
-	ch, err := rpcClient.WatchMethods(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	for {
-		select {
-		case update, ok := <-ch:
-			if !ok {
-				return
-			}
-			if *pVerbose {
-				printMethodInfos(update)
-			} else {
-				printMethodNames(update)
-			}
-		}
-	}
+	rpcClient.Connect()
+	rpcClient.Handle(context.Background())
 }
 
-func printMethodInfos(update []*intf.MethodInfo) {
+func printMethodInfos(state *tube.TubeState) {
 	var arr [](map[string](interface{}))
-	for _, info := range update {
+	for _, info := range state.Methods {
 		mapInfo := map[string](interface{}){
 			"name": info.Name,
 		}
 		if info.Help != "" {
 			mapInfo["help"] = info.Help
 		}
-		if info.SchemaJson != "" {
-			schemaJson, err := simplejson.NewJson([]byte(info.SchemaJson))
-			if err != nil {
-				panic(err)
-			}
-			mapInfo["schema"] = schemaJson.Interface()
+
+		if info.Schema() != nil {
+			mapInfo["schema"] = info.Schema().RebuildType()
 		}
 		// TODO: schema
 		arr = append(arr, mapInfo)
@@ -233,9 +218,9 @@ func printMethodInfos(update []*intf.MethodInfo) {
 	fmt.Printf("%s\n", string(repr))
 }
 
-func printMethodNames(update []*intf.MethodInfo) {
+func printMethodNames(state *tube.TubeState) {
 	var arr []string
-	for _, info := range update {
+	for _, info := range state.Methods {
 		arr = append(arr, info.Name)
 	}
 	jarr := simplejson.New()

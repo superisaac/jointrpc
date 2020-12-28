@@ -39,7 +39,6 @@ func (self *Router) Init() *Router {
 	self.fallbackConns = make([]*ConnT, 0)
 	self.connMap = make(map[CID](*ConnT))
 	self.pendingMap = make(map[PendingKey]PendingValue)
-	self.watchers = make([]*MethodWatcher, 0)
 	self.localMethodsSig = ""
 	self.setupChannels()
 	return self
@@ -69,8 +68,8 @@ func (self MethodDesc) IsLocal() bool {
 
 func (self MethodInfo) ToMap() MethodInfoMap {
 	var schemaIntf interface{}
-	if self.Schema != nil {
-		schemaIntf = self.Schema.RebuildType()
+	if self.SchemaJson != "" {
+		schemaIntf = self.Schema().RebuildType()
 	}
 	return MethodInfoMap{
 		"name":      self.Name,
@@ -184,7 +183,7 @@ func (self *Router) probeMethodChange() {
 		log.Debugf("local methods sig changed from %s to %s", self.localMethodsSig, sig)
 		self.localMethodsSig = sig
 
-		go self.NotifyMethodUpdate()
+		go self.NotifyStateChange()
 	}
 }
 

@@ -13,7 +13,10 @@ func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []
 	msgId := 1
 
 	msg := jsonrpc.NewRequestMessage(msgId, method, params, nil)
+	return self.CallMessage(rootCtx, msg)
+}
 
+func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage) (jsonrpc.IMessage, error) {
 	envolope := &intf.JSONRPCEnvolope{Body: msg.MustString()}
 	req := &intf.JSONRPCCallRequest{Envolope: envolope}
 

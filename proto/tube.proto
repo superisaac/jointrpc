@@ -6,7 +6,7 @@ message Empty {}
 
 service JSONRPCTube {
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
-  rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
+  //rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
 
   rpc Call(JSONRPCCallRequest) returns (JSONRPCCallResult);
   rpc Notify(JSONRPCNotifyRequest) returns (JSONRPCNotifyResponse);
@@ -20,30 +20,30 @@ message ListMethodsResponse {
   repeated MethodInfo method_infos = 1;
 }
 
-message WatchMethodsRequest {
-}
+// message WatchMethodsRequest {
+// }
 
-message MethodUpdate {
-  repeated MethodInfo method_infos = 1;
-}
+// message MethodUpdate {
+//   repeated MethodInfo method_infos = 1;
+// }
 
-message MetaRequest {
-}
+// message MetaRequest {
+// }
 
-enum RPCProtocol {
-  JSONRPC = 0;
-}
+// enum RPCProtocol {
+//   JSONRPC = 0;
+// }
 
-message MetaResult {
-  repeated RPCEntry entries = 1;
-  int32 ping_interval = 3;
-}
+// message MetaResult {
+//   repeated RPCEntry entries = 1;
+//   int32 ping_interval = 3;
+// }
 
-message RPCEntry {
-  RPCProtocol protocol = 1;
-  string name = 2;
-  string help = 3;
-}
+// message RPCEntry {
+//   RPCProtocol protocol = 1;
+//   string name = 2;
+//   string help = 3;
+// }
 
 message JSONRPCEnvolope {
   string body = 1;  // json encoded rpc message
@@ -91,19 +91,25 @@ message PONG {
   string text = 1;
 }
 
+message TubeState {
+  repeated MethodInfo methods = 1;
+}
+
 message JSONRPCDownPacket {
   oneof payload {
     UpdateMethodsResponse update_methods = 1;
-
+    
     PING ping = 10;
     PONG pong = 11;
+    TubeState state = 15;
+    
     JSONRPCEnvolope envolope = 20;    
   }
 }
 
 message JSONRPCUpPacket {
   oneof payload {
-    UpdateMethodsRequest update_methods= 1;
+    UpdateMethodsRequest update_methods = 1;
 
     PING ping = 10;
     PONG pong = 11;

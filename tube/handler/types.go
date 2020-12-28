@@ -16,19 +16,23 @@ type RPCRequest struct {
 type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)
 type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
 
+type StateHandlerFunc func(newState *tube.TubeState)
+
 type OnChangeFunc func()
 
 type MethodHandler struct {
 	function HandlerFunc
 	//Options HandlerOption
-	Schema     string
+	SchemaJson string
 	Help       string
 	Concurrent bool
 }
 
 type HandlerManager struct {
-	ChResultMsg       chan jsonrpc.IMessage
-	MethodHandlers    map[string]MethodHandler
+	ChResultMsg    chan jsonrpc.IMessage
+	MethodHandlers map[string]MethodHandler
+	StateHandler   StateHandlerFunc
+
 	defaultHandler    DefaultHandlerFunc
 	defaultConcurrent bool
 	onChange          OnChangeFunc

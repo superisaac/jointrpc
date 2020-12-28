@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"context"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/rpctube/client"
 	example "github.com/superisaac/rpctube/client/example"
 	server "github.com/superisaac/rpctube/server"
+	bridge "github.com/superisaac/rpctube/bridge"	
 	"os"
 	"strings"
 	//"strings"
@@ -15,7 +17,7 @@ import (
 var commands []string = []string{
 	"server", "rpc", "call",
 	"watch", "notify",
-	"listmethods", "watchmethods",
+	"listmethods", "watchstate",
 	"example.array",
 	"help",
 }
@@ -66,13 +68,14 @@ func main() {
 
 	switch os.Args[1] {
 	case "server":
+		go bridge.StartNewBridge(context.Background(), []client.ServerEntry{})
 		server.CommandStartServer()
 	case "listmethods":
 		setupClientSideLogger("")
 		client.CommandListMethods()
-	case "watchmethods":
+	case "watchstate":
 		setupClientSideLogger("")
-		client.CommandWatchMethods()
+		client.CommandWatchState()
 	case "rpc":
 		setupClientSideLogger("")
 		client.CommandCallRPC("rpc")

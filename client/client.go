@@ -8,6 +8,7 @@ import (
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	//server "github.com/superisaac/rpctube/server"
+	encoding "github.com/superisaac/rpctube/encoding"
 	tube "github.com/superisaac/rpctube/tube"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -20,7 +21,7 @@ import (
 func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	sendUpChannel := make(chan *intf.JSONRPCUpPacket)
 	c := &RPCClient{
-		serverEntry: serverEntry,
+		serverEntry:   serverEntry,
 		sendUpChannel: sendUpChannel,
 	}
 	c.InitHandlerManager()
@@ -28,6 +29,10 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 		c.OnHandlerChanged()
 	})
 	return c
+}
+
+func (self RPCClient) String() string {
+	return self.serverEntry.Address
 }
 
 func (self *RPCClient) Connect() error {
@@ -59,7 +64,7 @@ func (self *RPCClient) OnHandlerChanged() {
 func (self *RPCClient) updateMethods() {
 	upMethods := make([](*intf.MethodInfo), 0)
 	for m, info := range self.MethodHandlers {
-		minfo := &intf.MethodInfo{Name: m, Help: info.Help, SchemaJson: info.Schema}
+		minfo := &intf.MethodInfo{Name: m, Help: info.Help, SchemaJson: info.SchemaJson}
 		upMethods = append(upMethods, minfo)
 	}
 	up := &intf.UpdateMethodsRequest{Methods: upMethods}
@@ -71,7 +76,6 @@ func (self *RPCClient) updateMethods() {
 func (self *RPCClient) Handle(rootCtx context.Context) error {
 	for {
 		err := self.handleRPC(rootCtx)
-		//log.Debugf("handle rpc %v", err)
 		if err != nil {
 			if grpc.Code(err) == codes.Unavailable {
 				log.Debugf("connect closed retrying")
@@ -154,6 +158,14 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 			continue
 		}
 
+		istate := downpac.GetState()
+		if istate != nil {
+			state := encoding.DecodeTubeState(istate)
+			if self.StateHandler != nil {
+				self.StateHandler(state)
+			}
+		}
+
 		// Handle JSONRPC Request
 		//req := downpac.GetRequest()
 		envo := downpac.GetEnvolope()
@@ -200,7 +212,7 @@ func NewServerFlag(flagSet *flag.FlagSet) *ServerFlag {
 
 func (self *ServerFlag) ptrValue() ServerEntry {
 	return ServerEntry{
-		Address: *self.pAddress,
+		Address:  *self.pAddress,
 		CertFile: *self.pCertFile,
 	}
 }

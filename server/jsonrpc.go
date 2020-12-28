@@ -14,6 +14,7 @@ import (
 	codes "google.golang.org/grpc/codes"
 
 	log "github.com/sirupsen/logrus"
+	encoding "github.com/superisaac/rpctube/encoding"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	schema "github.com/superisaac/rpctube/jsonrpc/schema"
@@ -72,42 +73,10 @@ func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotify
 	return resp, nil
 }
 
-// turn from tube's struct to protobuf message
-func encodeMethodInfo(minfo tube.MethodInfo) *intf.MethodInfo {
-	intfInfo := &intf.MethodInfo{
-		Name:      minfo.Name,
-		Help:      minfo.Help,
-		Delegated: minfo.Delegated,
-	}
-	if minfo.Schema != nil {
-		intfInfo.SchemaJson = schema.SchemaToString(minfo.Schema)
-	}
-	return intfInfo
-}
-
-// turn from protobuf to tube's struct
-func decodeMethodInfo(iminfo *intf.MethodInfo) (*tube.MethodInfo, error) {
-	var s schema.Schema
-	var err error
-	if iminfo.SchemaJson != "" {
-		builder := schema.NewSchemaBuilder()
-		s, err = builder.BuildBytes([]byte(iminfo.SchemaJson))
-		if err != nil {
-			return nil, err
-		}
-	}
-	return &tube.MethodInfo{
-		Name:      iminfo.Name,
-		Help:      iminfo.Help,
-		Schema:    s,
-		Delegated: iminfo.Delegated,
-	}, nil
-}
-
 func buildMethodInfos(minfos []tube.MethodInfo) []*intf.MethodInfo {
 	intfMInfos := make([]*intf.MethodInfo, 0)
 	for _, minfo := range minfos {
-		intfMInfos = append(intfMInfos, encodeMethodInfo(minfo))
+		intfMInfos = append(intfMInfos, encoding.EncodeMethodInfo(minfo))
 	}
 	return intfMInfos
 }
@@ -120,38 +89,11 @@ func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMeth
 	return resp, nil
 }
 
-func buildMethodUpdate(minfos []tube.MethodInfo) *intf.MethodUpdate {
-	intfMInfos := buildMethodInfos(minfos)
-	return &intf.MethodUpdate{MethodInfos: intfMInfos}
-}
-
-func (self *JSONRPCTube) WatchMethods(req *intf.WatchMethodsRequest, stream intf.JSONRPCTube_WatchMethodsServer) error {
-	router := tube.Tube().Router
-	watcher := router.WatchMethods()
-	intfUpdate := buildMethodUpdate(router.GetLocalMethods())
-	err := stream.Send(intfUpdate)
-	if err != nil {
-		log.Debugf("error on send to stream %+v", err)
-		return err
-	}
-	for {
-		select {
-		case <-stream.Context().Done():
-			log.Debugf("watch methods stream zclosed")
-			return nil
-		case update, ok := <-watcher.ChUpdate:
-			if !ok {
-				log.Infof("watcher channel of update closed")
-				return nil
-			}
-			iUpdate := buildMethodUpdate(update.Methods)
-			err := stream.Send(iUpdate)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+func sendState(state *tube.TubeState, stream intf.JSONRPCTube_HandleServer) {
+	iState := encoding.EncodeTubeState(state)
+	payload := &intf.JSONRPCDownPacket_State{State: iState}
+	downpac := &intf.JSONRPCDownPacket{Payload: payload}
+	stream.Send(downpac)
 }
 
 // Handler
@@ -194,6 +136,12 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 		case <-context.Done():
 			log.Debugf("context done")
 			return
+		case state, ok := <-conn.StateChannel():
+			if !ok {
+				log.Debugf("state channel closed")
+				return
+			}
+			sendState(state, stream)
 		case msgvec, ok := <-conn.RecvChannel:
 			if !ok {
 				log.Debugf("recv channel closed")
@@ -213,6 +161,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	router := tube.Tube().Router
 	conn := router.Join()
 	conn.PeerAddr = remotePeer.Addr
+	conn.SetWatchState(true)
 	log.Debugf("Joined conn %d", conn.ConnId)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -222,6 +171,10 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	}()
 
 	log.Debugf("Handler connected, conn %d from ip %s", conn.ConnId, conn.PeerAddr.String())
+
+	// send initial state
+	state := router.GetState()
+	sendState(state, stream)
 
 	go relayMessages(ctx, stream, conn)
 
@@ -268,7 +221,8 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			upMethods := make([]tube.MethodInfo, 0)
 
 			for _, iminfo := range update.Methods {
-				minfo, err := decodeMethodInfo(iminfo)
+				minfo := encoding.DecodeMethodInfo(iminfo)
+				_, err := minfo.SchemaOrError()
 				if err != nil {
 					if buildError, ok := err.(*schema.SchemaBuildError); ok {
 						// parse schema error
