@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"context"
+	//"context"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/rpctube/client"
 	example "github.com/superisaac/rpctube/client/example"
 	server "github.com/superisaac/rpctube/server"
-	bridge "github.com/superisaac/rpctube/bridge"	
 	"os"
 	"strings"
 	//"strings"
@@ -68,7 +67,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "server":
-		go bridge.StartNewBridge(context.Background(), []client.ServerEntry{})
+
 		server.CommandStartServer()
 	case "listmethods":
 		setupClientSideLogger("")

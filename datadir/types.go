@@ -24,8 +24,8 @@ type LoggingConfig struct {
 }
 
 type PeerConfig struct {
-	URL string `yaml:"url,omitempty"`
-	// TODO: certs
+	Address string `yaml:"url,omitempty"`
+	CertFile string `yaml:"cert,omitempty"`
 }
 
 type ClusterConfig struct {
