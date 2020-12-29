@@ -5,6 +5,7 @@ import (
 	"errors"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/rpctube/client"
+	datadir "github.com/superisaac/rpctube/datadir"
 	tube "github.com/superisaac/rpctube/tube"
 	"sort"
 	"strings"
@@ -24,6 +25,21 @@ func (self Edge) hasMethod(methodName string) bool {
 }
 
 // Bridge
+func StartBridgesForPeers(rootCtx context.Context) {
+	cfg := datadir.GetConfig()
+	if len(cfg.Cluster.StaticPeers) > 0 {
+		// generate server entry from peers
+		var serverEntries []client.ServerEntry
+		for _, peer := range cfg.Cluster.StaticPeers {
+			serverEntries = append(serverEntries, client.ServerEntry{
+				Address:  peer.Address,
+				CertFile: peer.CertFile,
+			})
+		}
+		go StartNewBridge(rootCtx, serverEntries)
+	}
+}
+
 func StartNewBridge(rootCtx context.Context, entries []client.ServerEntry) {
 	bridge := NewBridge(entries)
 	bridge.Start(rootCtx)

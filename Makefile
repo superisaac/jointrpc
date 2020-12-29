@@ -35,7 +35,7 @@ gofmt:
 	go fmt jsonrpc/*.go
 	go fmt jsonrpc/schema/*.go
 	go fmt encoding/*.go
-	go fmt bridge/*.go
+	go fmt cluster/bridge/*.go
 
 install: bin/rpctube
 	install $< /usr/local/bin

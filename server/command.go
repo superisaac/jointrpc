@@ -7,13 +7,12 @@ import (
 	"net"
 	"os"
 	//"fmt"
-	bridge "github.com/superisaac/rpctube/bridge"
-	client "github.com/superisaac/rpctube/client"
+
+	bridge "github.com/superisaac/rpctube/cluster/bridge"
 	datadir "github.com/superisaac/rpctube/datadir"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	tube "github.com/superisaac/rpctube/tube"
 	handler "github.com/superisaac/rpctube/tube/handler"
-
 	grpc "google.golang.org/grpc"
 	credentials "google.golang.org/grpc/credentials"
 )
@@ -78,19 +77,7 @@ func StartServer(ctx context.Context, bind string, opts ...grpc.ServerOption) {
 	handlerCtx, _ := context.WithCancel(ctx)
 	handler.Builtin().Start(handlerCtx)
 
-	cfg := datadir.GetConfig()	
-	if len(cfg.Cluster.StaticPeers) > 0 {
-		// generate server entry from peers
-		var serverEntries []client.ServerEntry
-		for _, peer := range cfg.Cluster.StaticPeers {
-			serverEntries = append(serverEntries, client.ServerEntry{
-				Address:  peer.Address,
-				CertFile: peer.CertFile,
-			})
-		}
-		go bridge.StartNewBridge(ctx, serverEntries)
-	}
-
+	bridge.StartBridgesForPeers(ctx)
 	//var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	//hello.RegisterHelloServer(grpcServer, s)
