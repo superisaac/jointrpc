@@ -203,10 +203,10 @@ func (self *Bridge) tryUpdateMethods() {
 	sig := strings.Join(sigArr, ",")
 	if sig != self.methodSig {
 		self.methodSig = sig
-		cmdUpdate := tube.CmdUpdate{
+		cmdServe := tube.CmdServe{
 			ConnId:  self.conn.ConnId,
 			Methods: methods,
 		}
-		tube.Tube().Router.ChUpdate <- cmdUpdate
+		tube.Tube().Router.ChServe <- cmdServe
 	}
 }

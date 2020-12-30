@@ -61,7 +61,7 @@ type ConnT struct {
 	PeerAddr    net.Addr
 	RecvChannel MsgChannel
 
-	Methods    map[string]MethodInfo
+	ServeMethods    map[string]MethodInfo
 	AsFallback bool
 	watchState bool
 
@@ -75,13 +75,6 @@ type MethodDesc struct {
 }
 
 // Method update watcher
-type MethodUpdate struct {
-	Methods []MethodInfo
-}
-type MethodWatcher struct {
-	ChUpdate chan MethodUpdate
-}
-
 type MethodInfoMap map[string](interface{})
 
 // Channel commands
@@ -99,7 +92,7 @@ type CmdMsg struct {
 // 	ConnId CID
 // }
 
-type CmdUpdate struct {
+type CmdServe struct {
 	ConnId  CID
 	Methods []MethodInfo
 }
@@ -117,7 +110,7 @@ type Router struct {
 	ChMsg chan CmdMsg
 	//ChJoin     chan CmdJoin
 	//ChLeave  chan CmdLeave
-	ChUpdate chan CmdUpdate
+	ChServe chan CmdServe
 
 	localMethodsSig string
 }

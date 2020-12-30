@@ -75,11 +75,11 @@ message MethodInfo {
   bool   delegated = 4;
 }
 
-message UpdateMethodsRequest {
+message CanServeRequest {
   repeated MethodInfo methods  = 1;
 }
 
-message UpdateMethodsResponse {
+message CanServeResponse {
   string text = 1;
 }
 
@@ -97,7 +97,7 @@ message TubeState {
 
 message JSONRPCDownPacket {
   oneof payload {
-    UpdateMethodsResponse update_methods = 1;
+    CanServeResponse can_serve = 1;
     
     PING ping = 10;
     PONG pong = 11;
@@ -109,7 +109,7 @@ message JSONRPCDownPacket {
 
 message JSONRPCUpPacket {
   oneof payload {
-    UpdateMethodsRequest update_methods = 1;
+    CanServeRequest can_serve = 1;
 
     PING ping = 10;
     PONG pong = 11;

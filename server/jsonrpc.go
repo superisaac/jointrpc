@@ -215,7 +215,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			continue
 		}
 
-		update := up_pac.GetUpdateMethods()
+		update := up_pac.GetCanServe()
 		if update != nil {
 			//log.Debugf("update methods %+v", update)
 			upMethods := make([]tube.MethodInfo, 0)
@@ -227,8 +227,8 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 					if buildError, ok := err.(*schema.SchemaBuildError); ok {
 						// parse schema error
 						log.Warnf("error build schema %s, %+v", buildError.Error(), iminfo)
-						resp := &intf.UpdateMethodsResponse{Text: buildError.Error()}
-						payload := &intf.JSONRPCDownPacket_UpdateMethods{UpdateMethods: resp}
+						resp := &intf.CanServeResponse{Text: buildError.Error()}
+						payload := &intf.JSONRPCDownPacket_CanServe{CanServe: resp}
 						down_pac := &intf.JSONRPCDownPacket{Payload: payload}
 						stream.Send(down_pac)
 						// close the handle
@@ -239,11 +239,11 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 				upMethods = append(upMethods, *minfo)
 			}
 			log.Debugf("conn %d, update methods %v", conn.ConnId, update.Methods)
-			cmdUpdate := tube.CmdUpdate{
+			cmdServe := tube.CmdServe{
 				ConnId:  conn.ConnId,
 				Methods: upMethods,
 			}
-			router.ChUpdate <- cmdUpdate
+			router.ChServe <- cmdServe
 			continue
 		}
 

@@ -67,8 +67,8 @@ func (self *RPCClient) updateMethods() {
 		minfo := &intf.MethodInfo{Name: m, Help: info.Help, SchemaJson: info.SchemaJson}
 		upMethods = append(upMethods, minfo)
 	}
-	up := &intf.UpdateMethodsRequest{Methods: upMethods}
-	payload := &intf.JSONRPCUpPacket_UpdateMethods{UpdateMethods: up}
+	up := &intf.CanServeRequest{Methods: upMethods}
+	payload := &intf.JSONRPCUpPacket_CanServe{CanServe: up}
 	uppac := &intf.JSONRPCUpPacket{Payload: payload}
 	self.sendUpChannel <- uppac
 }

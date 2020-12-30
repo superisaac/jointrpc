@@ -13,7 +13,7 @@ func NewConn() *ConnT {
 	methods := make(map[string]MethodInfo)
 	conn := &ConnT{ConnId: connId,
 		RecvChannel: ch,
-		Methods:     methods,
+		ServeMethods:     methods,
 		AsFallback:  false,
 	}
 	return conn
@@ -21,14 +21,14 @@ func NewConn() *ConnT {
 
 func (self ConnT) GetMethods() []string {
 	var keys []string
-	for k := range self.Methods {
+	for k := range self.ServeMethods {
 		keys = append(keys, k)
 	}
 	return keys
 }
 
 func (self ConnT) ValidateMsg(msg jsonrpc.IMessage) (bool, jsonrpc.IMessage) {
-	if info, ok := self.Methods[msg.MustMethod()]; ok && info.Schema() != nil {
+	if info, ok := self.ServeMethods[msg.MustMethod()]; ok && info.Schema() != nil {
 		s := info.Schema()
 		validator := schema.NewSchemaValidator()
 		errPos := validator.Validate(s, msg.Interface())

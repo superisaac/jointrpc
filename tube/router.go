@@ -47,7 +47,7 @@ func (self *Router) Init() *Router {
 func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 1000)
 	//self.ChLeave = make(chan CmdLeave, 100)
-	self.ChUpdate = make(chan CmdUpdate, 1000)
+	self.ChServe = make(chan CmdServe, 1000)
 }
 
 func (self Router) GetAllMethods() []string {
@@ -110,13 +110,13 @@ func (self Router) getLocalMethodsSig() string {
 	return strings.Join(arr, ",")
 }
 
-func (self *Router) UpdateMethods(conn *ConnT, methods []MethodInfo) bool {
-	self.lock("UpdateMethods")
-	defer self.unlock("UpdateMethods")
-	return self.updateMethods(conn, methods)
+func (self *Router) UpdateServeMethods(conn *ConnT, methods []MethodInfo) bool {
+	self.lock("CanServeMethods")
+	defer self.unlock("CanServeMethods")
+	return self.updateServeMethods(conn, methods)
 }
 
-func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
+func (self *Router) updateServeMethods(conn *ConnT, methods []MethodInfo) bool {
 	connMethods := make(map[string]MethodInfo)
 	addingMethods := make([]MethodInfo, 0)
 	deletingMethods := make([]string, 0)
@@ -124,18 +124,18 @@ func (self *Router) updateMethods(conn *ConnT, methods []MethodInfo) bool {
 	// Find new methods
 	for _, minfo := range methods {
 		connMethods[minfo.Name] = minfo
-		if _, found := conn.Methods[minfo.Name]; !found {
+		if _, found := conn.ServeMethods[minfo.Name]; !found {
 			addingMethods = append(addingMethods, minfo)
 		}
 	}
 	// find old methods to delete
-	for method, _ := range conn.Methods {
+	for method, _ := range conn.ServeMethods {
 		if _, found := connMethods[method]; !found {
 			deletingMethods = append(deletingMethods, method)
 		}
 	}
 
-	conn.Methods = connMethods
+	conn.ServeMethods = connMethods
 	maybeChanged := len(addingMethods) > 0 || len(deletingMethods) > 0
 
 	// add methods
@@ -188,7 +188,7 @@ func (self *Router) probeMethodChange() {
 }
 
 func (self *Router) leaveConn(conn *ConnT) {
-	for method, _ := range conn.Methods {
+	for method, _ := range conn.ServeMethods {
 		methodDescList, ok := self.methodConnMap[method]
 		if !ok {
 			continue
@@ -200,7 +200,7 @@ func (self *Router) leaveConn(conn *ConnT) {
 			delete(self.methodConnMap, method)
 		}
 	}
-	conn.Methods = make(map[string]MethodInfo)
+	conn.ServeMethods = make(map[string]MethodInfo)
 
 	ct, ok := self.connMap[conn.ConnId]
 	if ok {
@@ -351,7 +351,7 @@ func (self *Router) broadcastMessage(msgvec MsgVec) int {
 			// skip the from addr
 			continue
 		}
-		_, ok := ct.Methods[msgvec.Msg.MustMethod()]
+		_, ok := ct.ServeMethods[msgvec.Msg.MustMethod()]
 		if ok {
 			cnt += 1
 			ct.RecvChannel <- msgvec
@@ -379,15 +379,15 @@ func (self *Router) Start(ctx context.Context) {
 			// 	if found {
 			// 		self.Leave(conn)
 			// 	}
-			case cmd_update, ok := <-self.ChUpdate:
+			case cmd_update, ok := <-self.ChServe:
 				{
 					if !ok {
-						log.Warnf("ChUpdate channel not ok")
+						log.Warnf("ChServe channel not ok")
 						return
 					}
 					conn, found := self.connMap[cmd_update.ConnId]
 					if found {
-						self.UpdateMethods(conn, cmd_update.Methods)
+						self.UpdateServeMethods(conn, cmd_update.Methods)
 					} else {
 						log.Infof("Conn %d not found for update methods", cmd_update.ConnId)
 					}

@@ -129,8 +129,8 @@ func (self *BuiltinHandlerManager) updateMethods() {
 			}
 			minfos = append(minfos, minfo)
 		}
-		cmdUpdate := tube.CmdUpdate{ConnId: self.conn.ConnId, Methods: minfos}
-		tube.Tube().Router.ChUpdate <- cmdUpdate
+		cmdServe := tube.CmdServe{ConnId: self.conn.ConnId, Methods: minfos}
+		tube.Tube().Router.ChServe <- cmdServe
 	}
 }
 
