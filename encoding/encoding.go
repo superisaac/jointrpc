@@ -14,7 +14,6 @@ func EncodeMethodInfo(minfo tube.MethodInfo) *intf.MethodInfo {
 		Name:       minfo.Name,
 		Help:       minfo.Help,
 		SchemaJson: minfo.SchemaJson,
-		Delegated:  minfo.Delegated,
 	}
 	return intfInfo
 }
@@ -25,7 +24,6 @@ func DecodeMethodInfo(iminfo *intf.MethodInfo) *tube.MethodInfo {
 		Name:       iminfo.Name,
 		Help:       iminfo.Help,
 		SchemaJson: iminfo.SchemaJson,
-		Delegated:  iminfo.Delegated,
 	}
 }
 

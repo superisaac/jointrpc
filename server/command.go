@@ -8,7 +8,7 @@ import (
 	"os"
 	//"fmt"
 
-	bridge "github.com/superisaac/rpctube/cluster/bridge"
+	mirror "github.com/superisaac/rpctube/cluster/mirror"
 	datadir "github.com/superisaac/rpctube/datadir"
 	intf "github.com/superisaac/rpctube/intf/tube"
 	tube "github.com/superisaac/rpctube/tube"
@@ -77,7 +77,7 @@ func StartServer(ctx context.Context, bind string, opts ...grpc.ServerOption) {
 	handlerCtx, _ := context.WithCancel(ctx)
 	handler.Builtin().Start(handlerCtx)
 
-	bridge.StartBridgesForPeers(ctx)
+	mirror.StartMirrorsForPeers(ctx)
 	//var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	//hello.RegisterHelloServer(grpcServer, s)

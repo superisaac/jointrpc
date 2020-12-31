@@ -125,7 +125,6 @@ func (self *BuiltinHandlerManager) updateMethods() {
 				Name:       m,
 				Help:       info.Help,
 				SchemaJson: info.SchemaJson,
-				Delegated:  false,
 			}
 			minfos = append(minfos, minfo)
 		}

@@ -72,7 +72,6 @@ message MethodInfo {
   //MethodLocation location = 2;
   string help = 2;
   string schema_json = 3;
-  bool   delegated = 4;
 }
 
 message CanServeRequest {
@@ -80,6 +79,14 @@ message CanServeRequest {
 }
 
 message CanServeResponse {
+  string text = 1;
+}
+
+message CanDelegateRequest {
+  repeated string methods  = 1;
+}
+
+message CanDelegateResponse {
   string text = 1;
 }
 
@@ -98,6 +105,7 @@ message TubeState {
 message JSONRPCDownPacket {
   oneof payload {
     CanServeResponse can_serve = 1;
+    CanDelegateResponse can_delegate = 2;
     
     PING ping = 10;
     PONG pong = 11;
@@ -110,6 +118,7 @@ message JSONRPCDownPacket {
 message JSONRPCUpPacket {
   oneof payload {
     CanServeRequest can_serve = 1;
+    CanDelegateRequest can_delegate = 2;
 
     PING ping = 10;
     PONG pong = 11;

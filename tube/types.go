@@ -46,7 +46,6 @@ type MethodInfo struct {
 	Name       string
 	Help       string
 	SchemaJson string
-	Delegated  bool
 	schemaObj  schema.Schema
 }
 
@@ -62,6 +61,8 @@ type ConnT struct {
 	RecvChannel MsgChannel
 
 	ServeMethods    map[string]MethodInfo
+	DelegateMethods map[string]bool
+
 	AsFallback bool
 	watchState bool
 
@@ -69,9 +70,13 @@ type ConnT struct {
 }
 
 type MethodDesc struct {
-	//ConnId  CID
 	Conn *ConnT
 	Info MethodInfo
+}
+
+type MethodDelegation struct {
+	Conn *ConnT
+	Name string // method name
 }
 
 // Method update watcher
@@ -97,10 +102,17 @@ type CmdServe struct {
 	Methods []MethodInfo
 }
 
+type CmdDelegate struct {
+	ConnId  CID
+	MethodNames []string
+}
+
 type Router struct {
 	// channels
 	routerLock    *sync.RWMutex
 	methodConnMap map[string]([]MethodDesc)
+	delegateConnMap map[string]([]MethodDelegation)
+	
 	fallbackConns []*ConnT
 
 	connMap    map[CID](*ConnT)
@@ -111,6 +123,7 @@ type Router struct {
 	//ChJoin     chan CmdJoin
 	//ChLeave  chan CmdLeave
 	ChServe chan CmdServe
+	ChDelegate chan CmdDelegate
 
 	localMethodsSig string
 }

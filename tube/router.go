@@ -17,6 +17,16 @@ func NewRouter() *Router {
 }
 
 func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
+	newarr := make([]MethodDesc, 0, len(slice)-1)
+	for _, desc := range slice {
+		if desc.Conn != conn {
+			newarr = append(newarr, desc)
+		}
+	}
+	return newarr
+}
+
+func DelegateRemoveConn(slice []MethodDelegation, conn *ConnT) []MethodDelegation {
 	// for i := range slice {
 	// 	if slice[i].Conn == conn {
 	// 		//if slice[i].Conn.ConnId == conn.ConnId {
@@ -24,7 +34,7 @@ func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
 	// 	}
 	// }
 	// return slice
-	newarr := make([]MethodDesc, 0, len(slice)-1)
+	newarr := make([]MethodDelegation, 0, len(slice)-1)
 	for _, desc := range slice {
 		if desc.Conn != conn {
 			newarr = append(newarr, desc)
@@ -48,6 +58,7 @@ func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 1000)
 	//self.ChLeave = make(chan CmdLeave, 100)
 	self.ChServe = make(chan CmdServe, 1000)
+	self.ChDelegate = make(chan CmdDelegate, 1000)
 }
 
 func (self Router) GetAllMethods() []string {
@@ -62,10 +73,6 @@ func (self Router) GetAllMethods() []string {
 	return methods
 }
 
-func (self MethodDesc) IsLocal() bool {
-	return !self.Info.Delegated
-}
-
 func (self MethodInfo) ToMap() MethodInfoMap {
 	var schemaIntf interface{}
 	if self.SchemaJson != "" {
@@ -75,7 +82,6 @@ func (self MethodInfo) ToMap() MethodInfoMap {
 		"name":      self.Name,
 		"help":      self.Help,
 		"schema":    schemaIntf,
-		"delegated": self.Delegated,
 	}
 }
 
@@ -89,9 +95,7 @@ func (self Router) getLocalMethods() []MethodInfo {
 	minfos := []MethodInfo{}
 	for _, descs := range self.methodConnMap {
 		for _, desc := range descs {
-			if desc.IsLocal() {
-				minfos = append(minfos, desc.Info)
-			}
+			minfos = append(minfos, desc.Info)
 		}
 	}
 	sort.Slice(minfos, func(i, j int) bool { return minfos[i].Name < minfos[j].Name })
@@ -176,6 +180,67 @@ func (self *Router) updateServeMethods(conn *ConnT, methods []MethodInfo) bool {
 	return maybeChanged
 }
 
+func (self *Router) UpdateDelegateMethods(conn *ConnT, methodNames []string) bool {
+	self.lock("CanDelegateMethods")
+	defer self.unlock("CanDelegateMethods")
+	return self.updateDelegateMethods(conn, methodNames)
+}
+
+func (self *Router) updateDelegateMethods(conn *ConnT, methodNames []string) bool {
+	connMethods := make(map[string]bool)
+	addingMethods := make([]string, 0)
+	deletingMethods := make([]string, 0)
+
+	// Find new methods
+	for _, mname := range methodNames {
+		connMethods[mname] = true
+		if _, found := conn.DelegateMethods[mname]; !found {
+			addingMethods = append(addingMethods, mname)
+		}
+	}
+	// find old methods to delete
+	for mname, _ := range conn.DelegateMethods {
+		if _, found := connMethods[mname]; !found {
+			deletingMethods = append(deletingMethods, mname)
+		}
+	}
+
+	conn.DelegateMethods = connMethods
+	maybeChanged := len(addingMethods) > 0 || len(deletingMethods) > 0
+
+	// add methods
+	for _, mname := range addingMethods {
+		methodDelg := MethodDelegation{
+			Conn: conn,
+			Name: mname,
+		}
+		// bi direction map
+		methodDelgArr, methodFound := self.delegateConnMap[mname]
+
+		if methodFound {
+			methodDelgArr = append(methodDelgArr, methodDelg)
+		} else {
+			var tmp []MethodDelegation
+			methodDelgArr = append(tmp, methodDelg)
+		}
+		self.delegateConnMap[mname] = methodDelgArr
+	}
+	// delete methods
+	for _, mname := range deletingMethods {
+		methodDelgList, ok := self.delegateConnMap[mname]
+		if !ok {
+			continue
+		}
+		methodDelgList = DelegateRemoveConn(methodDelgList, conn)
+		if len(methodDelgList) > 0 {
+			self.delegateConnMap[mname] = methodDelgList
+		} else {
+			delete(self.delegateConnMap, mname)
+		}
+	}
+	return maybeChanged
+}
+
 func (self *Router) probeMethodChange() {
 	sig := self.getLocalMethodsSig()
 	if self.localMethodsSig != sig {
@@ -231,15 +296,17 @@ func (self *Router) SelectConn(method string) (*ConnT, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
-	descs, ok := self.methodConnMap[method]
-	if ok && len(descs) > 0 {
-		// or random or round-robin
-		//return descs[0].Conn, true
-		// Select conn by random
+	if descs, ok := self.methodConnMap[method]; ok && len(descs) > 0 {
 		index := rand.Intn(len(descs))
 		return descs[index].Conn, true
 
 	}
+
+	if delgs, ok := self.delegateConnMap[method]; ok && len(delgs) > 0 {
+		index := rand.Intn(len(delgs))
+		return delgs[index].Conn, true
+	}
+
 	// fallback conns
 	if len(self.fallbackConns) > 0 {
 		index := rand.Intn(len(self.fallbackConns))
@@ -393,14 +460,28 @@ func (self *Router) Start(ctx context.Context) {
 					}
 				}
 
-			case cmd_msg, ok := <-self.ChMsg:
+			case cmdDelg, ok := <-self.ChDelegate:
+				{
+					if !ok {
+						log.Warnf("ChServe channel not ok")
+						return
+					}
+					conn, found := self.connMap[cmdDelg.ConnId]
+					if found {
+						self.UpdateDelegateMethods(conn, cmdDelg.MethodNames)
+					} else {
+						log.Infof("Conn %d not found for update methods", cmdDelg.ConnId)
+					}
+				}
+				
+			case cmdMsg, ok := <-self.ChMsg:
 				{
 					if !ok {
 						log.Warnf("ChMsg channel not ok")
 						return
 					}
 
-					self.RouteMessage(cmd_msg)
+					self.RouteMessage(cmdMsg)
 				}
 			}
 		}
