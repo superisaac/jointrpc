@@ -27,6 +27,7 @@ clean:
 	rm ./tmp/protoc.ts
 
 gofmt:
+	go fmt misc/*.go
 	go fmt client/*.go
 	go fmt client/example/*.go
 	go fmt server/*.go
@@ -36,6 +37,7 @@ gofmt:
 	go fmt jsonrpc/schema/*.go
 	go fmt encoding/*.go
 	go fmt cluster/bridge/*.go
+	go fmt cluster/mirror/*.go
 
 install: bin/rpctube
 	install $< /usr/local/bin

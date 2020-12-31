@@ -10,13 +10,14 @@ import (
 	"os"
 	"strings"
 	//"strings"
-	//tube "github.com/superisaac/rpctube/tube"
+	bridge "github.com/superisaac/rpctube/cluster/bridge"
 )
 
 var commands []string = []string{
 	"server", "rpc", "call",
 	"watch", "notify",
 	"listmethods", "watchstate",
+	"bridge",
 	"example.array",
 	"help",
 }
@@ -87,6 +88,9 @@ func main() {
 	case "watch":
 		setupClientSideLogger("")
 		client.CommandWatch()
+	case "bridge":
+		setupClientSideLogger("")
+		bridge.CommandStartBridge()
 	case "example.array":
 		setupClientSideLogger("")
 		example.CommandExampleArray()

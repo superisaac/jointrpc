@@ -32,7 +32,7 @@ func TestJoinConn(t *testing.T) {
 	conn := router.Join() //cid, ch)
 	assert.Equal(1, len(router.connMap))
 
-	router.UpdateServeMethods(conn, []MethodInfo{{"abc", "method abc", "", false, nil}})
+	router.UpdateServeMethods(conn, []MethodInfo{{"abc", "method abc", "", nil}})
 	methods := conn.GetMethods()
 	assert.Equal(1, len(methods))
 	assert.Equal("abc", methods[0])
@@ -47,13 +47,15 @@ func TestRouteMessage(t *testing.T) {
 	conn := router.Join()
 
 	assert.Equal(1, len(router.connMap))
-	router.UpdateServeMethods(conn, []MethodInfo{{"abc", "", "", false, nil}, {"def", "", "", true, nil}})
+	router.UpdateServeMethods(conn, []MethodInfo{{"abc", "", "", nil}, {"def", "", "", nil}})
 
 	methods := router.GetAllMethods()
 	assert.Equal([]string{"abc", "def"}, methods)
 
 	localMethods := router.GetLocalMethods()
-	assert.Equal([]MethodInfo{{"abc", "", "", false, nil}}, localMethods)
+	assert.Equal(2, len(localMethods))
+	assert.Equal("abc", localMethods[0].Name)
+	assert.Equal("def", localMethods[1].Name)
 
 	_ = router.Join()
 
@@ -85,7 +87,7 @@ func TestRouteRoutine(t *testing.T) {
 	conn := router.Join()
 	cid := conn.ConnId
 	ch := conn.RecvChannel
-	router.ChServe <- CmdServe{ConnId: cid, Methods: []MethodInfo{{"abc", "method abc", "", false, nil}}}
+	router.ChServe <- CmdServe{ConnId: cid, Methods: []MethodInfo{{"abc", "method abc", "", nil}}}
 
 	conn1 := router.Join()
 	cid1 := conn1.ConnId

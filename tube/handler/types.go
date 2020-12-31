@@ -16,6 +16,7 @@ type RPCRequest struct {
 type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)
 type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
 
+// listen to tube state change
 type StateHandlerFunc func(newState *tube.TubeState)
 
 type OnChangeFunc func()

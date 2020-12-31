@@ -79,9 +79,9 @@ func (self MethodInfo) ToMap() MethodInfoMap {
 		schemaIntf = self.Schema().RebuildType()
 	}
 	return MethodInfoMap{
-		"name":      self.Name,
-		"help":      self.Help,
-		"schema":    schemaIntf,
+		"name":   self.Name,
+		"help":   self.Help,
+		"schema": schemaIntf,
 	}
 }
 
@@ -473,7 +473,7 @@ func (self *Router) Start(ctx context.Context) {
 						log.Infof("Conn %d not found for update methods", cmdDelg.ConnId)
 					}
 				}
-				
+
 			case cmdMsg, ok := <-self.ChMsg:
 				{
 					if !ok {

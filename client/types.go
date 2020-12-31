@@ -23,8 +23,7 @@ type RPCRequest struct {
 
 type RPCClient struct {
 	handler.HandlerManager
-	//serverAddress string
-	//certFile      string
+
 	serverEntry   ServerEntry
 	tubeClient    intf.JSONRPCTubeClient
 	sendUpChannel chan *intf.JSONRPCUpPacket

@@ -179,7 +179,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	go relayMessages(ctx, stream, conn)
 
 	for {
-		up_pac, err := stream.Recv()
+		uppac, err := stream.Recv()
 		if err != nil {
 			if err == io.EOF {
 				log.Debugf("eof met")
@@ -192,7 +192,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			return err
 		}
 		// Pong on Ping
-		ping := up_pac.GetPing()
+		ping := uppac.GetPing()
 		if ping != nil {
 			pong := &intf.PONG{Text: ping.Text}
 			payload := &intf.JSONRPCDownPacket_Pong{Pong: pong}
@@ -203,7 +203,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 		}
 
 		// Handle JSONRPC Request
-		env := up_pac.GetEnvolope()
+		env := uppac.GetEnvolope()
 		if env != nil {
 			msg, err := jsonrpc.ParseBytes([]byte(env.Body))
 			if err != nil {
@@ -215,7 +215,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 			continue
 		}
 
-		update := up_pac.GetCanServe()
+		update := uppac.GetCanServe()
 		if update != nil {
 			//log.Debugf("update methods %+v", update)
 			upMethods := make([]tube.MethodInfo, 0)
@@ -244,6 +244,24 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 				Methods: upMethods,
 			}
 			router.ChServe <- cmdServe
+			continue
+		}
+
+		delegate := uppac.GetCanDelegate()
+		if delegate != nil {
+			log.Debugf("conn %d, delegate methods %v", conn.ConnId, delegate.Methods)
+			// TODO: validate delegate methods
+			cmdDelegate := tube.CmdDelegate{
+				ConnId:      conn.ConnId,
+				MethodNames: delegate.Methods,
+			}
+			router.ChDelegate <- cmdDelegate
+
+			resp := &intf.CanDelegateResponse{Text: "ok"}
+			payload := &intf.JSONRPCDownPacket_CanDelegate{CanDelegate: resp}
+			down_pac := &intf.JSONRPCDownPacket{Payload: payload}
+			stream.Send(down_pac)
+
 			continue
 		}
 

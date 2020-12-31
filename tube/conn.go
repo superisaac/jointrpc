@@ -12,9 +12,9 @@ func NewConn() *ConnT {
 	//chState := make(chan TuebState, 100)
 	methods := make(map[string]MethodInfo)
 	conn := &ConnT{ConnId: connId,
-		RecvChannel: ch,
-		ServeMethods:     methods,
-		AsFallback:  false,
+		RecvChannel:  ch,
+		ServeMethods: methods,
+		AsFallback:   false,
 	}
 	return conn
 }

@@ -73,6 +73,13 @@ func (self *RPCClient) updateMethods() {
 	self.sendUpChannel <- uppac
 }
 
+func (self *RPCClient) UpdateDelegateMethods(methods []string) {
+	up := &intf.CanDelegateRequest{Methods: methods}
+	payload := &intf.JSONRPCUpPacket_CanDelegate{CanDelegate: up}
+	uppac := &intf.JSONRPCUpPacket{Payload: payload}
+	self.sendUpChannel <- uppac
+}
+
 func (self *RPCClient) Handle(rootCtx context.Context) error {
 	for {
 		err := self.handleRPC(rootCtx)

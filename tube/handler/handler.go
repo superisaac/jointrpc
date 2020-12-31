@@ -54,6 +54,10 @@ func (self *HandlerManager) wrapHandlerResult(msg jsonrpc.IMessage, res interfac
 		return nil, err
 	} else if msg.IsRequest() {
 		log.Debugf("msg is request")
+		if resMsg, ok := res.(jsonrpc.IMessage); ok {
+			// TODO: assert resMsg is res and resId matches
+			return resMsg, nil
+		}
 		return jsonrpc.NewResultMessage(msg.MustId(), res, nil), nil
 	} else {
 		return nil, nil

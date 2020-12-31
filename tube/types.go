@@ -103,16 +103,16 @@ type CmdServe struct {
 }
 
 type CmdDelegate struct {
-	ConnId  CID
+	ConnId      CID
 	MethodNames []string
 }
 
 type Router struct {
 	// channels
-	routerLock    *sync.RWMutex
-	methodConnMap map[string]([]MethodDesc)
+	routerLock      *sync.RWMutex
+	methodConnMap   map[string]([]MethodDesc)
 	delegateConnMap map[string]([]MethodDelegation)
-	
+
 	fallbackConns []*ConnT
 
 	connMap    map[CID](*ConnT)
@@ -122,7 +122,7 @@ type Router struct {
 	ChMsg chan CmdMsg
 	//ChJoin     chan CmdJoin
 	//ChLeave  chan CmdLeave
-	ChServe chan CmdServe
+	ChServe    chan CmdServe
 	ChDelegate chan CmdDelegate
 
 	localMethodsSig string
