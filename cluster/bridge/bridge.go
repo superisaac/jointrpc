@@ -33,6 +33,7 @@ func StartNewBridge(rootCtx context.Context, entries []client.ServerEntry) *Brid
 }
 
 func NewBridge(entries []client.ServerEntry) *Bridge {
+	misc.Assert(len(entries) > 0, "empty entries")
 	bridge := new(Bridge)
 	bridge.serverEntries = entries
 	bridge.edges = make(map[string]*Edge)
