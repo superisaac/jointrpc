@@ -37,11 +37,17 @@ function compile_go() {
 
 function compile_python() {
     echo Compiling python interfaces...
-    python -m grpc_tools.protoc -I proto/ \
-           --python_out=python/ \
-           --grpc_python_out=python/ \
-           $protofiles
-    exit_if $?
+
+    python -c 'import grpc_tools.protoc' 2>/dev/null
+    if [ $? -eq 0 ]; then
+        python -m grpc_tools.protoc -I proto/ \
+               --python_out=python/ \
+               --grpc_python_out=python/ \
+               $protofiles
+        exit_if $?
+    else
+        echo 'No plugin for python grpc, skip python installation' >&2
+    fi
 
     if [ yes`which protoc-gen-grpclib_python` != yes ]; then
         python -m grpc_tools.protoc -I proto/ \

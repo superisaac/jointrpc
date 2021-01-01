@@ -58,13 +58,10 @@ func CommandStartServer() {
 		}
 		opts = append(opts, grpc.Creds(creds))
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	StartServer(ctx, bind, opts...)
+	StartServer(context.Background(), bind, opts...)
 }
 
-func StartServer(ctx context.Context, bind string, opts ...grpc.ServerOption) {
+func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption) {
 	lis, err := net.Listen("tcp", bind)
 	if err != nil {
 		log.Panicf("failed to listen: %v", err)
@@ -72,15 +69,12 @@ func StartServer(ctx context.Context, bind string, opts ...grpc.ServerOption) {
 		log.Infof("entry server listen at %s", bind)
 	}
 
-	tube.Tube().Start(ctx)
+	tube.Tube().Start(rootCtx)
 
-	handlerCtx, _ := context.WithCancel(ctx)
-	handler.Builtin().Start(handlerCtx)
+	handler.StartBuiltinHandlerManager(rootCtx)
 
-	mirror.StartMirrorsForPeers(ctx)
-	//var opts []grpc.ServerOption
+	mirror.StartMirrorsForPeers(rootCtx)
 	grpcServer := grpc.NewServer(opts...)
-	//hello.RegisterHelloServer(grpcServer, s)
 	intf.RegisterJSONRPCTubeServer(grpcServer, NewJSONRPCTubeServer())
 	grpcServer.Serve(lis)
 }

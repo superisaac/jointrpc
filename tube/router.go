@@ -446,17 +446,17 @@ func (self *Router) Start(ctx context.Context) {
 			// 	if found {
 			// 		self.Leave(conn)
 			// 	}
-			case cmd_update, ok := <-self.ChServe:
+			case cmdServe, ok := <-self.ChServe:
 				{
 					if !ok {
 						log.Warnf("ChServe channel not ok")
 						return
 					}
-					conn, found := self.connMap[cmd_update.ConnId]
+					conn, found := self.connMap[cmdServe.ConnId]
 					if found {
-						self.UpdateServeMethods(conn, cmd_update.Methods)
+						self.UpdateServeMethods(conn, cmdServe.Methods)
 					} else {
-						log.Infof("Conn %d not found for update methods", cmd_update.ConnId)
+						log.Infof("Conn %d not found for update serve methods", cmdServe.ConnId)
 					}
 				}
 

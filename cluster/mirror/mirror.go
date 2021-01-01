@@ -81,9 +81,7 @@ func (self *Mirror) connectRemote(rootCtx context.Context, entry client.ServerEn
 
 func (self *Mirror) Start(rootCtx context.Context) error {
 	for _, entry := range self.serverEntries {
-		ctx := context.WithValue(
-			rootCtx, "connectTo", entry.Address)
-		go self.connectRemote(ctx, entry)
+		go self.connectRemote(rootCtx, entry)
 	}
 
 	// join connection

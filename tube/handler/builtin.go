@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	//"fmt"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	//schema "github.com/superisaac/rpctube/jsonrpc/schema"
@@ -13,37 +14,44 @@ type BuiltinHandlerManager struct {
 	conn *tube.ConnT
 }
 
-func (self *BuiltinHandlerManager) Start(ctx context.Context) {
-	go func() {
-		router := tube.Tube().Router
-		self.conn = router.Join()
-
-		defer func() {
-			router.Leave(self.conn)
-			self.conn = nil
-		}()
-
-		self.updateMethods()
-
-		for {
-			select {
-			case <-ctx.Done():
-				log.Debugf("builtin handlers, context done")
-				return
-			case msgvec, ok := <-self.conn.RecvChannel:
-				if !ok {
-					return
-				}
-				self.messageReceived(msgvec)
-			case resmsg, ok := <-self.ChResultMsg:
-				if !ok {
-					return
-				}
-				router.ChMsg <- tube.CmdMsg{
-					MsgVec: tube.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
-			}
-		}
+func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
+	ctx, cancel := context.WithCancel(rootCtx)
+	defer func() {
+		cancel()
+		log.Debug("buildin handlermanager context canceled")
 	}()
+
+	router := tube.Tube().Router
+	self.conn = router.Join()
+
+	defer func() {
+		log.Debugf("conn %d leave router", self.conn.ConnId)
+		router.Leave(self.conn)
+		self.conn = nil
+	}()
+
+	self.updateMethods()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Debugf("builtin handlers, context done")
+			return
+		case msgvec, ok := <-self.conn.RecvChannel:
+			if !ok {
+				log.Debugf("recv channel colosed, leave")
+				return
+			}
+			self.messageReceived(msgvec)
+		case resmsg, ok := <-self.ChResultMsg:
+			if !ok {
+				log.Infof("result channel closed, return")
+				return
+			}
+			router.ChMsg <- tube.CmdMsg{
+				MsgVec: tube.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
+		}
+	}
 }
 
 func (self *BuiltinHandlerManager) messageReceived(msgvec tube.MsgVec) {
@@ -142,4 +150,8 @@ func Builtin() *BuiltinHandlerManager {
 		builtin = new(BuiltinHandlerManager).Init()
 	}
 	return builtin
+}
+
+func StartBuiltinHandlerManager(rootCtx context.Context) {
+	go Builtin().Start(rootCtx)
 }

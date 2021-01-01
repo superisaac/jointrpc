@@ -53,3 +53,27 @@ func ValidateString(v interface{}, prefix string) (string, error) {
 	reason := fmt.Sprintf("%s require string", prefix)
 	return "", &RPCError{11403, reason, false}
 }
+
+func MustNumber(input interface{}, prefix string) json.Number {
+	v, err := ValidateNumber(input, prefix)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+func MustFloat(input interface{}, prefix string) float64 {
+	v, err := ValidateFloat(input, prefix)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+func MustInt(input interface{}, prefix string) int64 {
+	v, err := ValidateInt(input, prefix)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
