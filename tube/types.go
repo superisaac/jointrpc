@@ -109,6 +109,7 @@ type CmdDelegate struct {
 
 type Router struct {
 	// channels
+	name            string
 	routerLock      *sync.RWMutex
 	methodConnMap   map[string]([]MethodDesc)
 	delegateConnMap map[string]([]MethodDelegation)
@@ -128,6 +129,6 @@ type Router struct {
 	localMethodsSig string
 }
 
-type TubeT struct {
-	Router *Router
-}
+// type TubeT struct {
+// 	Router *Router
+// }

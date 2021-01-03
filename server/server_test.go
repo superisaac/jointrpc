@@ -12,13 +12,24 @@ import (
 	"time"
 )
 
+func TestContext(t *testing.T) {
+	assert := assert.New(t)
+
+	root, cancelRoot := context.WithCancel(context.Background())
+	defer cancelRoot()
+
+	c1 := context.WithValue(root, "key1", "value1")
+	assert.Equal("value1", c1.Value("key1"))
+	c2, cancelC2 := context.WithCancel(c1)
+	defer cancelC2()
+	assert.Equal("value1", c2.Value("key1"))
+}
+
 func TestServerClientRound(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer func() {
-		cancel()
-	}()
+	defer cancel()
 
 	go StartServer(ctx, "127.0.0.1:10001")
 
@@ -39,7 +50,6 @@ func TestServerClientRound(t *testing.T) {
 	res1, err := c.CallRPC(ctx, ".echo", [](interface{}){1})
 	assert.Nil(err)
 	assert.True(res1.IsError())
-	//fmt.Printf("res1 %+v\n", res1)
 	errbody, ok := res1.MustError().(map[string]interface{})
 	assert.True(ok)
 	assert.Equal("Validation Error: .params[0] data is not string", errbody["reason"])
@@ -76,7 +86,6 @@ func TestClientAsServe(t *testing.T) {
 
 	res, err := c.CallRPC(ctx, "add2int", [](interface{}){5, 6})
 	assert.Nil(err)
-	//fmt.Printf("res is %+v", res)
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
 

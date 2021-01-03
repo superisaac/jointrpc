@@ -8,6 +8,7 @@ import (
 	"os"
 	//"fmt"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	mirror "github.com/superisaac/rpctube/cluster/mirror"
 	datadir "github.com/superisaac/rpctube/datadir"
 	intf "github.com/superisaac/rpctube/intf/tube"
@@ -66,15 +67,49 @@ func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption
 	if err != nil {
 		log.Panicf("failed to listen: %v", err)
 	} else {
-		log.Infof("entry server listen at %s", bind)
+		log.Debugf("entry server listen at %s", bind)
 	}
 
-	tube.Tube().Start(rootCtx)
+	//tube.Tube().Start(rootCtx)
 
-	handler.StartBuiltinHandlerManager(rootCtx)
+	router := tube.NewRouter("grpc_server")
+	go router.Start(rootCtx)
+	ctxWithRouter := context.WithValue(rootCtx, "router", router)
 
-	mirror.StartMirrorsForPeers(rootCtx)
+	handler.StartBuiltinHandlerManager(ctxWithRouter)
+
+	mirror.StartMirrorsForPeers(ctxWithRouter)
+
+	opts = append(opts, grpc.UnaryInterceptor(
+		unaryRouterAssigner(router)))
+
+	opts = append(opts, grpc.StreamInterceptor(
+		streamRouterAssigner(router)))
+
 	grpcServer := grpc.NewServer(opts...)
 	intf.RegisterJSONRPCTubeServer(grpcServer, NewJSONRPCTubeServer())
 	grpcServer.Serve(lis)
+}
+
+func unaryRouterAssigner(router *tube.Router) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler) (resp interface{}, err error) {
+		rCtx := context.WithValue(ctx, "router", router)
+		h, err := handler(rCtx, req)
+		return h, err
+	}
+}
+
+func streamRouterAssigner(router *tube.Router) grpc.StreamServerInterceptor {
+	return func(srv interface{},
+		ss grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler) error {
+		rCtx := context.WithValue(ss.Context(), "router", router)
+		wrappedStream := grpc_middleware.WrapServerStream(ss)
+		wrappedStream.WrappedContext = rCtx
+		return handler(srv, wrappedStream)
+	}
 }

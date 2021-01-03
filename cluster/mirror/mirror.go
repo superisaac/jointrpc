@@ -41,12 +41,14 @@ func StartMirrorsForPeers(rootCtx context.Context) {
 }
 
 func StartNewMirror(rootCtx context.Context, entries []client.ServerEntry) {
-	mirror := NewMirror(entries)
+	router := tube.RouterFromContext(rootCtx)
+	mirror := NewMirror(entries, router)
 	mirror.Start(rootCtx)
 }
 
-func NewMirror(entries []client.ServerEntry) *Mirror {
+func NewMirror(entries []client.ServerEntry, router *tube.Router) *Mirror {
 	mirror := new(Mirror)
+	mirror.router = router
 	mirror.InitHandlerManager()
 	mirror.serverEntries = entries
 	mirror.edges = make(map[string]*Edge)
@@ -85,10 +87,9 @@ func (self *Mirror) Start(rootCtx context.Context) error {
 	}
 
 	// join connection
-	router := tube.Tube().Router
-	self.conn = router.Join()
+	self.conn = self.router.Join()
 	defer func() {
-		router.Leave(self.conn)
+		self.router.Leave(self.conn)
 		self.conn = nil
 	}()
 
@@ -119,7 +120,7 @@ func (self *Mirror) Start(rootCtx context.Context) error {
 				// TODO: log
 				return nil
 			}
-			router.ChMsg <- tube.CmdMsg{
+			self.router.ChMsg <- tube.CmdMsg{
 				MsgVec: tube.MsgVec{
 					Msg:        resmsg,
 					FromConnId: self.conn.ConnId,
@@ -195,6 +196,6 @@ func (self *Mirror) tryUpdateMethods() {
 			ConnId:      self.conn.ConnId,
 			MethodNames: methodNames,
 		}
-		tube.Tube().Router.ChDelegate <- cmdDelegate
+		self.router.ChDelegate <- cmdDelegate
 	}
 }

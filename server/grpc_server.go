@@ -36,7 +36,7 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCCallRequ
 		return nil, tube.ErrRequestNotifyRequired
 	}
 
-	router := tube.Tube().Router
+	router := tube.RouterFromContext(context)
 	recvmsg, err := router.SingleCall(reqmsg, false)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotify
 		return nil, tube.ErrRequestNotifyRequired
 	}
 
-	router := tube.Tube().Router
+	router := tube.RouterFromContext(context)
 	_, err = router.SingleCall(notifymsg, req.Broadcast)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,8 @@ func buildMethodInfos(minfos []tube.MethodInfo) []*intf.MethodInfo {
 }
 
 func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
-	minfos := tube.Tube().Router.GetLocalMethods()
+	router := tube.RouterFromContext(context)
+	minfos := router.GetLocalMethods()
 	intfMInfos := buildMethodInfos(minfos)
 	resp := &intf.ListMethodsResponse{MethodInfos: intfMInfos}
 	log.Debugf("list methods resp %v", resp)
@@ -97,9 +98,10 @@ func sendState(state *tube.TubeState, stream intf.JSONRPCTube_HandleServer) {
 }
 
 // Handler
-func downMsgReceived(msgvec tube.MsgVec, stream intf.JSONRPCTube_HandleServer, conn *tube.ConnT) {
+func downMsgReceived(context context.Context, msgvec tube.MsgVec, stream intf.JSONRPCTube_HandleServer, conn *tube.ConnT) {
 	msg := msgvec.Msg
 
+	router := tube.RouterFromContext(context)
 	if msg.IsRequest() || msg.IsNotify() {
 		// validate params
 		validated, errmsg := conn.ValidateMsg(msg)
@@ -109,7 +111,6 @@ func downMsgReceived(msgvec tube.MsgVec, stream intf.JSONRPCTube_HandleServer, c
 					Msg:        errmsg,
 					FromConnId: conn.ConnId,
 				}
-				router := tube.Tube().Router
 				router.ChMsg <- tube.CmdMsg{MsgVec: msgvec}
 			}
 		}
@@ -147,7 +148,7 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 				log.Debugf("recv channel closed")
 				return
 			}
-			downMsgReceived(msgvec, stream, conn)
+			downMsgReceived(context, msgvec, stream, conn)
 		}
 	} // and for loop
 }
@@ -158,13 +159,13 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 		return errors.New("cannot get peer info from stream")
 	}
 
-	router := tube.Tube().Router
+	router := tube.RouterFromContext(stream.Context())
 	conn := router.Join()
 	conn.PeerAddr = remotePeer.Addr
 	conn.SetWatchState(true)
 	log.Debugf("Joined conn %d", conn.ConnId)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
 		router.Leave(conn)

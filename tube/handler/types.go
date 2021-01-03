@@ -1,16 +1,13 @@
 package handler
 
 import (
-	//"github.com/gorilla/websocket"
+	//"context"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
 	tube "github.com/superisaac/rpctube/tube"
 )
 
 type RPCRequest struct {
 	MsgVec tube.MsgVec
-	//Message jsonrpc.IMessage
-	//FromConnId tube.CID
-	// TODO: add more fields
 }
 
 type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)

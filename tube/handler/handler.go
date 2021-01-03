@@ -8,6 +8,7 @@ import (
 	tube "github.com/superisaac/rpctube/tube"
 )
 
+// handler manager
 func (self *HandlerManager) InitHandlerManager() {
 	self.ChResultMsg = make(chan jsonrpc.IMessage, 100)
 	self.MethodHandlers = make(map[string](MethodHandler))

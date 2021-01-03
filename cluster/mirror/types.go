@@ -22,6 +22,7 @@ type CmdStateChange struct {
 type Mirror struct {
 	handler.HandlerManager
 	conn          *tube.ConnT
+	router        *tube.Router
 	serverEntries []client.ServerEntry
 	edges         map[string]*Edge
 	//methodEdges map[string]StringSet

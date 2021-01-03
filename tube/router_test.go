@@ -25,7 +25,7 @@ func (self TestConnT) Location() MethodLocation {
 
 func TestJoinConn(t *testing.T) {
 	assert := assert.New(t)
-	router := NewRouter()
+	router := NewRouter("test_join_conn")
 
 	//cid := CID(1002)
 	//ch := make(MsgChannel, 100)
@@ -40,7 +40,7 @@ func TestJoinConn(t *testing.T) {
 
 func TestRouteMessage(t *testing.T) {
 	assert := assert.New(t)
-	router := NewRouter()
+	router := NewRouter("test_message")
 
 	//cid := CID(1002)
 	//ch := make(MsgChannel, 100)
@@ -77,7 +77,7 @@ func TestRouteMessage(t *testing.T) {
 
 func TestRouteRoutine(t *testing.T) {
 	assert := assert.New(t)
-	router := NewRouter()
+	router := NewRouter("test_route_routine")
 	ctx, cancel := context.WithCancel(context.Background())
 	router.Start(ctx)
 	defer cancel()

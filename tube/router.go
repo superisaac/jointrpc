@@ -12,8 +12,18 @@ import (
 	"time"
 )
 
-func NewRouter() *Router {
-	return new(Router).Init()
+func NewRouter(name string) *Router {
+	return new(Router).Init(name)
+}
+
+func RouterFromContext(ctx context.Context) *Router {
+	if v := ctx.Value("router"); v != nil {
+		if router, ok := v.(*Router); ok {
+			return router
+		}
+		panic("context value router is not a router instance")
+	}
+	panic("context does not have router")
 }
 
 func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
@@ -27,13 +37,6 @@ func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
 }
 
 func DelegateRemoveConn(slice []MethodDelegation, conn *ConnT) []MethodDelegation {
-	// for i := range slice {
-	// 	if slice[i].Conn == conn {
-	// 		//if slice[i].Conn.ConnId == conn.ConnId {
-	// 		slice = append(slice[:i], slice[i+1:]...)
-	// 	}
-	// }
-	// return slice
 	newarr := make([]MethodDelegation, 0, len(slice)-1)
 	for _, desc := range slice {
 		if desc.Conn != conn {
@@ -43,7 +46,8 @@ func DelegateRemoveConn(slice []MethodDelegation, conn *ConnT) []MethodDelegatio
 	return newarr
 }
 
-func (self *Router) Init() *Router {
+func (self *Router) Init(name string) *Router {
+	self.name = name
 	self.routerLock = new(sync.RWMutex)
 	self.methodConnMap = make(map[string]([]MethodDesc))
 	self.fallbackConns = make([]*ConnT, 0)
@@ -59,6 +63,10 @@ func (self *Router) setupChannels() {
 	//self.ChLeave = make(chan CmdLeave, 100)
 	self.ChServe = make(chan CmdServe, 1000)
 	self.ChDelegate = make(chan CmdDelegate, 1000)
+}
+
+func (self Router) Name() string {
+	return self.name
 }
 
 func (self Router) GetAllMethods() []string {
@@ -429,63 +437,54 @@ func (self *Router) broadcastMessage(msgvec MsgVec) int {
 
 func (self *Router) Start(ctx context.Context) {
 	//self.setupChannels()
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Debugf("Router goroutine done")
-				return
-				/*case cmd_join := <-self.ChJoin:
-				self.Join(cmd_join.ConnId, cmd_join.RecvChannel) */
-			// case cmd_leave, ok := <-self.ChLeave:
-			// 	if !ok {
-			// 		log.Warnf("ChLeave channel not ok")
-			// 		return
-			// 	}
-			// 	conn, found := self.connMap[cmd_leave.ConnId]
-			// 	if found {
-			// 		self.Leave(conn)
-			// 	}
-			case cmdServe, ok := <-self.ChServe:
-				{
-					if !ok {
-						log.Warnf("ChServe channel not ok")
-						return
-					}
-					conn, found := self.connMap[cmdServe.ConnId]
-					if found {
-						self.UpdateServeMethods(conn, cmdServe.Methods)
-					} else {
-						log.Infof("Conn %d not found for update serve methods", cmdServe.ConnId)
-					}
+	go self.Loop(ctx)
+}
+
+func (self *Router) Loop(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Debugf("Router goroutine done")
+			return
+		case cmdServe, ok := <-self.ChServe:
+			{
+				if !ok {
+					log.Warnf("ChServe channel not ok")
+					return
 				}
-
-			case cmdDelg, ok := <-self.ChDelegate:
-				{
-					if !ok {
-						log.Warnf("ChServe channel not ok")
-						return
-					}
-					conn, found := self.connMap[cmdDelg.ConnId]
-					if found {
-						self.UpdateDelegateMethods(conn, cmdDelg.MethodNames)
-					} else {
-						log.Infof("Conn %d not found for update methods", cmdDelg.ConnId)
-					}
-				}
-
-			case cmdMsg, ok := <-self.ChMsg:
-				{
-					if !ok {
-						log.Warnf("ChMsg channel not ok")
-						return
-					}
-
-					self.RouteMessage(cmdMsg)
+				conn, found := self.connMap[cmdServe.ConnId]
+				if found {
+					self.UpdateServeMethods(conn, cmdServe.Methods)
+				} else {
+					log.Infof("Conn %d not found for update serve methods", cmdServe.ConnId)
 				}
 			}
+
+		case cmdDelg, ok := <-self.ChDelegate:
+			{
+				if !ok {
+					log.Warnf("ChServe channel not ok")
+					return
+				}
+				conn, found := self.connMap[cmdDelg.ConnId]
+				if found {
+					self.UpdateDelegateMethods(conn, cmdDelg.MethodNames)
+				} else {
+					log.Infof("Conn %d not found for update methods", cmdDelg.ConnId)
+				}
+			}
+
+		case cmdMsg, ok := <-self.ChMsg:
+			{
+				if !ok {
+					log.Warnf("ChMsg channel not ok")
+					return
+				}
+
+				self.RouteMessage(cmdMsg)
+			}
 		}
-	}()
+	}
 }
 
 // commands

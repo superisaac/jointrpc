@@ -199,13 +199,6 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 }
 
 func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage) {
-	//msg, err := server.RequestToMessage(req)
-	// if err != nil {
-	// 	log.Warnf("parse request message error %+v", err)
-	// 	errmsg := jsonrpc.RPCErrorMessage(req.Id, 10400, "parse message error", false)
-	// 	self.ReturnResultMessage(errmsg)
-	// 	return
-	// }
 	msgvec := tube.MsgVec{Msg: msg, FromConnId: 0}
 	self.HandleRequestMessage(msgvec)
 }

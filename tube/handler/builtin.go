@@ -3,30 +3,34 @@ package handler
 import (
 	"context"
 	//"fmt"
+	//"time"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	misc "github.com/superisaac/rpctube/misc"
+
 	//schema "github.com/superisaac/rpctube/jsonrpc/schema"
 	tube "github.com/superisaac/rpctube/tube"
 )
 
 type BuiltinHandlerManager struct {
 	HandlerManager
-	conn *tube.ConnT
+	router *tube.Router
+	conn   *tube.ConnT
 }
 
 func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
+	self.router = tube.RouterFromContext(rootCtx)
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()
 		log.Debug("buildin handlermanager context canceled")
 	}()
 
-	router := tube.Tube().Router
-	self.conn = router.Join()
+	self.conn = self.router.Join()
 
 	defer func() {
 		log.Debugf("conn %d leave router", self.conn.ConnId)
-		router.Leave(self.conn)
+		self.router.Leave(self.conn)
 		self.conn = nil
 	}()
 
@@ -42,13 +46,14 @@ func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
 				log.Debugf("recv channel colosed, leave")
 				return
 			}
+			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.messageReceived(msgvec)
 		case resmsg, ok := <-self.ChResultMsg:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return
 			}
-			router.ChMsg <- tube.CmdMsg{
+			self.router.ChMsg <- tube.CmdMsg{
 				MsgVec: tube.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
 		}
 	}
@@ -75,9 +80,11 @@ const (
 )
 
 func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
+	misc.Assert(self.router == nil, "already initited")
 	self.InitHandlerManager()
 	self.On(".listMethods", func(req *RPCRequest, params []interface{}) (interface{}, error) {
-		minfos := tube.Tube().Router.GetLocalMethods()
+		minfos := self.router.GetLocalMethods()
+
 		arr := make([](tube.MethodInfoMap), 0)
 		for _, minfo := range minfos {
 			arr = append(arr, minfo.ToMap())
@@ -112,7 +119,7 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 			connId = self.conn.ConnId
 		}
 		msgvec := tube.MsgVec{Msg: notify, FromConnId: connId}
-		tube.Tube().Router.ChMsg <- tube.CmdMsg{
+		self.router.ChMsg <- tube.CmdMsg{
 			MsgVec:    msgvec,
 			Broadcast: true,
 		}
@@ -137,21 +144,11 @@ func (self *BuiltinHandlerManager) updateMethods() {
 			minfos = append(minfos, minfo)
 		}
 		cmdServe := tube.CmdServe{ConnId: self.conn.ConnId, Methods: minfos}
-		tube.Tube().Router.ChServe <- cmdServe
+		self.router.ChServe <- cmdServe
 	}
-}
-
-var (
-	builtin *BuiltinHandlerManager
-)
-
-func Builtin() *BuiltinHandlerManager {
-	if builtin == nil {
-		builtin = new(BuiltinHandlerManager).Init()
-	}
-	return builtin
 }
 
 func StartBuiltinHandlerManager(rootCtx context.Context) {
-	go Builtin().Start(rootCtx)
+	builtin := new(BuiltinHandlerManager).Init()
+	go builtin.Start(rootCtx)
 }
