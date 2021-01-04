@@ -1,10 +1,10 @@
-package tube
+package joint
 
 import (
 	//"github.com/gorilla/websocket"
 	"errors"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	schema "github.com/superisaac/rpctube/jsonrpc/schema"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"net"
 	"sync"
 	"time"

@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
-	server "github.com/superisaac/rpctube/server"
+	server "github.com/superisaac/jointrpc/server"
 	"testing"
 	"time"
 )

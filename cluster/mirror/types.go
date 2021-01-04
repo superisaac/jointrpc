@@ -1,28 +1,28 @@
 package mirror
 
 import (
-	client "github.com/superisaac/rpctube/client"
-	misc "github.com/superisaac/rpctube/misc"
-	tube "github.com/superisaac/rpctube/tube"
-	handler "github.com/superisaac/rpctube/tube/handler"
+	client "github.com/superisaac/jointrpc/client"
+	"github.com/superisaac/jointrpc/joint"
+	handler "github.com/superisaac/jointrpc/joint/handler"
+	misc "github.com/superisaac/jointrpc/misc"
 )
 
 type Edge struct {
 	remoteClient *client.RPCClient
 	// set of names
-	dlgMethods  []tube.MethodInfo
+	dlgMethods  []joint.MethodInfo
 	methodNames misc.StringSet
 }
 
 type CmdStateChange struct {
 	ServerAddress string
-	State         *tube.TubeState
+	State         *joint.TubeState
 }
 
 type Mirror struct {
 	handler.HandlerManager
-	conn          *tube.ConnT
-	router        *tube.Router
+	conn          *joint.ConnT
+	router        *joint.Router
 	serverEntries []client.ServerEntry
 	edges         map[string]*Edge
 	//methodEdges map[string]StringSet

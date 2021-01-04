@@ -6,7 +6,7 @@ import (
 	//"reflect"
 	json "encoding/json"
 	simplejson "github.com/bitly/go-simplejson"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"strings"
 )
 

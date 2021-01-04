@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"errors"
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	tube "github.com/superisaac/rpctube/tube"
+	"github.com/superisaac/jointrpc/joint"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	http "net/http"
 )
 
-func StartHTTPd(http_bind string, router *tube.Router) {
+func StartHTTPd(http_bind string, router *joint.Router) {
 	log.Infof("start http proxy at %s", http_bind)
 	http.HandleFunc("/", tubeHandler(router))
 	//http.HandleFunc("/", HandleHome)
@@ -19,7 +19,7 @@ func StartHTTPd(http_bind string, router *tube.Router) {
 
 type handlerFunc func(w http.ResponseWriter, r *http.Request)
 
-func tubeHandler(router *tube.Router) handlerFunc {
+func tubeHandler(router *joint.Router) handlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// only support POST
 		if r.Method != "POST" {

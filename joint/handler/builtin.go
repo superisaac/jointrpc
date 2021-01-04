@@ -5,21 +5,21 @@ import (
 	//"fmt"
 	//"time"
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	misc "github.com/superisaac/rpctube/misc"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 
-	//schema "github.com/superisaac/rpctube/jsonrpc/schema"
-	tube "github.com/superisaac/rpctube/tube"
+	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
+	"github.com/superisaac/jointrpc/joint"
 )
 
 type BuiltinHandlerManager struct {
 	HandlerManager
-	router *tube.Router
-	conn   *tube.ConnT
+	router *joint.Router
+	conn   *joint.ConnT
 }
 
 func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
-	self.router = tube.RouterFromContext(rootCtx)
+	self.router = joint.RouterFromContext(rootCtx)
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()
@@ -53,13 +53,13 @@ func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
 				log.Infof("result channel closed, return")
 				return
 			}
-			self.router.ChMsg <- tube.CmdMsg{
-				MsgVec: tube.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
+			self.router.ChMsg <- joint.CmdMsg{
+				MsgVec: joint.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
 		}
 	}
 }
 
-func (self *BuiltinHandlerManager) messageReceived(msgvec tube.MsgVec) {
+func (self *BuiltinHandlerManager) messageReceived(msgvec joint.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
 		validated, errmsg := self.conn.ValidateMsg(msg)
@@ -85,7 +85,7 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 	self.On(".listMethods", func(req *RPCRequest, params []interface{}) (interface{}, error) {
 		minfos := self.router.GetLocalMethods()
 
-		arr := make([](tube.MethodInfoMap), 0)
+		arr := make([](joint.MethodInfoMap), 0)
 		for _, minfo := range minfos {
 			arr = append(arr, minfo.ToMap())
 		}
@@ -114,12 +114,12 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 		}
 		notify := jsonrpc.NewNotifyMessage(method, params[1:], nil)
 
-		connId := tube.CID(0)
+		connId := joint.CID(0)
 		if self.conn != nil {
 			connId = self.conn.ConnId
 		}
-		msgvec := tube.MsgVec{Msg: notify, FromConnId: connId}
-		self.router.ChMsg <- tube.CmdMsg{
+		msgvec := joint.MsgVec{Msg: notify, FromConnId: connId}
+		self.router.ChMsg <- joint.CmdMsg{
 			MsgVec:    msgvec,
 			Broadcast: true,
 		}
@@ -134,16 +134,16 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 
 func (self *BuiltinHandlerManager) updateMethods() {
 	if self.conn != nil {
-		minfos := make([]tube.MethodInfo, 0)
+		minfos := make([]joint.MethodInfo, 0)
 		for m, info := range self.MethodHandlers {
-			minfo := tube.MethodInfo{
+			minfo := joint.MethodInfo{
 				Name:       m,
 				Help:       info.Help,
 				SchemaJson: info.SchemaJson,
 			}
 			minfos = append(minfos, minfo)
 		}
-		cmdServe := tube.CmdServe{ConnId: self.conn.ConnId, Methods: minfos}
+		cmdServe := joint.CmdServe{ConnId: self.conn.ConnId, Methods: minfos}
 		self.router.ChServe <- cmdServe
 	}
 }

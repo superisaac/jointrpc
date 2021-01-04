@@ -3,7 +3,7 @@
 protofiles := $(shell find ./proto -name '*.proto')
 gofiles := $(shell find . -name '*.go')
 
-build: compile_proto bin/rpctube
+build: compile_proto bin/jointrpc
 
 all: test build
 
@@ -14,17 +14,17 @@ all: test build
 
 compile_proto: ./tmp/protoc.ts
 
-bin/rpctube: ${gofiles}
-	go build -o $@ rpctube.go
+bin/jointrpc: ${gofiles}
+	go build -o $@ jointrpc.go
 
 test:
-	go test -v github.com/superisaac/rpctube/jsonrpc
-	go test -v github.com/superisaac/rpctube/jsonrpc/schema
-	go test -v github.com/superisaac/rpctube/tube
-	go test -v github.com/superisaac/rpctube/server
+	go test -v github.com/superisaac/jointrpc/jsonrpc
+	go test -v github.com/superisaac/jointrpc/jsonrpc/schema
+	go test -v github.com/superisaac/jointrpc/joint
+	go test -v github.com/superisaac/jointrpc/server
 
 clean:
-	rm -rf bin/rpctube
+	rm -rf bin/jointrpc
 	rm ./tmp/protoc.ts
 
 gofmt:
@@ -32,13 +32,13 @@ gofmt:
 	go fmt client/*.go
 	go fmt client/example/*.go
 	go fmt server/*.go
-	go fmt tube/*.go
-	go fmt tube/handler/*.go
+	go fmt joint/*.go
+	go fmt joint/handler/*.go
 	go fmt jsonrpc/*.go
 	go fmt jsonrpc/schema/*.go
 	go fmt encoding/*.go
 	go fmt cluster/bridge/*.go
 	go fmt cluster/mirror/*.go
 
-install: bin/rpctube
+install: bin/jointrpc
 	install $< /usr/local/bin

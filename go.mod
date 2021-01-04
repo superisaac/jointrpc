@@ -1,4 +1,4 @@
-module github.com/superisaac/rpctube
+module github.com/superisaac/jointrpc
 
 go 1.15
 

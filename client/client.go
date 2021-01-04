@@ -5,11 +5,11 @@ import (
 	"flag"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
-	intf "github.com/superisaac/rpctube/intf/tube"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	//server "github.com/superisaac/rpctube/server"
-	encoding "github.com/superisaac/rpctube/encoding"
-	tube "github.com/superisaac/rpctube/tube"
+	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	//server "github.com/superisaac/jointrpc/server"
+	encoding "github.com/superisaac/jointrpc/encoding"
+	"github.com/superisaac/jointrpc/joint"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	credentials "google.golang.org/grpc/credentials"
@@ -19,7 +19,7 @@ import (
 )
 
 func NewRPCClient(serverEntry ServerEntry) *RPCClient {
-	sendUpChannel := make(chan *intf.JSONRPCUpPacket)
+	sendUpChannel := make(chan *intf.JointRPCUpPacket)
 	c := &RPCClient{
 		serverEntry:   serverEntry,
 		sendUpChannel: sendUpChannel,
@@ -50,7 +50,7 @@ func (self *RPCClient) Connect() error {
 	if err != nil {
 		return err
 	}
-	self.tubeClient = intf.NewJSONRPCTubeClient(conn)
+	self.tubeClient = intf.NewJointRPCClient(conn)
 	return nil
 }
 
@@ -68,15 +68,15 @@ func (self *RPCClient) updateMethods() {
 		upMethods = append(upMethods, minfo)
 	}
 	up := &intf.CanServeRequest{Methods: upMethods}
-	payload := &intf.JSONRPCUpPacket_CanServe{CanServe: up}
-	uppac := &intf.JSONRPCUpPacket{Payload: payload}
+	payload := &intf.JointRPCUpPacket_CanServe{CanServe: up}
+	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	self.sendUpChannel <- uppac
 }
 
 func (self *RPCClient) UpdateDelegateMethods(methods []string) {
 	up := &intf.CanDelegateRequest{Methods: methods}
-	payload := &intf.JSONRPCUpPacket_CanDelegate{CanDelegate: up}
-	uppac := &intf.JSONRPCUpPacket{Payload: payload}
+	payload := &intf.JointRPCUpPacket_CanDelegate{CanDelegate: up}
+	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	self.sendUpChannel <- uppac
 }
 
@@ -95,7 +95,7 @@ func (self *RPCClient) Handle(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JSONRPCTube_HandleClient) {
+func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_HandleClient) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -113,14 +113,14 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JSONRPCTube
 			}
 
 			envo := &intf.JSONRPCEnvolope{Body: resmsg.MustString()}
-			payload := &intf.JSONRPCUpPacket_Envolope{Envolope: envo}
-			uppac := &intf.JSONRPCUpPacket{Payload: payload}
+			payload := &intf.JointRPCUpPacket_Envolope{Envolope: envo}
+			uppac := &intf.JointRPCUpPacket{Payload: payload}
 			stream.Send(uppac)
 		}
 	}
 }
 
-func (self *RPCClient) DeliverUpPacket(uppack *intf.JSONRPCUpPacket) {
+func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
 	self.sendUpChannel <- uppack
 }
 
@@ -159,8 +159,8 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 		if ping != nil {
 			// Send Pong
 			pong := &intf.PONG{Text: ping.Text}
-			payload := &intf.JSONRPCUpPacket_Pong{Pong: pong}
-			uppac := &intf.JSONRPCUpPacket{Payload: payload}
+			payload := &intf.JointRPCUpPacket_Pong{Pong: pong}
+			uppac := &intf.JointRPCUpPacket{Payload: payload}
 
 			//stream.Send(uppac)
 			self.sendUpChannel <- uppac
@@ -199,7 +199,7 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 }
 
 func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage) {
-	msgvec := tube.MsgVec{Msg: msg, FromConnId: 0}
+	msgvec := joint.MsgVec{Msg: msg, FromConnId: 0}
 	self.HandleRequestMessage(msgvec)
 }
 

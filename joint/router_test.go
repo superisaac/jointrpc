@@ -1,11 +1,11 @@
-package tube
+package joint
 
 import (
 	//"fmt"
 	"context"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"testing"
 	"time"
 )

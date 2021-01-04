@@ -1,10 +1,10 @@
-package tube
+package joint
 
 import (
 	//"fmt"
 	"context"
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"math/rand"
 	"sort"
 	"strings"

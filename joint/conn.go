@@ -1,9 +1,9 @@
-package tube
+package joint
 
 import (
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	schema "github.com/superisaac/rpctube/jsonrpc/schema"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 )
 
 func NewConn() *ConnT {

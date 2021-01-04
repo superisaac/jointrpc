@@ -14,29 +14,29 @@ import (
 	codes "google.golang.org/grpc/codes"
 
 	log "github.com/sirupsen/logrus"
-	encoding "github.com/superisaac/rpctube/encoding"
-	intf "github.com/superisaac/rpctube/intf/tube"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	schema "github.com/superisaac/rpctube/jsonrpc/schema"
-	tube "github.com/superisaac/rpctube/tube"
+	encoding "github.com/superisaac/jointrpc/encoding"
+	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	"github.com/superisaac/jointrpc/joint"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	peer "google.golang.org/grpc/peer"
 )
 
-type JSONRPCTube struct {
-	intf.UnimplementedJSONRPCTubeServer
+type JointRPC struct {
+	intf.UnimplementedJointRPCServer
 }
 
-func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCCallRequest) (*intf.JSONRPCCallResult, error) {
+func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest) (*intf.JSONRPCCallResult, error) {
 	reqmsg, err := jsonrpc.ParseBytes([]byte(req.Envolope.Body))
 	if err != nil {
 		return nil, err
 	}
 
 	if !reqmsg.IsRequest() {
-		return nil, tube.ErrRequestNotifyRequired
+		return nil, joint.ErrRequestNotifyRequired
 	}
 
-	router := tube.RouterFromContext(context)
+	router := joint.RouterFromContext(context)
 	recvmsg, err := router.SingleCall(reqmsg, false)
 	if err != nil {
 		return nil, err
@@ -54,17 +54,17 @@ func (self *JSONRPCTube) Call(context context.Context, req *intf.JSONRPCCallRequ
 	return res, nil
 }
 
-func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
+func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
 	notifymsg, err := jsonrpc.ParseBytes([]byte(req.Envolope.Body))
 	if err != nil {
 		return nil, err
 	}
 
 	if !notifymsg.IsNotify() {
-		return nil, tube.ErrRequestNotifyRequired
+		return nil, joint.ErrRequestNotifyRequired
 	}
 
-	router := tube.RouterFromContext(context)
+	router := joint.RouterFromContext(context)
 	_, err = router.SingleCall(notifymsg, req.Broadcast)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (self *JSONRPCTube) Notify(context context.Context, req *intf.JSONRPCNotify
 	return resp, nil
 }
 
-func buildMethodInfos(minfos []tube.MethodInfo) []*intf.MethodInfo {
+func buildMethodInfos(minfos []joint.MethodInfo) []*intf.MethodInfo {
 	intfMInfos := make([]*intf.MethodInfo, 0)
 	for _, minfo := range minfos {
 		intfMInfos = append(intfMInfos, encoding.EncodeMethodInfo(minfo))
@@ -81,8 +81,8 @@ func buildMethodInfos(minfos []tube.MethodInfo) []*intf.MethodInfo {
 	return intfMInfos
 }
 
-func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
-	router := tube.RouterFromContext(context)
+func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
+	router := joint.RouterFromContext(context)
 	minfos := router.GetLocalMethods()
 	intfMInfos := buildMethodInfos(minfos)
 	resp := &intf.ListMethodsResponse{MethodInfos: intfMInfos}
@@ -90,42 +90,42 @@ func (self *JSONRPCTube) ListMethods(context context.Context, req *intf.ListMeth
 	return resp, nil
 }
 
-func sendState(state *tube.TubeState, stream intf.JSONRPCTube_HandleServer) {
+func sendState(state *joint.TubeState, stream intf.JointRPC_HandleServer) {
 	iState := encoding.EncodeTubeState(state)
-	payload := &intf.JSONRPCDownPacket_State{State: iState}
-	downpac := &intf.JSONRPCDownPacket{Payload: payload}
+	payload := &intf.JointRPCDownPacket_State{State: iState}
+	downpac := &intf.JointRPCDownPacket{Payload: payload}
 	stream.Send(downpac)
 }
 
 // Handler
-func downMsgReceived(context context.Context, msgvec tube.MsgVec, stream intf.JSONRPCTube_HandleServer, conn *tube.ConnT) {
+func downMsgReceived(context context.Context, msgvec joint.MsgVec, stream intf.JointRPC_HandleServer, conn *joint.ConnT) {
 	msg := msgvec.Msg
 
-	router := tube.RouterFromContext(context)
+	router := joint.RouterFromContext(context)
 	if msg.IsRequest() || msg.IsNotify() {
 		// validate params
 		validated, errmsg := conn.ValidateMsg(msg)
 		if !validated {
 			if errmsg != nil {
-				msgvec := tube.MsgVec{
+				msgvec := joint.MsgVec{
 					Msg:        errmsg,
 					FromConnId: conn.ConnId,
 				}
-				router.ChMsg <- tube.CmdMsg{MsgVec: msgvec}
+				router.ChMsg <- joint.CmdMsg{MsgVec: msgvec}
 			}
 		}
 	}
 
 	env := &intf.JSONRPCEnvolope{Body: msg.MustString()}
-	payload := &intf.JSONRPCDownPacket_Envolope{Envolope: env}
-	pac := &intf.JSONRPCDownPacket{Payload: payload}
+	payload := &intf.JointRPCDownPacket_Envolope{Envolope: env}
+	pac := &intf.JointRPCDownPacket{Payload: payload}
 	err := stream.Send(pac)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer, conn *tube.ConnT) {
+func relayMessages(context context.Context, stream intf.JointRPC_HandleServer, conn *joint.ConnT) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Warnf("recovered ERROR %+v", r)
@@ -153,13 +153,13 @@ func relayMessages(context context.Context, stream intf.JSONRPCTube_HandleServer
 	} // and for loop
 }
 
-func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
+func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 	remotePeer, ok := peer.FromContext(stream.Context())
 	if !ok {
 		return errors.New("cannot get peer info from stream")
 	}
 
-	router := tube.RouterFromContext(stream.Context())
+	router := joint.RouterFromContext(stream.Context())
 	conn := router.Join()
 	conn.PeerAddr = remotePeer.Addr
 	conn.SetWatchState(true)
@@ -196,8 +196,8 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 		ping := uppac.GetPing()
 		if ping != nil {
 			pong := &intf.PONG{Text: ping.Text}
-			payload := &intf.JSONRPCDownPacket_Pong{Pong: pong}
-			down_pac := &intf.JSONRPCDownPacket{Payload: payload}
+			payload := &intf.JointRPCDownPacket_Pong{Pong: pong}
+			down_pac := &intf.JointRPCDownPacket{Payload: payload}
 
 			stream.Send(down_pac)
 			continue
@@ -211,15 +211,15 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 				log.Warnf("error on requesttomessage() %s", err.Error())
 				return err
 			}
-			msgvec := tube.MsgVec{Msg: msg, FromConnId: conn.ConnId}
-			router.ChMsg <- tube.CmdMsg{MsgVec: msgvec}
+			msgvec := joint.MsgVec{Msg: msg, FromConnId: conn.ConnId}
+			router.ChMsg <- joint.CmdMsg{MsgVec: msgvec}
 			continue
 		}
 
 		update := uppac.GetCanServe()
 		if update != nil {
 			//log.Debugf("update methods %+v", update)
-			upMethods := make([]tube.MethodInfo, 0)
+			upMethods := make([]joint.MethodInfo, 0)
 
 			for _, iminfo := range update.Methods {
 				minfo := encoding.DecodeMethodInfo(iminfo)
@@ -229,8 +229,8 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 						// parse schema error
 						log.Warnf("error build schema %s, %+v", buildError.Error(), iminfo)
 						resp := &intf.CanServeResponse{Text: buildError.Error()}
-						payload := &intf.JSONRPCDownPacket_CanServe{CanServe: resp}
-						down_pac := &intf.JSONRPCDownPacket{Payload: payload}
+						payload := &intf.JointRPCDownPacket_CanServe{CanServe: resp}
+						down_pac := &intf.JointRPCDownPacket{Payload: payload}
 						stream.Send(down_pac)
 						// close the handle
 						return nil
@@ -240,7 +240,7 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 				upMethods = append(upMethods, *minfo)
 			}
 			log.Debugf("conn %d, update methods %v", conn.ConnId, update.Methods)
-			cmdServe := tube.CmdServe{
+			cmdServe := joint.CmdServe{
 				ConnId:  conn.ConnId,
 				Methods: upMethods,
 			}
@@ -252,15 +252,15 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 		if delegate != nil {
 			log.Debugf("conn %d, delegate methods %v", conn.ConnId, delegate.Methods)
 			// TODO: validate delegate methods
-			cmdDelegate := tube.CmdDelegate{
+			cmdDelegate := joint.CmdDelegate{
 				ConnId:      conn.ConnId,
 				MethodNames: delegate.Methods,
 			}
 			router.ChDelegate <- cmdDelegate
 
 			resp := &intf.CanDelegateResponse{Text: "ok"}
-			payload := &intf.JSONRPCDownPacket_CanDelegate{CanDelegate: resp}
-			down_pac := &intf.JSONRPCDownPacket{Payload: payload}
+			payload := &intf.JointRPCDownPacket_CanDelegate{CanDelegate: resp}
+			down_pac := &intf.JointRPCDownPacket{Payload: payload}
 			stream.Send(down_pac)
 
 			continue
@@ -269,6 +269,6 @@ func (self *JSONRPCTube) Handle(stream intf.JSONRPCTube_HandleServer) error {
 	}
 }
 
-func NewJSONRPCTubeServer() *JSONRPCTube {
-	return &JSONRPCTube{}
+func NewJointRPCServer() *JointRPC {
+	return &JointRPC{}
 }

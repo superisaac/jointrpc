@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	client "github.com/superisaac/rpctube/client"
+	client "github.com/superisaac/jointrpc/client"
 	"os"
 )
 

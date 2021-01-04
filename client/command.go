@@ -8,12 +8,12 @@ import (
 	//"strings"
 	simplejson "github.com/bitly/go-simplejson"
 	//log "github.com/sirupsen/logrus"
-	//intf "github.com/superisaac/rpctube/intf/tube"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	tube "github.com/superisaac/rpctube/tube"
-	handler "github.com/superisaac/rpctube/tube/handler"
+	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	"github.com/superisaac/jointrpc/joint"
+	handler "github.com/superisaac/jointrpc/joint/handler"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"os"
-	//example "github.com/superisaac/rpctube/client/example"
+	//example "github.com/superisaac/jointrpc/client/example"
 	//grpc "google.golang.org/grpc"
 )
 
@@ -193,7 +193,7 @@ func CommandWatchState() {
 	rpcClient.Handle(context.Background())
 }
 
-func printMethodInfos(state *tube.TubeState) {
+func printMethodInfos(state *joint.TubeState) {
 	var arr [](map[string](interface{}))
 	for _, info := range state.Methods {
 		mapInfo := map[string](interface{}){
@@ -218,7 +218,7 @@ func printMethodInfos(state *tube.TubeState) {
 	fmt.Printf("%s\n", string(repr))
 }
 
-func printMethodNames(state *tube.TubeState) {
+func printMethodNames(state *joint.TubeState) {
 	var arr []string
 	for _, info := range state.Methods {
 		arr = append(arr, info.Name)

@@ -3,9 +3,9 @@ package handler
 import (
 	//"errors"
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	schema "github.com/superisaac/rpctube/jsonrpc/schema"
-	tube "github.com/superisaac/rpctube/tube"
+	"github.com/superisaac/jointrpc/joint"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 )
 
 // handler manager
@@ -69,7 +69,7 @@ func (self *HandlerManager) ReturnResultMessage(resmsg jsonrpc.IMessage) {
 	self.ChResultMsg <- resmsg
 }
 
-func (self *HandlerManager) HandleRequestMessage(msgvec tube.MsgVec) {
+func (self *HandlerManager) HandleRequestMessage(msgvec joint.MsgVec) {
 	msg := msgvec.Msg
 	handler, ok := self.MethodHandlers[msg.MustMethod()]
 

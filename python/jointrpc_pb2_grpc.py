@@ -2,10 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import tube_pb2 as tube__pb2
+import jointrpc_pb2 as jointrpc__pb2
 
 
-class JSONRPCTubeStub(object):
+class JointRPCStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,39 +15,39 @@ class JSONRPCTubeStub(object):
             channel: A grpc.Channel.
         """
         self.ListMethods = channel.unary_unary(
-                '/JSONRPCTube/ListMethods',
-                request_serializer=tube__pb2.ListMethodsRequest.SerializeToString,
-                response_deserializer=tube__pb2.ListMethodsResponse.FromString,
+                '/JointRPC/ListMethods',
+                request_serializer=jointrpc__pb2.ListMethodsRequest.SerializeToString,
+                response_deserializer=jointrpc__pb2.ListMethodsResponse.FromString,
                 )
         self.Call = channel.unary_unary(
-                '/JSONRPCTube/Call',
-                request_serializer=tube__pb2.JSONRPCCallRequest.SerializeToString,
-                response_deserializer=tube__pb2.JSONRPCCallResult.FromString,
+                '/JointRPC/Call',
+                request_serializer=jointrpc__pb2.JSONRPCCallRequest.SerializeToString,
+                response_deserializer=jointrpc__pb2.JSONRPCCallResult.FromString,
                 )
         self.Notify = channel.unary_unary(
-                '/JSONRPCTube/Notify',
-                request_serializer=tube__pb2.JSONRPCNotifyRequest.SerializeToString,
-                response_deserializer=tube__pb2.JSONRPCNotifyResponse.FromString,
+                '/JointRPC/Notify',
+                request_serializer=jointrpc__pb2.JSONRPCNotifyRequest.SerializeToString,
+                response_deserializer=jointrpc__pb2.JSONRPCNotifyResponse.FromString,
                 )
         self.Handle = channel.stream_stream(
-                '/JSONRPCTube/Handle',
-                request_serializer=tube__pb2.JSONRPCUpPacket.SerializeToString,
-                response_deserializer=tube__pb2.JSONRPCDownPacket.FromString,
+                '/JointRPC/Handle',
+                request_serializer=jointrpc__pb2.JointRPCUpPacket.SerializeToString,
+                response_deserializer=jointrpc__pb2.JointRPCDownPacket.FromString,
                 )
 
 
-class JSONRPCTubeServicer(object):
+class JointRPCServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def ListMethods(self, request, context):
-        """rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def Call(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -65,36 +65,36 @@ class JSONRPCTubeServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_JSONRPCTubeServicer_to_server(servicer, server):
+def add_JointRPCServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'ListMethods': grpc.unary_unary_rpc_method_handler(
                     servicer.ListMethods,
-                    request_deserializer=tube__pb2.ListMethodsRequest.FromString,
-                    response_serializer=tube__pb2.ListMethodsResponse.SerializeToString,
+                    request_deserializer=jointrpc__pb2.ListMethodsRequest.FromString,
+                    response_serializer=jointrpc__pb2.ListMethodsResponse.SerializeToString,
             ),
             'Call': grpc.unary_unary_rpc_method_handler(
                     servicer.Call,
-                    request_deserializer=tube__pb2.JSONRPCCallRequest.FromString,
-                    response_serializer=tube__pb2.JSONRPCCallResult.SerializeToString,
+                    request_deserializer=jointrpc__pb2.JSONRPCCallRequest.FromString,
+                    response_serializer=jointrpc__pb2.JSONRPCCallResult.SerializeToString,
             ),
             'Notify': grpc.unary_unary_rpc_method_handler(
                     servicer.Notify,
-                    request_deserializer=tube__pb2.JSONRPCNotifyRequest.FromString,
-                    response_serializer=tube__pb2.JSONRPCNotifyResponse.SerializeToString,
+                    request_deserializer=jointrpc__pb2.JSONRPCNotifyRequest.FromString,
+                    response_serializer=jointrpc__pb2.JSONRPCNotifyResponse.SerializeToString,
             ),
             'Handle': grpc.stream_stream_rpc_method_handler(
                     servicer.Handle,
-                    request_deserializer=tube__pb2.JSONRPCUpPacket.FromString,
-                    response_serializer=tube__pb2.JSONRPCDownPacket.SerializeToString,
+                    request_deserializer=jointrpc__pb2.JointRPCUpPacket.FromString,
+                    response_serializer=jointrpc__pb2.JointRPCDownPacket.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'JSONRPCTube', rpc_method_handlers)
+            'JointRPC', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class JSONRPCTube(object):
+class JointRPC(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -108,9 +108,9 @@ class JSONRPCTube(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/JSONRPCTube/ListMethods',
-            tube__pb2.ListMethodsRequest.SerializeToString,
-            tube__pb2.ListMethodsResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/JointRPC/ListMethods',
+            jointrpc__pb2.ListMethodsRequest.SerializeToString,
+            jointrpc__pb2.ListMethodsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -125,9 +125,9 @@ class JSONRPCTube(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/JSONRPCTube/Call',
-            tube__pb2.JSONRPCCallRequest.SerializeToString,
-            tube__pb2.JSONRPCCallResult.FromString,
+        return grpc.experimental.unary_unary(request, target, '/JointRPC/Call',
+            jointrpc__pb2.JSONRPCCallRequest.SerializeToString,
+            jointrpc__pb2.JSONRPCCallResult.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -142,9 +142,9 @@ class JSONRPCTube(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/JSONRPCTube/Notify',
-            tube__pb2.JSONRPCNotifyRequest.SerializeToString,
-            tube__pb2.JSONRPCNotifyResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/JointRPC/Notify',
+            jointrpc__pb2.JSONRPCNotifyRequest.SerializeToString,
+            jointrpc__pb2.JSONRPCNotifyResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -159,8 +159,8 @@ class JSONRPCTube(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/JSONRPCTube/Handle',
-            tube__pb2.JSONRPCUpPacket.SerializeToString,
-            tube__pb2.JSONRPCDownPacket.FromString,
+        return grpc.experimental.stream_stream(request_iterator, target, '/JointRPC/Handle',
+            jointrpc__pb2.JointRPCUpPacket.SerializeToString,
+            jointrpc__pb2.JointRPCDownPacket.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

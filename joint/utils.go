@@ -1,8 +1,8 @@
-package tube
+package joint
 
 import (
 	"sync/atomic"
-	//jsonrpc "github.com/superisaac/rpctube/jsonrpc"
+	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 )
 
 var counter uint64 = 10000

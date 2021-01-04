@@ -1,16 +1,15 @@
 syntax = "proto3";
 
-option go_package = "intf/tube";
+option go_package = "intf/jointrpc";
 
 message Empty {}
 
-service JSONRPCTube {
+service JointRPC {
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
   //rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
-
   rpc Call(JSONRPCCallRequest) returns (JSONRPCCallResult);
   rpc Notify(JSONRPCNotifyRequest) returns (JSONRPCNotifyResponse);
-  rpc Handle(stream JSONRPCUpPacket) returns (stream JSONRPCDownPacket);
+  rpc Handle(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
 }
 
 message ListMethodsRequest {
@@ -19,31 +18,6 @@ message ListMethodsRequest {
 message ListMethodsResponse {
   repeated MethodInfo method_infos = 1;
 }
-
-// message WatchMethodsRequest {
-// }
-
-// message MethodUpdate {
-//   repeated MethodInfo method_infos = 1;
-// }
-
-// message MetaRequest {
-// }
-
-// enum RPCProtocol {
-//   JSONRPC = 0;
-// }
-
-// message MetaResult {
-//   repeated RPCEntry entries = 1;
-//   int32 ping_interval = 3;
-// }
-
-// message RPCEntry {
-//   RPCProtocol protocol = 1;
-//   string name = 2;
-//   string help = 3;
-// }
 
 message JSONRPCEnvolope {
   string body = 1;  // json encoded rpc message
@@ -102,7 +76,7 @@ message TubeState {
   repeated MethodInfo methods = 1;
 }
 
-message JSONRPCDownPacket {
+message JointRPCDownPacket {
   oneof payload {
     CanServeResponse can_serve = 1;
     CanDelegateResponse can_delegate = 2;
@@ -115,7 +89,7 @@ message JSONRPCDownPacket {
   }
 }
 
-message JSONRPCUpPacket {
+message JointRPCUpPacket {
   oneof payload {
     CanServeRequest can_serve = 1;
     CanDelegateRequest can_delegate = 2;

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	//"context"
 	log "github.com/sirupsen/logrus"
-	client "github.com/superisaac/rpctube/client"
-	example "github.com/superisaac/rpctube/client/example"
-	server "github.com/superisaac/rpctube/server"
+	client "github.com/superisaac/jointrpc/client"
+	example "github.com/superisaac/jointrpc/client/example"
+	server "github.com/superisaac/jointrpc/server"
 	"os"
 	"strings"
 	//"strings"
-	bridge "github.com/superisaac/rpctube/cluster/bridge"
+	bridge "github.com/superisaac/jointrpc/cluster/bridge"
 )
 
 var commands []string = []string{

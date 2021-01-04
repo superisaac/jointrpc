@@ -1,9 +1,9 @@
 package client
 
 import (
-	intf "github.com/superisaac/rpctube/intf/tube"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	handler "github.com/superisaac/rpctube/tube/handler"
+	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	handler "github.com/superisaac/jointrpc/joint/handler"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 )
 
 type ServerEntry struct {
@@ -25,8 +25,8 @@ type RPCClient struct {
 	handler.HandlerManager
 
 	serverEntry   ServerEntry
-	tubeClient    intf.JSONRPCTubeClient
-	sendUpChannel chan *intf.JSONRPCUpPacket
+	tubeClient    intf.JointRPCClient
+	sendUpChannel chan *intf.JointRPCUpPacket
 }
 
 type MethodUpdateReceiver chan []*intf.MethodInfo

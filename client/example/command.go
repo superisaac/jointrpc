@@ -3,7 +3,7 @@ package example
 import (
 	"flag"
 	//log "github.com/sirupsen/logrus"
-	client "github.com/superisaac/rpctube/client"
+	client "github.com/superisaac/jointrpc/client"
 	"os"
 )
 

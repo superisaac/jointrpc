@@ -4,9 +4,9 @@ import (
 	"context"
 	//simplejson "github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
-	intf "github.com/superisaac/rpctube/intf/tube"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	//server "github.com/superisaac/rpctube/server"
+	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	//server "github.com/superisaac/jointrpc/server"
 )
 
 func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}) (jsonrpc.IMessage, error) {

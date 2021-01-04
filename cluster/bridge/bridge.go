@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	log "github.com/sirupsen/logrus"
-	client "github.com/superisaac/rpctube/client"
+	client "github.com/superisaac/jointrpc/client"
 	"strings"
-	//datadir "github.com/superisaac/rpctube/datadir"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	misc "github.com/superisaac/rpctube/misc"
-	tube "github.com/superisaac/rpctube/tube"
-	handler "github.com/superisaac/rpctube/tube/handler"
+	//datadir "github.com/superisaac/jointrpc/datadir"
+	"github.com/superisaac/jointrpc/joint"
+	handler "github.com/superisaac/jointrpc/joint/handler"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 )
 
 // edge methods
@@ -56,7 +56,7 @@ func (self *Bridge) connectRemote(rootCtx context.Context, entry client.ServerEn
 	edge.remoteClient = c
 	self.edges[entry.Address] = edge
 
-	c.OnStateChange(func(state *tube.TubeState) {
+	c.OnStateChange(func(state *joint.TubeState) {
 		self.ChState <- CmdStateChange{
 			serverAddress: entry.Address,
 			state:         state,

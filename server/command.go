@@ -9,11 +9,11 @@ import (
 	//"fmt"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	mirror "github.com/superisaac/rpctube/cluster/mirror"
-	datadir "github.com/superisaac/rpctube/datadir"
-	intf "github.com/superisaac/rpctube/intf/tube"
-	tube "github.com/superisaac/rpctube/tube"
-	handler "github.com/superisaac/rpctube/tube/handler"
+	mirror "github.com/superisaac/jointrpc/cluster/mirror"
+	datadir "github.com/superisaac/jointrpc/datadir"
+	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	"github.com/superisaac/jointrpc/joint"
+	handler "github.com/superisaac/jointrpc/joint/handler"
 	grpc "google.golang.org/grpc"
 	credentials "google.golang.org/grpc/credentials"
 )
@@ -70,9 +70,9 @@ func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption
 		log.Debugf("entry server listen at %s", bind)
 	}
 
-	//tube.Tube().Start(rootCtx)
+	//joint.Tube().Start(rootCtx)
 
-	router := tube.NewRouter("grpc_server")
+	router := joint.NewRouter("grpc_server")
 	go router.Start(rootCtx)
 	ctxWithRouter := context.WithValue(rootCtx, "router", router)
 
@@ -87,11 +87,11 @@ func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption
 		streamRouterAssigner(router)))
 
 	grpcServer := grpc.NewServer(opts...)
-	intf.RegisterJSONRPCTubeServer(grpcServer, NewJSONRPCTubeServer())
+	intf.RegisterJointRPCServer(grpcServer, NewJointRPCServer())
 	grpcServer.Serve(lis)
 }
 
-func unaryRouterAssigner(router *tube.Router) grpc.UnaryServerInterceptor {
+func unaryRouterAssigner(router *joint.Router) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context,
 		req interface{},
 		info *grpc.UnaryServerInfo,
@@ -102,7 +102,7 @@ func unaryRouterAssigner(router *tube.Router) grpc.UnaryServerInterceptor {
 	}
 }
 
-func streamRouterAssigner(router *tube.Router) grpc.StreamServerInterceptor {
+func streamRouterAssigner(router *joint.Router) grpc.StreamServerInterceptor {
 	return func(srv interface{},
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,

@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	client "github.com/superisaac/rpctube/client"
-	jsonrpc "github.com/superisaac/rpctube/jsonrpc"
-	handler "github.com/superisaac/rpctube/tube/handler"
+	client "github.com/superisaac/jointrpc/client"
+	handler "github.com/superisaac/jointrpc/joint/handler"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"testing"
 	"time"
 )
