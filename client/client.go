@@ -238,7 +238,7 @@ func (self *ServerFlag) Get() ServerEntry {
 	}
 
 	if value.ServerUrl == "" {
-		value.ServerUrl = "localhost:50055"
+		value.ServerUrl = "h2c://localhost:50055"
 	}
 
 	if value.CertFile == "" {
