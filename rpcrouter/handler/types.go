@@ -2,19 +2,19 @@ package handler
 
 import (
 	//"context"
-	"github.com/superisaac/jointrpc/joint"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/rpcrouter"
 )
 
 type RPCRequest struct {
-	MsgVec joint.MsgVec
+	MsgVec rpcrouter.MsgVec
 }
 
 type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)
 type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
 
 // listen to tube state change
-type StateHandlerFunc func(newState *joint.TubeState)
+type StateHandlerFunc func(newState *rpcrouter.TubeState)
 
 type OnChangeFunc func()
 

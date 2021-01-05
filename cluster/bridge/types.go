@@ -2,8 +2,8 @@ package bridge
 
 import (
 	client "github.com/superisaac/jointrpc/client"
-	"github.com/superisaac/jointrpc/joint"
 	misc "github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/rpcrouter"
 )
 
 type Edge struct {
@@ -14,7 +14,7 @@ type Edge struct {
 
 type CmdStateChange struct {
 	serverAddress string
-	state         *joint.TubeState
+	state         *rpcrouter.TubeState
 }
 
 type Bridge struct {

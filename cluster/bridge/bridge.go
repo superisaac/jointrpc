@@ -7,10 +7,10 @@ import (
 	client "github.com/superisaac/jointrpc/client"
 	"strings"
 	//datadir "github.com/superisaac/jointrpc/datadir"
-	"github.com/superisaac/jointrpc/joint"
-	handler "github.com/superisaac/jointrpc/joint/handler"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/rpcrouter"
+	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 )
 
 // edge methods
@@ -56,7 +56,7 @@ func (self *Bridge) connectRemote(rootCtx context.Context, entry client.ServerEn
 	edge.remoteClient = c
 	self.edges[entry.Address] = edge
 
-	c.OnStateChange(func(state *joint.TubeState) {
+	c.OnStateChange(func(state *rpcrouter.TubeState) {
 		self.ChState <- CmdStateChange{
 			serverAddress: entry.Address,
 			state:         state,

@@ -9,9 +9,9 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 	//log "github.com/sirupsen/logrus"
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jointrpc/joint"
-	handler "github.com/superisaac/jointrpc/joint/handler"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/rpcrouter"
+	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	"os"
 	//example "github.com/superisaac/jointrpc/client/example"
 	//grpc "google.golang.org/grpc"
@@ -193,7 +193,7 @@ func CommandWatchState() {
 	rpcClient.Handle(context.Background())
 }
 
-func printMethodInfos(state *joint.TubeState) {
+func printMethodInfos(state *rpcrouter.TubeState) {
 	var arr [](map[string](interface{}))
 	for _, info := range state.Methods {
 		mapInfo := map[string](interface{}){
@@ -218,7 +218,7 @@ func printMethodInfos(state *joint.TubeState) {
 	fmt.Printf("%s\n", string(repr))
 }
 
-func printMethodNames(state *joint.TubeState) {
+func printMethodNames(state *rpcrouter.TubeState) {
 	var arr []string
 	for _, info := range state.Methods {
 		arr = append(arr, info.Name)

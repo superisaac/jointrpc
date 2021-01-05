@@ -2,8 +2,8 @@ package client
 
 import (
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	handler "github.com/superisaac/jointrpc/joint/handler"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 )
 
 type ServerEntry struct {

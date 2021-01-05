@@ -20,7 +20,7 @@ bin/jointrpc: ${gofiles}
 test:
 	go test -v github.com/superisaac/jointrpc/jsonrpc
 	go test -v github.com/superisaac/jointrpc/jsonrpc/schema
-	go test -v github.com/superisaac/jointrpc/joint
+	go test -v github.com/superisaac/jointrpc/rpcrouter
 	go test -v github.com/superisaac/jointrpc/server
 
 clean:
@@ -32,8 +32,8 @@ gofmt:
 	go fmt client/*.go
 	go fmt client/example/*.go
 	go fmt server/*.go
-	go fmt joint/*.go
-	go fmt joint/handler/*.go
+	go fmt rpcrouter/*.go
+	go fmt rpcrouter/handler/*.go
 	go fmt jsonrpc/*.go
 	go fmt jsonrpc/schema/*.go
 	go fmt encoding/*.go

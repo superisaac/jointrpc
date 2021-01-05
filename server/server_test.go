@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	client "github.com/superisaac/jointrpc/client"
-	handler "github.com/superisaac/jointrpc/joint/handler"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	"testing"
 	"time"
 )

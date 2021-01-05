@@ -3,8 +3,8 @@ package example
 import (
 	"context"
 	client "github.com/superisaac/jointrpc/client"
-	handler "github.com/superisaac/jointrpc/joint/handler"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 )
 
 func ExampleArray(serverEntry client.ServerEntry) error {

@@ -9,7 +9,7 @@ import (
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	//server "github.com/superisaac/jointrpc/server"
 	encoding "github.com/superisaac/jointrpc/encoding"
-	"github.com/superisaac/jointrpc/joint"
+	"github.com/superisaac/jointrpc/rpcrouter"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	credentials "google.golang.org/grpc/credentials"
@@ -199,7 +199,7 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 }
 
 func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage) {
-	msgvec := joint.MsgVec{Msg: msg, FromConnId: 0}
+	msgvec := rpcrouter.MsgVec{Msg: msg, FromConnId: 0}
 	self.HandleRequestMessage(msgvec)
 }
 

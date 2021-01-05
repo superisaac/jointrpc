@@ -12,8 +12,8 @@ import (
 	mirror "github.com/superisaac/jointrpc/cluster/mirror"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jointrpc/joint"
-	handler "github.com/superisaac/jointrpc/joint/handler"
+	"github.com/superisaac/jointrpc/rpcrouter"
+	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	grpc "google.golang.org/grpc"
 	credentials "google.golang.org/grpc/credentials"
 )
@@ -70,9 +70,9 @@ func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption
 		log.Debugf("entry server listen at %s", bind)
 	}
 
-	//joint.Tube().Start(rootCtx)
+	//rpcrouter.Tube().Start(rootCtx)
 
-	router := joint.NewRouter("grpc_server")
+	router := rpcrouter.NewRouter("grpc_server")
 	go router.Start(rootCtx)
 	ctxWithRouter := context.WithValue(rootCtx, "router", router)
 
@@ -91,7 +91,7 @@ func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption
 	grpcServer.Serve(lis)
 }
 
-func unaryRouterAssigner(router *joint.Router) grpc.UnaryServerInterceptor {
+func unaryRouterAssigner(router *rpcrouter.Router) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context,
 		req interface{},
 		info *grpc.UnaryServerInfo,
@@ -102,7 +102,7 @@ func unaryRouterAssigner(router *joint.Router) grpc.UnaryServerInterceptor {
 	}
 }
 
-func streamRouterAssigner(router *joint.Router) grpc.StreamServerInterceptor {
+func streamRouterAssigner(router *rpcrouter.Router) grpc.StreamServerInterceptor {
 	return func(srv interface{},
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,

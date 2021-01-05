@@ -9,17 +9,17 @@ import (
 	misc "github.com/superisaac/jointrpc/misc"
 
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
-	"github.com/superisaac/jointrpc/joint"
+	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 
 type BuiltinHandlerManager struct {
 	HandlerManager
-	router *joint.Router
-	conn   *joint.ConnT
+	router *rpcrouter.Router
+	conn   *rpcrouter.ConnT
 }
 
 func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
-	self.router = joint.RouterFromContext(rootCtx)
+	self.router = rpcrouter.RouterFromContext(rootCtx)
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()
@@ -53,13 +53,13 @@ func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
 				log.Infof("result channel closed, return")
 				return
 			}
-			self.router.ChMsg <- joint.CmdMsg{
-				MsgVec: joint.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
+			self.router.ChMsg <- rpcrouter.CmdMsg{
+				MsgVec: rpcrouter.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
 		}
 	}
 }
 
-func (self *BuiltinHandlerManager) messageReceived(msgvec joint.MsgVec) {
+func (self *BuiltinHandlerManager) messageReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
 		validated, errmsg := self.conn.ValidateMsg(msg)
@@ -85,7 +85,7 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 	self.On(".listMethods", func(req *RPCRequest, params []interface{}) (interface{}, error) {
 		minfos := self.router.GetLocalMethods()
 
-		arr := make([](joint.MethodInfoMap), 0)
+		arr := make([](rpcrouter.MethodInfoMap), 0)
 		for _, minfo := range minfos {
 			arr = append(arr, minfo.ToMap())
 		}
@@ -114,12 +114,12 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 		}
 		notify := jsonrpc.NewNotifyMessage(method, params[1:], nil)
 
-		connId := joint.CID(0)
+		connId := rpcrouter.CID(0)
 		if self.conn != nil {
 			connId = self.conn.ConnId
 		}
-		msgvec := joint.MsgVec{Msg: notify, FromConnId: connId}
-		self.router.ChMsg <- joint.CmdMsg{
+		msgvec := rpcrouter.MsgVec{Msg: notify, FromConnId: connId}
+		self.router.ChMsg <- rpcrouter.CmdMsg{
 			MsgVec:    msgvec,
 			Broadcast: true,
 		}
@@ -134,16 +134,16 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 
 func (self *BuiltinHandlerManager) updateMethods() {
 	if self.conn != nil {
-		minfos := make([]joint.MethodInfo, 0)
+		minfos := make([]rpcrouter.MethodInfo, 0)
 		for m, info := range self.MethodHandlers {
-			minfo := joint.MethodInfo{
+			minfo := rpcrouter.MethodInfo{
 				Name:       m,
 				Help:       info.Help,
 				SchemaJson: info.SchemaJson,
 			}
 			minfos = append(minfos, minfo)
 		}
-		cmdServe := joint.CmdServe{ConnId: self.conn.ConnId, Methods: minfos}
+		cmdServe := rpcrouter.CmdServe{ConnId: self.conn.ConnId, Methods: minfos}
 		self.router.ChServe <- cmdServe
 	}
 }

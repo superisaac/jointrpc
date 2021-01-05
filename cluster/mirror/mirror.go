@@ -6,8 +6,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
 	datadir "github.com/superisaac/jointrpc/datadir"
-	"github.com/superisaac/jointrpc/joint"
 	misc "github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/rpcrouter"
 	"strings"
 )
 
@@ -15,7 +15,7 @@ import (
 func NewEdge() *Edge {
 	return &Edge{
 		methodNames: make(misc.StringSet),
-		dlgMethods:  make([]joint.MethodInfo, 0),
+		dlgMethods:  make([]rpcrouter.MethodInfo, 0),
 	}
 }
 
@@ -41,12 +41,12 @@ func StartMirrorsForPeers(rootCtx context.Context) {
 }
 
 func StartNewMirror(rootCtx context.Context, entries []client.ServerEntry) {
-	router := joint.RouterFromContext(rootCtx)
+	router := rpcrouter.RouterFromContext(rootCtx)
 	mirror := NewMirror(entries, router)
 	mirror.Start(rootCtx)
 }
 
-func NewMirror(entries []client.ServerEntry, router *joint.Router) *Mirror {
+func NewMirror(entries []client.ServerEntry, router *rpcrouter.Router) *Mirror {
 	mirror := new(Mirror)
 	mirror.router = router
 	mirror.InitHandlerManager()
@@ -71,7 +71,7 @@ func (self *Mirror) connectRemote(rootCtx context.Context, entry client.ServerEn
 	edge.remoteClient = c
 	self.edges[entry.Address] = edge
 
-	c.OnStateChange(func(state *joint.TubeState) {
+	c.OnStateChange(func(state *rpcrouter.TubeState) {
 		self.ChState <- CmdStateChange{
 			ServerAddress: entry.Address,
 			State:         state,
@@ -120,8 +120,8 @@ func (self *Mirror) Start(rootCtx context.Context) error {
 				// TODO: log
 				return nil
 			}
-			self.router.ChMsg <- joint.CmdMsg{
-				MsgVec: joint.MsgVec{
+			self.router.ChMsg <- rpcrouter.CmdMsg{
+				MsgVec: rpcrouter.MsgVec{
 					Msg:        resmsg,
 					FromConnId: self.conn.ConnId,
 				},
@@ -131,7 +131,7 @@ func (self *Mirror) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *Mirror) messageReceived(msgvec joint.MsgVec) error {
+func (self *Mirror) messageReceived(msgvec rpcrouter.MsgVec) error {
 	msg := msgvec.Msg
 	// stupid methods
 	if msg.IsRequest() {
@@ -158,7 +158,7 @@ func (self *Mirror) messageReceived(msgvec joint.MsgVec) error {
 
 func (self *Mirror) handleStateChange(stateChange CmdStateChange) {
 	if edge, ok := self.edges[stateChange.ServerAddress]; ok {
-		var newMethods []joint.MethodInfo
+		var newMethods []rpcrouter.MethodInfo
 		methodNames := make(misc.StringSet)
 		for _, minfo := range stateChange.State.Methods {
 			if strings.HasPrefix(minfo.Name, ".") {
@@ -192,7 +192,7 @@ func (self *Mirror) tryUpdateMethods() {
 	sig := strings.Join(methodNames, ",")
 	if sig != self.methodSig {
 		self.methodSig = sig
-		cmdDelegate := joint.CmdDelegate{
+		cmdDelegate := rpcrouter.CmdDelegate{
 			ConnId:      self.conn.ConnId,
 			MethodNames: methodNames,
 		}
