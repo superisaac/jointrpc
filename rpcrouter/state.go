@@ -44,6 +44,6 @@ func (self *Router) notifyStateChange() {
 }
 
 func (self *Router) GetState() *TubeState {
-	state := &TubeState{Methods: self.getLocalMethods()}
+	state := &TubeState{Methods: self.getMethods()}
 	return state
 }

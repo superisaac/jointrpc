@@ -18,6 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type JointRPCClient interface {
 	ListMethods(ctx context.Context, in *ListMethodsRequest, opts ...grpc.CallOption) (*ListMethodsResponse, error)
+	ListDelegates(ctx context.Context, in *ListDelegatesRequest, opts ...grpc.CallOption) (*ListDelegatesResponse, error)
 	//rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
 	Call(ctx context.Context, in *JSONRPCCallRequest, opts ...grpc.CallOption) (*JSONRPCCallResult, error)
 	Notify(ctx context.Context, in *JSONRPCNotifyRequest, opts ...grpc.CallOption) (*JSONRPCNotifyResponse, error)
@@ -35,6 +36,15 @@ func NewJointRPCClient(cc grpc.ClientConnInterface) JointRPCClient {
 func (c *jointRPCClient) ListMethods(ctx context.Context, in *ListMethodsRequest, opts ...grpc.CallOption) (*ListMethodsResponse, error) {
 	out := new(ListMethodsResponse)
 	err := c.cc.Invoke(ctx, "/JointRPC/ListMethods", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jointRPCClient) ListDelegates(ctx context.Context, in *ListDelegatesRequest, opts ...grpc.CallOption) (*ListDelegatesResponse, error) {
+	out := new(ListDelegatesResponse)
+	err := c.cc.Invoke(ctx, "/JointRPC/ListDelegates", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +105,7 @@ func (x *jointRPCHandleClient) Recv() (*JointRPCDownPacket, error) {
 // for forward compatibility
 type JointRPCServer interface {
 	ListMethods(context.Context, *ListMethodsRequest) (*ListMethodsResponse, error)
+	ListDelegates(context.Context, *ListDelegatesRequest) (*ListDelegatesResponse, error)
 	//rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
 	Call(context.Context, *JSONRPCCallRequest) (*JSONRPCCallResult, error)
 	Notify(context.Context, *JSONRPCNotifyRequest) (*JSONRPCNotifyResponse, error)
@@ -108,6 +119,9 @@ type UnimplementedJointRPCServer struct {
 
 func (UnimplementedJointRPCServer) ListMethods(context.Context, *ListMethodsRequest) (*ListMethodsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMethods not implemented")
+}
+func (UnimplementedJointRPCServer) ListDelegates(context.Context, *ListDelegatesRequest) (*ListDelegatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDelegates not implemented")
 }
 func (UnimplementedJointRPCServer) Call(context.Context, *JSONRPCCallRequest) (*JSONRPCCallResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Call not implemented")
@@ -145,6 +159,24 @@ func _JointRPC_ListMethods_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(JointRPCServer).ListMethods(ctx, req.(*ListMethodsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _JointRPC_ListDelegates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDelegatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JointRPCServer).ListDelegates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/JointRPC/ListDelegates",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JointRPCServer).ListDelegates(ctx, req.(*ListDelegatesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -218,6 +250,10 @@ var _JointRPC_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListMethods",
 			Handler:    _JointRPC_ListMethods_Handler,
+		},
+		{
+			MethodName: "ListDelegates",
+			Handler:    _JointRPC_ListDelegates_Handler,
 		},
 		{
 			MethodName: "Call",

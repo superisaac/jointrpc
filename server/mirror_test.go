@@ -58,7 +58,7 @@ func TestMirrorRun(t *testing.T) {
 	err := c1.Connect()
 	assert.Nil(err)
 	cCtx, cancelClient := context.WithCancel(context.Background())
-	defer cancelClient()
+	//defer cancelClient()
 	go c1.Handle(cCtx)
 
 	// start c2, the add2int() caller to server2
@@ -68,8 +68,12 @@ func TestMirrorRun(t *testing.T) {
 	assert.Nil(err)
 
 	// call rpc from server2 which delegates server1
+	time.Sleep(100 * time.Millisecond)
 	ctx1, cancel1 := context.WithCancel(context.Background())
 	defer cancel1()
+	delegates, err := c2.ListDelegates(ctx1)
+	assert.Nil(err)
+	assert.Equal([]string{"add2int"}, delegates)
 	res, err := c2.CallRPC(ctx1, "add2int", [](interface{}){5, 6})
 	assert.Nil(err)
 	assert.True(res.IsResult())
@@ -90,4 +94,23 @@ func TestMirrorRun(t *testing.T) {
 	assert.True(ok)
 	assert.Equal(json.Number("404"), errBody["code"])
 	assert.Equal("method not found", errBody["reason"])
+
+	// close client serve, the add2int() provider
+	cancelClient()
+	time.Sleep(100 * time.Millisecond)
+	d1, err := c2.ListDelegates(ctx1)
+	assert.Nil(err)
+	assert.Equal(0, len(d1))
+	//assert.Equal([]string{}, d1)
+
+	// call rpc from server2 which doesnot delegates server1
+	ctx4, cancel4 := context.WithCancel(context.Background())
+	defer cancel4()
+	res4, err := c2.CallRPC(ctx4, "add2int", [](interface{}){15, 16})
+	assert.Nil(err)
+	assert.True(res4.IsError())
+	errBody4, ok := res4.MustError().(map[string]interface{})
+	assert.True(ok)
+	assert.Equal(json.Number("404"), errBody4["code"])
+	assert.Equal("method not found", errBody4["reason"])
 }

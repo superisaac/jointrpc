@@ -127,7 +127,7 @@ type Router struct {
 	ChServe    chan CmdServe
 	ChDelegate chan CmdDelegate
 
-	localMethodsSig string
+	methodsSig string
 }
 
 // type TubeT struct {

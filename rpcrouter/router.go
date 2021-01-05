@@ -55,7 +55,7 @@ func (self *Router) Init(name string) *Router {
 	self.connMap = make(map[CID](*ConnT))
 
 	self.pendingMap = make(map[PendingKey]PendingValue)
-	self.localMethodsSig = ""
+	self.methodsSig = ""
 	self.setupChannels()
 	return self
 }
@@ -71,18 +71,6 @@ func (self Router) Name() string {
 	return self.name
 }
 
-func (self Router) GetAllMethods() []string {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
-
-	methods := []string{}
-	for method, _ := range self.methodConnMap {
-		methods = append(methods, method)
-	}
-	sort.Strings(methods)
-	return methods
-}
-
 func (self MethodInfo) ToMap() MethodInfoMap {
 	var schemaIntf interface{}
 	if self.SchemaJson != "" {
@@ -95,13 +83,34 @@ func (self MethodInfo) ToMap() MethodInfoMap {
 	}
 }
 
-func (self Router) GetLocalMethods() []MethodInfo {
+func (self Router) GetDelegates() []string {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
-	return self.getLocalMethods()
+	arr := make([]string, 0)
+	for name, _ := range self.delegateConnMap {
+		arr = append(arr, name)
+	}
+	return arr
+}
+func (self Router) GetMethods() []MethodInfo {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+	return self.getMethods()
 }
 
-func (self Router) getLocalMethods() []MethodInfo {
+func (self Router) GetMethodNames() []string {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+
+	methods := []string{}
+	for method, _ := range self.methodConnMap {
+		methods = append(methods, method)
+	}
+	sort.Strings(methods)
+	return methods
+}
+
+func (self Router) getMethods() []MethodInfo {
 	minfos := []MethodInfo{}
 	for _, descs := range self.methodConnMap {
 		for _, desc := range descs {
@@ -112,10 +121,10 @@ func (self Router) getLocalMethods() []MethodInfo {
 	return minfos
 }
 
-func (self Router) getLocalMethodsSig() string {
+func (self Router) getMethodsSig() string {
 	var arr []string
 	var dup map[string]bool = map[string]bool{}
-	for _, minfo := range self.getLocalMethods() {
+	for _, minfo := range self.getMethods() {
 		if _, ok := dup[minfo.Name]; !ok {
 			arr = append(arr, minfo.Name)
 			dup[minfo.Name] = true
@@ -252,11 +261,11 @@ func (self *Router) updateDelegateMethods(conn *ConnT, methodNames []string) boo
 }
 
 func (self *Router) probeMethodChange() {
-	sig := self.getLocalMethodsSig()
-	if self.localMethodsSig != sig {
+	sig := self.getMethodsSig()
+	if self.methodsSig != sig {
 		// notify local methods change by broadcasting notification
-		log.Debugf("local methods sig changed from %s to %s", self.localMethodsSig, sig)
-		self.localMethodsSig = sig
+		log.Debugf("local methods sig changed from %s to %s", self.methodsSig, sig)
+		self.methodsSig = sig
 
 		go self.NotifyStateChange()
 	}

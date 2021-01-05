@@ -49,10 +49,10 @@ func TestRouteMessage(t *testing.T) {
 	assert.Equal(1, len(router.connMap))
 	router.UpdateServeMethods(conn, []MethodInfo{{"abc", "", "", nil}, {"def", "", "", nil}})
 
-	methods := router.GetAllMethods()
+	methods := router.GetMethodNames()
 	assert.Equal([]string{"abc", "def"}, methods)
 
-	localMethods := router.GetLocalMethods()
+	localMethods := router.GetMethods()
 	assert.Equal(2, len(localMethods))
 	assert.Equal("abc", localMethods[0].Name)
 	assert.Equal("def", localMethods[1].Name)

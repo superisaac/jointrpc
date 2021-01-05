@@ -19,6 +19,10 @@ class JointRPCBase(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def ListDelegates(self, stream: 'grpclib.server.Stream[jointrpc_pb2.ListDelegatesRequest, jointrpc_pb2.ListDelegatesResponse]') -> None:
+        pass
+
+    @abc.abstractmethod
     async def Call(self, stream: 'grpclib.server.Stream[jointrpc_pb2.JSONRPCCallRequest, jointrpc_pb2.JSONRPCCallResult]') -> None:
         pass
 
@@ -37,6 +41,12 @@ class JointRPCBase(abc.ABC):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 jointrpc_pb2.ListMethodsRequest,
                 jointrpc_pb2.ListMethodsResponse,
+            ),
+            '/JointRPC/ListDelegates': grpclib.const.Handler(
+                self.ListDelegates,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                jointrpc_pb2.ListDelegatesRequest,
+                jointrpc_pb2.ListDelegatesResponse,
             ),
             '/JointRPC/Call': grpclib.const.Handler(
                 self.Call,
@@ -67,6 +77,12 @@ class JointRPCStub:
             '/JointRPC/ListMethods',
             jointrpc_pb2.ListMethodsRequest,
             jointrpc_pb2.ListMethodsResponse,
+        )
+        self.ListDelegates = grpclib.client.UnaryUnaryMethod(
+            channel,
+            '/JointRPC/ListDelegates',
+            jointrpc_pb2.ListDelegatesRequest,
+            jointrpc_pb2.ListDelegatesResponse,
         )
         self.Call = grpclib.client.UnaryUnaryMethod(
             channel,

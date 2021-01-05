@@ -23,7 +23,6 @@ func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	res, err := self.tubeClient.Call(ctx, req)
-	log.Debugf("res is %v", res)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +36,17 @@ func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage
 		return nil, &jsonrpc.RPCError{10409, "msg is neither result nor error", false}
 	}
 	return resmsg, nil
+}
+
+func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) {
+	ctx, cancel := context.WithCancel(rootCtx)
+	defer cancel()
+	req := &intf.ListDelegatesRequest{}
+	res, err := self.tubeClient.ListDelegates(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return res.Delegates, err
 }
 
 func (self *RPCClient) SendNotify(rootCtx context.Context, method string, params []interface{}, broadcast bool) error {

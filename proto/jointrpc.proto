@@ -6,6 +6,7 @@ message Empty {}
 
 service JointRPC {
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
+  rpc ListDelegates(ListDelegatesRequest) returns (ListDelegatesResponse);
   //rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
   rpc Call(JSONRPCCallRequest) returns (JSONRPCCallResult);
   rpc Notify(JSONRPCNotifyRequest) returns (JSONRPCNotifyResponse);
@@ -17,6 +18,13 @@ message ListMethodsRequest {
 
 message ListMethodsResponse {
   repeated MethodInfo method_infos = 1;
+}
+
+message ListDelegatesRequest {
+}
+
+message ListDelegatesResponse {
+  repeated string delegates = 1;
 }
 
 message JSONRPCEnvolope {

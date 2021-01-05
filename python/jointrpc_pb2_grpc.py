@@ -19,6 +19,11 @@ class JointRPCStub(object):
                 request_serializer=jointrpc__pb2.ListMethodsRequest.SerializeToString,
                 response_deserializer=jointrpc__pb2.ListMethodsResponse.FromString,
                 )
+        self.ListDelegates = channel.unary_unary(
+                '/JointRPC/ListDelegates',
+                request_serializer=jointrpc__pb2.ListDelegatesRequest.SerializeToString,
+                response_deserializer=jointrpc__pb2.ListDelegatesResponse.FromString,
+                )
         self.Call = channel.unary_unary(
                 '/JointRPC/Call',
                 request_serializer=jointrpc__pb2.JSONRPCCallRequest.SerializeToString,
@@ -40,6 +45,12 @@ class JointRPCServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def ListMethods(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListDelegates(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -71,6 +82,11 @@ def add_JointRPCServicer_to_server(servicer, server):
                     servicer.ListMethods,
                     request_deserializer=jointrpc__pb2.ListMethodsRequest.FromString,
                     response_serializer=jointrpc__pb2.ListMethodsResponse.SerializeToString,
+            ),
+            'ListDelegates': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListDelegates,
+                    request_deserializer=jointrpc__pb2.ListDelegatesRequest.FromString,
+                    response_serializer=jointrpc__pb2.ListDelegatesResponse.SerializeToString,
             ),
             'Call': grpc.unary_unary_rpc_method_handler(
                     servicer.Call,
@@ -111,6 +127,23 @@ class JointRPC(object):
         return grpc.experimental.unary_unary(request, target, '/JointRPC/ListMethods',
             jointrpc__pb2.ListMethodsRequest.SerializeToString,
             jointrpc__pb2.ListMethodsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ListDelegates(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/JointRPC/ListDelegates',
+            jointrpc__pb2.ListDelegatesRequest.SerializeToString,
+            jointrpc__pb2.ListDelegatesResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

@@ -83,10 +83,16 @@ func buildMethodInfos(minfos []rpcrouter.MethodInfo) []*intf.MethodInfo {
 
 func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
 	router := rpcrouter.RouterFromContext(context)
-	minfos := router.GetLocalMethods()
+	minfos := router.GetMethods()
 	intfMInfos := buildMethodInfos(minfos)
 	resp := &intf.ListMethodsResponse{MethodInfos: intfMInfos}
-	log.Debugf("list methods resp %v", resp)
+	return resp, nil
+}
+
+func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDelegatesRequest) (*intf.ListDelegatesResponse, error) {
+	router := rpcrouter.RouterFromContext(context)
+	delegates := router.GetDelegates()
+	resp := &intf.ListDelegatesResponse{Delegates: delegates}
 	return resp, nil
 }
 

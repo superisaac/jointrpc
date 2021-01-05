@@ -83,7 +83,7 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 	misc.Assert(self.router == nil, "already initited")
 	self.InitHandlerManager()
 	self.On(".listMethods", func(req *RPCRequest, params []interface{}) (interface{}, error) {
-		minfos := self.router.GetLocalMethods()
+		minfos := self.router.GetMethods()
 
 		arr := make([](rpcrouter.MethodInfoMap), 0)
 		for _, minfo := range minfos {
