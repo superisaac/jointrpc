@@ -31,6 +31,7 @@ gofmt:
 	go fmt misc/*.go
 	go fmt client/*.go
 	go fmt client/example/*.go
+	go fmt mirror/*.go
 	go fmt server/*.go
 	go fmt rpcrouter/*.go
 	go fmt rpcrouter/handler/*.go
@@ -38,7 +39,7 @@ gofmt:
 	go fmt jsonrpc/schema/*.go
 	go fmt encoding/*.go
 	go fmt cluster/bridge/*.go
-	go fmt cluster/mirror/*.go
+
 
 install: bin/jointrpc
 	install $< /usr/local/bin

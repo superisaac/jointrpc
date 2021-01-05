@@ -2,6 +2,7 @@ package datadir
 
 import (
 	"errors"
+	"context"
 	"path/filepath"
 	log "github.com/sirupsen/logrus"
 	logsyslog "github.com/sirupsen/logrus/hooks/syslog"
@@ -11,23 +12,38 @@ import (
 	"os"
 )
 
-var (
-	cfg       *Config
-)
+// var (
+// 	cfg       *Config
+// )
 
-func GetConfig() *Config {
-	if cfg == nil {
-		cfg = new(Config)
-		err := cfg.ParseConfig()
-		if err != nil {
-			panic(err)
-		}
-		cfg.setupLogger()
-	}
-	return cfg
+// func GetConfig() *Config {
+// 	if cfg == nil {
+// 		cfg = new(Config)
+// 		err := cfg.ParseConfig()
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		cfg.setupLogger()
+// 	}
+// 	return cfg
+// }
+
+
+func NewConfig() *Config {
+	return new(Config)
 }
 
-func (self *Config) ParseConfig() error {
+func ConfigFromContext(ctx context.Context) *Config {
+	if v := ctx.Value("config"); v != nil {
+		if cfg, ok := v.(*Config); ok {
+			return cfg
+		}
+		panic("context value config is not a config instance")
+	}
+	panic("context does not have config")
+}
+
+func (self *Config) ParseDatadir() error {
 	cfgPath := Datapath("config.yml")
 	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
 		err = self.validateValues()

@@ -26,7 +26,7 @@ func (self Edge) hasMethod(methodName string) bool {
 
 // Mirror
 func StartMirrorsForPeers(rootCtx context.Context) {
-	cfg := datadir.GetConfig()
+	cfg := datadir.ConfigFromContext(rootCtx)
 	if len(cfg.Cluster.StaticPeers) > 0 {
 		// generate server entry from peers
 		var serverEntries []client.ServerEntry

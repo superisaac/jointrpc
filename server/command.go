@@ -7,11 +7,10 @@ import (
 	"net"
 	"os"
 	//"fmt"
-
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	mirror "github.com/superisaac/jointrpc/cluster/mirror"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	mirror "github.com/superisaac/jointrpc/mirror"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	grpc "google.golang.org/grpc"
@@ -31,10 +30,11 @@ func CommandStartServer() {
 		datadir.SetDatadir(*pDatadir)
 	}
 
-	//go StartHTTPd(*httpBind)
-	cfg := datadir.GetConfig()
-	var opts []grpc.ServerOption
+	cfg := datadir.NewConfig()
+	cfg.ParseDatadir()
 
+	//go StartHTTPd(*httpBind)
+	var opts []grpc.ServerOption
 	// server bind
 	bind := *pBind
 	if bind == "" {
@@ -59,10 +59,10 @@ func CommandStartServer() {
 		}
 		opts = append(opts, grpc.Creds(creds))
 	}
-	StartServer(context.Background(), bind, opts...)
+	StartServer(context.Background(), bind, cfg, opts...)
 }
 
-func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption) {
+func StartServer(rootCtx context.Context, bind string, cfg *datadir.Config, opts ...grpc.ServerOption) {
 	lis, err := net.Listen("tcp", bind)
 	if err != nil {
 		log.Panicf("failed to listen: %v", err)
@@ -70,46 +70,52 @@ func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption
 		log.Debugf("entry server listen at %s", bind)
 	}
 
-	//rpcrouter.Tube().Start(rootCtx)
+	if cfg == nil {
+		cfg = datadir.NewConfig()
+	}
 
 	router := rpcrouter.NewRouter("grpc_server")
 	go router.Start(rootCtx)
-	ctxWithRouter := context.WithValue(rootCtx, "router", router)
 
-	handler.StartBuiltinHandlerManager(ctxWithRouter)
+	aCtx := context.WithValue(rootCtx, "config", cfg)
+	aCtx = context.WithValue(aCtx, "router", router)
 
-	mirror.StartMirrorsForPeers(ctxWithRouter)
+	handler.StartBuiltinHandlerManager(aCtx)
 
-	opts = append(opts, grpc.UnaryInterceptor(
-		unaryRouterAssigner(router)))
+	mirror.StartMirrorsForPeers(aCtx)
 
-	opts = append(opts, grpc.StreamInterceptor(
-		streamRouterAssigner(router)))
+	opts = append(opts,
+		grpc.UnaryInterceptor(
+			unaryBindContext(router, cfg)),
+		grpc.StreamInterceptor(
+			streamBindContext(router, cfg)))
 
 	grpcServer := grpc.NewServer(opts...)
 	intf.RegisterJointRPCServer(grpcServer, NewJointRPCServer())
 	grpcServer.Serve(lis)
 }
 
-func unaryRouterAssigner(router *rpcrouter.Router) grpc.UnaryServerInterceptor {
+func unaryBindContext(router *rpcrouter.Router, cfg *datadir.Config) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context,
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp interface{}, err error) {
 		rCtx := context.WithValue(ctx, "router", router)
-		h, err := handler(rCtx, req)
+		cCtx := context.WithValue(rCtx, "config", cfg)
+		h, err := handler(cCtx, req)
 		return h, err
 	}
 }
 
-func streamRouterAssigner(router *rpcrouter.Router) grpc.StreamServerInterceptor {
+func streamBindContext(router *rpcrouter.Router, cfg *datadir.Config) grpc.StreamServerInterceptor {
 	return func(srv interface{},
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler) error {
 		rCtx := context.WithValue(ss.Context(), "router", router)
+		cCtx := context.WithValue(rCtx, "config", cfg)
 		wrappedStream := grpc_middleware.WrapServerStream(ss)
-		wrappedStream.WrappedContext = rCtx
+		wrappedStream.WrappedContext = cCtx
 		return handler(srv, wrappedStream)
 	}
 }

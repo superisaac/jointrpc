@@ -50,8 +50,10 @@ func (self *Router) Init(name string) *Router {
 	self.name = name
 	self.routerLock = new(sync.RWMutex)
 	self.methodConnMap = make(map[string]([]MethodDesc))
+	self.delegateConnMap = make(map[string][]MethodDelegation)
 	self.fallbackConns = make([]*ConnT, 0)
 	self.connMap = make(map[CID](*ConnT))
+
 	self.pendingMap = make(map[PendingKey]PendingValue)
 	self.localMethodsSig = ""
 	self.setupChannels()
