@@ -26,8 +26,9 @@ type CID uint64
 
 // Commands
 type MsgVec struct {
-	Msg        jsonrpc.IMessage
-	FromConnId CID
+	Msg          jsonrpc.IMessage
+	FromConnId   CID
+	TargetConnId CID
 }
 type MsgChannel chan MsgVec
 

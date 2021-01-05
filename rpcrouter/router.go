@@ -300,9 +300,14 @@ func (self *Router) leaveConn(conn *ConnT) {
 	self.probeMethodChange()
 }
 
-func (self *Router) SelectConn(method string) (*ConnT, bool) {
+func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
+
+	if targetConnId != CID(0) {
+		conn, found := self.connMap[targetConnId]
+		return conn, found
+	}
 
 	if descs, ok := self.methodConnMap[method]; ok && len(descs) > 0 {
 		index := rand.Intn(len(descs))
@@ -343,7 +348,7 @@ func (self *Router) ClearTimeoutRequests() {
 	for pKey, pValue := range self.pendingMap {
 		if now.After(pValue.Expire) {
 			errMsg := jsonrpc.RPCErrorMessage(pKey.MsgId, 408, "request timeout", true)
-			msgvec := MsgVec{errMsg, CID(0)}
+			msgvec := MsgVec{Msg: errMsg}
 			_ = self.deliverMessage(pKey.ConnId, msgvec)
 		} else {
 			tmpMap[pKey] = pValue
@@ -372,7 +377,7 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 	msg := cmdMsg.MsgVec.Msg
 	fromConnId := cmdMsg.MsgVec.FromConnId
 	if msg.IsRequest() {
-		toConn, found := self.SelectConn(msg.MustMethod())
+		toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
 		if found {
 			pKey := PendingKey{ConnId: fromConnId, MsgId: msg.MustId()}
 			expireTime := time.Now().Add(DefaultRequestTimeout)
@@ -382,14 +387,14 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 			return self.deliverMessage(toConn.ConnId, cmdMsg.MsgVec)
 		} else {
 			errMsg := jsonrpc.RPCErrorMessage(msg.MustId(), 404, "method not found", false)
-			errMsgVec := MsgVec{errMsg, CID(0)}
+			errMsgVec := MsgVec{Msg: errMsg}
 			return self.deliverMessage(fromConnId, errMsgVec)
 		}
 	} else if msg.IsNotify() {
 		if cmdMsg.Broadcast {
 			self.broadcastMessage(cmdMsg.MsgVec)
 		} else {
-			toConn, found := self.SelectConn(msg.MustMethod())
+			toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
 			if found {
 				return self.deliverMessage(
 					toConn.ConnId, cmdMsg.MsgVec)

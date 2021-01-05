@@ -68,7 +68,7 @@ func TestRouteMessage(t *testing.T) {
 	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.MustId())
-	router.RouteMessage(CmdMsg{MsgVec{msg, conn.ConnId}, false})
+	router.RouteMessage(CmdMsg{MsgVec{Msg: msg, FromConnId: conn.ConnId}, false})
 
 	rcvmsg := <-conn.RecvChannel
 	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
@@ -82,32 +82,46 @@ func TestRouteRoutine(t *testing.T) {
 	router.Start(ctx)
 	defer cancel()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 
 	conn := router.Join()
 	cid := conn.ConnId
 	ch := conn.RecvChannel
+
 	router.ChServe <- CmdServe{ConnId: cid, Methods: []MethodInfo{{"abc", "method abc", "", nil}}}
 
 	conn1 := router.Join()
 	cid1 := conn1.ConnId
-
 	j1 := `{
 "id": 100002,
 "method": "abc",
 "params": [1, 3]
 }`
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.MustId())
 
-	router.ChMsg <- CmdMsg{MsgVec{msg, cid1}, false}
+	router.ChMsg <- CmdMsg{MsgVec{Msg: msg, FromConnId: cid1, TargetConnId: cid}, false}
 
-	//fmt.Printf("will rcv %v\n", ch)
 	rcvmsg := <-ch
-	//fmt.Printf("recved %v\n", rcvmsg)
-
 	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
+
+	// wrong target id
+	conn2 := router.Join()
+	cid2 := conn2.ConnId
+	j2 := `{
+"id": 100003,
+"method": "abc",
+"params": [2, 6]
+}`
+	msg2, err := jsonrpc.ParseBytes([]byte(j2))
+	assert.Nil(err)
+	assert.Equal(json.Number("100003"), msg2.MustId())
+	router.ChMsg <- CmdMsg{MsgVec{Msg: msg2, FromConnId: cid2, TargetConnId: CID(int(cid) + 100)}, false}
+	rcvmsg2 := <-conn2.RecvChannel
+	assert.Equal(msg2.MustId(), rcvmsg2.Msg.MustId())
+	assert.True(rcvmsg2.Msg.IsError())
+
 }
