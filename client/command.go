@@ -111,9 +111,9 @@ func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}) er
 
 // Call ListMethods
 func CommandListMethods() {
-	listMethodsFlags := flag.NewFlagSet("listmethods", flag.ExitOnError)
-	serverFlag := NewServerFlag(listMethodsFlags)
-	listMethodsFlags.Parse(os.Args[2:])
+	aFlags := flag.NewFlagSet("methods", flag.ExitOnError)
+	serverFlag := NewServerFlag(aFlags)
+	aFlags.Parse(os.Args[2:])
 
 	err := RunListMethods(serverFlag.Get())
 	if err != nil {
@@ -135,6 +135,36 @@ func RunListMethods(serverEntry ServerEntry) error {
 	fmt.Printf("available methods:\n")
 	for _, minfo := range methodInfos {
 		fmt.Printf("  %s\t%s\n", minfo.Name, minfo.Help)
+	}
+	return nil
+}
+
+// Call ListDelegates
+func CommandListDelegates() {
+	aFlags := flag.NewFlagSet("delegates", flag.ExitOnError)
+	serverFlag := NewServerFlag(aFlags)
+	aFlags.Parse(os.Args[2:])
+
+	err := RunListDelegates(serverFlag.Get())
+	if err != nil {
+		panic(err)
+	}
+}
+
+func RunListDelegates(serverEntry ServerEntry) error {
+	client := NewRPCClient(serverEntry)
+	err := client.Connect()
+	if err != nil {
+		return err
+	}
+	delegates, err := client.ListDelegates(context.Background())
+	if err != nil {
+		return nil
+	}
+
+	fmt.Printf("delegated methods:\n")
+	for _, name := range delegates {
+		fmt.Printf("  %s\n", name)
 	}
 	return nil
 }

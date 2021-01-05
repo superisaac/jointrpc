@@ -42,7 +42,7 @@ func (self *RPCClient) Connect() error {
 
 	serverUrl, err := url.Parse(self.serverEntry.ServerUrl)
 	if err != nil {
-		log.Fatalf("error parse server entry url %s, %+v", self.serverEntry.ServerUrl, err)
+		log.Panicf("error parse server entry url %s, %+v", self.serverEntry.ServerUrl, err)
 	}
 
 	if serverUrl.Scheme == "h2c" {
@@ -56,7 +56,7 @@ func (self *RPCClient) Connect() error {
 			opts = append(opts, grpc.WithTransportCredentials(creds))
 		}
 	} else {
-		log.Fatalf("invalid server url scheme %s", serverUrl.Scheme)
+		log.Panicf("invalid server url scheme %s", serverUrl.Scheme)
 	}
 	conn, err := grpc.Dial(serverUrl.Host, opts...)
 	if err != nil {

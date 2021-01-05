@@ -16,7 +16,8 @@ import (
 var commands []string = []string{
 	"server", "rpc", "call",
 	"watch", "notify",
-	"listmethods", "watchstate",
+	"methods", "watchstate",
+	"delegates",
 	"bridge",
 	"example.array",
 	"help",
@@ -70,9 +71,12 @@ func main() {
 	case "server":
 
 		server.CommandStartServer()
-	case "listmethods":
+	case "methods":
 		setupClientSideLogger("")
 		client.CommandListMethods()
+	case "delegates":
+		setupClientSideLogger("")
+		client.CommandListDelegates()
 	case "watchstate":
 		setupClientSideLogger("")
 		client.CommandWatchState()
