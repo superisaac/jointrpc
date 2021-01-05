@@ -32,8 +32,8 @@ func StartMirrorsForPeers(rootCtx context.Context) {
 		var serverEntries []client.ServerEntry
 		for _, peer := range cfg.Cluster.StaticPeers {
 			serverEntries = append(serverEntries, client.ServerEntry{
-				Address:  peer.Address,
-				CertFile: peer.CertFile,
+				ServerUrl: peer.ServerUrl,
+				CertFile:  peer.CertFile,
 			})
 		}
 		go StartNewMirror(rootCtx, serverEntries)
@@ -57,7 +57,7 @@ func NewMirror(entries []client.ServerEntry, router *rpcrouter.Router) *Mirror {
 }
 
 func (self *Mirror) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {
-	if _, ok := self.edges[entry.Address]; ok {
+	if _, ok := self.edges[entry.ServerUrl]; ok {
 		//log.Warnf("remote client already exist %s", self.remoteClient)
 		panic(errors.New("client already exists"))
 	}
@@ -69,12 +69,12 @@ func (self *Mirror) connectRemote(rootCtx context.Context, entry client.ServerEn
 	}
 	edge := NewEdge()
 	edge.remoteClient = c
-	self.edges[entry.Address] = edge
+	self.edges[entry.ServerUrl] = edge
 
 	c.OnStateChange(func(state *rpcrouter.TubeState) {
 		self.ChState <- CmdStateChange{
-			ServerAddress: entry.Address,
-			State:         state,
+			ServerUrl: entry.ServerUrl,
+			State:     state,
 		}
 	})
 	c.Handle(rootCtx)
@@ -157,7 +157,7 @@ func (self *Mirror) messageReceived(msgvec rpcrouter.MsgVec) error {
 }
 
 func (self *Mirror) handleStateChange(stateChange CmdStateChange) {
-	if edge, ok := self.edges[stateChange.ServerAddress]; ok {
+	if edge, ok := self.edges[stateChange.ServerUrl]; ok {
 		var newMethods []rpcrouter.MethodInfo
 		methodNames := make(misc.StringSet)
 		for _, minfo := range stateChange.State.Methods {
@@ -176,7 +176,7 @@ func (self *Mirror) handleStateChange(stateChange CmdStateChange) {
 		edge.methodNames = methodNames
 		self.tryUpdateMethods()
 	} else {
-		log.Warnf("fail to find edges %s", stateChange.ServerAddress)
+		log.Warnf("fail to find edges %s", stateChange.ServerUrl)
 	}
 }
 

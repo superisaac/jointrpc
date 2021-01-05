@@ -13,8 +13,8 @@ type Edge struct {
 }
 
 type CmdStateChange struct {
-	serverAddress string
-	state         *rpcrouter.TubeState
+	serverUrl string
+	state     *rpcrouter.TubeState
 }
 
 type Bridge struct {

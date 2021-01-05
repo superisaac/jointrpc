@@ -41,7 +41,7 @@ func TestMirrorRun(t *testing.T) {
 
 	// start server2
 	cfg := datadir.NewConfig()
-	cfg.Cluster.StaticPeers = []datadir.PeerConfig{{"localhost:10010", ""}}
+	cfg.Cluster.StaticPeers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
 	go StartServer(rootCtx, "localhost:10011", cfg)
 	time.Sleep(100 * time.Millisecond)
 
@@ -49,7 +49,7 @@ func TestMirrorRun(t *testing.T) {
 	go StartServer(rootCtx, "localhost:10012", nil)
 
 	// start client1, the serve of add2int()
-	c1 := client.NewRPCClient(client.ServerEntry{"localhost:10010", ""})
+	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10010", ""})
 	c1.On("add2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
 		b := jsonrpc.MustInt(params[1], "params[1]")
@@ -63,7 +63,7 @@ func TestMirrorRun(t *testing.T) {
 
 	// start c2, the add2int() caller to server2
 	time.Sleep(100 * time.Millisecond)
-	c2 := client.NewRPCClient(client.ServerEntry{"localhost:10011", ""})
+	c2 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10011", ""})
 	err = c2.Connect()
 	assert.Nil(err)
 
@@ -80,7 +80,7 @@ func TestMirrorRun(t *testing.T) {
 	assert.Equal(json.Number("11"), res.MustResult())
 
 	// start client3
-	c3 := client.NewRPCClient(client.ServerEntry{"localhost:10012", ""})
+	c3 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10012", ""})
 	err = c3.Connect()
 	assert.Nil(err)
 

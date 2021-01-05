@@ -7,8 +7,8 @@ import (
 )
 
 type ServerEntry struct {
-	Address  string
-	CertFile string
+	ServerUrl string // raw url, scheme must be h2 or h2c
+	CertFile  string
 }
 
 type ServerFlag struct {

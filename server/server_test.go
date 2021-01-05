@@ -35,7 +35,7 @@ func TestServerClientRound(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	c := client.NewRPCClient(client.ServerEntry{"127.0.0.1:10001", ""})
+	c := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10001", ""})
 	err := c.Connect()
 	assert.Nil(err)
 
@@ -55,8 +55,8 @@ func TestServerClientRound(t *testing.T) {
 	assert.Equal("Validation Error: .params[0] data is not string", errbody["reason"])
 }
 
-func StartTestServe(rootCtx context.Context, serverAddress string) {
-	c := client.NewRPCClient(client.ServerEntry{serverAddress, ""})
+func StartTestServe(rootCtx context.Context, serverUrl string) {
+	c := client.NewRPCClient(client.ServerEntry{serverUrl, ""})
 	c.On("add2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
 		b := jsonrpc.MustInt(params[1], "params[1]")
@@ -77,10 +77,10 @@ func TestClientAsServe(t *testing.T) {
 	go StartServer(ctx, "127.0.0.1:10002", nil)
 	time.Sleep(100 * time.Millisecond)
 
-	go StartTestServe(ctx, "127.0.0.1:10002")
+	go StartTestServe(ctx, "h2c://127.0.0.1:10002")
 	time.Sleep(100 * time.Millisecond)
 
-	c := client.NewRPCClient(client.ServerEntry{"127.0.0.1:10002", ""})
+	c := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10002", ""})
 	err := c.Connect()
 	assert.Nil(err)
 

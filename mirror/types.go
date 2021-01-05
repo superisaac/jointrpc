@@ -15,8 +15,8 @@ type Edge struct {
 }
 
 type CmdStateChange struct {
-	ServerAddress string
-	State         *rpcrouter.TubeState
+	ServerUrl string
+	State     *rpcrouter.TubeState
 }
 
 type Mirror struct {

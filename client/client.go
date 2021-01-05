@@ -1,21 +1,23 @@
 package client
 
 import (
+	//"fmt"
 	"context"
 	"flag"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"io"
+	"net/url"
+	"os"
+	"time"
 	//server "github.com/superisaac/jointrpc/server"
 	encoding "github.com/superisaac/jointrpc/encoding"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	credentials "google.golang.org/grpc/credentials"
-	"io"
-	"os"
-	"time"
 )
 
 func NewRPCClient(serverEntry ServerEntry) *RPCClient {
@@ -32,21 +34,31 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 }
 
 func (self RPCClient) String() string {
-	return self.serverEntry.Address
+	return self.serverEntry.ServerUrl
 }
 
 func (self *RPCClient) Connect() error {
 	var opts []grpc.DialOption
-	if self.serverEntry.CertFile != "" {
-		creds, err := credentials.NewClientTLSFromFile(self.serverEntry.CertFile, "")
-		if err != nil {
-			panic(err)
-		}
-		opts = append(opts, grpc.WithTransportCredentials(creds))
-	} else {
-		opts = append(opts, grpc.WithInsecure())
+
+	serverUrl, err := url.Parse(self.serverEntry.ServerUrl)
+	if err != nil {
+		log.Fatalf("error parse server entry url %s, %+v", self.serverEntry.ServerUrl, err)
 	}
-	conn, err := grpc.Dial(self.serverEntry.Address, opts...)
+
+	if serverUrl.Scheme == "h2c" {
+		opts = append(opts, grpc.WithInsecure())
+	} else if serverUrl.Scheme == "h2" {
+		if self.serverEntry.CertFile != "" {
+			creds, err := credentials.NewClientTLSFromFile(self.serverEntry.CertFile, "")
+			if err != nil {
+				panic(err)
+			}
+			opts = append(opts, grpc.WithTransportCredentials(creds))
+		}
+	} else {
+		log.Fatalf("invalid server url scheme %s", serverUrl.Scheme)
+	}
+	conn, err := grpc.Dial(serverUrl.Host, opts...)
 	if err != nil {
 		return err
 	}
@@ -214,19 +226,19 @@ func NewServerFlag(flagSet *flag.FlagSet) *ServerFlag {
 
 func (self *ServerFlag) ptrValue() ServerEntry {
 	return ServerEntry{
-		Address:  *self.pAddress,
-		CertFile: *self.pCertFile,
+		ServerUrl: *self.pAddress,
+		CertFile:  *self.pCertFile,
 	}
 }
 
 func (self *ServerFlag) Get() ServerEntry {
 	value := self.ptrValue()
-	if value.Address == "" {
-		value.Address = os.Getenv("TUBE_CONNECT")
+	if value.ServerUrl == "" {
+		value.ServerUrl = os.Getenv("TUBE_CONNECT")
 	}
 
-	if value.Address == "" {
-		value.Address = "localhost:50055"
+	if value.ServerUrl == "" {
+		value.ServerUrl = "localhost:50055"
 	}
 
 	if value.CertFile == "" {

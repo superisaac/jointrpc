@@ -42,7 +42,7 @@ func NewBridge(entries []client.ServerEntry) *Bridge {
 }
 
 func (self *Bridge) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {
-	if _, ok := self.edges[entry.Address]; ok {
+	if _, ok := self.edges[entry.ServerUrl]; ok {
 		//log.Warnf("remote client already exist %s", self.remoteClient)
 		panic(errors.New("client already exists"))
 	}
@@ -54,16 +54,16 @@ func (self *Bridge) connectRemote(rootCtx context.Context, entry client.ServerEn
 	}
 	edge := NewEdge()
 	edge.remoteClient = c
-	self.edges[entry.Address] = edge
+	self.edges[entry.ServerUrl] = edge
 
 	c.OnStateChange(func(state *rpcrouter.TubeState) {
 		self.ChState <- CmdStateChange{
-			serverAddress: entry.Address,
-			state:         state,
+			serverUrl: entry.ServerUrl,
+			state:     state,
 		}
 	})
 	c.OnDefault(func(req *handler.RPCRequest, method string, params []interface{}) (interface{}, error) {
-		return self.messageReceived(req.MsgVec.Msg, entry.Address)
+		return self.messageReceived(req.MsgVec.Msg, entry.ServerUrl)
 	})
 	// TODO: concurrent
 	c.Handle(rootCtx)
@@ -120,7 +120,7 @@ func (self *Bridge) messageReceived(msg jsonrpc.IMessage, fromAddress string) (i
 }
 
 func (self *Bridge) handleStateChange(stateChange CmdStateChange) {
-	if edge, ok := self.edges[stateChange.serverAddress]; ok {
+	if edge, ok := self.edges[stateChange.serverUrl]; ok {
 		// update edge records
 		methodNames := make(misc.StringSet)
 		for _, minfo := range stateChange.state.Methods {
@@ -134,9 +134,9 @@ func (self *Bridge) handleStateChange(stateChange CmdStateChange) {
 		}
 		edge.methodNames = methodNames
 
-		self.exchangeDelegateMethods(stateChange.serverAddress)
+		self.exchangeDelegateMethods(stateChange.serverUrl)
 	} else {
-		log.Warnf("fail to find edges %s", stateChange.serverAddress)
+		log.Warnf("fail to find edges %s", stateChange.serverUrl)
 	}
 }
 

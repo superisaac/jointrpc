@@ -26,12 +26,11 @@ func CommandStartBridge() {
 
 	serverEntries := make([]client.ServerEntry, 0)
 
-	for _, serverAddress := range args {
+	for _, connect := range args {
 		serverEntries = append(serverEntries, client.ServerEntry{
-			Address:  serverAddress,
-			CertFile: *pCertFile,
+			ServerUrl: connect,
+			CertFile:  *pCertFile,
 		})
 	}
-
 	StartNewBridge(context.Background(), serverEntries)
 }
