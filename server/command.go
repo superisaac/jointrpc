@@ -11,6 +11,7 @@ import (
 	datadir "github.com/superisaac/jointrpc/datadir"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	mirror "github.com/superisaac/jointrpc/mirror"
+	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	grpc "google.golang.org/grpc"
@@ -77,8 +78,7 @@ func StartServer(rootCtx context.Context, bind string, cfg *datadir.Config, opts
 	router := rpcrouter.NewRouter("grpc_server")
 	go router.Start(rootCtx)
 
-	aCtx := context.WithValue(rootCtx, "config", cfg)
-	aCtx = context.WithValue(aCtx, "router", router)
+	aCtx := misc.NewBinder(rootCtx).Bind("router", router).Bind("config", cfg).Context()
 
 	handler.StartBuiltinHandlerManager(aCtx)
 
@@ -100,8 +100,8 @@ func unaryBindContext(router *rpcrouter.Router, cfg *datadir.Config) grpc.UnaryS
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp interface{}, err error) {
-		rCtx := context.WithValue(ctx, "router", router)
-		cCtx := context.WithValue(rCtx, "config", cfg)
+		b := misc.NewBinder(ctx)
+		cCtx := b.Bind("router", router).Bind("config", cfg).Context()
 		h, err := handler(cCtx, req)
 		return h, err
 	}
@@ -112,10 +112,10 @@ func streamBindContext(router *rpcrouter.Router, cfg *datadir.Config) grpc.Strea
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler) error {
-		rCtx := context.WithValue(ss.Context(), "router", router)
-		cCtx := context.WithValue(rCtx, "config", cfg)
+
+		b := misc.NewBinder(ss.Context())
 		wrappedStream := grpc_middleware.WrapServerStream(ss)
-		wrappedStream.WrappedContext = cCtx
+		wrappedStream.WrappedContext = b.Bind("router", router).Bind("config", cfg).Context()
 		return handler(srv, wrappedStream)
 	}
 }
