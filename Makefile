@@ -22,6 +22,7 @@ test:
 	go test -v github.com/superisaac/jointrpc/jsonrpc/schema
 	go test -v github.com/superisaac/jointrpc/rpcrouter
 	go test -v github.com/superisaac/jointrpc/server
+	go test -v github.com/superisaac/jointrpc/cluster/bridge
 
 clean:
 	rm -rf bin/jointrpc
@@ -39,7 +40,6 @@ gofmt:
 	go fmt jsonrpc/schema/*.go
 	go fmt encoding/*.go
 	go fmt cluster/bridge/*.go
-
 
 install: bin/jointrpc
 	install $< /usr/local/bin
