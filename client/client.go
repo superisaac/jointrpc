@@ -37,6 +37,18 @@ func (self RPCClient) String() string {
 	return self.serverEntry.ServerUrl
 }
 
+func (self RPCClient) certFileFromFragment(serverUrl *url.URL) string {
+	if serverUrl.Fragment != "" {
+		v, err := url.ParseQuery(serverUrl.Fragment)
+		if err != nil {
+			log.Warnf("server url fragment parse error %s %+v", serverUrl.Fragment, err)
+		} else {
+			return v.Get("cert")
+		}
+	}
+	return ""
+}
+
 func (self *RPCClient) Connect() error {
 	var opts []grpc.DialOption
 
@@ -48,8 +60,12 @@ func (self *RPCClient) Connect() error {
 	if serverUrl.Scheme == "h2c" {
 		opts = append(opts, grpc.WithInsecure())
 	} else if serverUrl.Scheme == "h2" {
-		if self.serverEntry.CertFile != "" {
-			creds, err := credentials.NewClientTLSFromFile(self.serverEntry.CertFile, "")
+		certFile := self.certFileFromFragment(serverUrl)
+		if certFile == "" {
+			certFile = self.serverEntry.CertFile
+		}
+		if certFile != "" {
+			creds, err := credentials.NewClientTLSFromFile(certFile, "")
 			if err != nil {
 				panic(err)
 			}

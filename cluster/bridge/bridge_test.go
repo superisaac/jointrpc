@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	client "github.com/superisaac/jointrpc/client"
-	server "github.com/superisaac/jointrpc/server"	
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	server "github.com/superisaac/jointrpc/server"
 	//mirror "github.com/superisaac/jointrpc/cluster/mirror"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	"testing"
@@ -36,7 +36,7 @@ func TestBridgeRun(t *testing.T) {
 
 	rootCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	// start server1
 	go server.StartServer(rootCtx, "localhost:10020", nil)
 	// start server2
@@ -47,7 +47,7 @@ func TestBridgeRun(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	serverEntries := []client.ServerEntry{{"h2c://localhost:10020", ""}, {"h2c://localhost:10021", ""}, {"h2c://localhost:10022", ""}}
-		
+
 	go StartNewBridge(rootCtx, serverEntries)
 
 	// start client1, the serve of add2int()
@@ -91,7 +91,7 @@ func TestBridgeRun(t *testing.T) {
 	res3, err := c3.CallRPC(ctx2, "add2int", [](interface{}){15, 16})
 	assert.Nil(err)
 	assert.True(res3.IsResult())
-	assert.Equal(json.Number("31"), res3.MustResult())	
+	assert.Equal(json.Number("31"), res3.MustResult())
 
 	// close client serve, the add2int() provider
 	cancelServo()

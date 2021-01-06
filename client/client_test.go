@@ -1,29 +1,21 @@
 package client
 
 import (
-	"context"
 	"github.com/stretchr/testify/assert"
-	server "github.com/superisaac/jointrpc/server"
+	"net/url"
 	"testing"
-	"time"
 )
 
-func TestServerClientRound(t *testing.T) {
+func TestServerUrl(t *testing.T) {
 	assert := assert.New(t)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go server.StartServer(ctx, "127.0.0.1:10001")
-
-	time.Sleep(1 * time.Second)
-
-	c := NewRPCClient(ServerEntry{"127.0.0.1:10001", ""})
-
-	err := c.Connect()
+	ustr := "h2c://localhost:8999#cert=/tmp/p1.cert&ff=kk"
+	u, err := url.Parse(ustr)
 	assert.Nil(err)
 
-	res, err := client.CallRPC(ctx, ".listMethods", [](interface{}){})
-	assert.Nil(res)
-	fmt.Printf("res %+v", res)
+	assert.Equal("cert=/tmp/p1.cert&ff=kk", u.Fragment)
+
+	v, err := url.ParseQuery(u.Fragment)
+	assert.Nil(err)
+	assert.Equal("", v.Get("opp"))
+	assert.Equal("/tmp/p1.cert", v.Get("cert"))
 }
