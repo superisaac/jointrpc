@@ -37,6 +37,14 @@ func (self RPCClient) String() string {
 	return self.serverEntry.ServerUrl
 }
 
+func (self RPCClient) ServerEntry() ServerEntry {
+	return self.serverEntry
+}
+
+func (self RPCClient) Connected() bool {
+	return self.connected
+}
+
 func (self RPCClient) certFileFromFragment(serverUrl *url.URL) string {
 	if serverUrl.Fragment != "" {
 		v, err := url.ParseQuery(serverUrl.Fragment)
@@ -111,13 +119,14 @@ func (self *RPCClient) UpdateDelegateMethods(methods []string) {
 func (self *RPCClient) Handle(rootCtx context.Context) error {
 	for {
 		err := self.handleRPC(rootCtx)
+		self.connected = false
 		if err != nil {
-			if grpc.Code(err) == codes.Unavailable {
-				log.Debugf("connect closed retrying")
-			} else {
-				return err
-			}
+			return err
 		}
+		if self.onConnectionLost != nil {
+			self.onConnectionLost()
+		}
+		// wait to retry
 		time.Sleep(1 * time.Second)
 	}
 	return nil
@@ -127,6 +136,7 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_Ha
 	for {
 		select {
 		case <-ctx.Done():
+			//stream.
 			return
 		case uppacket, ok := <-self.sendUpChannel:
 			if !ok {
@@ -148,6 +158,13 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_Ha
 	}
 }
 
+func (self *RPCClient) OnConnected(cb ConnectedCallback) {
+	self.onConnected = cb
+}
+func (self *RPCClient) OnConnectionLost(cb ConnectionLostCallback) {
+	self.onConnectionLost = cb
+}
+
 func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
 	self.sendUpChannel <- uppack
 }
@@ -163,6 +180,10 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 		return err
 	}
 	log.Debugf("connected")
+	self.connected = true
+	if self.onConnected != nil {
+		self.onConnected()
+	}
 
 	sendCtx, sendCancel := context.WithCancel(rootCtx)
 	defer sendCancel()
@@ -176,6 +197,9 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 		downpac, err := stream.Recv()
 		if err == io.EOF {
 			log.Infof("client stream closed")
+			return nil
+		} else if grpc.Code(err) == codes.Unavailable {
+			log.Debugf("connect closed retrying")
 			return nil
 		} else if err != nil {
 			log.Debugf("down pack error %+v %d", err, grpc.Code(err))

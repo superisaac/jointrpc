@@ -1,8 +1,9 @@
 package bridge
 
 import (
+	//"fmt"
 	"context"
-	"errors"
+	//"errors"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
 	"strings"
@@ -12,18 +13,6 @@ import (
 	"github.com/superisaac/jointrpc/rpcrouter"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 )
-
-// edge methods
-func NewEdge() *Edge {
-	return &Edge{
-		methodNames: make(misc.StringSet),
-	}
-}
-
-func (self Edge) hasMethod(methodName string) bool {
-	_, ok := self.methodNames[methodName]
-	return ok
-}
 
 // Bridge
 func StartNewBridge(rootCtx context.Context, entries []client.ServerEntry) *Bridge {
@@ -41,38 +30,11 @@ func NewBridge(entries []client.ServerEntry) *Bridge {
 	return bridge
 }
 
-func (self *Bridge) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {
-	if _, ok := self.edges[entry.ServerUrl]; ok {
-		//log.Warnf("remote client already exist %s", self.remoteClient)
-		panic(errors.New("client already exists"))
-	}
-	c := client.NewRPCClient(entry)
-
-	err := c.Connect()
-	if err != nil {
-		return err
-	}
-	edge := NewEdge()
-	edge.remoteClient = c
-	self.edges[entry.ServerUrl] = edge
-
-	c.OnStateChange(func(state *rpcrouter.TubeState) {
-		self.ChState <- CmdStateChange{
-			serverUrl: entry.ServerUrl,
-			state:     state,
-		}
-	})
-	c.OnDefault(func(req *handler.RPCRequest, method string, params []interface{}) (interface{}, error) {
-		return self.messageReceived(req.MsgVec.Msg, entry.ServerUrl)
-	})
-	// TODO: concurrent
-	c.Handle(rootCtx)
-	return nil
-}
-
 func (self *Bridge) Start(rootCtx context.Context) error {
 	for _, entry := range self.serverEntries {
-		go self.connectRemote(rootCtx, entry)
+		edge := NewEdge(entry)
+		self.edges[entry.ServerUrl] = edge
+		go edge.Start(rootCtx, self)
 	}
 
 	mainCtx, mainCancel := context.WithCancel(rootCtx)
@@ -120,27 +82,14 @@ func (self *Bridge) messageReceived(msg jsonrpc.IMessage, fromAddress string) (i
 }
 
 func (self *Bridge) handleStateChange(stateChange CmdStateChange) {
-	if edge, ok := self.edges[stateChange.serverUrl]; ok {
-		// update edge records
-		methodNames := make(misc.StringSet)
-		for _, minfo := range stateChange.state.Methods {
-			if strings.HasPrefix(minfo.Name, ".") {
-				continue
-			}
-			if _, ok := methodNames[minfo.Name]; ok {
-				continue
-			}
-			methodNames[minfo.Name] = true
-		}
-		edge.methodNames = methodNames
-
-		self.exchangeDelegateMethods(stateChange.serverUrl)
+	if fromEdge, ok := self.edges[stateChange.serverUrl]; ok {
+		self.exchangeDelegateMethods(fromEdge)
 	} else {
 		log.Warnf("fail to find edges %s", stateChange.serverUrl)
 	}
 }
 
-func (self *Bridge) exchangeDelegateMethodsForEdge(aEdge *Edge, fromAddress string) {
+func (self *Bridge) exchangeDelegateMethodsForEdge(aEdge *Edge) {
 	uni := misc.NewStringUnifier()
 	for _, edge := range self.edges {
 		if edge == aEdge {
@@ -150,14 +99,90 @@ func (self *Bridge) exchangeDelegateMethodsForEdge(aEdge *Edge, fromAddress stri
 			uni.Add(mname)
 		}
 	}
-	aEdge.remoteClient.UpdateDelegateMethods(uni.Result())
+	aEdge.UpdateDelegateMethods(uni.Result())
 }
 
-func (self *Bridge) exchangeDelegateMethods(fromAddress string) {
-	for sname, edge := range self.edges {
-		if sname == fromAddress {
+func (self *Bridge) exchangeDelegateMethods(fromEdge *Edge) {
+	for _, edge := range self.edges {
+		if edge == fromEdge {
 			continue
 		}
-		self.exchangeDelegateMethodsForEdge(edge, fromAddress)
+		self.exchangeDelegateMethodsForEdge(edge)
+	}
+}
+
+// edge methods
+func NewEdge(entry client.ServerEntry) *Edge {
+	return &Edge{
+		remoteClient: client.NewRPCClient(entry),
+		methodNames:  make(misc.StringSet),
+	}
+}
+
+func (self Edge) hasMethod(methodName string) bool {
+	_, ok := self.methodNames[methodName]
+	return ok
+}
+
+func (self *Edge) onStateChange(state *rpcrouter.TubeState) {
+	//fmt.Printf("state change %v\b", state)
+	// update edge records
+	methodNames := make(misc.StringSet)
+	if state != nil {
+		for _, minfo := range state.Methods {
+			if strings.HasPrefix(minfo.Name, ".") {
+				continue
+			}
+			if _, ok := methodNames[minfo.Name]; ok {
+				continue
+			}
+			methodNames[minfo.Name] = true
+		}
+	}
+	self.methodNames = methodNames
+}
+
+func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
+	entry := self.remoteClient.ServerEntry()
+	self.remoteClient.OnStateChange(func(state *rpcrouter.TubeState) {
+		self.onStateChange(state)
+		bridge.ChState <- CmdStateChange{
+			serverUrl: entry.ServerUrl,
+			state:     state,
+		}
+	})
+	self.remoteClient.OnConnected(func() {
+		log.Debugf("bridge client connected %s\n", entry.ServerUrl)
+		if self.delegateMethods != nil || len(self.delegateMethods) > 0 {
+			self.remoteClient.UpdateDelegateMethods(self.delegateMethods)
+		}
+	})
+	self.remoteClient.OnConnectionLost(func() {
+		log.Debugf("bridge client on connection lost %s\n", entry.ServerUrl)
+		self.onStateChange(nil)
+		bridge.ChState <- CmdStateChange{
+			serverUrl: entry.ServerUrl,
+			state:     nil,
+		}
+	})
+
+	self.remoteClient.OnDefault(func(req *handler.RPCRequest, method string, params []interface{}) (interface{}, error) {
+		return bridge.messageReceived(req.MsgVec.Msg, entry.ServerUrl)
+	})
+
+	err := self.remoteClient.Connect()
+	if err != nil {
+		return err
+	}
+	// TODO: concurrent
+	return self.remoteClient.Handle(rootCtx)
+}
+
+func (self *Edge) UpdateDelegateMethods(methods []string) {
+	//log.Infof("delegate %v", methods)
+	self.delegateMethods = methods
+	if self.remoteClient.Connected() {
+		//log.Infof("client %s update methods %+v", self.remoteClient.ServerEntry().ServerUrl, self.delegateMethods)
+		self.remoteClient.UpdateDelegateMethods(self.delegateMethods)
 	}
 }

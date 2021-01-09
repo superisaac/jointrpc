@@ -1,7 +1,6 @@
 package rpcrouter
 
 import (
-	//"fmt"
 	"context"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
@@ -86,7 +85,8 @@ func (self MethodInfo) ToMap() MethodInfoMap {
 func (self Router) GetDelegates() []string {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
-	arr := make([]string, 0)
+
+	var arr []string
 	for name, _ := range self.delegateConnMap {
 		arr = append(arr, name)
 	}

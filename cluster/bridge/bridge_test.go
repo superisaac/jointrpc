@@ -44,7 +44,7 @@ func TestBridgeRun(t *testing.T) {
 	// start server3
 	go server.StartServer(rootCtx, "localhost:10022", nil)
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 
 	serverEntries := []client.ServerEntry{{"h2c://localhost:10020", ""}, {"h2c://localhost:10021", ""}, {"h2c://localhost:10022", ""}}
 
@@ -64,7 +64,7 @@ func TestBridgeRun(t *testing.T) {
 	go c1.Handle(cCtx)
 
 	// start c2, the add2int() caller to server2
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 	c2 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10021", ""})
 	err = c2.Connect()
 	assert.Nil(err)
@@ -111,4 +111,86 @@ func TestBridgeRun(t *testing.T) {
 	assert.True(ok)
 	assert.Equal(json.Number("404"), errBody4["code"])
 	assert.Equal("method not found", errBody4["reason"])
+}
+
+func TestServerBreak(t *testing.T) {
+	assert := assert.New(t)
+
+	rootCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// start server1
+	ctx1, cancelServer1 := context.WithCancel(rootCtx)
+	go server.StartServer(ctx1, "localhost:10030", nil)
+	// start server2
+	go server.StartServer(rootCtx, "localhost:10031", nil)
+	// start server3
+	go server.StartServer(rootCtx, "localhost:10032", nil)
+
+	time.Sleep(100 * time.Millisecond)
+
+	serverEntries := []client.ServerEntry{{"h2c://localhost:10030", ""}, {"h2c://localhost:10031", ""}, {"h2c://localhost:10032", ""}}
+
+	go StartNewBridge(rootCtx, serverEntries)
+
+	// start client1, the serve of add2int()
+	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10030", ""})
+	c1.On("add2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+		a := jsonrpc.MustInt(params[0], "params[0]")
+		b := jsonrpc.MustInt(params[1], "params[1]")
+		return a + b, nil
+	}, handler.WithSchema(addSchema))
+	err := c1.Connect()
+	assert.Nil(err)
+	cCtx, cancelServo := context.WithCancel(context.Background())
+	defer cancelServo()
+	go c1.Handle(cCtx)
+	// start c2, the add2int() caller to server2
+	time.Sleep(100 * time.Millisecond)
+	c2 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10031", ""})
+	err = c2.Connect()
+	assert.Nil(err)
+
+	// call rpc from server2 which delegates server1
+	time.Sleep(100 * time.Millisecond)
+	ctx2, cancel1 := context.WithCancel(context.Background())
+	defer cancel1()
+	delegates, err := c2.ListDelegates(ctx1)
+	assert.Nil(err)
+	assert.Equal([]string{"add2int"}, delegates)
+	res, err := c2.CallRPC(ctx2, "add2int", [](interface{}){5, 6})
+	assert.Nil(err)
+	assert.True(res.IsResult())
+	assert.Equal(json.Number("11"), res.MustResult())
+	// close server1
+	cancelServer1()
+	time.Sleep(100 * time.Millisecond)
+
+	delegates1, err := c2.ListDelegates(context.Background())
+	assert.Nil(err)
+	assert.Nil(delegates1)
+
+	ctx3, cancel3 := context.WithCancel(context.Background())
+	defer cancel3()
+
+	resf, err := c2.CallRPC(ctx3, "add2int", [](interface{}){8, 12})
+	assert.Nil(err)
+	assert.True(resf.IsError())
+
+	// start client3
+	c3 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10032", ""})
+	err = c3.Connect()
+	assert.Nil(err)
+	// call rpc from server3 which doesnot delegates server1
+	ctx2, cancel2 := context.WithCancel(context.Background())
+	defer cancel2()
+	res3, err := c3.CallRPC(ctx2, "add2int", [](interface{}){15, 16})
+	assert.Nil(err)
+	assert.True(res3.IsError())
+
+	errBody3, ok := res3.MustError().(map[string]interface{})
+	assert.True(ok)
+	assert.Equal(json.Number("404"), errBody3["code"])
+	assert.Equal("method not found", errBody3["reason"])
+
 }

@@ -89,8 +89,20 @@ func StartServer(rootCtx context.Context, bind string, cfg *datadir.Config, opts
 			unaryBindContext(router, cfg)),
 		grpc.StreamInterceptor(
 			streamBindContext(router, cfg)))
-
 	grpcServer := grpc.NewServer(opts...)
+
+	serverCtx, cancelServer := context.WithCancel(rootCtx)
+	defer cancelServer()
+
+	go func() {
+		for {
+			<-serverCtx.Done()
+			log.Debugf("gRPC Server %s stops", bind)
+			grpcServer.Stop()
+			return
+		}
+	}()
+
 	intf.RegisterJointRPCServer(grpcServer, NewJointRPCServer())
 	grpcServer.Serve(lis)
 }

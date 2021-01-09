@@ -21,12 +21,19 @@ type RPCRequest struct {
 	// TODO: add more fields
 }
 
+type ConnectionLostCallback func()
+type ConnectedCallback func()
+
 type RPCClient struct {
 	handler.HandlerManager
 
 	serverEntry   ServerEntry
+	connected     bool
 	tubeClient    intf.JointRPCClient
 	sendUpChannel chan *intf.JointRPCUpPacket
+
+	onConnected      ConnectedCallback
+	onConnectionLost ConnectionLostCallback
 }
 
 type MethodUpdateReceiver chan []*intf.MethodInfo

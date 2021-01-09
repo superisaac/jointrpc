@@ -9,7 +9,8 @@ import (
 type Edge struct {
 	remoteClient *client.RPCClient
 	// set of names
-	methodNames misc.StringSet
+	methodNames     misc.StringSet
+	delegateMethods []string
 }
 
 type CmdStateChange struct {
