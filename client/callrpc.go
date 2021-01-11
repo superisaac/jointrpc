@@ -9,16 +9,16 @@ import (
 	//server "github.com/superisaac/jointrpc/server"
 )
 
-func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}) (jsonrpc.IMessage, error) {
+func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, broadcast bool) (jsonrpc.IMessage, error) {
 	msgId := 1
 
 	msg := jsonrpc.NewRequestMessage(msgId, method, params, nil)
-	return self.CallMessage(rootCtx, msg)
+	return self.CallMessage(rootCtx, msg, broadcast)
 }
 
-func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage) (jsonrpc.IMessage, error) {
+func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage, broadcast bool) (jsonrpc.IMessage, error) {
 	envolope := &intf.JSONRPCEnvolope{Body: msg.MustString()}
-	req := &intf.JSONRPCCallRequest{Envolope: envolope}
+	req := &intf.JSONRPCCallRequest{Envolope: envolope, Broadcast: broadcast}
 
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()

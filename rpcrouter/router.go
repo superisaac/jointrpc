@@ -1,6 +1,7 @@
 package rpcrouter
 
 import (
+	//"fmt"
 	"context"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
@@ -311,6 +312,22 @@ func (self *Router) leaveConn(conn *ConnT) {
 	self.probeMethodChange()
 }
 
+func (self *Router) ListConns(method string, limit int) []*ConnT {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+
+	var arr []*ConnT
+	if descs, ok := self.methodConnMap[method]; ok && len(descs) > 0 {
+		for _, desc := range descs {
+			arr = append(arr, desc.Conn)
+			if len(arr) >= limit {
+				break
+			}
+		}
+	}
+	return arr
+}
+
 func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
@@ -393,7 +410,6 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 			pKey := PendingKey{ConnId: fromConnId, MsgId: msg.MustId()}
 			expireTime := time.Now().Add(DefaultRequestTimeout)
 			pValue := PendingValue{ConnId: toConn.ConnId, Expire: expireTime}
-
 			self.setPending(pKey, pValue)
 			return self.deliverMessage(toConn.ConnId, cmdMsg.MsgVec)
 		} else {
@@ -402,14 +418,10 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 			return self.deliverMessage(fromConnId, errMsgVec)
 		}
 	} else if msg.IsNotify() {
-		if cmdMsg.Broadcast {
-			self.broadcastMessage(cmdMsg.MsgVec)
-		} else {
-			toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
-			if found {
-				return self.deliverMessage(
-					toConn.ConnId, cmdMsg.MsgVec)
-			}
+		toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
+		if found {
+			return self.deliverMessage(
+				toConn.ConnId, cmdMsg.MsgVec)
 		}
 	} else if msg.IsResultOrError() {
 		for pKey, pValue := range self.pendingMap {
@@ -432,23 +444,6 @@ func (self *Router) deliverMessage(connId CID, msgvec MsgVec) *ConnT {
 		return ct
 	}
 	return nil
-}
-
-func (self *Router) broadcastMessage(msgvec MsgVec) int {
-	log.Debugf("broadcast message %+v", msgvec.Msg)
-	cnt := 0
-	for _, ct := range self.connMap {
-		if ct.ConnId == msgvec.FromConnId {
-			// skip the from addr
-			continue
-		}
-		_, ok := ct.ServeMethods[msgvec.Msg.MustMethod()]
-		if ok {
-			cnt += 1
-			ct.RecvChannel <- msgvec
-		}
-	}
-	return cnt
 }
 
 func (self *Router) Start(ctx context.Context) {
@@ -552,21 +547,4 @@ func (self *Router) Leave(conn *ConnT) {
 	defer self.unlock("Leave")
 
 	self.leaveConn(conn)
-}
-
-func (self *Router) SingleCall(reqmsg jsonrpc.IMessage, broadcast bool) (jsonrpc.IMessage, error) {
-	if reqmsg.IsRequest() {
-		conn := self.Join()
-		defer self.Leave(conn)
-
-		self.ChMsg <- CmdMsg{
-			MsgVec: MsgVec{Msg: reqmsg, FromConnId: conn.ConnId}}
-		msgvec := <-conn.RecvChannel
-		return msgvec.Msg, nil
-	} else {
-		self.ChMsg <- CmdMsg{
-			MsgVec:    MsgVec{Msg: reqmsg, FromConnId: 0},
-			Broadcast: broadcast}
-		return nil, nil
-	}
 }

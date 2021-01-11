@@ -137,7 +137,7 @@ func (self *Mirror) messageReceived(msgvec rpcrouter.MsgVec) error {
 	if msg.IsRequest() {
 		for _, edge := range self.edges {
 			if edge.hasMethod(msg.MustMethod()) {
-				resmsg, err := edge.remoteClient.CallMessage(context.Background(), msg)
+				resmsg, err := edge.remoteClient.CallMessage(context.Background(), msg, false)
 				if err != nil {
 					return err
 				}

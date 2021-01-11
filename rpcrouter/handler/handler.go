@@ -15,7 +15,7 @@ func (self *HandlerManager) InitHandlerManager() {
 }
 
 func (self *HandlerManager) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
-	h := MethodHandler{function: handler, Concurrent: false}
+	h := MethodHandler{function: handler}
 	for _, opt := range opts {
 		opt(&h)
 	}
@@ -75,12 +75,16 @@ func (self *HandlerManager) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			log.Errorf("Recovered ERROR on handling request msg %+v", r)
-			if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+
+			if r == Deferred {
+				log.Infof("handler is deferred")
+				return
+			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
 				errmsg := rpcError.ToMessage(msg.MustId())
 				self.ReturnResultMessage(errmsg)
 				return
 			} else {
+				log.Errorf("Recovered ERROR on handling request msg %+v", r)
 				errmsg := jsonrpc.ErrServerError.ToMessage(msg.MustId())
 				self.ReturnResultMessage(errmsg)
 			}
@@ -106,6 +110,10 @@ func (self *HandlerManager) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
 	}
 
 	//log.Debugf("handle request method %+v, resmsg %+v, error %+v", msg, resmsg, err)
+	if err == Deferred {
+		log.Infof("handler is deferred")
+		return
+	}
 	if err != nil {
 		log.Warnf("bad up message %w", err)
 		errmsg := jsonrpc.RPCErrorMessage(msg.MustId(), 10401, "bad handler res", false)
@@ -138,33 +146,9 @@ func WithSchema(schemaJson string) func(*MethodHandler) {
 	}
 }
 
-func WithConcurrent(c bool) func(*MethodHandler) {
-	return func(h *MethodHandler) {
-		// TODO: parse schema
-		h.Concurrent = c
-	}
-}
-
 func (self *HandlerManager) OnDefault(handler DefaultHandlerFunc, opts ...func(*HandlerManager)) {
 	self.defaultHandler = handler
 	for _, opt := range opts {
 		opt(self)
-	}
-}
-
-func (self HandlerManager) CanRunConcurrent(method string) bool {
-	handler, ok := self.MethodHandlers[method]
-	if ok {
-		return handler.Concurrent
-	} else if self.defaultConcurrent {
-		return true
-	}
-	return false
-}
-
-func WithDefaultConcurrent(c bool) func(*HandlerManager) {
-	return func(h *HandlerManager) {
-		// TODO: parse schema
-		h.defaultConcurrent = c
 	}
 }

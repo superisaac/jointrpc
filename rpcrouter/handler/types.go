@@ -2,6 +2,7 @@ package handler
 
 import (
 	//"context"
+	"errors"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )
@@ -9,6 +10,10 @@ import (
 type RPCRequest struct {
 	MsgVec rpcrouter.MsgVec
 }
+
+var (
+	Deferred = errors.New("handler deferred")
+)
 
 type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)
 type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
@@ -23,7 +28,6 @@ type MethodHandler struct {
 	//Options HandlerOption
 	SchemaJson string
 	Help       string
-	Concurrent bool
 }
 
 type HandlerManager struct {
@@ -31,7 +35,6 @@ type HandlerManager struct {
 	MethodHandlers map[string]MethodHandler
 	StateHandler   StateHandlerFunc
 
-	defaultHandler    DefaultHandlerFunc
-	defaultConcurrent bool
-	onChange          OnChangeFunc
+	defaultHandler DefaultHandlerFunc
+	onChange       OnChangeFunc
 }

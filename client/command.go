@@ -66,6 +66,7 @@ func RunSendNotify(serverEntry ServerEntry, method string, params []interface{},
 func CommandCallRPC(subcmd string) {
 	callFlags := flag.NewFlagSet(subcmd, flag.ExitOnError)
 	serverFlag := NewServerFlag(callFlags)
+	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
 	callFlags.Parse(os.Args[2:])
 
 	if callFlags.NArg() < 1 {
@@ -82,19 +83,19 @@ func CommandCallRPC(subcmd string) {
 		panic(err)
 	}
 
-	err = RunCallRPC(serverFlag.Get(), method, params)
+	err = RunCallRPC(serverFlag.Get(), method, params, *pBroadcast)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}) error {
+func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}, broadcast bool) error {
 	client := NewRPCClient(serverEntry)
 	err := client.Connect()
 	if err != nil {
 		return err
 	}
-	res, err := client.CallRPC(context.Background(), method, params)
+	res, err := client.CallRPC(context.Background(), method, params, broadcast)
 	if err != nil {
 		return err
 	}

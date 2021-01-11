@@ -40,7 +40,7 @@ func tubeHandler(router *rpcrouter.Router) handlerFunc {
 			return
 		}
 
-		result, err := router.SingleCall(msg, false)
+		result, err := router.CallOrNotify(msg, false)
 		if err != nil {
 			jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 			return

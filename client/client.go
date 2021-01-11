@@ -239,11 +239,7 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 				log.Warnf("msg is none of reques|notify %+v ", msg)
 				continue
 			}
-			if self.CanRunConcurrent(msg.MustMethod()) {
-				go self.handleDownRequest(msg)
-			} else {
-				self.handleDownRequest(msg)
-			}
+			self.handleDownRequest(msg)
 			continue
 		}
 	}

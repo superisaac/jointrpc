@@ -63,7 +63,7 @@ func (self *Bridge) messageReceived(msg jsonrpc.IMessage, fromAddress string) (i
 				continue
 			}
 			if edge.hasMethod(msg.MustMethod()) {
-				resmsg, err := edge.remoteClient.CallMessage(context.Background(), msg)
+				resmsg, err := edge.remoteClient.CallMessage(context.Background(), msg, false)
 				if err != nil {
 					return nil, err
 				}

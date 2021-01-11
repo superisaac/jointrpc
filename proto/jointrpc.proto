@@ -33,6 +33,7 @@ message JSONRPCEnvolope {
 
 message JSONRPCCallRequest {
   JSONRPCEnvolope envolope = 1;
+  bool  broadcast = 2;
 }
 
 

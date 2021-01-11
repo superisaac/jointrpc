@@ -146,6 +146,10 @@ func NewRequestMessage(id interface{}, method string, params []interface{}, raw 
 	return msg
 }
 
+func (self RequestMessage) Clone(newId interface{}) *RequestMessage {
+	return NewRequestMessage(newId, self.Method, self.Params, nil)
+}
+
 func NewNotifyMessage(method string, params []interface{}, raw *simplejson.Json) *NotifyMessage {
 	if method == "" {
 		panic(&RPCError{10400, "notify message method cannot be empty", false})

@@ -37,7 +37,8 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 	}
 
 	router := rpcrouter.RouterFromContext(context)
-	recvmsg, err := router.SingleCall(reqmsg, false)
+
+	recvmsg, err := router.CallOrNotify(reqmsg, req.Broadcast)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 	}
 
 	router := rpcrouter.RouterFromContext(context)
-	_, err = router.SingleCall(notifymsg, req.Broadcast)
+	_, err = router.CallOrNotify(notifymsg, req.Broadcast)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +246,7 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 				}
 				upMethods = append(upMethods, *minfo)
 			}
-			log.Debugf("conn %d, update methods %v", conn.ConnId, update.Methods)
+			log.Debugf("conn %d, update methods %+v", conn.ConnId, update.Methods)
 			cmdServe := rpcrouter.CmdServe{
 				ConnId:  conn.ConnId,
 				Methods: upMethods,
@@ -256,7 +257,7 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 
 		delegate := uppac.GetCanDelegate()
 		if delegate != nil {
-			log.Debugf("conn %d, delegate methods %v", conn.ConnId, delegate.Methods)
+			log.Debugf("conn %d, delegate methods %+v", conn.ConnId, delegate.Methods)
 			// TODO: validate delegate methods
 			cmdDelegate := rpcrouter.CmdDelegate{
 				ConnId:      conn.ConnId,
