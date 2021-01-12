@@ -10,6 +10,7 @@ import (
 	//"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
+	uuid "github.com/google/uuid"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 
@@ -17,6 +18,7 @@ import (
 	encoding "github.com/superisaac/jointrpc/encoding"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	//misc "github.com/superisaac/jointrpc/misc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	peer "google.golang.org/grpc/peer"
@@ -38,7 +40,11 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 
 	router := rpcrouter.RouterFromContext(context)
 
-	recvmsg, err := router.CallOrNotify(reqmsg, req.Broadcast)
+	msgvec := rpcrouter.MsgVec{Msg: reqmsg, TraceId: req.Envolope.TraceId}
+	if msgvec.TraceId == "" {
+		msgvec.TraceId = uuid.New().String()
+	}
+	recvmsg, resTraceId, err := router.CallOrNotify(msgvec, req.Broadcast)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +57,8 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 	}
 	res := &intf.JSONRPCCallResult{
 		Envolope: &intf.JSONRPCEnvolope{
-			Body: recvmsg.MustString()}}
+			TraceId: resTraceId,
+			Body:    recvmsg.MustString()}}
 	return res, nil
 }
 
@@ -66,7 +73,13 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 	}
 
 	router := rpcrouter.RouterFromContext(context)
-	_, err = router.CallOrNotify(notifymsg, req.Broadcast)
+
+	msgvec := rpcrouter.MsgVec{Msg: notifymsg, TraceId: req.Envolope.TraceId}
+	if msgvec.TraceId == "" {
+		msgvec.TraceId = uuid.New().String()
+	}
+	_, traceId, err := router.CallOrNotify(msgvec, req.Broadcast)
+	log.Debugf("trace Id %s", traceId)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +118,7 @@ func sendState(state *rpcrouter.TubeState, stream intf.JointRPC_HandleServer) {
 }
 
 // Handler
-func downMsgReceived(context context.Context, msgvec rpcrouter.MsgVec, stream intf.JointRPC_HandleServer, conn *rpcrouter.ConnT) {
+func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream intf.JointRPC_HandleServer, conn *rpcrouter.ConnT) {
 	msg := msgvec.Msg
 
 	router := rpcrouter.RouterFromContext(context)
@@ -116,6 +129,7 @@ func downMsgReceived(context context.Context, msgvec rpcrouter.MsgVec, stream in
 			if errmsg != nil {
 				msgvec := rpcrouter.MsgVec{
 					Msg:        errmsg,
+					TraceId:    msgvec.TraceId,
 					FromConnId: conn.ConnId,
 				}
 				router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
@@ -123,7 +137,7 @@ func downMsgReceived(context context.Context, msgvec rpcrouter.MsgVec, stream in
 		}
 	}
 
-	env := &intf.JSONRPCEnvolope{Body: msg.MustString()}
+	env := &intf.JSONRPCEnvolope{Body: msg.MustString(), TraceId: msgvec.TraceId}
 	payload := &intf.JointRPCDownPacket_Envolope{Envolope: env}
 	pac := &intf.JointRPCDownPacket{Payload: payload}
 	err := stream.Send(pac)
@@ -155,7 +169,7 @@ func relayMessages(context context.Context, stream intf.JointRPC_HandleServer, c
 				log.Debugf("recv channel closed")
 				return
 			}
-			downMsgReceived(context, msgvec, stream, conn)
+			downMsgToDeliver(context, msgvec, stream, conn)
 		}
 	} // and for loop
 }
@@ -211,14 +225,17 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 		}
 
 		// Handle JSONRPC Request
-		env := uppac.GetEnvolope()
-		if env != nil {
-			msg, err := jsonrpc.ParseBytes([]byte(env.Body))
+		envo := uppac.GetEnvolope()
+		if envo != nil {
+			msg, err := jsonrpc.ParseBytes([]byte(envo.Body))
 			if err != nil {
 				log.Warnf("error on requesttomessage() %s", err.Error())
 				return err
 			}
-			msgvec := rpcrouter.MsgVec{Msg: msg, FromConnId: conn.ConnId}
+			msgvec := rpcrouter.MsgVec{
+				Msg:        msg,
+				TraceId:    envo.TraceId,
+				FromConnId: conn.ConnId}
 			router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
 			continue
 		}

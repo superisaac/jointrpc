@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	uuid "github.com/google/uuid"
 	//simplejson "github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
@@ -9,33 +10,65 @@ import (
 	//server "github.com/superisaac/jointrpc/server"
 )
 
-func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, broadcast bool) (jsonrpc.IMessage, error) {
+type CallOption struct {
+	broadcast bool
+	traceId   string
+}
+
+type CallOptionFunc func(opt *CallOption)
+
+func WithTraceId(traceId string) CallOptionFunc {
+	return func(opt *CallOption) {
+		opt.traceId = traceId
+	}
+}
+
+func WithBroadcast(b bool) CallOptionFunc {
+	return func(opt *CallOption) {
+		opt.broadcast = b
+	}
+}
+
+func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) (jsonrpc.IMessage, string, error) {
 	msgId := 1
 
 	msg := jsonrpc.NewRequestMessage(msgId, method, params, nil)
-	return self.CallMessage(rootCtx, msg, broadcast)
+	return self.CallMessage(rootCtx, msg, opts...)
 }
 
-func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage, broadcast bool) (jsonrpc.IMessage, error) {
-	envolope := &intf.JSONRPCEnvolope{Body: msg.MustString()}
-	req := &intf.JSONRPCCallRequest{Envolope: envolope, Broadcast: broadcast}
+func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, string, error) {
+
+	opt := &CallOption{}
+
+	for _, optfunc := range opts {
+		optfunc(opt)
+	}
+
+	if opt.traceId == "" {
+		opt.traceId = uuid.New().String()
+	}
+	envolope := &intf.JSONRPCEnvolope{
+		Body:    msg.MustString(),
+		TraceId: opt.traceId,
+	}
+	req := &intf.JSONRPCCallRequest{Envolope: envolope, Broadcast: opt.broadcast}
 
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	res, err := self.tubeClient.Call(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	resmsg, err := jsonrpc.ParseBytes([]byte(res.Envolope.Body))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if !resmsg.IsResultOrError() {
 		log.Warnf("bad result or error message %+v", res.Envolope.Body)
-		return nil, &jsonrpc.RPCError{10409, "msg is neither result nor error", false}
+		return nil, "", &jsonrpc.RPCError{10409, "msg is neither result nor error", false}
 	}
-	return resmsg, nil
+	return resmsg, res.Envolope.TraceId, nil
 }
 
 func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) {
@@ -49,13 +82,22 @@ func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) 
 	return res.Delegates, err
 }
 
-func (self *RPCClient) SendNotify(rootCtx context.Context, method string, params []interface{}, broadcast bool) error {
+func (self *RPCClient) SendNotify(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) error {
+	opt := &CallOption{}
+	for _, optfunc := range opts {
+		optfunc(opt)
+	}
+	if opt.traceId == "" {
+		opt.traceId = uuid.New().String()
+	}
 	notify := jsonrpc.NewNotifyMessage(method, params, nil)
 
-	env := &intf.JSONRPCEnvolope{Body: notify.MustString()}
+	env := &intf.JSONRPCEnvolope{
+		Body:    notify.MustString(),
+		TraceId: opt.traceId}
 	req := &intf.JSONRPCNotifyRequest{
 		Envolope:  env,
-		Broadcast: broadcast,
+		Broadcast: opt.broadcast,
 	}
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()

@@ -24,9 +24,12 @@ var (
 
 type CID uint64
 
+const ZeroCID = CID(0)
+
 // Commands
 type MsgVec struct {
 	Msg          jsonrpc.IMessage
+	TraceId      string
 	FromConnId   CID
 	TargetConnId CID
 }

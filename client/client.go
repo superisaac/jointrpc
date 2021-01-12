@@ -144,13 +144,15 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_Ha
 				return
 			}
 			stream.Send(uppacket)
-		case resmsg, ok := <-self.ChResultMsg:
+		case resenvo, ok := <-self.ChResult:
 			if !ok {
 				log.Warnf("result msg closed")
 				return
 			}
 
-			envo := &intf.JSONRPCEnvolope{Body: resmsg.MustString()}
+			envo := &intf.JSONRPCEnvolope{
+				Body:    resenvo.Msg.MustString(),
+				TraceId: resenvo.TraceId}
 			payload := &intf.JointRPCUpPacket_Envolope{Envolope: envo}
 			uppac := &intf.JointRPCUpPacket{Payload: payload}
 			stream.Send(uppac)
@@ -239,15 +241,18 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 				log.Warnf("msg is none of reques|notify %+v ", msg)
 				continue
 			}
-			self.handleDownRequest(msg)
+			self.handleDownRequest(msg, envo.TraceId)
 			continue
 		}
 	}
 	return nil
 }
 
-func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage) {
-	msgvec := rpcrouter.MsgVec{Msg: msg, FromConnId: 0}
+func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string) {
+	msgvec := rpcrouter.MsgVec{
+		Msg:        msg,
+		TraceId:    traceId,
+		FromConnId: 0}
 	self.HandleRequestMessage(msgvec)
 }
 

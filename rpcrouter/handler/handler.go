@@ -10,7 +10,7 @@ import (
 
 // handler manager
 func (self *HandlerManager) InitHandlerManager() {
-	self.ChResultMsg = make(chan jsonrpc.IMessage, 100)
+	self.ChResult = make(chan MsgEnvo, 100)
 	self.MethodHandlers = make(map[string](MethodHandler))
 }
 
@@ -65,8 +65,8 @@ func (self *HandlerManager) wrapHandlerResult(msg jsonrpc.IMessage, res interfac
 	}
 }
 
-func (self *HandlerManager) ReturnResultMessage(resmsg jsonrpc.IMessage) {
-	self.ChResultMsg <- resmsg
+func (self *HandlerManager) ReturnResultMessage(resmsg jsonrpc.IMessage, traceId string) {
+	self.ChResult <- MsgEnvo{Msg: resmsg, TraceId: traceId}
 }
 
 func (self *HandlerManager) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
@@ -81,12 +81,12 @@ func (self *HandlerManager) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
 				return
 			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
 				errmsg := rpcError.ToMessage(msg.MustId())
-				self.ReturnResultMessage(errmsg)
+				self.ReturnResultMessage(errmsg, msgvec.TraceId)
 				return
 			} else {
 				log.Errorf("Recovered ERROR on handling request msg %+v", r)
 				errmsg := jsonrpc.ErrServerError.ToMessage(msg.MustId())
-				self.ReturnResultMessage(errmsg)
+				self.ReturnResultMessage(errmsg, msgvec.TraceId)
 			}
 		}
 	}()
@@ -117,11 +117,11 @@ func (self *HandlerManager) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
 	if err != nil {
 		log.Warnf("bad up message %w", err)
 		errmsg := jsonrpc.RPCErrorMessage(msg.MustId(), 10401, "bad handler res", false)
-		self.ReturnResultMessage(errmsg)
+		self.ReturnResultMessage(errmsg, msgvec.TraceId)
 		return
 	}
 	if resmsg != nil {
-		self.ReturnResultMessage(resmsg)
+		self.ReturnResultMessage(resmsg, msgvec.TraceId)
 	}
 }
 

@@ -312,14 +312,14 @@ func (self *Router) leaveConn(conn *ConnT) {
 	self.probeMethodChange()
 }
 
-func (self *Router) ListConns(method string, limit int) []*ConnT {
+func (self *Router) ListConns(method string, limit int) []CID {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
-	var arr []*ConnT
+	var arr []CID
 	if descs, ok := self.methodConnMap[method]; ok && len(descs) > 0 {
 		for _, desc := range descs {
-			arr = append(arr, desc.Conn)
+			arr = append(arr, desc.Conn.ConnId)
 			if len(arr) >= limit {
 				break
 			}
@@ -332,7 +332,7 @@ func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
-	if targetConnId != CID(0) {
+	if targetConnId != ZeroCID {
 		conn, found := self.connMap[targetConnId]
 		return conn, found
 	}
@@ -414,7 +414,7 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 			return self.deliverMessage(toConn.ConnId, cmdMsg.MsgVec)
 		} else {
 			errMsg := jsonrpc.RPCErrorMessage(msg.MustId(), 404, "method not found", false)
-			errMsgVec := MsgVec{Msg: errMsg}
+			errMsgVec := MsgVec{Msg: errMsg, TraceId: cmdMsg.MsgVec.TraceId}
 			return self.deliverMessage(fromConnId, errMsgVec)
 		}
 	} else if msg.IsNotify() {

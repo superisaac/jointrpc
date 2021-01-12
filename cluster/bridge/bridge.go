@@ -55,19 +55,22 @@ func (self *Bridge) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *Bridge) messageReceived(msg jsonrpc.IMessage, fromAddress string) (interface{}, error) {
+func (self *Bridge) requestReceived(msgvec rpcrouter.MsgVec, fromAddress string) (interface{}, error) {
 	// stupid methods
+	msg := msgvec.Msg
 	if msg.IsRequest() {
 		for sn, edge := range self.edges {
 			if sn == fromAddress {
 				continue
 			}
 			if edge.hasMethod(msg.MustMethod()) {
-				resmsg, err := edge.remoteClient.CallMessage(context.Background(), msg, false)
+				resmsg, t, err := edge.remoteClient.CallMessage(context.Background(), msg,
+					client.WithTraceId(msgvec.TraceId))
 				if err != nil {
 					return nil, err
 				}
 
+				log.Debugf("trace id %s", t)
 				if resmsg.MustId() != msg.MustId() {
 					log.Fatal("result has not the same id with origial request msg")
 				}
@@ -167,7 +170,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	})
 
 	self.remoteClient.OnDefault(func(req *handler.RPCRequest, method string, params []interface{}) (interface{}, error) {
-		return bridge.messageReceived(req.MsgVec.Msg, entry.ServerUrl)
+		return bridge.requestReceived(req.MsgVec, entry.ServerUrl)
 	})
 
 	err := self.remoteClient.Connect()

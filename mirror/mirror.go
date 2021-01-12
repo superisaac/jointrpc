@@ -3,6 +3,7 @@ package mirror
 import (
 	"context"
 	"errors"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
 	datadir "github.com/superisaac/jointrpc/datadir"
@@ -111,18 +112,19 @@ func (self *Mirror) Start(rootCtx context.Context) error {
 				// TODO: log
 				return nil
 			}
-			err := self.messageReceived(msgvec)
+			err := self.requestReceived(msgvec)
 			if err != nil {
 				return err
 			}
-		case resmsg, ok := <-self.ChResultMsg:
+		case resenvo, ok := <-self.ChResult:
 			if !ok {
 				// TODO: log
 				return nil
 			}
 			self.router.ChMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
-					Msg:        resmsg,
+					Msg:        resenvo.Msg,
+					TraceId:    resenvo.TraceId,
 					FromConnId: self.conn.ConnId,
 				},
 			}
@@ -131,21 +133,26 @@ func (self *Mirror) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *Mirror) messageReceived(msgvec rpcrouter.MsgVec) error {
+func (self *Mirror) requestReceived(msgvec rpcrouter.MsgVec) error {
 	msg := msgvec.Msg
 	// stupid methods
 	if msg.IsRequest() {
 		for _, edge := range self.edges {
 			if edge.hasMethod(msg.MustMethod()) {
-				resmsg, err := edge.remoteClient.CallMessage(context.Background(), msg, false)
+				resmsg, t, err := edge.remoteClient.CallMessage(
+					context.Background(),
+					msg,
+					client.WithTraceId(msgvec.TraceId))
 				if err != nil {
 					return err
 				}
+				misc.Assert(t == msgvec.TraceId, fmt.Sprintf("trace mismatch %s vs. %s", msgvec.TraceId, t))
+
 				if resmsg.MustId() != msg.MustId() {
 					log.Fatal("result has not the same id with origial request msg")
 				}
 
-				self.ReturnResultMessage(resmsg)
+				self.ReturnResultMessage(resmsg, msgvec.TraceId)
 				return nil
 			}
 		}

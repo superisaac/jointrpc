@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"errors"
+	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
@@ -11,7 +12,7 @@ import (
 
 func StartHTTPd(http_bind string, router *rpcrouter.Router) {
 	log.Infof("start http proxy at %s", http_bind)
-	http.HandleFunc("/", tubeHandler(router))
+	http.HandleFunc("/", jointrpcHandler(router))
 	//http.HandleFunc("/", HandleHome)
 	log.Fatal(
 		http.ListenAndServe(http_bind, nil))
@@ -19,7 +20,7 @@ func StartHTTPd(http_bind string, router *rpcrouter.Router) {
 
 type handlerFunc func(w http.ResponseWriter, r *http.Request)
 
-func tubeHandler(router *rpcrouter.Router) handlerFunc {
+func jointrpcHandler(router *rpcrouter.Router) handlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// only support POST
 		if r.Method != "POST" {
@@ -40,7 +41,12 @@ func tubeHandler(router *rpcrouter.Router) handlerFunc {
 			return
 		}
 
-		result, err := router.CallOrNotify(msg, false)
+		msgvec := rpcrouter.MsgVec{Msg: msg, TraceId: r.Header.Get("X-Trace-Id")}
+		// sennity check against TraceId
+		if msgvec.TraceId == "" {
+			msgvec.TraceId = uuid.New().String()
+		}
+		result, _, err := router.CallOrNotify(msgvec, false)
 		if err != nil {
 			jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 			return

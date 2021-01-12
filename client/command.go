@@ -6,8 +6,9 @@ import (
 	"flag"
 	"fmt"
 	//"strings"
+
 	simplejson "github.com/bitly/go-simplejson"
-	//log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
@@ -26,6 +27,7 @@ func CommandSendNotify() {
 	callFlags := flag.NewFlagSet("notify", flag.ExitOnError)
 	serverFlag := NewServerFlag(callFlags)
 	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
+	pTraceId := callFlags.String("traceid", "", "trace id during the workflow")
 
 	callFlags.Parse(os.Args[2:])
 
@@ -43,19 +45,19 @@ func CommandSendNotify() {
 		panic(err)
 	}
 
-	err = RunSendNotify(serverFlag.Get(), method, params, *pBroadcast)
+	err = RunSendNotify(serverFlag.Get(), method, params, WithBroadcast(*pBroadcast), WithTraceId(*pTraceId))
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunSendNotify(serverEntry ServerEntry, method string, params []interface{}, broadcast bool) error {
+func RunSendNotify(serverEntry ServerEntry, method string, params []interface{}, opts ...CallOptionFunc) error {
 	client := NewRPCClient(serverEntry)
 	err := client.Connect()
 	if err != nil {
 		return err
 	}
-	err = client.SendNotify(context.Background(), method, params, broadcast)
+	err = client.SendNotify(context.Background(), method, params, opts...)
 	if err != nil {
 		return err
 	}
@@ -67,7 +69,10 @@ func CommandCallRPC(subcmd string) {
 	callFlags := flag.NewFlagSet(subcmd, flag.ExitOnError)
 	serverFlag := NewServerFlag(callFlags)
 	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
+	pTraceId := callFlags.String("traceid", "", "trace id during the workflow")
+
 	callFlags.Parse(os.Args[2:])
+	// TODO, check the sanity agains traceId
 
 	if callFlags.NArg() < 1 {
 		printHelp()
@@ -83,23 +88,24 @@ func CommandCallRPC(subcmd string) {
 		panic(err)
 	}
 
-	err = RunCallRPC(serverFlag.Get(), method, params, *pBroadcast)
+	err = RunCallRPC(serverFlag.Get(), method, params, WithBroadcast(*pBroadcast), WithTraceId(*pTraceId))
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}, broadcast bool) error {
+func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}, opts ...CallOptionFunc) error {
 	client := NewRPCClient(serverEntry)
 	err := client.Connect()
 	if err != nil {
 		return err
 	}
-	res, err := client.CallRPC(context.Background(), method, params, broadcast)
+
+	res, t, err := client.CallRPC(context.Background(), method, params, opts...)
 	if err != nil {
 		return err
 	}
-
+	log.Debugf("response got trace id %s", t)
 	repr, err := res.EncodePretty()
 	if err != nil {
 		return err

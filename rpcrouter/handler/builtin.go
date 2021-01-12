@@ -47,25 +47,28 @@ func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
 				return
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
-			self.messageReceived(msgvec)
-		case resmsg, ok := <-self.ChResultMsg:
+			self.requestReceived(msgvec)
+		case resenvo, ok := <-self.ChResult:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return
 			}
 			self.router.ChMsg <- rpcrouter.CmdMsg{
-				MsgVec: rpcrouter.MsgVec{Msg: resmsg, FromConnId: self.conn.ConnId}}
+				MsgVec: rpcrouter.MsgVec{
+					Msg:        resenvo.Msg,
+					TraceId:    resenvo.TraceId,
+					FromConnId: self.conn.ConnId}}
 		}
 	}
 }
 
-func (self *BuiltinHandlerManager) messageReceived(msgvec rpcrouter.MsgVec) {
+func (self *BuiltinHandlerManager) requestReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
 		validated, errmsg := self.conn.ValidateMsg(msg)
 		if !validated {
 			if errmsg != nil {
-				self.ReturnResultMessage(errmsg)
+				self.ReturnResultMessage(errmsg, msgvec.TraceId)
 			}
 			return
 		}
@@ -102,29 +105,6 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 		}
 		return map[string]string{"echo": msg}, nil
 	}, WithSchema(echoSchema))
-
-	self.On(".broadcast", func(req *RPCRequest, params []interface{}) (interface{}, error) {
-		if len(params) < 1 {
-			return nil, &jsonrpc.RPCError{Code: 400, Reason: "method must be specified"}
-		}
-
-		method, err := jsonrpc.ValidateString(params[0], "method")
-		if err != nil {
-			return nil, err
-		}
-		notify := jsonrpc.NewNotifyMessage(method, params[1:], nil)
-
-		connId := rpcrouter.CID(0)
-		if self.conn != nil {
-			connId = self.conn.ConnId
-		}
-		msgvec := rpcrouter.MsgVec{Msg: notify, FromConnId: connId}
-		self.router.ChMsg <- rpcrouter.CmdMsg{
-			MsgVec:    msgvec,
-			Broadcast: true,
-		}
-		return "ok", nil
-	}, WithHelp("broadcast a notify to all receivers"))
 
 	self.OnChange(func() {
 		self.updateMethods()

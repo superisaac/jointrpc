@@ -1,91 +1,103 @@
 package rpcrouter
 
 import (
-	//"fmt"
-	"github.com/google/uuid"
+	"fmt"
+	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 )
 
-func (self *Router) SingleCall(msg jsonrpc.IMessage) (jsonrpc.IMessage, error) {
+func (self *Router) SingleCall(msgvec MsgVec) (jsonrpc.IMessage, string, error) {
+	msg := msgvec.Msg
 	if msg.IsRequest() {
 		conn := self.Join()
 		defer self.Leave(conn)
 
 		self.ChMsg <- CmdMsg{
-			MsgVec: MsgVec{Msg: msg,
+			MsgVec: MsgVec{
+				Msg:        msg,
+				TraceId:    msgvec.TraceId,
 				FromConnId: conn.ConnId}}
 		msgvec := <-conn.RecvChannel
-		return msgvec.Msg, nil
+		return msgvec.Msg, msgvec.TraceId, nil
 	} else if msg.IsNotify() {
 		self.ChMsg <- CmdMsg{
-			MsgVec: MsgVec{Msg: msg, FromConnId: 0},
+			MsgVec: MsgVec{
+				Msg:        msg,
+				TraceId:    msgvec.TraceId,
+				FromConnId: ZeroCID},
 		}
-		return nil, nil
+		return nil, "", nil
 	} else {
-		return nil, ErrRequestNotifyRequired
+		return nil, "", ErrRequestNotifyRequired
 	}
 }
 
-func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int) (jsonrpc.IMessage, error) {
+func (self *Router) GatherCall(msgvec MsgVec, limit int) (resmsg jsonrpc.IMessage, traceId string, err error) {
+	msg := msgvec.Msg
 	if msg.IsRequest() {
 		conn := self.Join()
 		defer self.Leave(conn)
 
 		reqmsg, _ := msg.(*jsonrpc.RequestMessage)
 
-		servos := self.ListConns(reqmsg.Method, limit)
+		servoIds := self.ListConns(reqmsg.Method, limit)
 
 		var arr []interface{}
 
-		for _, servoConn := range servos {
+		for _, servoId := range servoIds {
 			msgId := uuid.New().String()
 			newmsg := reqmsg.Clone(msgId)
 			self.ChMsg <- CmdMsg{
 				MsgVec: MsgVec{
 					Msg:          newmsg,
+					TraceId:      msgvec.TraceId,
 					FromConnId:   conn.ConnId,
-					TargetConnId: servoConn.ConnId},
+					TargetConnId: servoId},
 			}
 		}
-		log.Infof("send request %s to %d handlers", reqmsg.Method,
-			len(servos))
+		log.Infof("send request %s to %d handlers", reqmsg.Method, len(servoIds))
 		// wait for results
-		for i := 0; i < len(servos); i++ {
-			msgvec := <-conn.RecvChannel
-			misc.Assert(msgvec.Msg.IsResultOrError(), "recved neither result not error")
-			arr = append(arr, msgvec.Msg.Interface())
+		var resTraceId string
+		for i := 0; i < len(servoIds); i++ {
+			resMsgvec := <-conn.RecvChannel
+
+			misc.Assert(resMsgvec.Msg.IsResultOrError(), "recved neither result not error")
+			resTraceId = resMsgvec.TraceId
+			misc.Assert(resTraceId == msgvec.TraceId,
+				fmt.Sprintf("traceid mismatch %s %s", msgvec.TraceId, resTraceId))
+			arr = append(arr, resMsgvec.Msg.Interface())
 		}
 		resmsg := jsonrpc.NewResultMessage(reqmsg.Id, arr, nil)
-		return resmsg, nil
+		return resmsg, resTraceId, nil
 	} else if msg.IsNotify() {
 		conn := self.Join()
 		defer self.Leave(conn)
 
 		notifymsg, _ := msg.(*jsonrpc.NotifyMessage)
-		servos := self.ListConns(notifymsg.Method, limit)
+		servoIds := self.ListConns(notifymsg.Method, limit)
 
-		for _, servoConn := range servos {
+		for _, servoId := range servoIds {
 			self.ChMsg <- CmdMsg{
 				MsgVec: MsgVec{
 					Msg:          notifymsg,
+					TraceId:      msgvec.TraceId,
 					FromConnId:   conn.ConnId,
-					TargetConnId: servoConn.ConnId},
+					TargetConnId: servoId},
 			}
 		}
-		log.Infof("send notify %s to %d handlers", notifymsg.Method,
-			len(servos))
-		return nil, nil
+		log.Infof("send notify %s to %d handlers", notifymsg.Method, len(servoIds))
+		return nil, "", nil
 	} else {
-		return nil, ErrRequestNotifyRequired
+		return nil, "", ErrRequestNotifyRequired
 	}
 }
 
-func (self *Router) CallOrNotify(msg jsonrpc.IMessage, broadcast bool) (jsonrpc.IMessage, error) {
+func (self *Router) CallOrNotify(msgvec MsgVec, broadcast bool) (jsonrpc.IMessage, string, error) {
 	if broadcast {
-		return self.GatherCall(msg, 100)
+		return self.GatherCall(msgvec, 100)
 	} else {
-		return self.SingleCall(msg)
+		return self.SingleCall(msgvec)
 	}
 }
