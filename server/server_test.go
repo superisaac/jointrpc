@@ -39,18 +39,18 @@ func TestServerClientRound(t *testing.T) {
 	err := c.Connect()
 	assert.Nil(err)
 
-	res, t1, err := c.CallRPC(ctx, ".echo", [](interface{}){"nice"}, client.WithTraceId("trace1"))
+	res, err := c.CallRPC(ctx, ".echo", [](interface{}){"nice"}, client.WithTraceId("trace1"))
 	assert.Nil(err)
-	assert.Equal("trace1", t1)
+	assert.Equal("trace1", res.TraceId())
 
 	assert.True(res.IsResult())
 	m, ok := res.MustResult().(map[string]interface{})
 	assert.True(ok)
 	assert.Equal("nice", m["echo"])
 
-	res1, t2, err := c.CallRPC(ctx, ".echo", [](interface{}){1}, client.WithTraceId("trace2"))
+	res1, err := c.CallRPC(ctx, ".echo", [](interface{}){1}, client.WithTraceId("trace2"))
 	assert.Nil(err)
-	assert.Equal("trace2", t2)
+	assert.Equal("trace2", res1.TraceId())
 	assert.True(res1.IsError())
 	errbody, ok := res1.MustError().(map[string]interface{})
 	assert.True(ok)
@@ -107,9 +107,9 @@ func TestClientAsServe(t *testing.T) {
 	err := c.Connect()
 	assert.Nil(err)
 
-	res, t1, err := c.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace11"))
+	res, err := c.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace11"))
 	assert.Nil(err)
-	assert.Equal("trace11", t1)
+	assert.Equal("trace11", res.TraceId())
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
 
@@ -135,11 +135,11 @@ func TestBroadcastRequest(t *testing.T) {
 	err := c.Connect()
 	assert.Nil(err)
 
-	res, t1, err := c.CallRPC(ctx, "whoami", [](interface{}){},
+	res, err := c.CallRPC(ctx, "whoami", [](interface{}){},
 		client.WithBroadcast(true),
 		client.WithTraceId("trace41"))
 	assert.Nil(err)
-	assert.Equal("trace41", t1)
+	assert.Equal("trace41", res.TraceId())
 	assert.True(res.IsResult())
 
 	arr, ok := res.MustResult().([]interface{})

@@ -48,15 +48,14 @@ func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(msgvec)
-		case resenvo, ok := <-self.ChResult:
+		case resmsg, ok := <-self.ChResult:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return
 			}
 			self.router.ChMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
-					Msg:        resenvo.Msg,
-					TraceId:    resenvo.TraceId,
+					Msg:        resmsg,
 					FromConnId: self.conn.ConnId}}
 		}
 	}
@@ -68,7 +67,7 @@ func (self *BuiltinHandlerManager) requestReceived(msgvec rpcrouter.MsgVec) {
 		validated, errmsg := self.conn.ValidateMsg(msg)
 		if !validated {
 			if errmsg != nil {
-				self.ReturnResultMessage(errmsg, msgvec.TraceId)
+				self.ReturnResultMessage(errmsg)
 			}
 			return
 		}

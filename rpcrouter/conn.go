@@ -34,7 +34,7 @@ func (self ConnT) ValidateMsg(msg jsonrpc.IMessage) (bool, jsonrpc.IMessage) {
 		errPos := validator.Validate(s, msg.Interface())
 		if errPos != nil {
 			if msg.IsRequest() {
-				errmsg := errPos.ToMessage(msg.MustId())
+				errmsg := errPos.ToMessage(msg)
 				return false, errmsg
 			} else {
 				log.Warnf("validate error %s", errPos.Error())

@@ -29,14 +29,14 @@ func WithBroadcast(b bool) CallOptionFunc {
 	}
 }
 
-func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) (jsonrpc.IMessage, string, error) {
+func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
 	msgId := 1
 
 	msg := jsonrpc.NewRequestMessage(msgId, method, params, nil)
 	return self.CallMessage(rootCtx, msg, opts...)
 }
 
-func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, string, error) {
+func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
 
 	opt := &CallOption{}
 
@@ -44,12 +44,15 @@ func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage
 		optfunc(opt)
 	}
 
-	if opt.traceId == "" {
-		opt.traceId = uuid.New().String()
+	if opt.traceId != "" {
+		msg.SetTraceId(opt.traceId)
+	}
+	if msg.TraceId() == "" {
+		msg.SetTraceId(uuid.New().String())
 	}
 	envolope := &intf.JSONRPCEnvolope{
 		Body:    msg.MustString(),
-		TraceId: opt.traceId,
+		TraceId: msg.TraceId(),
 	}
 	req := &intf.JSONRPCCallRequest{Envolope: envolope, Broadcast: opt.broadcast}
 
@@ -57,18 +60,20 @@ func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage
 	defer cancel()
 	res, err := self.tubeClient.Call(ctx, req)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	resmsg, err := jsonrpc.ParseBytes([]byte(res.Envolope.Body))
+
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
+	resmsg.SetTraceId(res.Envolope.TraceId)
 	if !resmsg.IsResultOrError() {
 		log.Warnf("bad result or error message %+v", res.Envolope.Body)
-		return nil, "", &jsonrpc.RPCError{10409, "msg is neither result nor error", false}
+		return nil, &jsonrpc.RPCError{10409, "msg is neither result nor error", false}
 	}
-	return resmsg, res.Envolope.TraceId, nil
+	return resmsg, nil
 }
 
 func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) {
@@ -87,10 +92,13 @@ func (self *RPCClient) SendNotify(rootCtx context.Context, method string, params
 	for _, optfunc := range opts {
 		optfunc(opt)
 	}
+	notify := jsonrpc.NewNotifyMessage(method, params, nil)
+
 	if opt.traceId == "" {
 		opt.traceId = uuid.New().String()
 	}
-	notify := jsonrpc.NewNotifyMessage(method, params, nil)
+
+	notify.SetTraceId(opt.traceId)
 
 	env := &intf.JSONRPCEnvolope{
 		Body:    notify.MustString(),

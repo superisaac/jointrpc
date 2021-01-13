@@ -18,6 +18,7 @@ import (
 	encoding "github.com/superisaac/jointrpc/encoding"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 	//misc "github.com/superisaac/jointrpc/misc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
@@ -29,7 +30,7 @@ type JointRPC struct {
 }
 
 func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest) (*intf.JSONRPCCallResult, error) {
-	reqmsg, err := jsonrpc.ParseBytes([]byte(req.Envolope.Body))
+	reqmsg, err := encoding.MessageFromEnvolope(req.Envolope)
 	if err != nil {
 		return nil, err
 	}
@@ -37,33 +38,32 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 	if !reqmsg.IsRequest() {
 		return nil, rpcrouter.ErrRequestNotifyRequired
 	}
-
+	if reqmsg.TraceId() == "" {
+		reqmsg.SetTraceId(uuid.New().String())
+	}
 	router := rpcrouter.RouterFromContext(context)
 
-	msgvec := rpcrouter.MsgVec{Msg: reqmsg, TraceId: req.Envolope.TraceId}
-	if msgvec.TraceId == "" {
-		msgvec.TraceId = uuid.New().String()
-	}
-	recvmsg, resTraceId, err := router.CallOrNotify(msgvec, req.Broadcast)
+	msgvec := rpcrouter.MsgVec{Msg: reqmsg}
+	recvmsg, err := router.CallOrNotify(msgvec, req.Broadcast)
+
 	if err != nil {
 		return nil, err
 	}
 	if recvmsg == nil {
-		recvmsg = jsonrpc.NewResultMessage(reqmsg.MustId(), nil, nil)
+		misc.AssertEqual(recvmsg.TraceId(), msgvec.Msg.TraceId(), "")
+		recvmsg = jsonrpc.NewResultMessage(reqmsg, nil, nil)
 	}
 	if !recvmsg.IsResultOrError() {
 		log.Warnf("bad recvmsg is neither result nor error %+v", recvmsg)
 		return nil, errors.New("recv msg is neigher result or error")
 	}
 	res := &intf.JSONRPCCallResult{
-		Envolope: &intf.JSONRPCEnvolope{
-			TraceId: resTraceId,
-			Body:    recvmsg.MustString()}}
+		Envolope: encoding.MessageToEnvolope(recvmsg)}
 	return res, nil
 }
 
 func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
-	notifymsg, err := jsonrpc.ParseBytes([]byte(req.Envolope.Body))
+	notifymsg, err := encoding.MessageFromEnvolope(req.Envolope)
 	if err != nil {
 		return nil, err
 	}
@@ -71,15 +71,15 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 	if !notifymsg.IsNotify() {
 		return nil, rpcrouter.ErrRequestNotifyRequired
 	}
+	if notifymsg.TraceId() == "" {
+		notifymsg.SetTraceId(uuid.New().String())
+	}
 
 	router := rpcrouter.RouterFromContext(context)
+	msgvec := rpcrouter.MsgVec{Msg: notifymsg}
 
-	msgvec := rpcrouter.MsgVec{Msg: notifymsg, TraceId: req.Envolope.TraceId}
-	if msgvec.TraceId == "" {
-		msgvec.TraceId = uuid.New().String()
-	}
-	_, traceId, err := router.CallOrNotify(msgvec, req.Broadcast)
-	log.Debugf("trace Id %s", traceId)
+	_, err = router.CallOrNotify(msgvec, req.Broadcast)
+
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,6 @@ func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream i
 			if errmsg != nil {
 				msgvec := rpcrouter.MsgVec{
 					Msg:        errmsg,
-					TraceId:    msgvec.TraceId,
 					FromConnId: conn.ConnId,
 				}
 				router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
@@ -137,7 +136,7 @@ func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream i
 		}
 	}
 
-	env := &intf.JSONRPCEnvolope{Body: msg.MustString(), TraceId: msgvec.TraceId}
+	env := encoding.MessageToEnvolope(msg)
 	payload := &intf.JointRPCDownPacket_Envolope{Envolope: env}
 	pac := &intf.JointRPCDownPacket{Payload: payload}
 	err := stream.Send(pac)
@@ -227,14 +226,13 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 		// Handle JSONRPC Request
 		envo := uppac.GetEnvolope()
 		if envo != nil {
-			msg, err := jsonrpc.ParseBytes([]byte(envo.Body))
+			msg, err := encoding.MessageFromEnvolope(envo)
 			if err != nil {
 				log.Warnf("error on requesttomessage() %s", err.Error())
 				return err
 			}
 			msgvec := rpcrouter.MsgVec{
 				Msg:        msg,
-				TraceId:    envo.TraceId,
 				FromConnId: conn.ConnId}
 			router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
 			continue

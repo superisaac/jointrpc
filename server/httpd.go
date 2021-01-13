@@ -41,12 +41,14 @@ func jointrpcHandler(router *rpcrouter.Router) handlerFunc {
 			return
 		}
 
-		msgvec := rpcrouter.MsgVec{Msg: msg, TraceId: r.Header.Get("X-Trace-Id")}
-		// sennity check against TraceId
-		if msgvec.TraceId == "" {
-			msgvec.TraceId = uuid.New().String()
+		// FIXME: sennity check against TraceId
+		msg.SetTraceId(r.Header.Get("X-Trace-Id"))
+		if msg.TraceId() == "" {
+			msg.SetTraceId(uuid.New().String())
 		}
-		result, _, err := router.CallOrNotify(msgvec, false)
+
+		msgvec := rpcrouter.MsgVec{Msg: msg}
+		result, err := router.CallOrNotify(msgvec, false)
 		if err != nil {
 			jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 			return

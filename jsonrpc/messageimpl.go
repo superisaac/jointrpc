@@ -50,6 +50,14 @@ func (self BaseMessage) Bytes() ([]byte, error) {
 	return self.raw.MarshalJSON()
 }
 
+func (self *BaseMessage) SetTraceId(traceId string) {
+	self.traceId = traceId
+}
+
+func (self BaseMessage) TraceId() string {
+	return self.traceId
+}
+
 // Must methods
 // MustId
 func (self RequestMessage) MustId() interface{} {
@@ -147,7 +155,9 @@ func NewRequestMessage(id interface{}, method string, params []interface{}, raw 
 }
 
 func (self RequestMessage) Clone(newId interface{}) *RequestMessage {
-	return NewRequestMessage(newId, self.Method, self.Params, nil)
+	newReq := NewRequestMessage(newId, self.Method, self.Params, nil)
+	newReq.SetTraceId(self.traceId)
+	return newReq
 }
 
 func NewNotifyMessage(method string, params []interface{}, raw *simplejson.Json) *NotifyMessage {
@@ -169,11 +179,7 @@ func NewNotifyMessage(method string, params []interface{}, raw *simplejson.Json)
 	return msg
 }
 
-func NewResultMessage(id interface{}, result interface{}, raw *simplejson.Json) *ResultMessage {
-	if id == nil {
-		panic(&RPCError{10400, "result message id cannot be nil", false})
-	}
-
+func rawResultMessage(id interface{}, result interface{}, raw *simplejson.Json) *ResultMessage {
 	if raw == nil {
 		raw = simplejson.New()
 		raw.Set("version", "2.0")
@@ -188,11 +194,19 @@ func NewResultMessage(id interface{}, result interface{}, raw *simplejson.Json) 
 	return msg
 }
 
-func NewErrorMessage(id interface{}, errbody interface{}, raw *simplejson.Json) *ErrorMessage {
-	if id == nil {
-		panic(&RPCError{10400, "error message id cannot be nil", false})
-	}
+func NewResultMessage(reqmsg IMessage, result interface{}, raw *simplejson.Json) *ResultMessage {
+	resmsg := rawResultMessage(reqmsg.MustId(), result, raw)
+	resmsg.SetTraceId(reqmsg.TraceId())
+	return resmsg
+}
 
+func NewErrorMessage(reqmsg IMessage, errbody interface{}, raw *simplejson.Json) *ErrorMessage {
+	errmsg := rawErrorMessage(reqmsg.MustId(), errbody, raw)
+	errmsg.SetTraceId(reqmsg.TraceId())
+	return errmsg
+}
+
+func rawErrorMessage(id interface{}, errbody interface{}, raw *simplejson.Json) *ErrorMessage {
 	if raw == nil {
 		raw = simplejson.New()
 		raw.Set("version", "2.0")
@@ -208,12 +222,13 @@ func NewErrorMessage(id interface{}, errbody interface{}, raw *simplejson.Json) 
 	return msg
 }
 
-func RPCErrorMessage(id interface{}, code int, reason string, retryable bool) *ErrorMessage {
+func RPCErrorMessage(reqmsg IMessage, code int, reason string, retryable bool) *ErrorMessage {
+
 	errbody := map[string](interface{}){
 		"code":      code,
 		"reason":    reason,
 		"retryable": retryable}
-	return NewErrorMessage(id, errbody, nil)
+	return NewErrorMessage(reqmsg, errbody, nil)
 }
 
 func ParseBytes(data []byte) (IMessage, error) {
@@ -237,10 +252,10 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 			return NewRequestMessage(id, method, params, parsed), nil
 		}
 		if errIntf := parsed.Get("error").Interface(); errIntf != nil {
-			return NewErrorMessage(id, errIntf, parsed), nil
+			return rawErrorMessage(id, errIntf, parsed), nil
 		}
 		res := parsed.Get("result").Interface()
-		return NewResultMessage(id, res, parsed), nil
+		return rawResultMessage(id, res, parsed), nil
 	} else if method != "" {
 		params := parsed.Get("params").MustArray()
 		return NewNotifyMessage(method, params, parsed), nil

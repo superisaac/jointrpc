@@ -375,7 +375,7 @@ func (self *Router) ClearTimeoutRequests() {
 
 	for pKey, pValue := range self.pendingMap {
 		if now.After(pValue.Expire) {
-			errMsg := jsonrpc.RPCErrorMessage(pKey.MsgId, 408, "request timeout", true)
+			errMsg := jsonrpc.RPCErrorMessage(pKey.Msg, 408, "request timeout", true)
 			msgvec := MsgVec{Msg: errMsg}
 			_ = self.deliverMessage(pKey.ConnId, msgvec)
 		} else {
@@ -407,14 +407,15 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 	if msg.IsRequest() {
 		toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
 		if found {
-			pKey := PendingKey{ConnId: fromConnId, MsgId: msg.MustId()}
+			pKey := PendingKey{ConnId: fromConnId, Msg: msg}
 			expireTime := time.Now().Add(DefaultRequestTimeout)
 			pValue := PendingValue{ConnId: toConn.ConnId, Expire: expireTime}
 			self.setPending(pKey, pValue)
 			return self.deliverMessage(toConn.ConnId, cmdMsg.MsgVec)
 		} else {
-			errMsg := jsonrpc.RPCErrorMessage(msg.MustId(), 404, "method not found", false)
-			errMsgVec := MsgVec{Msg: errMsg, TraceId: cmdMsg.MsgVec.TraceId}
+			errMsg := jsonrpc.RPCErrorMessage(msg, 404, "method not found", false)
+			errMsg.SetTraceId(msg.TraceId())
+			errMsgVec := MsgVec{Msg: errMsg}
 			return self.deliverMessage(fromConnId, errMsgVec)
 		}
 	} else if msg.IsNotify() {
@@ -425,7 +426,7 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 		}
 	} else if msg.IsResultOrError() {
 		for pKey, pValue := range self.pendingMap {
-			if pKey.MsgId == msg.MustId() && pValue.ConnId == fromConnId {
+			if pKey.Msg.MustId() == msg.MustId() && pValue.ConnId == fromConnId {
 				// delete key within a range loop is safe
 				// refer to https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-golang-map-within-a-range-loop
 				self.deletePending(pKey)

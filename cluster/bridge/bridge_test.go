@@ -76,10 +76,10 @@ func TestBridgeRun(t *testing.T) {
 	delegates, err := c2.ListDelegates(ctx1)
 	assert.Nil(err)
 	assert.Equal([]string{"add2int"}, delegates)
-	res, t1, err := c2.CallRPC(ctx1, "add2int", [](interface{}){5, 6},
+	res, err := c2.CallRPC(ctx1, "add2int", [](interface{}){5, 6},
 		client.WithTraceId("trace1"))
 	assert.Nil(err)
-	assert.Equal("trace1", t1)
+	assert.Equal("trace1", res.TraceId())
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
 
@@ -90,10 +90,10 @@ func TestBridgeRun(t *testing.T) {
 	// call rpc from server3 which doesnot delegates server1
 	ctx2, cancel2 := context.WithCancel(context.Background())
 	defer cancel2()
-	res3, t3, err := c3.CallRPC(ctx2, "add2int", [](interface{}){15, 16},
+	res3, err := c3.CallRPC(ctx2, "add2int", [](interface{}){15, 16},
 		client.WithTraceId("trace3"))
 	assert.Nil(err)
-	assert.Equal("trace3", t3)
+	assert.Equal("trace3", res3.TraceId())
 	assert.True(res3.IsResult())
 	assert.Equal(json.Number("31"), res3.MustResult())
 
@@ -108,10 +108,10 @@ func TestBridgeRun(t *testing.T) {
 	// call rpc from server2 which doesnot delegates server1
 	ctx4, cancel4 := context.WithCancel(context.Background())
 	defer cancel4()
-	res4, t4, err := c2.CallRPC(ctx4, "add2int", [](interface{}){15, 16},
+	res4, err := c2.CallRPC(ctx4, "add2int", [](interface{}){15, 16},
 		client.WithTraceId("trace4"))
 	assert.Nil(err)
-	assert.Equal("trace4", t4)
+	assert.Equal("trace4", res4.TraceId())
 	assert.True(res4.IsError())
 	errBody4, ok := res4.MustError().(map[string]interface{})
 	assert.True(ok)
@@ -164,10 +164,10 @@ func TestServerBreak(t *testing.T) {
 	delegates, err := c2.ListDelegates(ctx1)
 	assert.Nil(err)
 	assert.Equal([]string{"add2int"}, delegates)
-	res, t1, err := c2.CallRPC(ctx2, "add2int", [](interface{}){5, 6},
+	res, err := c2.CallRPC(ctx2, "add2int", [](interface{}){5, 6},
 		client.WithTraceId("trace11"))
 	assert.Nil(err)
-	assert.Equal("trace11", t1)
+	assert.Equal("trace11", res.TraceId())
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
 	// close server1
@@ -181,10 +181,10 @@ func TestServerBreak(t *testing.T) {
 	ctx3, cancel3 := context.WithCancel(context.Background())
 	defer cancel3()
 
-	resf, tf, err := c2.CallRPC(ctx3, "add2int", [](interface{}){8, 12},
+	resf, err := c2.CallRPC(ctx3, "add2int", [](interface{}){8, 12},
 		client.WithTraceId("tracebag"))
 	assert.Nil(err)
-	assert.Equal("tracebag", tf)
+	assert.Equal("tracebag", resf.TraceId())
 	assert.True(resf.IsError())
 
 	// start client3
@@ -194,11 +194,11 @@ func TestServerBreak(t *testing.T) {
 	// call rpc from server3 which doesnot delegates server1
 	ctx2, cancel2 := context.WithCancel(context.Background())
 	defer cancel2()
-	res3, t3, err := c3.CallRPC(
+	res3, err := c3.CallRPC(
 		ctx2, "add2int", [](interface{}){15, 16},
 		client.WithTraceId("trace3"))
 	assert.Nil(err)
-	assert.Equal("trace3", t3)
+	assert.Equal("trace3", res3.TraceId())
 	assert.True(res3.IsError())
 
 	errBody3, ok := res3.MustError().(map[string]interface{})

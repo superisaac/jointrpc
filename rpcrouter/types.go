@@ -29,7 +29,6 @@ const ZeroCID = CID(0)
 // Commands
 type MsgVec struct {
 	Msg          jsonrpc.IMessage
-	TraceId      string
 	FromConnId   CID
 	TargetConnId CID
 }
@@ -38,7 +37,8 @@ type MsgChannel chan MsgVec
 // Pending Struct
 type PendingKey struct {
 	ConnId CID
-	MsgId  interface{}
+	//MsgId  interface{}
+	Msg jsonrpc.IMessage
 }
 
 type PendingValue struct {

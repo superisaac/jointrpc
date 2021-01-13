@@ -30,13 +30,8 @@ type MethodHandler struct {
 	Help       string
 }
 
-type MsgEnvo struct {
-	Msg     jsonrpc.IMessage
-	TraceId string
-}
-
 type HandlerManager struct {
-	ChResult       chan MsgEnvo
+	ChResult       chan jsonrpc.IMessage
 	MethodHandlers map[string]MethodHandler
 	StateHandler   StateHandlerFunc
 

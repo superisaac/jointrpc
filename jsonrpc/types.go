@@ -50,6 +50,10 @@ type IMessage interface {
 	MustString() string
 	Bytes() ([]byte, error)
 
+	// TraceId
+	SetTraceId(traceId string)
+	TraceId() string
+
 	// upvote
 	MustId() interface{}
 	MustMethod() string
@@ -61,6 +65,7 @@ type IMessage interface {
 type BaseMessage struct {
 	messageType int
 	raw         *simplejson.Json
+	traceId     string
 }
 
 type RequestMessage struct {

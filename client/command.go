@@ -101,11 +101,11 @@ func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}, op
 		return err
 	}
 
-	res, t, err := client.CallRPC(context.Background(), method, params, opts...)
+	res, err := client.CallRPC(context.Background(), method, params, opts...)
 	if err != nil {
 		return err
 	}
-	log.Debugf("response got trace id %s", t)
+	log.Debugf("result got trace id %s", res.TraceId())
 	repr, err := res.EncodePretty()
 	if err != nil {
 		return err

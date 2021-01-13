@@ -3,7 +3,7 @@ package encoding
 import (
 	//log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )
@@ -42,4 +42,19 @@ func DecodeTubeState(iState *intf.TubeState) *rpcrouter.TubeState {
 		resMethods = append(resMethods, *minfo)
 	}
 	return &rpcrouter.TubeState{Methods: resMethods}
+}
+
+func MessageToEnvolope(msg jsonrpc.IMessage) *intf.JSONRPCEnvolope {
+	return &intf.JSONRPCEnvolope{
+		Body:    msg.MustString(),
+		TraceId: msg.TraceId()}
+}
+
+func MessageFromEnvolope(envo *intf.JSONRPCEnvolope) (jsonrpc.IMessage, error) {
+	msg, err := jsonrpc.ParseBytes([]byte(envo.Body))
+	if err != nil {
+		return nil, err
+	}
+	msg.SetTraceId(envo.TraceId)
+	return msg, nil
 }

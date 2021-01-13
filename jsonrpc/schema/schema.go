@@ -104,9 +104,9 @@ func (self ErrorPos) Error() string {
 	return fmt.Sprintf("Validation Error: %s %s", self.Path(), self.hint)
 }
 
-func (self ErrorPos) ToMessage(id interface{}) *jsonrpc.ErrorMessage {
+func (self ErrorPos) ToMessage(reqmsg jsonrpc.IMessage) *jsonrpc.ErrorMessage {
 	err := &jsonrpc.RPCError{10401, self.Error(), false}
-	return err.ToMessage(id)
+	return err.ToMessage(reqmsg)
 }
 
 func NewSchemaValidator() *SchemaValidator {

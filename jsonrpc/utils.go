@@ -13,8 +13,8 @@ func (self *RPCError) Error() string {
 	return fmt.Sprintf("code=%d, reason=%s", self.Code, self.Reason)
 }
 
-func (self RPCError) ToMessage(id interface{}) *ErrorMessage {
-	return RPCErrorMessage(id, self.Code, self.Reason, self.Retryable)
+func (self RPCError) ToMessage(reqmsg IMessage) *ErrorMessage {
+	return RPCErrorMessage(reqmsg, self.Code, self.Reason, self.Retryable)
 }
 
 func MarshalJson(data interface{}) (string, error) {

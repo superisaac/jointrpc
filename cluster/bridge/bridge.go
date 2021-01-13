@@ -64,13 +64,11 @@ func (self *Bridge) requestReceived(msgvec rpcrouter.MsgVec, fromAddress string)
 				continue
 			}
 			if edge.hasMethod(msg.MustMethod()) {
-				resmsg, t, err := edge.remoteClient.CallMessage(context.Background(), msg,
-					client.WithTraceId(msgvec.TraceId))
+				resmsg, err := edge.remoteClient.CallMessage(context.Background(), msg)
 				if err != nil {
 					return nil, err
 				}
 
-				log.Debugf("trace id %s", t)
 				if resmsg.MustId() != msg.MustId() {
 					log.Fatal("result has not the same id with origial request msg")
 				}
