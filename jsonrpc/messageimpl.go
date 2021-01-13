@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"github.com/bitly/go-simplejson"
+	log "github.com/sirupsen/logrus"
 )
 
 func (self BaseMessage) IsRequest() bool {
@@ -58,7 +59,40 @@ func (self BaseMessage) TraceId() string {
 	return self.traceId
 }
 
+// Log
+func (self RequestMessage) Log() *log.Entry {
+	return log.WithFields(log.Fields{
+		"trace_id": self.traceId,
+		"msg_type": "request",
+		"msg_id":   self.Id,
+		"method":   self.Method,
+	})
+}
+func (self NotifyMessage) Log() *log.Entry {
+	return log.WithFields(log.Fields{
+		"trace_id": self.traceId,
+		"msg_type": "notify",
+		"method":   self.Method,
+	})
+}
+func (self ResultMessage) Log() *log.Entry {
+	return log.WithFields(log.Fields{
+		"trace_id": self.traceId,
+		"msg_type": "result",
+		"msg_id":   self.Id,
+	})
+}
+
+func (self ErrorMessage) Log() *log.Entry {
+	return log.WithFields(log.Fields{
+		"trace_id": self.traceId,
+		"msg_type": "error",
+		"msg_id":   self.Id,
+	})
+}
+
 // Must methods
+
 // MustId
 func (self RequestMessage) MustId() interface{} {
 	return self.Id

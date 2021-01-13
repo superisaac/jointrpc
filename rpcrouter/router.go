@@ -404,6 +404,7 @@ func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
 func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 	msg := cmdMsg.MsgVec.Msg
 	fromConnId := cmdMsg.MsgVec.FromConnId
+	msg.Log().WithFields(log.Fields{"from": fromConnId}).Debugf("route message")
 	if msg.IsRequest() {
 		toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
 		if found {

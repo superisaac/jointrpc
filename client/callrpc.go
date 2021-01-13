@@ -5,9 +5,9 @@ import (
 	uuid "github.com/google/uuid"
 	//simplejson "github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
+	encoding "github.com/superisaac/jointrpc/encoding"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	//server "github.com/superisaac/jointrpc/server"
 )
 
 type CallOption struct {
@@ -32,11 +32,11 @@ func WithBroadcast(b bool) CallOptionFunc {
 func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
 	msgId := 1
 
-	msg := jsonrpc.NewRequestMessage(msgId, method, params, nil)
-	return self.CallMessage(rootCtx, msg, opts...)
+	reqmsg := jsonrpc.NewRequestMessage(msgId, method, params, nil)
+	return self.CallMessage(rootCtx, reqmsg, opts...)
 }
 
-func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
+func (self *RPCClient) CallMessage(rootCtx context.Context, reqmsg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
 
 	opt := &CallOption{}
 
@@ -45,15 +45,13 @@ func (self *RPCClient) CallMessage(rootCtx context.Context, msg jsonrpc.IMessage
 	}
 
 	if opt.traceId != "" {
-		msg.SetTraceId(opt.traceId)
+		reqmsg.SetTraceId(opt.traceId)
 	}
-	if msg.TraceId() == "" {
-		msg.SetTraceId(uuid.New().String())
+	if reqmsg.TraceId() == "" {
+		reqmsg.SetTraceId(uuid.New().String())
 	}
-	envolope := &intf.JSONRPCEnvolope{
-		Body:    msg.MustString(),
-		TraceId: msg.TraceId(),
-	}
+	reqmsg.Log().Debug("request message created")
+	envolope := encoding.MessageToEnvolope(reqmsg)
 	req := &intf.JSONRPCCallRequest{Envolope: envolope, Broadcast: opt.broadcast}
 
 	ctx, cancel := context.WithCancel(rootCtx)
@@ -109,10 +107,11 @@ func (self *RPCClient) SendNotify(rootCtx context.Context, method string, params
 	}
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
-	res, err := self.tubeClient.Notify(ctx, req)
+	notify.Log().Debug("notify message created")
+	resp, err := self.tubeClient.Notify(ctx, req)
 	if err != nil {
 		return err
 	}
-	log.Debugf("send notify result %s", res.Text)
+	notify.Log().Debugf("notify result %s", resp.Text)
 	return nil
 }

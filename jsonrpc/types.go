@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"github.com/bitly/go-simplejson"
+	log "github.com/sirupsen/logrus"
 )
 
 //type CID uint64
@@ -60,6 +61,8 @@ type IMessage interface {
 	MustParams() []interface{}
 	MustResult() interface{}
 	MustError() interface{}
+
+	Log() *log.Entry
 }
 
 type BaseMessage struct {

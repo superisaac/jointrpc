@@ -30,6 +30,11 @@ type JointRPC struct {
 }
 
 func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest) (*intf.JSONRPCCallResult, error) {
+	remotePeer, ok := peer.FromContext(context)
+	if !ok {
+		return nil, errors.New("cannot get peer info from Call()")
+	}
+
 	reqmsg, err := encoding.MessageFromEnvolope(req.Envolope)
 	if err != nil {
 		return nil, err
@@ -41,8 +46,8 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 	if reqmsg.TraceId() == "" {
 		reqmsg.SetTraceId(uuid.New().String())
 	}
+	reqmsg.Log().Infof("from ip %s", remotePeer.Addr)
 	router := rpcrouter.RouterFromContext(context)
-
 	msgvec := rpcrouter.MsgVec{Msg: reqmsg}
 	recvmsg, err := router.CallOrNotify(msgvec, req.Broadcast)
 
@@ -63,6 +68,11 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 }
 
 func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
+	remotePeer, ok := peer.FromContext(context)
+	if !ok {
+		return nil, errors.New("cannot get peer info from Notify()")
+	}
+
 	notifymsg, err := encoding.MessageFromEnvolope(req.Envolope)
 	if err != nil {
 		return nil, err
@@ -75,6 +85,7 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 		notifymsg.SetTraceId(uuid.New().String())
 	}
 
+	notifymsg.Log().Infof("from ip %s", remotePeer.Addr)
 	router := rpcrouter.RouterFromContext(context)
 	msgvec := rpcrouter.MsgVec{Msg: notifymsg}
 
@@ -122,20 +133,18 @@ func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream i
 	msg := msgvec.Msg
 
 	router := rpcrouter.RouterFromContext(context)
-	if msg.IsRequest() || msg.IsNotify() {
+	if msg.IsRequestOrNotify() {
 		// validate params
-		validated, errmsg := conn.ValidateMsg(msg)
-		if !validated {
-			if errmsg != nil {
-				msgvec := rpcrouter.MsgVec{
-					Msg:        errmsg,
-					FromConnId: conn.ConnId,
-				}
-				router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
+		if validated, errmsg := conn.ValidateMsg(msg); !validated && errmsg != nil {
+			msgvec := rpcrouter.MsgVec{
+				Msg:        errmsg,
+				FromConnId: conn.ConnId,
 			}
+			router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
 		}
 	}
 
+	msg.Log().Infof("message down to client")
 	env := encoding.MessageToEnvolope(msg)
 	payload := &intf.JointRPCDownPacket_Envolope{Envolope: env}
 	pac := &intf.JointRPCDownPacket{Payload: payload}
