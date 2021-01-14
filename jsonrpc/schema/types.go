@@ -63,10 +63,13 @@ type ListSchema struct {
 	SchemaMixin
 	Item Schema
 }
+
 type TupleSchema struct {
 	SchemaMixin
-	Children []Schema
+	Children         []Schema
+	AdditionalSchema Schema
 }
+
 type ObjectSchema struct {
 	SchemaMixin
 	Properties map[string]Schema

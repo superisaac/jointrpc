@@ -4,15 +4,23 @@ import (
 	//"fmt"
 	"context"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	client "github.com/superisaac/jointrpc/client"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 )
 
-func TestContext(t *testing.T) {
+func TestMain(m *testing.M) {
+	log.SetOutput(ioutil.Discard)
+	os.Exit(m.Run())
+}
+
+func TestAdhocContext(t *testing.T) {
 	assert := assert.New(t)
 
 	root, cancelRoot := context.WithCancel(context.Background())

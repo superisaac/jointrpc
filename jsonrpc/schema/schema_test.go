@@ -222,7 +222,9 @@ func TestComplexValidator(t *testing.T) {
     },
     "requires": ["abc"]
    }
-]}`)
+],
+"additionalItems": {"type": "string"}
+}`)
 	builder := NewSchemaBuilder()
 	schema, err := builder.BuildBytes(s1)
 	assert.Nil(err)
@@ -232,6 +234,11 @@ func TestComplexValidator(t *testing.T) {
 	validator := NewSchemaValidator()
 	data := []byte(`["hello", {"abc": "world"}]`)
 	errPos := validator.ValidateBytes(s, data)
+	assert.Nil(errPos)
+
+	validator = NewSchemaValidator()
+	data = []byte(`["hello", {"abc": "world"}, "hello1", "hello2"]`)
+	errPos = validator.ValidateBytes(s, data)
 	assert.Nil(errPos)
 
 	validator = NewSchemaValidator()
@@ -247,6 +254,14 @@ func TestComplexValidator(t *testing.T) {
 	assert.NotNil(errPos)
 	assert.Equal("required prop is not present", errPos.hint)
 	assert.Equal("[1].abc", errPos.Path())
+
+	validator = NewSchemaValidator()
+	data = []byte(`["hello", {"abc": "world"}, "hello1", 123]`)
+	errPos = validator.ValidateBytes(s, data)
+	assert.NotNil(errPos)
+	assert.Equal("data is not string", errPos.hint)
+	assert.Equal("[3]", errPos.Path())
+
 }
 
 func TestMethodValidator(t *testing.T) {

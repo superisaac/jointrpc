@@ -146,6 +146,6 @@ func (self *Config) setupLogger() {
 	case "ERROR":
 		log.SetLevel(log.ErrorLevel)
 	default:
-		log.SetLevel(log.WarnLevel)
+		log.SetLevel(log.InfoLevel)
 	}
 }
