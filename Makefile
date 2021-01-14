@@ -23,6 +23,7 @@ test:
 	go test -v github.com/superisaac/jointrpc/rpcrouter
 	go test -v github.com/superisaac/jointrpc/server
 	go test -v github.com/superisaac/jointrpc/client
+	go test -v github.com/superisaac/jointrpc/mirror
 	go test -v github.com/superisaac/jointrpc/cluster/bridge
 
 clean:

@@ -7,7 +7,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
 	example "github.com/superisaac/jointrpc/client/example"
-	server "github.com/superisaac/jointrpc/server"
+	//server "github.com/superisaac/jointrpc/server"
+	command "github.com/superisaac/jointrpc/command"	
 	"os"
 	//"strings"
 	//"strings"
@@ -90,7 +91,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "server":
-		server.CommandStartServer()
+		command.CommandStartServer()
 	case "methods":
 		setupClientSideLogger("")
 		client.CommandListMethods()

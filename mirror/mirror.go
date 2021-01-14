@@ -37,7 +37,7 @@ func StartMirrorsForPeers(rootCtx context.Context) {
 				CertFile:  peer.CertFile,
 			})
 		}
-		go StartNewMirror(rootCtx, serverEntries)
+		StartNewMirror(rootCtx, serverEntries)
 	}
 }
 

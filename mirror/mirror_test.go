@@ -1,35 +1,64 @@
-package server
+package mirror
 
 import (
 	//"fmt"
 	"context"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	client "github.com/superisaac/jointrpc/client"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	//mirror "github.com/superisaac/jointrpc/cluster/mirror"
 	datadir "github.com/superisaac/jointrpc/datadir"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	server "github.com/superisaac/jointrpc/server"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 )
+
+const addSchema = `
+{
+  "type": "method",
+  "params": [
+    {
+      "type": "number"
+    },
+    {
+      "type": "number"
+    }
+  ],
+  "returns": {
+    "type": "number"
+  }
+}
+`
+
+func TestMain(m *testing.M) {
+	log.SetOutput(ioutil.Discard)
+	os.Exit(m.Run())
+}
 
 func TestMirrorRun(t *testing.T) {
 	assert := assert.New(t)
 
 	rootCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	// start server1
-	go StartServer(rootCtx, "localhost:10010", nil)
+	go server.StartServer(rootCtx, "localhost:10010")
 
 	// start server2
 	cfg := datadir.NewConfig()
 	cfg.Cluster.StaticPeers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
-	go StartServer(rootCtx, "localhost:10011", cfg)
+	rootCtx1 := server.ServerContext(rootCtx, nil, cfg)
+	go server.StartServer(rootCtx1, "localhost:10011")
+	time.Sleep(100 * time.Millisecond)
+	go StartMirrorsForPeers(rootCtx1)
 	time.Sleep(100 * time.Millisecond)
 
 	// start server3
-	go StartServer(rootCtx, "localhost:10012", nil)
+	go server.StartServer(rootCtx, "localhost:10012")
 
 	// start client1, the serve of add2int()
 	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10010", ""})

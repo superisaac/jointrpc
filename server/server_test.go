@@ -39,7 +39,7 @@ func TestServerClientRound(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go StartServer(ctx, "127.0.0.1:10001", nil)
+	go StartServer(ctx, "127.0.0.1:10001")
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -105,7 +105,7 @@ func TestClientAsServe(t *testing.T) {
 		cancel()
 	}()
 
-	go StartServer(ctx, "127.0.0.1:10002", nil)
+	go StartServer(ctx, "127.0.0.1:10002")
 	time.Sleep(100 * time.Millisecond)
 
 	go StartTestServe(ctx, "h2c://127.0.0.1:10002", "testclent")
@@ -131,7 +131,7 @@ func TestBroadcastRequest(t *testing.T) {
 		cancel()
 	}()
 
-	go StartServer(ctx, "127.0.0.1:10005", nil)
+	go StartServer(ctx, "127.0.0.1:10005")
 	time.Sleep(100 * time.Millisecond)
 
 	go StartTestServe(ctx, "h2c://127.0.0.1:10005", "jack")

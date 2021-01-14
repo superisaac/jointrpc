@@ -129,5 +129,5 @@ func (self *BuiltinHandlerManager) updateMethods() {
 
 func StartBuiltinHandlerManager(rootCtx context.Context) {
 	builtin := new(BuiltinHandlerManager).Init()
-	go builtin.Start(rootCtx)
+	builtin.Start(rootCtx)
 }

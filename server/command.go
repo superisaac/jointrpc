@@ -2,68 +2,34 @@ package server
 
 import (
 	"context"
-	"flag"
+	//"flag"
 	log "github.com/sirupsen/logrus"
 	"net"
-	"os"
+	//"os"
 	//"fmt"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	mirror "github.com/superisaac/jointrpc/mirror"
+	//mirror "github.com/superisaac/jointrpc/mirror"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	grpc "google.golang.org/grpc"
-	credentials "google.golang.org/grpc/credentials"
+	//credentials "google.golang.org/grpc/credentials"
 )
 
-func CommandStartServer() {
-	serverFlags := flag.NewFlagSet("server", flag.ExitOnError)
-	pBind := serverFlags.String("b", "", "The grpc server address and port")
-	pDatadir := serverFlags.String("d", "", "The datadir to store configs")
-	pCertFile := serverFlags.String("cert", "", "tls cert file")
-	pKeyFile := serverFlags.String("key", "", "tls key file")
-	//httpBind := serverFlags.String("httpd", "127.0.0.1:50056", "http address and port")
-
-	serverFlags.Parse(os.Args[2:])
-	if *pDatadir != "" {
-		datadir.SetDatadir(*pDatadir)
+func ServerContext(rootCtx context.Context, router *rpcrouter.Router, cfg *datadir.Config) context.Context {
+	if router == nil {
+		router = rpcrouter.NewRouter("server")
 	}
-
-	cfg := datadir.NewConfig()
-	cfg.ParseDatadir()
-
-	//go StartHTTPd(*httpBind)
-	var opts []grpc.ServerOption
-	// server bind
-	bind := *pBind
-	if bind == "" {
-		bind = cfg.Server.Bind
+	if cfg == nil {
+		cfg = datadir.NewConfig()
 	}
-
-	// tls settings
-	certFile := *pCertFile
-	if certFile == "" {
-		certFile = cfg.Server.TLS.CertFile
-	}
-
-	keyFile := *pKeyFile
-	if keyFile == "" {
-		keyFile = cfg.Server.TLS.KeyFile
-	}
-
-	if certFile != "" || keyFile != "" {
-		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
-		if err != nil {
-			panic(err)
-		}
-		opts = append(opts, grpc.Creds(creds))
-	}
-	StartServer(context.Background(), bind, cfg, opts...)
+	aCtx := misc.NewBinder(rootCtx).Bind("router", router).Bind("config", cfg).Context()
+	return aCtx
 }
 
-func StartServer(rootCtx context.Context, bind string, cfg *datadir.Config, opts ...grpc.ServerOption) {
+func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption) {
 	lis, err := net.Listen("tcp", bind)
 	if err != nil {
 		log.Panicf("failed to listen: %v", err)
@@ -71,18 +37,17 @@ func StartServer(rootCtx context.Context, bind string, cfg *datadir.Config, opts
 		log.Debugf("entry server listen at %s", bind)
 	}
 
-	if cfg == nil {
-		cfg = datadir.NewConfig()
+	if r := rootCtx.Value("router"); r == nil {
+		// no router attached, spawn a context with default router and cfg
+		rootCtx = ServerContext(rootCtx, nil, nil)
 	}
 
-	router := rpcrouter.NewRouter("grpc_server")
+	router := rpcrouter.RouterFromContext(rootCtx)
 	go router.Start(rootCtx)
 
-	aCtx := misc.NewBinder(rootCtx).Bind("router", router).Bind("config", cfg).Context()
+	go handler.StartBuiltinHandlerManager(rootCtx)
 
-	handler.StartBuiltinHandlerManager(aCtx)
-
-	mirror.StartMirrorsForPeers(aCtx)
+	cfg := datadir.ConfigFromContext(rootCtx)
 
 	opts = append(opts,
 		grpc.UnaryInterceptor(
