@@ -35,15 +35,10 @@ type MsgVec struct {
 type MsgChannel chan MsgVec
 
 // Pending Struct
-type PendingKey struct {
-	ConnId CID
-	//MsgId  interface{}
-	Msg jsonrpc.IMessage
-}
-
-type PendingValue struct {
-	ConnId CID
-	Expire time.Time
+type PendingT struct {
+	OrigMsgVec MsgVec
+	Expire     time.Time
+	ToConnId   CID
 }
 
 type MethodInfo struct {
@@ -120,8 +115,8 @@ type Router struct {
 
 	fallbackConns []*ConnT
 
-	connMap    map[CID](*ConnT)
-	pendingMap map[PendingKey]PendingValue
+	connMap map[CID](*ConnT)
+	pendingRequests map[string]PendingT
 
 	// channels
 	ChMsg chan CmdMsg

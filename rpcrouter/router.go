@@ -3,8 +3,10 @@ package rpcrouter
 import (
 	//"fmt"
 	"context"
+	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 	"math/rand"
 	"sort"
 	"strings"
@@ -54,7 +56,7 @@ func (self *Router) Init(name string) *Router {
 	self.fallbackConns = make([]*ConnT, 0)
 	self.connMap = make(map[CID](*ConnT))
 
-	self.pendingMap = make(map[PendingKey]PendingValue)
+	self.pendingRequests = make(map[string]PendingT)
 	self.methodsSig = ""
 	self.setupChannels()
 	return self
@@ -371,54 +373,38 @@ func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
 
 func (self *Router) ClearTimeoutRequests() {
 	now := time.Now()
-	tmpMap := make(map[PendingKey]PendingValue)
+	tmpMap := make(map[string]PendingT)
+	//var tmpMap map[stirng]PendingT
 
-	for pKey, pValue := range self.pendingMap {
-		if now.After(pValue.Expire) {
-			errMsg := jsonrpc.RPCErrorMessage(pKey.Msg, 408, "request timeout", true)
+	for msgId, reqt := range self.pendingRequests {
+		if now.After(reqt.Expire) {
+			errMsg := jsonrpc.RPCErrorMessage(reqt.OrigMsgVec.Msg, 408, "request timeout", true)
 			msgvec := MsgVec{Msg: errMsg}
-			_ = self.deliverMessage(pKey.ConnId, msgvec)
+			_ = self.deliverMessage(reqt.OrigMsgVec.FromConnId, msgvec)
 		} else {
-			tmpMap[pKey] = pValue
+			tmpMap[msgId] = reqt
 		}
 	}
-	self.pendingMap = tmpMap
+	self.pendingRequests = tmpMap
 }
 
 func (self *Router) ClearPending(connId CID) {
-	for pKey, pValue := range self.pendingMap {
-		if pKey.ConnId == connId || pValue.ConnId == connId {
-			self.deletePending(pKey)
+	for msgId, reqt := range self.pendingRequests {
+		if reqt.ToConnId == connId || reqt.OrigMsgVec.FromConnId == connId {
+			self.deletePending(msgId)
 		}
 	}
 }
 
-func (self *Router) deletePending(pKey PendingKey) {
-	delete(self.pendingMap, pKey)
-}
-
-func (self *Router) setPending(pKey PendingKey, pValue PendingValue) {
-	self.pendingMap[pKey] = pValue
+func (self *Router) deletePending(msgId string) {
+	delete(self.pendingRequests, msgId)
 }
 
 func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 	msg := cmdMsg.MsgVec.Msg
-	fromConnId := cmdMsg.MsgVec.FromConnId
-	msg.Log().WithFields(log.Fields{"from": fromConnId}).Debugf("route message")
+	msg.Log().WithFields(log.Fields{"from": cmdMsg.MsgVec.FromConnId}).Debugf("route message")
 	if msg.IsRequest() {
-		toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
-		if found {
-			pKey := PendingKey{ConnId: fromConnId, Msg: msg}
-			expireTime := time.Now().Add(DefaultRequestTimeout)
-			pValue := PendingValue{ConnId: toConn.ConnId, Expire: expireTime}
-			self.setPending(pKey, pValue)
-			return self.deliverMessage(toConn.ConnId, cmdMsg.MsgVec)
-		} else {
-			errMsg := jsonrpc.RPCErrorMessage(msg, 404, "method not found", false)
-			errMsg.SetTraceId(msg.TraceId())
-			errMsgVec := MsgVec{Msg: errMsg}
-			return self.deliverMessage(fromConnId, errMsgVec)
-		}
+		return self.routeRequest(cmdMsg)
 	} else if msg.IsNotify() {
 		toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
 		if found {
@@ -426,15 +412,68 @@ func (self *Router) routeMessage(cmdMsg CmdMsg) *ConnT {
 				toConn.ConnId, cmdMsg.MsgVec)
 		}
 	} else if msg.IsResultOrError() {
-		for pKey, pValue := range self.pendingMap {
-			if pKey.Msg.MustId() == msg.MustId() && pValue.ConnId == fromConnId {
-				// delete key within a range loop is safe
-				// refer to https://stackoverflow.com/questions/23229975/is-it-safe-to-remove-selected-keys-from-golang-map-within-a-range-loop
-				self.deletePending(pKey)
-				return self.deliverMessage(
-					pKey.ConnId, cmdMsg.MsgVec)
+		return self.routeResultOrError(cmdMsg)
+	}
+	return nil
+}
+
+func (self *Router) routeRequest(cmdMsg CmdMsg) *ConnT {
+	msg := cmdMsg.MsgVec.Msg
+	fromConnId := cmdMsg.MsgVec.FromConnId
+	toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
+	if found {
+		expireTime := time.Now().Add(DefaultRequestTimeout)
+		reqMsg, ok := msg.(*jsonrpc.RequestMessage)
+		misc.Assert(ok, "bad msg type other than request")
+		newId := uuid.New().String()
+		newReqMsg := reqMsg.Clone(newId)
+		self.pendingRequests[newId] = PendingT{
+			OrigMsgVec: cmdMsg.MsgVec,
+			Expire:     expireTime,
+			ToConnId:   toConn.ConnId,
+		}
+		targetVec := cmdMsg.MsgVec
+		targetVec.Msg = newReqMsg
+		return self.deliverMessage(toConn.ConnId, targetVec)
+	} else {
+		errMsg := jsonrpc.RPCErrorMessage(msg, 404, "method not found", false)
+		errMsg.SetTraceId(msg.TraceId())
+		errMsgVec := MsgVec{Msg: errMsg}
+		return self.deliverMessage(fromConnId, errMsgVec)
+	}
+
+}
+func (self *Router) routeResultOrError(cmdMsg CmdMsg) *ConnT {
+	msg := cmdMsg.MsgVec.Msg
+	if msgId, ok := msg.MustId().(string); ok {
+		if reqt, ok := self.pendingRequests[msgId]; ok {
+			self.deletePending(msgId)
+
+			if cmdMsg.MsgVec.FromConnId != reqt.ToConnId {
+				msg.Log().Warnf("msg conn %d not from the delivered conn %d", cmdMsg.MsgVec.FromConnId, reqt.ToConnId)
 			}
-		} // end of for
+			origReq := reqt.OrigMsgVec.Msg
+			if msg.TraceId() != origReq.TraceId() {
+				msg.Log().Warnf("result trace is different from request %s", origReq.TraceId())
+			}
+			if resMsg, ok := msg.(*jsonrpc.ResultMessage); ok {
+				newRes := jsonrpc.NewResultMessage(reqt.OrigMsgVec.Msg, resMsg.Result, nil)
+				newVec := cmdMsg.MsgVec
+				newVec.Msg = newRes
+				return self.deliverMessage(reqt.OrigMsgVec.FromConnId, newVec)
+			} else if errMsg, ok := msg.(*jsonrpc.ErrorMessage); ok {
+				newErr := jsonrpc.NewErrorMessage(reqt.OrigMsgVec.Msg, errMsg.Error, nil)
+				newVec := cmdMsg.MsgVec
+				newVec.Msg = newErr
+				return self.deliverMessage(reqt.OrigMsgVec.FromConnId, newVec)
+			} else {
+				msg.Log().Fatalf("msg is neither result nor error")
+			}
+		} else {
+			msg.Log().Warn("fail to find request from this result/error")
+		}
+	} else {
+		msg.Log().Warnf("message id is not string, %+v", msg.MustId())
 	}
 	return nil
 }
