@@ -11,8 +11,10 @@ import (
 	//grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	server "github.com/superisaac/jointrpc/server"	
-	mirror "github.com/superisaac/jointrpc/mirror"
+	server "github.com/superisaac/jointrpc/server"
+	service "github.com/superisaac/jointrpc/service"
+	builtin "github.com/superisaac/jointrpc/service/builtin"
+	mirror "github.com/superisaac/jointrpc/service/mirror"
 	//misc "github.com/superisaac/jointrpc/misc"
 	//"github.com/superisaac/jointrpc/rpcrouter"
 	//handler "github.com/superisaac/jointrpc/rpcrouter/handler"
@@ -66,6 +68,11 @@ func CommandStartServer() {
 	rootCtx := server.ServerContext(context.Background(), nil, nil)
 	go server.StartServer(rootCtx, bind, opts...)
 	//go handler.StartBuiltinHandlerManager(rootCtx)
+
+	builtinService := builtin.NewBuiltinService()
+	service.TryStartService(rootCtx, builtinService)
+
 	time.Sleep(100 * time.Millisecond)
-	go mirror.StartMirrorsForPeers(rootCtx)
+	mirrorService := mirror.NewMirrorService()
+	service.TryStartService(rootCtx, mirrorService)
 }

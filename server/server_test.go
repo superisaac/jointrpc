@@ -33,38 +33,6 @@ func TestAdhocContext(t *testing.T) {
 	assert.Equal("value1", c2.Value("key1"))
 }
 
-func TestServerClientRound(t *testing.T) {
-	assert := assert.New(t)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go StartServer(ctx, "127.0.0.1:10001")
-
-	time.Sleep(100 * time.Millisecond)
-
-	c := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10001", ""})
-	err := c.Connect()
-	assert.Nil(err)
-
-	res, err := c.CallRPC(ctx, ".echo", [](interface{}){"nice"}, client.WithTraceId("trace1"))
-	assert.Nil(err)
-	assert.Equal("trace1", res.TraceId())
-
-	assert.True(res.IsResult())
-	m, ok := res.MustResult().(map[string]interface{})
-	assert.True(ok)
-	assert.Equal("nice", m["echo"])
-
-	res1, err := c.CallRPC(ctx, ".echo", [](interface{}){1}, client.WithTraceId("trace2"))
-	assert.Nil(err)
-	assert.Equal("trace2", res1.TraceId())
-	assert.True(res1.IsError())
-	errbody, ok := res1.MustError().(map[string]interface{})
-	assert.True(ok)
-	assert.Equal("Validation Error: .params[0] data is not string", errbody["reason"])
-}
-
 const addSchema = `
 {
   "type": "method",

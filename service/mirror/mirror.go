@@ -25,39 +25,35 @@ func (self Edge) hasMethod(methodName string) bool {
 	return ok
 }
 
-// Mirror
-func StartMirrorsForPeers(rootCtx context.Context) {
-	cfg := datadir.ConfigFromContext(rootCtx)
-	if len(cfg.Cluster.StaticPeers) > 0 {
-		// generate server entry from peers
-		var serverEntries []client.ServerEntry
-		for _, peer := range cfg.Cluster.StaticPeers {
-			serverEntries = append(serverEntries, client.ServerEntry{
-				ServerUrl: peer.ServerUrl,
-				CertFile:  peer.CertFile,
-			})
-		}
-		StartNewMirror(rootCtx, serverEntries)
-	}
+func NewMirrorService() *MirrorService {
+	return new(MirrorService)
 }
 
-func StartNewMirror(rootCtx context.Context, entries []client.ServerEntry) {
+func (self *MirrorService) Init(rootCtx context.Context) {
 	router := rpcrouter.RouterFromContext(rootCtx)
-	mirror := NewMirror(entries, router)
-	mirror.Start(rootCtx)
+	cfg := datadir.ConfigFromContext(rootCtx)
+
+	var entries []client.ServerEntry
+	for _, peer := range cfg.Cluster.StaticPeers {
+		entries = append(entries, client.ServerEntry{
+			ServerUrl: peer.ServerUrl,
+			CertFile:  peer.CertFile,
+		})
+	}
+
+	self.router = router
+	self.InitHandlerManager()
+	self.serverEntries = entries
+	self.edges = make(map[string]*Edge)
+	self.ChState = make(chan CmdStateChange)
 }
 
-func NewMirror(entries []client.ServerEntry, router *rpcrouter.Router) *Mirror {
-	mirror := new(Mirror)
-	mirror.router = router
-	mirror.InitHandlerManager()
-	mirror.serverEntries = entries
-	mirror.edges = make(map[string]*Edge)
-	mirror.ChState = make(chan CmdStateChange)
-	return mirror
+func (self MirrorService) CanRun(rootCtx context.Context) bool {
+	cfg := datadir.ConfigFromContext(rootCtx)
+	return len(cfg.Cluster.StaticPeers) > 0
 }
 
-func (self *Mirror) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {
+func (self *MirrorService) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {
 	if _, ok := self.edges[entry.ServerUrl]; ok {
 		//log.Warnf("remote client already exist %s", self.remoteClient)
 		panic(errors.New("client already exists"))
@@ -82,7 +78,9 @@ func (self *Mirror) connectRemote(rootCtx context.Context, entry client.ServerEn
 	return nil
 }
 
-func (self *Mirror) Start(rootCtx context.Context) error {
+func (self *MirrorService) Start(rootCtx context.Context) error {
+	self.Init(rootCtx)
+
 	for _, entry := range self.serverEntries {
 		go self.connectRemote(rootCtx, entry)
 	}
@@ -132,7 +130,7 @@ func (self *Mirror) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *Mirror) requestReceived(msgvec rpcrouter.MsgVec) error {
+func (self *MirrorService) requestReceived(msgvec rpcrouter.MsgVec) error {
 	msg := msgvec.Msg
 	// stupid methods
 	if msg.IsRequest() {
@@ -161,7 +159,7 @@ func (self *Mirror) requestReceived(msgvec rpcrouter.MsgVec) error {
 
 }
 
-func (self *Mirror) handleStateChange(stateChange CmdStateChange) {
+func (self *MirrorService) handleStateChange(stateChange CmdStateChange) {
 	if edge, ok := self.edges[stateChange.ServerUrl]; ok {
 		var newMethods []rpcrouter.MethodInfo
 		methodNames := make(misc.StringSet)
@@ -185,7 +183,7 @@ func (self *Mirror) handleStateChange(stateChange CmdStateChange) {
 	}
 }
 
-func (self *Mirror) tryUpdateMethods() {
+func (self *MirrorService) tryUpdateMethods() {
 	uni := misc.NewStringUnifier()
 	for _, edge := range self.edges {
 		for _, minfo := range edge.dlgMethods {

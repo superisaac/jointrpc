@@ -11,6 +11,7 @@ import (
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	server "github.com/superisaac/jointrpc/server"
+	service "github.com/superisaac/jointrpc/service"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -54,7 +55,9 @@ func TestMirrorRun(t *testing.T) {
 	rootCtx1 := server.ServerContext(rootCtx, nil, cfg)
 	go server.StartServer(rootCtx1, "localhost:10011")
 	time.Sleep(100 * time.Millisecond)
-	go StartMirrorsForPeers(rootCtx1)
+
+	srv := NewMirrorService()
+	service.TryStartService(rootCtx1, srv)
 	time.Sleep(100 * time.Millisecond)
 
 	// start server3

@@ -21,9 +21,10 @@ test:
 	go test -v github.com/superisaac/jointrpc/jsonrpc
 	go test -v github.com/superisaac/jointrpc/jsonrpc/schema
 	go test -v github.com/superisaac/jointrpc/rpcrouter
-	go test -v github.com/superisaac/jointrpc/server
 	go test -v github.com/superisaac/jointrpc/client
-	go test -v github.com/superisaac/jointrpc/mirror
+	go test -v github.com/superisaac/jointrpc/server
+	go test -v github.com/superisaac/jointrpc/service/builtin
+	go test -v github.com/superisaac/jointrpc/service/mirror
 	go test -v github.com/superisaac/jointrpc/cluster/bridge
 
 clean:
@@ -34,7 +35,6 @@ gofmt:
 	go fmt misc/*.go
 	go fmt client/*.go
 	go fmt client/example/*.go
-	go fmt mirror/*.go
 	go fmt server/*.go
 	go fmt rpcrouter/*.go
 	go fmt rpcrouter/handler/*.go
@@ -42,6 +42,10 @@ gofmt:
 	go fmt jsonrpc/schema/*.go
 	go fmt encoding/*.go
 	go fmt cluster/bridge/*.go
+	go fmt service/*.go
+	go fmt service/builtin/*.go
+	go fmt service/mirror/*.go
+	go fmt command/*.go
 
 install: bin/jointrpc
 	install $< /usr/local/bin

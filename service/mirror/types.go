@@ -19,7 +19,7 @@ type CmdStateChange struct {
 	State     *rpcrouter.TubeState
 }
 
-type Mirror struct {
+type MirrorService struct {
 	handler.HandlerManager
 	conn          *rpcrouter.ConnT
 	router        *rpcrouter.Router

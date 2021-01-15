@@ -13,7 +13,7 @@ import (
 	//mirror "github.com/superisaac/jointrpc/mirror"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	//handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	grpc "google.golang.org/grpc"
 	//credentials "google.golang.org/grpc/credentials"
 )
@@ -45,7 +45,7 @@ func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption
 	router := rpcrouter.RouterFromContext(rootCtx)
 	go router.Start(rootCtx)
 
-	go handler.StartBuiltinHandlerManager(rootCtx)
+	//go handler.StartBuiltinHandlerManager(rootCtx)
 
 	cfg := datadir.ConfigFromContext(rootCtx)
 

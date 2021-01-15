@@ -1,4 +1,4 @@
-package handler
+package builtin
 
 import (
 	"context"
@@ -9,16 +9,22 @@ import (
 	misc "github.com/superisaac/jointrpc/misc"
 
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
+	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	//service "github.com/superisaac/jointrpc/service"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 
-type BuiltinHandlerManager struct {
-	HandlerManager
+type BuiltinService struct {
+	handler.HandlerManager
 	router *rpcrouter.Router
 	conn   *rpcrouter.ConnT
 }
 
-func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
+func (self BuiltinService) CanRun(rootCtx context.Context) bool {
+	return true
+}
+
+func (self *BuiltinService) Start(rootCtx context.Context) error {
 	self.router = rpcrouter.RouterFromContext(rootCtx)
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
@@ -40,18 +46,18 @@ func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Debugf("builtin handlers, context done")
-			return
+			return nil
 		case msgvec, ok := <-self.conn.RecvChannel:
 			if !ok {
 				log.Debugf("recv channel colosed, leave")
-				return
+				return nil
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(msgvec)
 		case resmsg, ok := <-self.ChResult:
 			if !ok {
 				log.Infof("result channel closed, return")
-				return
+				return nil
 			}
 			self.router.ChMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
@@ -59,9 +65,10 @@ func (self *BuiltinHandlerManager) Start(rootCtx context.Context) {
 					FromConnId: self.conn.ConnId}}
 		}
 	}
+	return nil
 }
 
-func (self *BuiltinHandlerManager) requestReceived(msgvec rpcrouter.MsgVec) {
+func (self *BuiltinService) requestReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
 		validated, errmsg := self.conn.ValidateMsg(msg)
@@ -81,10 +88,10 @@ const (
 	echoSchema = `{"type": "method", "params": [{"type": "string"}]}`
 )
 
-func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
+func (self *BuiltinService) Init() *BuiltinService {
 	misc.Assert(self.router == nil, "already initited")
 	self.InitHandlerManager()
-	self.On(".listMethods", func(req *RPCRequest, params []interface{}) (interface{}, error) {
+	self.On(".listMethods", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		minfos := self.router.GetMethods()
 
 		arr := make([](rpcrouter.MethodInfoMap), 0)
@@ -94,7 +101,7 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 		return arr, nil
 	})
 
-	self.On(".echo", func(req *RPCRequest, params []interface{}) (interface{}, error) {
+	self.On(".echo", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(params) < 1 {
 			return nil, &jsonrpc.RPCError{Code: 400, Reason: "len params should be at least 1"}
 		}
@@ -103,7 +110,7 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 			return nil, &jsonrpc.RPCError{Code: 400, Reason: "string params required"}
 		}
 		return map[string]string{"echo": msg}, nil
-	}, WithSchema(echoSchema))
+	}, handler.WithSchema(echoSchema))
 
 	self.OnChange(func() {
 		self.updateMethods()
@@ -111,7 +118,7 @@ func (self *BuiltinHandlerManager) Init() *BuiltinHandlerManager {
 	return self
 }
 
-func (self *BuiltinHandlerManager) updateMethods() {
+func (self *BuiltinService) updateMethods() {
 	if self.conn != nil {
 		minfos := make([]rpcrouter.MethodInfo, 0)
 		for m, info := range self.MethodHandlers {
@@ -127,7 +134,6 @@ func (self *BuiltinHandlerManager) updateMethods() {
 	}
 }
 
-func StartBuiltinHandlerManager(rootCtx context.Context) {
-	builtin := new(BuiltinHandlerManager).Init()
-	builtin.Start(rootCtx)
+func NewBuiltinService() *BuiltinService {
+	return new(BuiltinService).Init()
 }
