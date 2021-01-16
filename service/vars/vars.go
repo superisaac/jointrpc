@@ -16,7 +16,8 @@ import (
 
 type VarsService struct {
 	handler.HandlerManager
-	vars   map[string](interface{})
+	//vars   map[string](map[string](interface{}))
+	vars map[string]interface{}
 	router *rpcrouter.Router
 	conn   *rpcrouter.ConnT
 }
@@ -56,6 +57,7 @@ func (self *VarsService) ReadVars(varsPath string) error {
 	if err != nil {
 		return err
 	}
+	//vars := make(map[string](map[string]interface{}))
 	vars := make(map[string]interface{})
 	err = yaml.Unmarshal(data, vars)
 	if err != nil {
