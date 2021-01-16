@@ -3,8 +3,8 @@ package command
 import (
 	"context"
 	"flag"
+	log "github.com/sirupsen/logrus"
 	"time"
-	//log "github.com/sirupsen/logrus"
 	//"net"
 	"os"
 	//"fmt"
@@ -15,6 +15,7 @@ import (
 	service "github.com/superisaac/jointrpc/service"
 	builtin "github.com/superisaac/jointrpc/service/builtin"
 	mirror "github.com/superisaac/jointrpc/service/mirror"
+	vars "github.com/superisaac/jointrpc/service/vars"
 	//misc "github.com/superisaac/jointrpc/misc"
 	//"github.com/superisaac/jointrpc/rpcrouter"
 	//handler "github.com/superisaac/jointrpc/rpcrouter/handler"
@@ -37,6 +38,7 @@ func CommandStartServer() {
 
 	cfg := datadir.NewConfig()
 	cfg.ParseDatadir()
+	cfg.SetupLogger()
 
 	//go StartHTTPd(*httpBind)
 	var opts []grpc.ServerOption
@@ -66,13 +68,19 @@ func CommandStartServer() {
 	}
 
 	rootCtx := server.ServerContext(context.Background(), nil, nil)
-	go server.StartServer(rootCtx, bind, opts...)
-	//go handler.StartBuiltinHandlerManager(rootCtx)
 
-	builtinService := builtin.NewBuiltinService()
-	service.TryStartService(rootCtx, builtinService)
+	srvs := []service.IService{
+		builtin.NewBuiltinService(),
+		mirror.NewMirrorService(),
+		vars.NewVarsService(),
+	}
 
-	time.Sleep(100 * time.Millisecond)
-	mirrorService := mirror.NewMirrorService()
-	service.TryStartService(rootCtx, mirrorService)
+	go func() {
+		log.Debugf("ddddd")
+		time.Sleep(100 * time.Millisecond)
+		for _, srv := range srvs {
+			service.TryStartService(rootCtx, srv)
+		}
+	}()
+	server.StartServer(rootCtx, bind, opts...)
 }

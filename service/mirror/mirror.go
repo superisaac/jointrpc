@@ -48,6 +48,10 @@ func (self *MirrorService) Init(rootCtx context.Context) {
 	self.ChState = make(chan CmdStateChange)
 }
 
+func (self MirrorService) Name() string {
+	return "mirror"
+}
+
 func (self MirrorService) CanRun(rootCtx context.Context) bool {
 	cfg := datadir.ConfigFromContext(rootCtx)
 	return len(cfg.Cluster.StaticPeers) > 0

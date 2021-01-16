@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/bitly/go-simplejson v0.5.0
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/golang/protobuf v1.4.1
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/websocket v1.4.2

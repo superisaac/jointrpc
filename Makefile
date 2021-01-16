@@ -45,6 +45,7 @@ gofmt:
 	go fmt service/*.go
 	go fmt service/builtin/*.go
 	go fmt service/mirror/*.go
+	go fmt service/vars/*.go
 	go fmt command/*.go
 
 install: bin/jointrpc

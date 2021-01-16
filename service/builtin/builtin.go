@@ -20,6 +20,10 @@ type BuiltinService struct {
 	conn   *rpcrouter.ConnT
 }
 
+func (self BuiltinService) Name() string {
+	return "builtin"
+}
+
 func (self BuiltinService) CanRun(rootCtx context.Context) bool {
 	return true
 }

@@ -12,23 +12,6 @@ import (
 	"os"
 )
 
-// var (
-// 	cfg       *Config
-// )
-
-// func GetConfig() *Config {
-// 	if cfg == nil {
-// 		cfg = new(Config)
-// 		err := cfg.ParseConfig()
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		cfg.setupLogger()
-// 	}
-// 	return cfg
-// }
-
-
 func NewConfig() *Config {
 	return new(Config)
 }
@@ -108,7 +91,7 @@ func (self *Config) validateValues() error {
 	return nil
 }
 
-func (self *Config) setupLogger() {
+func (self *Config) SetupLogger() {
 	log.SetFormatter(&log.JSONFormatter{})
 
 	logOutput := self.Logging.Output
