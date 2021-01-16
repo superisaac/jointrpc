@@ -56,7 +56,7 @@ func (self *Router) Init(name string) *Router {
 	self.fallbackConns = make([]*ConnT, 0)
 	self.connMap = make(map[CID](*ConnT))
 
-	self.pendingRequests = make(map[string]PendingT)
+	self.pendingRequests = make(map[interface{}]PendingT)
 	self.methodsSig = ""
 	self.setupChannels()
 	return self
@@ -373,7 +373,7 @@ func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
 
 func (self *Router) ClearTimeoutRequests() {
 	now := time.Now()
-	tmpMap := make(map[string]PendingT)
+	tmpMap := make(map[interface{}]PendingT)
 	//var tmpMap map[stirng]PendingT
 
 	for msgId, reqt := range self.pendingRequests {
@@ -396,7 +396,7 @@ func (self *Router) ClearPending(connId CID) {
 	}
 }
 
-func (self *Router) deletePending(msgId string) {
+func (self *Router) deletePending(msgId interface{}) {
 	delete(self.pendingRequests, msgId)
 }
 
@@ -425,15 +425,21 @@ func (self *Router) routeRequest(cmdMsg CmdMsg) *ConnT {
 		expireTime := time.Now().Add(DefaultRequestTimeout)
 		reqMsg, ok := msg.(*jsonrpc.RequestMessage)
 		misc.Assert(ok, "bad msg type other than request")
-		newId := uuid.New().String()
-		newReqMsg := reqMsg.Clone(newId)
-		self.pendingRequests[newId] = PendingT{
+
+		msgId := reqMsg.Id
+
+		if _, ok := self.pendingRequests[msgId]; ok {
+			msgId = uuid.New().String()
+			reqMsg.Log().Infof("msg id already exist, change a new one %s", msgId)
+			reqMsg = reqMsg.Clone(msgId)
+		}
+		self.pendingRequests[msgId] = PendingT{
 			OrigMsgVec: cmdMsg.MsgVec,
 			Expire:     expireTime,
 			ToConnId:   toConn.ConnId,
 		}
 		targetVec := cmdMsg.MsgVec
-		targetVec.Msg = newReqMsg
+		targetVec.Msg = reqMsg
 		return self.deliverMessage(toConn.ConnId, targetVec)
 	} else {
 		errMsg := jsonrpc.RPCErrorMessage(msg, 404, "method not found", false)
@@ -445,7 +451,9 @@ func (self *Router) routeRequest(cmdMsg CmdMsg) *ConnT {
 }
 func (self *Router) routeResultOrError(cmdMsg CmdMsg) *ConnT {
 	msg := cmdMsg.MsgVec.Msg
-	if msgId, ok := msg.MustId().(string); ok {
+	//if msgId, ok := msg.MustId().(string); ok {
+	msgId := msg.MustId()
+	if true {
 		if reqt, ok := self.pendingRequests[msgId]; ok {
 			self.deletePending(msgId)
 

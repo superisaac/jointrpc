@@ -17,7 +17,7 @@ import (
 type VarsService struct {
 	handler.HandlerManager
 	//vars   map[string](map[string](interface{}))
-	vars map[string]interface{}
+	vars   map[string]interface{}
 	router *rpcrouter.Router
 	conn   *rpcrouter.ConnT
 }

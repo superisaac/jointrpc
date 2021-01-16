@@ -116,7 +116,7 @@ type Router struct {
 	fallbackConns []*ConnT
 
 	connMap         map[CID](*ConnT)
-	pendingRequests map[string]PendingT
+	pendingRequests map[interface{}]PendingT
 
 	// channels
 	ChMsg chan CmdMsg

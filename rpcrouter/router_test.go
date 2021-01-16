@@ -10,19 +10,6 @@ import (
 	"time"
 )
 
-// implements ConnT
-/*type TestConnT struct {
-	ch MsgChannel
-}
-
-func (self TestConnT) RecvChannel() MsgChannel {
-	return self.ch
-}
-
-func (self TestConnT) Location() MethodLocation {
-	return Location_Local
-}*/
-
 func TestJoinConn(t *testing.T) {
 	assert := assert.New(t)
 	router := NewRouter("test_join_conn")
@@ -71,7 +58,7 @@ func TestRouteMessage(t *testing.T) {
 	router.RouteMessage(CmdMsg{MsgVec{Msg: msg, FromConnId: conn.ConnId}, false})
 
 	rcvmsg := <-conn.RecvChannel
-	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
+	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
 }
 
@@ -105,7 +92,7 @@ func TestRouteRoutine(t *testing.T) {
 	router.ChMsg <- CmdMsg{MsgVec{Msg: msg, FromConnId: cid1, TargetConnId: cid}, false}
 
 	rcvmsg := <-ch
-	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
+	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
 
 	// wrong target id
