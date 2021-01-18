@@ -2,17 +2,26 @@
 
 protofiles := $(shell find ./proto -name '*.proto')
 gofiles := $(shell find . -name '*.go')
+protogofiles := intf/jointrpc/jointrpc.pb.go intf/jointrpc/jointrpc_grpc.pb.go
+
+protopyfiles := python/jointrpc_pb2.py \
+	python/jointrpc_pb2_grpc.py \
+	python/jointrpc_grpc.py
 
 build: compile_proto bin/jointrpc
 
 all: test build
 
-./tmp/protoc.ts: ${protofiles} ./compileproto.sh
-	mkdir -p tmp
-	./compileproto.sh
-	echo compile >./tmp/protoc.ts
+intf/jointrpc/%.pb.go intf/jointrpc/%_grpc.pb.go: proto/%.proto
+	protoc -I proto/ --go_out=. --go-grpc_out=. $<
 
-compile_proto: ./tmp/protoc.ts
+python/%_pb2.py python/%_pb2_grpc.py python/%_grpc.py: proto/%.proto
+	python -m grpc_tools.protoc -I proto/ \
+			--python_out=python/ \
+			--grpc_python_out=python/ \
+			--grpclib_python_out=python/ $<
+
+compile_proto: $(protogofiles) $(protopyfiles)
 
 bin/jointrpc: ${gofiles}
 	go build -o $@ jointrpc.go
