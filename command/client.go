@@ -1,4 +1,4 @@
-package client
+package command
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	client "github.com/superisaac/jointrpc/client"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
@@ -18,21 +19,17 @@ import (
 	//grpc "google.golang.org/grpc"
 )
 
-func printHelp() {
-	fmt.Println("method params...")
-}
-
 // Send Notify
 func CommandSendNotify() {
 	callFlags := flag.NewFlagSet("notify", flag.ExitOnError)
-	serverFlag := NewServerFlag(callFlags)
+	serverFlag := client.NewServerFlag(callFlags)
 	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
 	pTraceId := callFlags.String("traceid", "", "trace id during the workflow")
 
 	callFlags.Parse(os.Args[2:])
 
 	if callFlags.NArg() < 1 {
-		printHelp()
+		fmt.Println("method params...")
 		os.Exit(1)
 	}
 
@@ -45,19 +42,20 @@ func CommandSendNotify() {
 		panic(err)
 	}
 
-	err = RunSendNotify(serverFlag.Get(), method, params, WithBroadcast(*pBroadcast), WithTraceId(*pTraceId))
+	err = RunSendNotify(serverFlag.Get(), method, params,
+		client.WithBroadcast(*pBroadcast), client.WithTraceId(*pTraceId))
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunSendNotify(serverEntry ServerEntry, method string, params []interface{}, opts ...CallOptionFunc) error {
-	client := NewRPCClient(serverEntry)
-	err := client.Connect()
+func RunSendNotify(serverEntry client.ServerEntry, method string, params []interface{}, opts ...client.CallOptionFunc) error {
+	c := client.NewRPCClient(serverEntry)
+	err := c.Connect()
 	if err != nil {
 		return err
 	}
-	err = client.SendNotify(context.Background(), method, params, opts...)
+	err = c.SendNotify(context.Background(), method, params, opts...)
 	if err != nil {
 		return err
 	}
@@ -67,7 +65,7 @@ func RunSendNotify(serverEntry ServerEntry, method string, params []interface{},
 // Call RPC
 func CommandCallRPC(subcmd string) {
 	callFlags := flag.NewFlagSet(subcmd, flag.ExitOnError)
-	serverFlag := NewServerFlag(callFlags)
+	serverFlag := client.NewServerFlag(callFlags)
 	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
 	pTraceId := callFlags.String("traceid", "", "trace id during the workflow")
 
@@ -75,7 +73,7 @@ func CommandCallRPC(subcmd string) {
 	// TODO, check the sanity agains traceId
 
 	if callFlags.NArg() < 1 {
-		printHelp()
+		fmt.Println("method params...")
 		os.Exit(1)
 	}
 
@@ -88,20 +86,21 @@ func CommandCallRPC(subcmd string) {
 		panic(err)
 	}
 
-	err = RunCallRPC(serverFlag.Get(), method, params, WithBroadcast(*pBroadcast), WithTraceId(*pTraceId))
+	err = RunCallRPC(serverFlag.Get(), method, params,
+		client.WithBroadcast(*pBroadcast), client.WithTraceId(*pTraceId))
 	if err != nil {
 		panic(err)
 	}
 }
 
-func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}, opts ...CallOptionFunc) error {
-	client := NewRPCClient(serverEntry)
-	err := client.Connect()
+func RunCallRPC(serverEntry client.ServerEntry, method string, params []interface{}, opts ...client.CallOptionFunc) error {
+	c := client.NewRPCClient(serverEntry)
+	err := c.Connect()
 	if err != nil {
 		return err
 	}
 
-	res, err := client.CallRPC(context.Background(), method, params, opts...)
+	res, err := c.CallRPC(context.Background(), method, params, opts...)
 	if err != nil {
 		return err
 	}
@@ -119,7 +118,7 @@ func RunCallRPC(serverEntry ServerEntry, method string, params []interface{}, op
 // Call ListMethods
 func CommandListMethods() {
 	aFlags := flag.NewFlagSet("methods", flag.ExitOnError)
-	serverFlag := NewServerFlag(aFlags)
+	serverFlag := client.NewServerFlag(aFlags)
 	aFlags.Parse(os.Args[2:])
 
 	err := RunListMethods(serverFlag.Get())
@@ -128,13 +127,13 @@ func CommandListMethods() {
 	}
 }
 
-func RunListMethods(serverEntry ServerEntry) error {
-	client := NewRPCClient(serverEntry)
-	err := client.Connect()
+func RunListMethods(serverEntry client.ServerEntry) error {
+	c := client.NewRPCClient(serverEntry)
+	err := c.Connect()
 	if err != nil {
 		return err
 	}
-	methodInfos, err := client.ListMethods(context.Background())
+	methodInfos, err := c.ListMethods(context.Background())
 	if err != nil {
 		return nil
 	}
@@ -149,7 +148,7 @@ func RunListMethods(serverEntry ServerEntry) error {
 // Call ListDelegates
 func CommandListDelegates() {
 	aFlags := flag.NewFlagSet("delegates", flag.ExitOnError)
-	serverFlag := NewServerFlag(aFlags)
+	serverFlag := client.NewServerFlag(aFlags)
 	aFlags.Parse(os.Args[2:])
 
 	err := RunListDelegates(serverFlag.Get())
@@ -158,13 +157,13 @@ func CommandListDelegates() {
 	}
 }
 
-func RunListDelegates(serverEntry ServerEntry) error {
-	client := NewRPCClient(serverEntry)
-	err := client.Connect()
+func RunListDelegates(serverEntry client.ServerEntry) error {
+	c := client.NewRPCClient(serverEntry)
+	err := c.Connect()
 	if err != nil {
 		return err
 	}
-	delegates, err := client.ListDelegates(context.Background())
+	delegates, err := c.ListDelegates(context.Background())
 	if err != nil {
 		return nil
 	}
@@ -179,7 +178,7 @@ func RunListDelegates(serverEntry ServerEntry) error {
 // Watch notify
 func CommandWatch() {
 	subFlags := flag.NewFlagSet("watchnotify", flag.ExitOnError)
-	serverFlag := NewServerFlag(subFlags)
+	serverFlag := client.NewServerFlag(subFlags)
 	subFlags.Parse(os.Args[2:])
 
 	notifyNames := subFlags.Args()
@@ -187,7 +186,7 @@ func CommandWatch() {
 		panic(errors.New("No notify methods specified to watch"))
 	}
 
-	rpcClient := NewRPCClient(serverFlag.Get())
+	rpcClient := client.NewRPCClient(serverFlag.Get())
 
 	for _, notifyName := range notifyNames {
 		rpcClient.On(notifyName, func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
@@ -214,11 +213,11 @@ func CommandWatch() {
 // Watch methods update
 func CommandWatchState() {
 	subFlags := flag.NewFlagSet("watchstate", flag.ExitOnError)
-	serverFlag := NewServerFlag(subFlags)
+	serverFlag := client.NewServerFlag(subFlags)
 	pVerbose := subFlags.Bool("verbose", false, "show method info")
 	subFlags.Parse(os.Args[2:])
 
-	rpcClient := NewRPCClient(serverFlag.Get())
+	rpcClient := client.NewRPCClient(serverFlag.Get())
 
 	if *pVerbose {
 		rpcClient.OnStateChange(printMethodInfos)

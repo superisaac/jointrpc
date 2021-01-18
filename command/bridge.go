@@ -1,16 +1,13 @@
-package bridge
+package command
 
 import (
 	"context"
 	"flag"
 	"fmt"
 	client "github.com/superisaac/jointrpc/client"
+	bridge "github.com/superisaac/jointrpc/cluster/bridge"
 	"os"
 )
-
-func printHelp() {
-	fmt.Println("server addresses...")
-}
 
 func CommandStartBridge() {
 	commandFlags := flag.NewFlagSet("bridge", flag.ExitOnError)
@@ -18,7 +15,7 @@ func CommandStartBridge() {
 
 	commandFlags.Parse(os.Args[2:])
 	if commandFlags.NArg() < 1 {
-		printHelp()
+		fmt.Println("server addresses...")
 		os.Exit(1)
 	}
 
@@ -32,5 +29,5 @@ func CommandStartBridge() {
 			CertFile:  *pCertFile,
 		})
 	}
-	StartNewBridge(context.Background(), serverEntries)
+	bridge.StartNewBridge(context.Background(), serverEntries)
 }

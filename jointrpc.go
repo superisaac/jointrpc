@@ -5,14 +5,14 @@ import (
 	"sort"
 	//"context"
 	log "github.com/sirupsen/logrus"
-	client "github.com/superisaac/jointrpc/client"
-	example "github.com/superisaac/jointrpc/client/example"
+	//client "github.com/superisaac/jointrpc/client"
+	//example "github.com/superisaac/jointrpc/client/example"
 	//server "github.com/superisaac/jointrpc/server"
 	command "github.com/superisaac/jointrpc/command"	
 	"os"
 	//"strings"
 	//"strings"
-	bridge "github.com/superisaac/jointrpc/cluster/bridge"
+	//bridge "github.com/superisaac/jointrpc/cluster/bridge"
 )
 
 var commands map[string]string = map[string]string{
@@ -94,31 +94,31 @@ func main() {
 		command.CommandStartServer()
 	case "methods":
 		setupClientSideLogger("")
-		client.CommandListMethods()
+		command.CommandListMethods()
 	case "delegates":
 		setupClientSideLogger("")
-		client.CommandListDelegates()
+		command.CommandListDelegates()
 	case "watchstate":
 		setupClientSideLogger("")
-		client.CommandWatchState()
+		command.CommandWatchState()
 	case "rpc":
 		setupClientSideLogger("")
-		client.CommandCallRPC("rpc")
+		command.CommandCallRPC("rpc")
 	case "call":
 		setupClientSideLogger("")
-		client.CommandCallRPC("call")
+		command.CommandCallRPC("call")
 	case "notify":
 		setupClientSideLogger("")
-		client.CommandSendNotify()
+		command.CommandSendNotify()
 	case "watch":
 		setupClientSideLogger("")
-		client.CommandWatch()
+		command.CommandWatch()
 	case "bridge":
 		setupClientSideLogger("")
-		bridge.CommandStartBridge()
+		command.CommandStartBridge()
 	case "example.array":
 		setupClientSideLogger("")
-		example.CommandExampleArray()
+		command.CommandExampleArray()
 	case "help":
 		showHelp()
 	default:

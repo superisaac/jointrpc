@@ -1,9 +1,10 @@
-package example
+package command
 
 import (
 	"flag"
 	//log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
+	example "github.com/superisaac/jointrpc/client/example"
 	"os"
 )
 
@@ -13,7 +14,7 @@ func CommandExampleArray() {
 	serverFlag := client.NewServerFlag(examFlags)
 	examFlags.Parse(os.Args[2:])
 
-	err := ExampleArray(serverFlag.Get())
+	err := example.ExampleArray(serverFlag.Get())
 	if err != nil {
 		panic(err)
 	}
