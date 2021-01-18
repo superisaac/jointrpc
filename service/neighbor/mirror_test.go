@@ -1,4 +1,4 @@
-package mirror
+package neighbor
 
 import (
 	//"fmt"
@@ -40,7 +40,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestMirrorRun(t *testing.T) {
+func TestNeighborRun(t *testing.T) {
 	assert := assert.New(t)
 
 	rootCtx, cancel := context.WithCancel(context.Background())
@@ -56,7 +56,7 @@ func TestMirrorRun(t *testing.T) {
 	go server.StartServer(rootCtx1, "localhost:10011")
 	time.Sleep(100 * time.Millisecond)
 
-	srv := NewMirrorService()
+	srv := NewNeighborService()
 	service.TryStartService(rootCtx1, srv)
 	time.Sleep(100 * time.Millisecond)
 

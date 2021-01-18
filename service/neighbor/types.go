@@ -1,4 +1,4 @@
-package mirror
+package neighbor
 
 import (
 	client "github.com/superisaac/jointrpc/client"
@@ -19,7 +19,7 @@ type CmdStateChange struct {
 	State     *rpcrouter.TubeState
 }
 
-type MirrorService struct {
+type NeighborService struct {
 	handler.HandlerManager
 	conn          *rpcrouter.ConnT
 	router        *rpcrouter.Router

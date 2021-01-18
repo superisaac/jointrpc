@@ -24,7 +24,7 @@ test:
 	go test -v github.com/superisaac/jointrpc/client
 	go test -v github.com/superisaac/jointrpc/server
 	go test -v github.com/superisaac/jointrpc/service/builtin
-	go test -v github.com/superisaac/jointrpc/service/mirror
+	go test -v github.com/superisaac/jointrpc/service/neighbor
 	go test -v github.com/superisaac/jointrpc/cluster/bridge
 
 clean:
@@ -44,7 +44,7 @@ gofmt:
 	go fmt cluster/bridge/*.go
 	go fmt service/*.go
 	go fmt service/builtin/*.go
-	go fmt service/mirror/*.go
+	go fmt service/neighbor/*.go
 	go fmt service/vars/*.go
 	go fmt command/*.go
 

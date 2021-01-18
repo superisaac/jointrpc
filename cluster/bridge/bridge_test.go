@@ -11,9 +11,8 @@ import (
 
 	client "github.com/superisaac/jointrpc/client"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	server "github.com/superisaac/jointrpc/server"
-	//mirror "github.com/superisaac/jointrpc/cluster/mirror"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	server "github.com/superisaac/jointrpc/server"
 	"testing"
 	"time"
 )

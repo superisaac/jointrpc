@@ -10,12 +10,9 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	//mirror "github.com/superisaac/jointrpc/mirror"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	//handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	grpc "google.golang.org/grpc"
-	//credentials "google.golang.org/grpc/credentials"
 )
 
 func ServerContext(rootCtx context.Context, router *rpcrouter.Router, cfg *datadir.Config) context.Context {

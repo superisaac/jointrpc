@@ -14,7 +14,7 @@ import (
 	server "github.com/superisaac/jointrpc/server"
 	service "github.com/superisaac/jointrpc/service"
 	builtin "github.com/superisaac/jointrpc/service/builtin"
-	mirror "github.com/superisaac/jointrpc/service/mirror"
+	neighbor "github.com/superisaac/jointrpc/service/neighbor"
 	vars "github.com/superisaac/jointrpc/service/vars"
 	//misc "github.com/superisaac/jointrpc/misc"
 	//"github.com/superisaac/jointrpc/rpcrouter"
@@ -71,16 +71,17 @@ func CommandStartServer() {
 
 	srvs := []service.IService{
 		builtin.NewBuiltinService(),
-		mirror.NewMirrorService(),
+		neighbor.NewNeighborService(),
 		vars.NewVarsService(),
 	}
 
 	go func() {
-		log.Debugf("ddddd")
+		// start services after grpc server starts
 		time.Sleep(100 * time.Millisecond)
 		for _, srv := range srvs {
 			service.TryStartService(rootCtx, srv)
 		}
 	}()
+	log.Infof("server starts at %s", bind)
 	server.StartServer(rootCtx, bind, opts...)
 }

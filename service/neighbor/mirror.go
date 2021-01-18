@@ -1,4 +1,4 @@
-package mirror
+package neighbor
 
 import (
 	"context"
@@ -25,11 +25,11 @@ func (self Edge) hasMethod(methodName string) bool {
 	return ok
 }
 
-func NewMirrorService() *MirrorService {
-	return new(MirrorService)
+func NewNeighborService() *NeighborService {
+	return new(NeighborService)
 }
 
-func (self *MirrorService) Init(rootCtx context.Context) {
+func (self *NeighborService) Init(rootCtx context.Context) {
 	router := rpcrouter.RouterFromContext(rootCtx)
 	cfg := datadir.ConfigFromContext(rootCtx)
 
@@ -48,16 +48,16 @@ func (self *MirrorService) Init(rootCtx context.Context) {
 	self.ChState = make(chan CmdStateChange)
 }
 
-func (self MirrorService) Name() string {
-	return "mirror"
+func (self NeighborService) Name() string {
+	return "neighbor"
 }
 
-func (self MirrorService) CanRun(rootCtx context.Context) bool {
+func (self NeighborService) CanRun(rootCtx context.Context) bool {
 	cfg := datadir.ConfigFromContext(rootCtx)
 	return len(cfg.Cluster.StaticPeers) > 0
 }
 
-func (self *MirrorService) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {
+func (self *NeighborService) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {
 	if _, ok := self.edges[entry.ServerUrl]; ok {
 		//log.Warnf("remote client already exist %s", self.remoteClient)
 		panic(errors.New("client already exists"))
@@ -82,7 +82,7 @@ func (self *MirrorService) connectRemote(rootCtx context.Context, entry client.S
 	return nil
 }
 
-func (self *MirrorService) Start(rootCtx context.Context) error {
+func (self *NeighborService) Start(rootCtx context.Context) error {
 	self.Init(rootCtx)
 
 	for _, entry := range self.serverEntries {
@@ -134,7 +134,7 @@ func (self *MirrorService) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *MirrorService) requestReceived(msgvec rpcrouter.MsgVec) error {
+func (self *NeighborService) requestReceived(msgvec rpcrouter.MsgVec) error {
 	msg := msgvec.Msg
 	// stupid methods
 	if msg.IsRequest() {
@@ -163,7 +163,7 @@ func (self *MirrorService) requestReceived(msgvec rpcrouter.MsgVec) error {
 
 }
 
-func (self *MirrorService) handleStateChange(stateChange CmdStateChange) {
+func (self *NeighborService) handleStateChange(stateChange CmdStateChange) {
 	if edge, ok := self.edges[stateChange.ServerUrl]; ok {
 		var newMethods []rpcrouter.MethodInfo
 		methodNames := make(misc.StringSet)
@@ -187,7 +187,7 @@ func (self *MirrorService) handleStateChange(stateChange CmdStateChange) {
 	}
 }
 
-func (self *MirrorService) tryUpdateMethods() {
+func (self *NeighborService) tryUpdateMethods() {
 	uni := misc.NewStringUnifier()
 	for _, edge := range self.edges {
 		for _, minfo := range edge.dlgMethods {
