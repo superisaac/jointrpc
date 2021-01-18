@@ -51,7 +51,7 @@ func TestNeighborRun(t *testing.T) {
 
 	// start server2
 	cfg := datadir.NewConfig()
-	cfg.Cluster.StaticPeers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
+	cfg.Cluster.NeighborPeers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
 	rootCtx1 := server.ServerContext(rootCtx, nil, cfg)
 	go server.StartServer(rootCtx1, "localhost:10011")
 	time.Sleep(100 * time.Millisecond)

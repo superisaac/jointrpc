@@ -30,7 +30,7 @@ type PeerConfig struct {
 
 type ClusterConfig struct {
 	AdvertisedURL string       `yaml:"advertised_url"`
-	StaticPeers   []PeerConfig `yaml:static_peers,omitempty"`
+	NeighborPeers   []PeerConfig `yaml:neighbor_peers,omitempty"`
 }
 
 // The root config item

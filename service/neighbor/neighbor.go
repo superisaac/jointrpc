@@ -34,7 +34,7 @@ func (self *NeighborService) Init(rootCtx context.Context) {
 	cfg := datadir.ConfigFromContext(rootCtx)
 
 	var entries []client.ServerEntry
-	for _, peer := range cfg.Cluster.StaticPeers {
+	for _, peer := range cfg.Cluster.NeighborPeers {
 		entries = append(entries, client.ServerEntry{
 			ServerUrl: peer.ServerUrl,
 			CertFile:  peer.CertFile,
@@ -54,7 +54,7 @@ func (self NeighborService) Name() string {
 
 func (self NeighborService) CanRun(rootCtx context.Context) bool {
 	cfg := datadir.ConfigFromContext(rootCtx)
-	return len(cfg.Cluster.StaticPeers) > 0
+	return len(cfg.Cluster.NeighborPeers) > 0
 }
 
 func (self *NeighborService) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {
