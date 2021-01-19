@@ -184,12 +184,6 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 	defer sendCancel()
 
 	go self.sendUpResult(sendCtx, stream)
-	// if len(self.MethodHandlers) > 0 {
-	// 	err := self.declareMethods(rootCtx)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	for {
 		downpac, err := stream.Recv()
