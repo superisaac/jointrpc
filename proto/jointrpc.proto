@@ -2,22 +2,36 @@ syntax = "proto3";
 
 option go_package = "intf/jointrpc";
 
-message Empty {}
-
 service JointRPC {
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
   rpc ListDelegates(ListDelegatesRequest) returns (ListDelegatesResponse);
-  //rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
+  rpc DeclareMethods(DeclareMethodsRequest) returns (DeclareMethodsResponse);
+
   rpc Call(JSONRPCCallRequest) returns (JSONRPCCallResult);
   rpc Notify(JSONRPCNotifyRequest) returns (JSONRPCNotifyResponse);
   rpc Handle(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
+
+  // cluster aware RPCs
+  //rpc WatchState(WatchStateRequest) returns (stream ServerState);
+  rpc DeclareDelegates(DeclareDelegatesRequest) returns (DeclareDelegatesResponse);    
+}
+
+message Empty {}
+message Error {
+  int32 code = 1;
+  string reason = 2;
+}
+
+message JSONRPCEnvolope {
+  string body = 1;  // json encoded rpc message
+  string trace_id = 2;
 }
 
 message ListMethodsRequest {
 }
 
 message ListMethodsResponse {
-  repeated MethodInfo method_infos = 1;
+  repeated MethodInfo methods = 1;
 }
 
 message ListDelegatesRequest {
@@ -27,9 +41,28 @@ message ListDelegatesResponse {
   repeated string delegates = 1;
 }
 
-message JSONRPCEnvolope {
-  string body = 1;  // json encoded rpc message
-  string trace_id = 2;
+message DeclareMethodsRequest {
+  string token = 1;  
+  string conn_public_id = 2;
+  repeated MethodInfo methods = 3;
+}
+
+message DeclareMethodsResponse {
+  Error error = 1;
+}
+
+message WatchStateRequest {
+  string cluster_token = 1;
+}
+
+message DeclareDelegatesRequest {
+  string token = 1;
+  string conn_public_id = 2;  
+  repeated string methods = 3;
+}
+
+message DeclareDelegatesResponse {
+  Error error = 1;
 }
 
 message JSONRPCCallRequest {
@@ -58,22 +91,6 @@ message MethodInfo {
   string schema_json = 3;
 }
 
-message CanServeRequest {
-  repeated MethodInfo methods  = 1;
-}
-
-message CanServeResponse {
-  string text = 1;
-}
-
-message CanDelegateRequest {
-  repeated string methods  = 1;
-}
-
-message CanDelegateResponse {
-  string text = 1;
-}
-
 message PING {
   string text = 1;
 }
@@ -82,31 +99,30 @@ message PONG {
   string text = 1;
 }
 
-message TubeState {
+message ServerState {
   repeated MethodInfo methods = 1;
+}
+
+message ServerGreeting {
+  string conn_public_id = 1;
 }
 
 message JointRPCDownPacket {
   oneof payload {
-    CanServeResponse can_serve = 1;
-    CanDelegateResponse can_delegate = 2;
+    PING ping = 1;
+    PONG pong = 2;
+    ServerGreeting greeting = 3;
+    ServerState state = 4;
     
-    PING ping = 10;
-    PONG pong = 11;
-    TubeState state = 15;
-    
-    JSONRPCEnvolope envolope = 20;    
+    JSONRPCEnvolope envolope = 10;    
   }
 }
 
 message JointRPCUpPacket {
   oneof payload {
-    CanServeRequest can_serve = 1;
-    CanDelegateRequest can_delegate = 2;
-
-    PING ping = 10;
-    PONG pong = 11;
-
-    JSONRPCEnvolope envolope = 20;
+    PING ping = 1;
+    PONG pong = 2;
+    
+    JSONRPCEnvolope envolope = 10;
   }
 }

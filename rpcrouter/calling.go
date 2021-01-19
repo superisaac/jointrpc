@@ -10,7 +10,7 @@ import (
 func (self *Router) SingleCall(msgvec MsgVec) (jsonrpc.IMessage, error) {
 	msg := msgvec.Msg
 	if msg.IsRequest() {
-		conn := self.Join()
+		conn := self.Join(false)
 		defer self.Leave(conn)
 
 		self.ChMsg <- CmdMsg{
@@ -35,7 +35,7 @@ func (self *Router) SingleCall(msgvec MsgVec) (jsonrpc.IMessage, error) {
 func (self *Router) GatherCall(msgvec MsgVec, limit int) (resmsg jsonrpc.IMessage, err error) {
 	msg := msgvec.Msg
 	if msg.IsRequest() {
-		conn := self.Join()
+		conn := self.Join(false)
 		defer self.Leave(conn)
 
 		reqmsg, _ := msg.(*jsonrpc.RequestMessage)
@@ -66,7 +66,7 @@ func (self *Router) GatherCall(msgvec MsgVec, limit int) (resmsg jsonrpc.IMessag
 		resmsg := jsonrpc.NewResultMessage(reqmsg, arr, nil)
 		return resmsg, nil
 	} else if msg.IsNotify() {
-		conn := self.Join()
+		conn := self.Join(false)
 		defer self.Leave(conn)
 
 		notifymsg, _ := msg.(*jsonrpc.NotifyMessage)

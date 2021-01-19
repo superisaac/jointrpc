@@ -27,21 +27,21 @@ func DecodeMethodInfo(iminfo *intf.MethodInfo) *rpcrouter.MethodInfo {
 	}
 }
 
-func EncodeTubeState(state *rpcrouter.TubeState) *intf.TubeState {
+func EncodeServerState(state *rpcrouter.ServerState) *intf.ServerState {
 	var resMethods []*intf.MethodInfo
 	for _, minfo := range state.Methods {
 		resMethods = append(resMethods, EncodeMethodInfo(minfo))
 	}
-	return &intf.TubeState{Methods: resMethods}
+	return &intf.ServerState{Methods: resMethods}
 }
 
-func DecodeTubeState(iState *intf.TubeState) *rpcrouter.TubeState {
+func DecodeServerState(iState *intf.ServerState) *rpcrouter.ServerState {
 	var resMethods []rpcrouter.MethodInfo
 	for _, info := range iState.Methods {
 		minfo := DecodeMethodInfo(info)
 		resMethods = append(resMethods, *minfo)
 	}
-	return &rpcrouter.TubeState{Methods: resMethods}
+	return &rpcrouter.ServerState{Methods: resMethods}
 }
 
 func MessageToEnvolope(msg jsonrpc.IMessage) *intf.JSONRPCEnvolope {

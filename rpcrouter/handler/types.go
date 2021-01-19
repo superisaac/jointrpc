@@ -19,7 +19,7 @@ type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error
 type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
 
 // listen to tube state change
-type StateHandlerFunc func(newState *rpcrouter.TubeState)
+type StateHandlerFunc func(newState *rpcrouter.ServerState)
 
 type OnChangeFunc func()
 

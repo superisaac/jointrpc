@@ -32,6 +32,11 @@ func (self *HandlerManager) OnChange(onChange OnChangeFunc) {
 	self.onChange = onChange
 }
 
+func (self *HandlerManager) TriggerChange() {
+	if self.onChange != nil {
+		self.onChange()
+	}
+}
 func (self *HandlerManager) OnStateChange(onChange StateHandlerFunc) {
 	self.StateHandler = onChange
 }
@@ -40,9 +45,7 @@ func (self *HandlerManager) UnHandle(method string) bool {
 	_, found := self.MethodHandlers[method]
 	if found {
 		delete(self.MethodHandlers, method)
-		if self.onChange != nil {
-			self.onChange()
-		}
+		self.TriggerChange()
 	}
 	return found
 }

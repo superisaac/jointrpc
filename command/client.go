@@ -229,7 +229,7 @@ func CommandWatchState() {
 	rpcClient.Handle(context.Background())
 }
 
-func printMethodInfos(state *rpcrouter.TubeState) {
+func printMethodInfos(state *rpcrouter.ServerState) {
 	var arr [](map[string](interface{}))
 	for _, info := range state.Methods {
 		mapInfo := map[string](interface{}){
@@ -254,7 +254,7 @@ func printMethodInfos(state *rpcrouter.TubeState) {
 	fmt.Printf("%s\n", string(repr))
 }
 
-func printMethodNames(state *rpcrouter.TubeState) {
+func printMethodNames(state *rpcrouter.ServerState) {
 	var arr []string
 	for _, info := range state.Methods {
 		arr = append(arr, info.Name)

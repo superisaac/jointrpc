@@ -76,7 +76,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 
 	self.InitHandlerManager()
 	self.router = rpcrouter.RouterFromContext(rootCtx)
-	self.conn = self.router.Join()
+	self.conn = self.router.Join(false)
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()
@@ -100,7 +100,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		return err
 	}
 
-	self.updateMethods()
+	self.declareMethods()
 	for {
 		select {
 		case <-ctx.Done():
@@ -148,7 +148,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *VarsService) updateMethods() {
+func (self *VarsService) declareMethods() {
 	if self.conn != nil {
 		minfos := make([]rpcrouter.MethodInfo, 0)
 		for m, info := range self.MethodHandlers {

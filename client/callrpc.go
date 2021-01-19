@@ -74,17 +74,6 @@ func (self *RPCClient) CallMessage(rootCtx context.Context, reqmsg jsonrpc.IMess
 	return resmsg, nil
 }
 
-func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) {
-	ctx, cancel := context.WithCancel(rootCtx)
-	defer cancel()
-	req := &intf.ListDelegatesRequest{}
-	res, err := self.tubeClient.ListDelegates(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return res.Delegates, err
-}
-
 func (self *RPCClient) SendNotify(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) error {
 	opt := &CallOption{}
 	for _, optfunc := range opts {

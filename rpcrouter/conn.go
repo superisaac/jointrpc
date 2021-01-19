@@ -27,6 +27,10 @@ func (self ConnT) GetMethods() []string {
 	return keys
 }
 
+func (self ConnT) PublicId() string {
+	return self.publicId
+}
+
 func (self ConnT) ValidateMsg(msg jsonrpc.IMessage) (bool, jsonrpc.IMessage) {
 	if info, ok := self.ServeMethods[msg.MustMethod()]; ok && info.Schema() != nil {
 		s := info.Schema()
@@ -49,9 +53,16 @@ func (self *ConnT) SetWatchState(w bool) {
 	self.watchState = w
 }
 
-func (self *ConnT) StateChannel() chan *TubeState {
+func (self *ConnT) StateChannel() chan *ServerState {
 	if self.stateChannel == nil {
-		self.stateChannel = make(chan *TubeState, 100)
+		self.stateChannel = make(chan *ServerState, 100)
 	}
 	return self.stateChannel
+}
+
+func (self ConnT) Log() *log.Entry {
+	return log.WithFields(log.Fields{
+		"conn_id":   self.ConnId,
+		"public_id": self.publicId,
+	})
 }

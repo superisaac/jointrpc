@@ -58,14 +58,17 @@ func (*Empty) Descriptor() ([]byte, []int) {
 	return file_jointrpc_proto_rawDescGZIP(), []int{0}
 }
 
-type ListMethodsRequest struct {
+type Error struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	Code   int32  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Reason string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
 }
 
-func (x *ListMethodsRequest) Reset() {
-	*x = ListMethodsRequest{}
+func (x *Error) Reset() {
+	*x = Error{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_jointrpc_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -73,13 +76,13 @@ func (x *ListMethodsRequest) Reset() {
 	}
 }
 
-func (x *ListMethodsRequest) String() string {
+func (x *Error) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListMethodsRequest) ProtoMessage() {}
+func (*Error) ProtoMessage() {}
 
-func (x *ListMethodsRequest) ProtoReflect() protoreflect.Message {
+func (x *Error) ProtoReflect() protoreflect.Message {
 	mi := &file_jointrpc_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -91,141 +94,23 @@ func (x *ListMethodsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListMethodsRequest.ProtoReflect.Descriptor instead.
-func (*ListMethodsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use Error.ProtoReflect.Descriptor instead.
+func (*Error) Descriptor() ([]byte, []int) {
 	return file_jointrpc_proto_rawDescGZIP(), []int{1}
 }
 
-type ListMethodsResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	MethodInfos []*MethodInfo `protobuf:"bytes,1,rep,name=method_infos,json=methodInfos,proto3" json:"method_infos,omitempty"`
-}
-
-func (x *ListMethodsResponse) Reset() {
-	*x = ListMethodsResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListMethodsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListMethodsResponse) ProtoMessage() {}
-
-func (x *ListMethodsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListMethodsResponse.ProtoReflect.Descriptor instead.
-func (*ListMethodsResponse) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ListMethodsResponse) GetMethodInfos() []*MethodInfo {
+func (x *Error) GetCode() int32 {
 	if x != nil {
-		return x.MethodInfos
+		return x.Code
 	}
-	return nil
+	return 0
 }
 
-type ListDelegatesRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *ListDelegatesRequest) Reset() {
-	*x = ListDelegatesRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListDelegatesRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListDelegatesRequest) ProtoMessage() {}
-
-func (x *ListDelegatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListDelegatesRequest.ProtoReflect.Descriptor instead.
-func (*ListDelegatesRequest) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{3}
-}
-
-type ListDelegatesResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Delegates []string `protobuf:"bytes,1,rep,name=delegates,proto3" json:"delegates,omitempty"`
-}
-
-func (x *ListDelegatesResponse) Reset() {
-	*x = ListDelegatesResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListDelegatesResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListDelegatesResponse) ProtoMessage() {}
-
-func (x *ListDelegatesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListDelegatesResponse.ProtoReflect.Descriptor instead.
-func (*ListDelegatesResponse) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *ListDelegatesResponse) GetDelegates() []string {
+func (x *Error) GetReason() string {
 	if x != nil {
-		return x.Delegates
+		return x.Reason
 	}
-	return nil
+	return ""
 }
 
 type JSONRPCEnvolope struct {
@@ -240,7 +125,7 @@ type JSONRPCEnvolope struct {
 func (x *JSONRPCEnvolope) Reset() {
 	*x = JSONRPCEnvolope{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[5]
+		mi := &file_jointrpc_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -253,7 +138,7 @@ func (x *JSONRPCEnvolope) String() string {
 func (*JSONRPCEnvolope) ProtoMessage() {}
 
 func (x *JSONRPCEnvolope) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[5]
+	mi := &file_jointrpc_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -266,7 +151,7 @@ func (x *JSONRPCEnvolope) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCEnvolope.ProtoReflect.Descriptor instead.
 func (*JSONRPCEnvolope) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{5}
+	return file_jointrpc_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *JSONRPCEnvolope) GetBody() string {
@@ -283,6 +168,443 @@ func (x *JSONRPCEnvolope) GetTraceId() string {
 	return ""
 }
 
+type ListMethodsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *ListMethodsRequest) Reset() {
+	*x = ListMethodsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListMethodsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMethodsRequest) ProtoMessage() {}
+
+func (x *ListMethodsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMethodsRequest.ProtoReflect.Descriptor instead.
+func (*ListMethodsRequest) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{3}
+}
+
+type ListMethodsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Methods []*MethodInfo `protobuf:"bytes,1,rep,name=methods,proto3" json:"methods,omitempty"`
+}
+
+func (x *ListMethodsResponse) Reset() {
+	*x = ListMethodsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListMethodsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMethodsResponse) ProtoMessage() {}
+
+func (x *ListMethodsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMethodsResponse.ProtoReflect.Descriptor instead.
+func (*ListMethodsResponse) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListMethodsResponse) GetMethods() []*MethodInfo {
+	if x != nil {
+		return x.Methods
+	}
+	return nil
+}
+
+type ListDelegatesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *ListDelegatesRequest) Reset() {
+	*x = ListDelegatesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListDelegatesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDelegatesRequest) ProtoMessage() {}
+
+func (x *ListDelegatesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDelegatesRequest.ProtoReflect.Descriptor instead.
+func (*ListDelegatesRequest) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{5}
+}
+
+type ListDelegatesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Delegates []string `protobuf:"bytes,1,rep,name=delegates,proto3" json:"delegates,omitempty"`
+}
+
+func (x *ListDelegatesResponse) Reset() {
+	*x = ListDelegatesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListDelegatesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDelegatesResponse) ProtoMessage() {}
+
+func (x *ListDelegatesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDelegatesResponse.ProtoReflect.Descriptor instead.
+func (*ListDelegatesResponse) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ListDelegatesResponse) GetDelegates() []string {
+	if x != nil {
+		return x.Delegates
+	}
+	return nil
+}
+
+type DeclareMethodsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Token        string        `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	ConnPublicId string        `protobuf:"bytes,2,opt,name=conn_public_id,json=connPublicId,proto3" json:"conn_public_id,omitempty"`
+	Methods      []*MethodInfo `protobuf:"bytes,3,rep,name=methods,proto3" json:"methods,omitempty"`
+}
+
+func (x *DeclareMethodsRequest) Reset() {
+	*x = DeclareMethodsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeclareMethodsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeclareMethodsRequest) ProtoMessage() {}
+
+func (x *DeclareMethodsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeclareMethodsRequest.ProtoReflect.Descriptor instead.
+func (*DeclareMethodsRequest) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *DeclareMethodsRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *DeclareMethodsRequest) GetConnPublicId() string {
+	if x != nil {
+		return x.ConnPublicId
+	}
+	return ""
+}
+
+func (x *DeclareMethodsRequest) GetMethods() []*MethodInfo {
+	if x != nil {
+		return x.Methods
+	}
+	return nil
+}
+
+type DeclareMethodsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+}
+
+func (x *DeclareMethodsResponse) Reset() {
+	*x = DeclareMethodsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeclareMethodsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeclareMethodsResponse) ProtoMessage() {}
+
+func (x *DeclareMethodsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeclareMethodsResponse.ProtoReflect.Descriptor instead.
+func (*DeclareMethodsResponse) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DeclareMethodsResponse) GetError() *Error {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
+type WatchStateRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ClusterToken string `protobuf:"bytes,1,opt,name=cluster_token,json=clusterToken,proto3" json:"cluster_token,omitempty"`
+}
+
+func (x *WatchStateRequest) Reset() {
+	*x = WatchStateRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WatchStateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WatchStateRequest) ProtoMessage() {}
+
+func (x *WatchStateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WatchStateRequest.ProtoReflect.Descriptor instead.
+func (*WatchStateRequest) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *WatchStateRequest) GetClusterToken() string {
+	if x != nil {
+		return x.ClusterToken
+	}
+	return ""
+}
+
+type DeclareDelegatesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Token        string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	ConnPublicId string   `protobuf:"bytes,2,opt,name=conn_public_id,json=connPublicId,proto3" json:"conn_public_id,omitempty"`
+	Methods      []string `protobuf:"bytes,3,rep,name=methods,proto3" json:"methods,omitempty"`
+}
+
+func (x *DeclareDelegatesRequest) Reset() {
+	*x = DeclareDelegatesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeclareDelegatesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeclareDelegatesRequest) ProtoMessage() {}
+
+func (x *DeclareDelegatesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeclareDelegatesRequest.ProtoReflect.Descriptor instead.
+func (*DeclareDelegatesRequest) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *DeclareDelegatesRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *DeclareDelegatesRequest) GetConnPublicId() string {
+	if x != nil {
+		return x.ConnPublicId
+	}
+	return ""
+}
+
+func (x *DeclareDelegatesRequest) GetMethods() []string {
+	if x != nil {
+		return x.Methods
+	}
+	return nil
+}
+
+type DeclareDelegatesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+}
+
+func (x *DeclareDelegatesResponse) Reset() {
+	*x = DeclareDelegatesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeclareDelegatesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeclareDelegatesResponse) ProtoMessage() {}
+
+func (x *DeclareDelegatesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeclareDelegatesResponse.ProtoReflect.Descriptor instead.
+func (*DeclareDelegatesResponse) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *DeclareDelegatesResponse) GetError() *Error {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
 type JSONRPCCallRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -295,7 +617,7 @@ type JSONRPCCallRequest struct {
 func (x *JSONRPCCallRequest) Reset() {
 	*x = JSONRPCCallRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[6]
+		mi := &file_jointrpc_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -308,7 +630,7 @@ func (x *JSONRPCCallRequest) String() string {
 func (*JSONRPCCallRequest) ProtoMessage() {}
 
 func (x *JSONRPCCallRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[6]
+	mi := &file_jointrpc_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -321,7 +643,7 @@ func (x *JSONRPCCallRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCCallRequest.ProtoReflect.Descriptor instead.
 func (*JSONRPCCallRequest) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{6}
+	return file_jointrpc_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *JSONRPCCallRequest) GetEnvolope() *JSONRPCEnvolope {
@@ -349,7 +671,7 @@ type JSONRPCCallResult struct {
 func (x *JSONRPCCallResult) Reset() {
 	*x = JSONRPCCallResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[7]
+		mi := &file_jointrpc_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -362,7 +684,7 @@ func (x *JSONRPCCallResult) String() string {
 func (*JSONRPCCallResult) ProtoMessage() {}
 
 func (x *JSONRPCCallResult) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[7]
+	mi := &file_jointrpc_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -375,7 +697,7 @@ func (x *JSONRPCCallResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCCallResult.ProtoReflect.Descriptor instead.
 func (*JSONRPCCallResult) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{7}
+	return file_jointrpc_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *JSONRPCCallResult) GetEnvolope() *JSONRPCEnvolope {
@@ -397,7 +719,7 @@ type JSONRPCNotifyRequest struct {
 func (x *JSONRPCNotifyRequest) Reset() {
 	*x = JSONRPCNotifyRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[8]
+		mi := &file_jointrpc_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -410,7 +732,7 @@ func (x *JSONRPCNotifyRequest) String() string {
 func (*JSONRPCNotifyRequest) ProtoMessage() {}
 
 func (x *JSONRPCNotifyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[8]
+	mi := &file_jointrpc_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -423,7 +745,7 @@ func (x *JSONRPCNotifyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCNotifyRequest.ProtoReflect.Descriptor instead.
 func (*JSONRPCNotifyRequest) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{8}
+	return file_jointrpc_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *JSONRPCNotifyRequest) GetEnvolope() *JSONRPCEnvolope {
@@ -451,7 +773,7 @@ type JSONRPCNotifyResponse struct {
 func (x *JSONRPCNotifyResponse) Reset() {
 	*x = JSONRPCNotifyResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[9]
+		mi := &file_jointrpc_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -464,7 +786,7 @@ func (x *JSONRPCNotifyResponse) String() string {
 func (*JSONRPCNotifyResponse) ProtoMessage() {}
 
 func (x *JSONRPCNotifyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[9]
+	mi := &file_jointrpc_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -477,7 +799,7 @@ func (x *JSONRPCNotifyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JSONRPCNotifyResponse.ProtoReflect.Descriptor instead.
 func (*JSONRPCNotifyResponse) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{9}
+	return file_jointrpc_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *JSONRPCNotifyResponse) GetText() string {
@@ -501,7 +823,7 @@ type MethodInfo struct {
 func (x *MethodInfo) Reset() {
 	*x = MethodInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[10]
+		mi := &file_jointrpc_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -514,7 +836,7 @@ func (x *MethodInfo) String() string {
 func (*MethodInfo) ProtoMessage() {}
 
 func (x *MethodInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[10]
+	mi := &file_jointrpc_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -527,7 +849,7 @@ func (x *MethodInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MethodInfo.ProtoReflect.Descriptor instead.
 func (*MethodInfo) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{10}
+	return file_jointrpc_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *MethodInfo) GetName() string {
@@ -551,194 +873,6 @@ func (x *MethodInfo) GetSchemaJson() string {
 	return ""
 }
 
-type CanServeRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Methods []*MethodInfo `protobuf:"bytes,1,rep,name=methods,proto3" json:"methods,omitempty"`
-}
-
-func (x *CanServeRequest) Reset() {
-	*x = CanServeRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CanServeRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CanServeRequest) ProtoMessage() {}
-
-func (x *CanServeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CanServeRequest.ProtoReflect.Descriptor instead.
-func (*CanServeRequest) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *CanServeRequest) GetMethods() []*MethodInfo {
-	if x != nil {
-		return x.Methods
-	}
-	return nil
-}
-
-type CanServeResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Text string `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
-}
-
-func (x *CanServeResponse) Reset() {
-	*x = CanServeResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[12]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CanServeResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CanServeResponse) ProtoMessage() {}
-
-func (x *CanServeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[12]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CanServeResponse.ProtoReflect.Descriptor instead.
-func (*CanServeResponse) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *CanServeResponse) GetText() string {
-	if x != nil {
-		return x.Text
-	}
-	return ""
-}
-
-type CanDelegateRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Methods []string `protobuf:"bytes,1,rep,name=methods,proto3" json:"methods,omitempty"`
-}
-
-func (x *CanDelegateRequest) Reset() {
-	*x = CanDelegateRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[13]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CanDelegateRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CanDelegateRequest) ProtoMessage() {}
-
-func (x *CanDelegateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[13]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CanDelegateRequest.ProtoReflect.Descriptor instead.
-func (*CanDelegateRequest) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *CanDelegateRequest) GetMethods() []string {
-	if x != nil {
-		return x.Methods
-	}
-	return nil
-}
-
-type CanDelegateResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Text string `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
-}
-
-func (x *CanDelegateResponse) Reset() {
-	*x = CanDelegateResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[14]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CanDelegateResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CanDelegateResponse) ProtoMessage() {}
-
-func (x *CanDelegateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[14]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CanDelegateResponse.ProtoReflect.Descriptor instead.
-func (*CanDelegateResponse) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *CanDelegateResponse) GetText() string {
-	if x != nil {
-		return x.Text
-	}
-	return ""
-}
-
 type PING struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -750,7 +884,7 @@ type PING struct {
 func (x *PING) Reset() {
 	*x = PING{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[15]
+		mi := &file_jointrpc_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -763,7 +897,7 @@ func (x *PING) String() string {
 func (*PING) ProtoMessage() {}
 
 func (x *PING) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[15]
+	mi := &file_jointrpc_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -776,7 +910,7 @@ func (x *PING) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PING.ProtoReflect.Descriptor instead.
 func (*PING) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{15}
+	return file_jointrpc_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *PING) GetText() string {
@@ -797,7 +931,7 @@ type PONG struct {
 func (x *PONG) Reset() {
 	*x = PONG{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[16]
+		mi := &file_jointrpc_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -810,7 +944,7 @@ func (x *PONG) String() string {
 func (*PONG) ProtoMessage() {}
 
 func (x *PONG) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[16]
+	mi := &file_jointrpc_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -823,7 +957,7 @@ func (x *PONG) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PONG.ProtoReflect.Descriptor instead.
 func (*PONG) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{16}
+	return file_jointrpc_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *PONG) GetText() string {
@@ -833,7 +967,7 @@ func (x *PONG) GetText() string {
 	return ""
 }
 
-type TubeState struct {
+type ServerState struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -841,23 +975,23 @@ type TubeState struct {
 	Methods []*MethodInfo `protobuf:"bytes,1,rep,name=methods,proto3" json:"methods,omitempty"`
 }
 
-func (x *TubeState) Reset() {
-	*x = TubeState{}
+func (x *ServerState) Reset() {
+	*x = ServerState{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[17]
+		mi := &file_jointrpc_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *TubeState) String() string {
+func (x *ServerState) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TubeState) ProtoMessage() {}
+func (*ServerState) ProtoMessage() {}
 
-func (x *TubeState) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[17]
+func (x *ServerState) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -868,16 +1002,63 @@ func (x *TubeState) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TubeState.ProtoReflect.Descriptor instead.
-func (*TubeState) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{17}
+// Deprecated: Use ServerState.ProtoReflect.Descriptor instead.
+func (*ServerState) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *TubeState) GetMethods() []*MethodInfo {
+func (x *ServerState) GetMethods() []*MethodInfo {
 	if x != nil {
 		return x.Methods
 	}
 	return nil
+}
+
+type ServerGreeting struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ConnPublicId string `protobuf:"bytes,1,opt,name=conn_public_id,json=connPublicId,proto3" json:"conn_public_id,omitempty"`
+}
+
+func (x *ServerGreeting) Reset() {
+	*x = ServerGreeting{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_jointrpc_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ServerGreeting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ServerGreeting) ProtoMessage() {}
+
+func (x *ServerGreeting) ProtoReflect() protoreflect.Message {
+	mi := &file_jointrpc_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ServerGreeting.ProtoReflect.Descriptor instead.
+func (*ServerGreeting) Descriptor() ([]byte, []int) {
+	return file_jointrpc_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ServerGreeting) GetConnPublicId() string {
+	if x != nil {
+		return x.ConnPublicId
+	}
+	return ""
 }
 
 type JointRPCDownPacket struct {
@@ -886,10 +1067,9 @@ type JointRPCDownPacket struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Payload:
-	//	*JointRPCDownPacket_CanServe
-	//	*JointRPCDownPacket_CanDelegate
 	//	*JointRPCDownPacket_Ping
 	//	*JointRPCDownPacket_Pong
+	//	*JointRPCDownPacket_Greeting
 	//	*JointRPCDownPacket_State
 	//	*JointRPCDownPacket_Envolope
 	Payload isJointRPCDownPacket_Payload `protobuf_oneof:"payload"`
@@ -898,7 +1078,7 @@ type JointRPCDownPacket struct {
 func (x *JointRPCDownPacket) Reset() {
 	*x = JointRPCDownPacket{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[18]
+		mi := &file_jointrpc_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -911,7 +1091,7 @@ func (x *JointRPCDownPacket) String() string {
 func (*JointRPCDownPacket) ProtoMessage() {}
 
 func (x *JointRPCDownPacket) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[18]
+	mi := &file_jointrpc_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -924,26 +1104,12 @@ func (x *JointRPCDownPacket) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JointRPCDownPacket.ProtoReflect.Descriptor instead.
 func (*JointRPCDownPacket) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{18}
+	return file_jointrpc_proto_rawDescGZIP(), []int{21}
 }
 
 func (m *JointRPCDownPacket) GetPayload() isJointRPCDownPacket_Payload {
 	if m != nil {
 		return m.Payload
-	}
-	return nil
-}
-
-func (x *JointRPCDownPacket) GetCanServe() *CanServeResponse {
-	if x, ok := x.GetPayload().(*JointRPCDownPacket_CanServe); ok {
-		return x.CanServe
-	}
-	return nil
-}
-
-func (x *JointRPCDownPacket) GetCanDelegate() *CanDelegateResponse {
-	if x, ok := x.GetPayload().(*JointRPCDownPacket_CanDelegate); ok {
-		return x.CanDelegate
 	}
 	return nil
 }
@@ -962,7 +1128,14 @@ func (x *JointRPCDownPacket) GetPong() *PONG {
 	return nil
 }
 
-func (x *JointRPCDownPacket) GetState() *TubeState {
+func (x *JointRPCDownPacket) GetGreeting() *ServerGreeting {
+	if x, ok := x.GetPayload().(*JointRPCDownPacket_Greeting); ok {
+		return x.Greeting
+	}
+	return nil
+}
+
+func (x *JointRPCDownPacket) GetState() *ServerState {
 	if x, ok := x.GetPayload().(*JointRPCDownPacket_State); ok {
 		return x.State
 	}
@@ -980,37 +1153,31 @@ type isJointRPCDownPacket_Payload interface {
 	isJointRPCDownPacket_Payload()
 }
 
-type JointRPCDownPacket_CanServe struct {
-	CanServe *CanServeResponse `protobuf:"bytes,1,opt,name=can_serve,json=canServe,proto3,oneof"`
-}
-
-type JointRPCDownPacket_CanDelegate struct {
-	CanDelegate *CanDelegateResponse `protobuf:"bytes,2,opt,name=can_delegate,json=canDelegate,proto3,oneof"`
-}
-
 type JointRPCDownPacket_Ping struct {
-	Ping *PING `protobuf:"bytes,10,opt,name=ping,proto3,oneof"`
+	Ping *PING `protobuf:"bytes,1,opt,name=ping,proto3,oneof"`
 }
 
 type JointRPCDownPacket_Pong struct {
-	Pong *PONG `protobuf:"bytes,11,opt,name=pong,proto3,oneof"`
+	Pong *PONG `protobuf:"bytes,2,opt,name=pong,proto3,oneof"`
+}
+
+type JointRPCDownPacket_Greeting struct {
+	Greeting *ServerGreeting `protobuf:"bytes,3,opt,name=greeting,proto3,oneof"`
 }
 
 type JointRPCDownPacket_State struct {
-	State *TubeState `protobuf:"bytes,15,opt,name=state,proto3,oneof"`
+	State *ServerState `protobuf:"bytes,4,opt,name=state,proto3,oneof"`
 }
 
 type JointRPCDownPacket_Envolope struct {
-	Envolope *JSONRPCEnvolope `protobuf:"bytes,20,opt,name=envolope,proto3,oneof"`
+	Envolope *JSONRPCEnvolope `protobuf:"bytes,10,opt,name=envolope,proto3,oneof"`
 }
-
-func (*JointRPCDownPacket_CanServe) isJointRPCDownPacket_Payload() {}
-
-func (*JointRPCDownPacket_CanDelegate) isJointRPCDownPacket_Payload() {}
 
 func (*JointRPCDownPacket_Ping) isJointRPCDownPacket_Payload() {}
 
 func (*JointRPCDownPacket_Pong) isJointRPCDownPacket_Payload() {}
+
+func (*JointRPCDownPacket_Greeting) isJointRPCDownPacket_Payload() {}
 
 func (*JointRPCDownPacket_State) isJointRPCDownPacket_Payload() {}
 
@@ -1022,8 +1189,6 @@ type JointRPCUpPacket struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Payload:
-	//	*JointRPCUpPacket_CanServe
-	//	*JointRPCUpPacket_CanDelegate
 	//	*JointRPCUpPacket_Ping
 	//	*JointRPCUpPacket_Pong
 	//	*JointRPCUpPacket_Envolope
@@ -1033,7 +1198,7 @@ type JointRPCUpPacket struct {
 func (x *JointRPCUpPacket) Reset() {
 	*x = JointRPCUpPacket{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_jointrpc_proto_msgTypes[19]
+		mi := &file_jointrpc_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1046,7 +1211,7 @@ func (x *JointRPCUpPacket) String() string {
 func (*JointRPCUpPacket) ProtoMessage() {}
 
 func (x *JointRPCUpPacket) ProtoReflect() protoreflect.Message {
-	mi := &file_jointrpc_proto_msgTypes[19]
+	mi := &file_jointrpc_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1059,26 +1224,12 @@ func (x *JointRPCUpPacket) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JointRPCUpPacket.ProtoReflect.Descriptor instead.
 func (*JointRPCUpPacket) Descriptor() ([]byte, []int) {
-	return file_jointrpc_proto_rawDescGZIP(), []int{19}
+	return file_jointrpc_proto_rawDescGZIP(), []int{22}
 }
 
 func (m *JointRPCUpPacket) GetPayload() isJointRPCUpPacket_Payload {
 	if m != nil {
 		return m.Payload
-	}
-	return nil
-}
-
-func (x *JointRPCUpPacket) GetCanServe() *CanServeRequest {
-	if x, ok := x.GetPayload().(*JointRPCUpPacket_CanServe); ok {
-		return x.CanServe
-	}
-	return nil
-}
-
-func (x *JointRPCUpPacket) GetCanDelegate() *CanDelegateRequest {
-	if x, ok := x.GetPayload().(*JointRPCUpPacket_CanDelegate); ok {
-		return x.CanDelegate
 	}
 	return nil
 }
@@ -1108,29 +1259,17 @@ type isJointRPCUpPacket_Payload interface {
 	isJointRPCUpPacket_Payload()
 }
 
-type JointRPCUpPacket_CanServe struct {
-	CanServe *CanServeRequest `protobuf:"bytes,1,opt,name=can_serve,json=canServe,proto3,oneof"`
-}
-
-type JointRPCUpPacket_CanDelegate struct {
-	CanDelegate *CanDelegateRequest `protobuf:"bytes,2,opt,name=can_delegate,json=canDelegate,proto3,oneof"`
-}
-
 type JointRPCUpPacket_Ping struct {
-	Ping *PING `protobuf:"bytes,10,opt,name=ping,proto3,oneof"`
+	Ping *PING `protobuf:"bytes,1,opt,name=ping,proto3,oneof"`
 }
 
 type JointRPCUpPacket_Pong struct {
-	Pong *PONG `protobuf:"bytes,11,opt,name=pong,proto3,oneof"`
+	Pong *PONG `protobuf:"bytes,2,opt,name=pong,proto3,oneof"`
 }
 
 type JointRPCUpPacket_Envolope struct {
-	Envolope *JSONRPCEnvolope `protobuf:"bytes,20,opt,name=envolope,proto3,oneof"`
+	Envolope *JSONRPCEnvolope `protobuf:"bytes,10,opt,name=envolope,proto3,oneof"`
 }
-
-func (*JointRPCUpPacket_CanServe) isJointRPCUpPacket_Payload() {}
-
-func (*JointRPCUpPacket_CanDelegate) isJointRPCUpPacket_Payload() {}
 
 func (*JointRPCUpPacket_Ping) isJointRPCUpPacket_Payload() {}
 
@@ -1142,118 +1281,137 @@ var File_jointrpc_proto protoreflect.FileDescriptor
 
 var file_jointrpc_proto_rawDesc = []byte{
 	0x0a, 0x0e, 0x6a, 0x6f, 0x69, 0x6e, 0x74, 0x72, 0x70, 0x63, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x14, 0x0a, 0x12, 0x4c, 0x69, 0x73,
-	0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22,
-	0x45, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x0c, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64,
-	0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x4d,
-	0x65, 0x74, 0x68, 0x6f, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0b, 0x6d, 0x65, 0x74, 0x68, 0x6f,
-	0x64, 0x49, 0x6e, 0x66, 0x6f, 0x73, 0x22, 0x16, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x44, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x35,
-	0x0a, 0x15, 0x4c, 0x69, 0x73, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x64, 0x65, 0x6c, 0x65, 0x67,
-	0x61, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x64, 0x65, 0x6c, 0x65,
-	0x67, 0x61, 0x74, 0x65, 0x73, 0x22, 0x40, 0x0a, 0x0f, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43,
-	0x45, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x12, 0x19, 0x0a, 0x08,
-	0x74, 0x72, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
-	0x74, 0x72, 0x61, 0x63, 0x65, 0x49, 0x64, 0x22, 0x60, 0x0a, 0x12, 0x4a, 0x53, 0x4f, 0x4e, 0x52,
-	0x50, 0x43, 0x43, 0x61, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2c, 0x0a,
-	0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x10, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x45, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70,
-	0x65, 0x52, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x62,
-	0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09,
-	0x62, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x22, 0x41, 0x0a, 0x11, 0x4a, 0x53, 0x4f,
-	0x4e, 0x52, 0x50, 0x43, 0x43, 0x61, 0x6c, 0x6c, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x2c,
-	0x0a, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x10, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x45, 0x6e, 0x76, 0x6f, 0x6c, 0x6f,
-	0x70, 0x65, 0x52, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x22, 0x62, 0x0a, 0x14,
-	0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x2c, 0x0a, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43,
-	0x45, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x52, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f,
-	0x70, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x62, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x62, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74,
-	0x22, 0x2b, 0x0a, 0x15, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x4e, 0x6f, 0x74, 0x69, 0x66,
-	0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78,
-	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x22, 0x55, 0x0a,
-	0x0a, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x12, 0x0a, 0x04, 0x6e,
-	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12,
-	0x12, 0x0a, 0x04, 0x68, 0x65, 0x6c, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x68,
-	0x65, 0x6c, 0x70, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x5f, 0x6a, 0x73,
-	0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61,
-	0x4a, 0x73, 0x6f, 0x6e, 0x22, 0x38, 0x0a, 0x0f, 0x43, 0x61, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x65,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x25, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f,
-	0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x4d, 0x65, 0x74, 0x68, 0x6f,
-	0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x26,
-	0x0a, 0x10, 0x43, 0x61, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x22, 0x2e, 0x0a, 0x12, 0x43, 0x61, 0x6e, 0x44, 0x65, 0x6c,
-	0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07,
-	0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d,
-	0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x29, 0x0a, 0x13, 0x43, 0x61, 0x6e, 0x44, 0x65, 0x6c,
-	0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a,
+	0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x33, 0x0a, 0x05, 0x45, 0x72, 0x72,
+	0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x22, 0x40,
+	0x0a, 0x0f, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x45, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70,
+	0x65, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x04, 0x62, 0x6f, 0x64, 0x79, 0x12, 0x19, 0x0a, 0x08, 0x74, 0x72, 0x61, 0x63, 0x65, 0x5f, 0x69,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x74, 0x72, 0x61, 0x63, 0x65, 0x49, 0x64,
+	0x22, 0x14, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x3c, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65,
+	0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a,
+	0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b,
+	0x2e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x07, 0x6d, 0x65, 0x74,
+	0x68, 0x6f, 0x64, 0x73, 0x22, 0x16, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x35, 0x0a, 0x15,
+	0x4c, 0x69, 0x73, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
+	0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61,
+	0x74, 0x65, 0x73, 0x22, 0x7a, 0x0a, 0x15, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x4d, 0x65,
+	0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05,
+	0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x6f, 0x6b,
+	0x65, 0x6e, 0x12, 0x24, 0x0a, 0x0e, 0x63, 0x6f, 0x6e, 0x6e, 0x5f, 0x70, 0x75, 0x62, 0x6c, 0x69,
+	0x63, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x63, 0x6f, 0x6e, 0x6e,
+	0x50, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x49, 0x64, 0x12, 0x25, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68,
+	0x6f, 0x64, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x4d, 0x65, 0x74, 0x68,
+	0x6f, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22,
+	0x36, 0x0a, 0x16, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x05, 0x65, 0x72, 0x72,
+	0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x06, 0x2e, 0x45, 0x72, 0x72, 0x6f, 0x72,
+	0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x22, 0x38, 0x0a, 0x11, 0x57, 0x61, 0x74, 0x63, 0x68,
+	0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d,
+	0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x5f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0c, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x54, 0x6f, 0x6b, 0x65,
+	0x6e, 0x22, 0x6f, 0x0a, 0x17, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05,
+	0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x6f, 0x6b,
+	0x65, 0x6e, 0x12, 0x24, 0x0a, 0x0e, 0x63, 0x6f, 0x6e, 0x6e, 0x5f, 0x70, 0x75, 0x62, 0x6c, 0x69,
+	0x63, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x63, 0x6f, 0x6e, 0x6e,
+	0x50, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68,
+	0x6f, 0x64, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f,
+	0x64, 0x73, 0x22, 0x38, 0x0a, 0x18, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6c,
+	0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c,
+	0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x06, 0x2e,
+	0x45, 0x72, 0x72, 0x6f, 0x72, 0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x22, 0x60, 0x0a, 0x12,
+	0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x43, 0x61, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x2c, 0x0a, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x45, 0x6e,
+	0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x52, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65,
+	0x12, 0x1c, 0x0a, 0x09, 0x62, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x09, 0x62, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x22, 0x41,
+	0x0a, 0x11, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x43, 0x61, 0x6c, 0x6c, 0x52, 0x65, 0x73,
+	0x75, 0x6c, 0x74, 0x12, 0x2c, 0x0a, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x45,
+	0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x52, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70,
+	0x65, 0x22, 0x62, 0x0a, 0x14, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x4e, 0x6f, 0x74, 0x69,
+	0x66, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2c, 0x0a, 0x08, 0x65, 0x6e, 0x76,
+	0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x4a, 0x53,
+	0x4f, 0x4e, 0x52, 0x50, 0x43, 0x45, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x52, 0x08, 0x65,
+	0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x62, 0x72, 0x6f, 0x61, 0x64,
+	0x63, 0x61, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x62, 0x72, 0x6f, 0x61,
+	0x64, 0x63, 0x61, 0x73, 0x74, 0x22, 0x2b, 0x0a, 0x15, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43,
+	0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12,
+	0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65,
+	0x78, 0x74, 0x22, 0x55, 0x0a, 0x0a, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x49, 0x6e, 0x66, 0x6f,
+	0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
+	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x65, 0x6c, 0x70, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x04, 0x68, 0x65, 0x6c, 0x70, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x63, 0x68, 0x65,
+	0x6d, 0x61, 0x5f, 0x6a, 0x73, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73,
+	0x63, 0x68, 0x65, 0x6d, 0x61, 0x4a, 0x73, 0x6f, 0x6e, 0x22, 0x1a, 0x0a, 0x04, 0x50, 0x49, 0x4e,
+	0x47, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x04, 0x74, 0x65, 0x78, 0x74, 0x22, 0x1a, 0x0a, 0x04, 0x50, 0x4f, 0x4e, 0x47, 0x12, 0x12, 0x0a,
 	0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x78,
-	0x74, 0x22, 0x1a, 0x0a, 0x04, 0x50, 0x49, 0x4e, 0x47, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78,
-	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x22, 0x1a, 0x0a,
-	0x04, 0x50, 0x4f, 0x4e, 0x47, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x22, 0x32, 0x0a, 0x09, 0x54, 0x75, 0x62,
-	0x65, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x25, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64,
-	0x49, 0x6e, 0x66, 0x6f, 0x52, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x9a, 0x02,
-	0x0a, 0x12, 0x4a, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x50, 0x43, 0x44, 0x6f, 0x77, 0x6e, 0x50, 0x61,
-	0x63, 0x6b, 0x65, 0x74, 0x12, 0x30, 0x0a, 0x09, 0x63, 0x61, 0x6e, 0x5f, 0x73, 0x65, 0x72, 0x76,
-	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x43, 0x61, 0x6e, 0x53, 0x65, 0x72,
-	0x76, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x08, 0x63, 0x61,
-	0x6e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x12, 0x39, 0x0a, 0x0c, 0x63, 0x61, 0x6e, 0x5f, 0x64, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x43,
-	0x61, 0x6e, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x48, 0x00, 0x52, 0x0b, 0x63, 0x61, 0x6e, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
-	0x65, 0x12, 0x1b, 0x0a, 0x04, 0x70, 0x69, 0x6e, 0x67, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x05, 0x2e, 0x50, 0x49, 0x4e, 0x47, 0x48, 0x00, 0x52, 0x04, 0x70, 0x69, 0x6e, 0x67, 0x12, 0x1b,
-	0x0a, 0x04, 0x70, 0x6f, 0x6e, 0x67, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x50,
-	0x4f, 0x4e, 0x47, 0x48, 0x00, 0x52, 0x04, 0x70, 0x6f, 0x6e, 0x67, 0x12, 0x22, 0x0a, 0x05, 0x73,
-	0x74, 0x61, 0x74, 0x65, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0a, 0x2e, 0x54, 0x75, 0x62,
-	0x65, 0x53, 0x74, 0x61, 0x74, 0x65, 0x48, 0x00, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x12,
-	0x2e, 0x0a, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x18, 0x14, 0x20, 0x01, 0x28,
+	0x74, 0x22, 0x34, 0x0a, 0x0b, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x53, 0x74, 0x61, 0x74, 0x65,
+	0x12, 0x25, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x0b, 0x2e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x07,
+	0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x36, 0x0a, 0x0e, 0x53, 0x65, 0x72, 0x76, 0x65,
+	0x72, 0x47, 0x72, 0x65, 0x65, 0x74, 0x69, 0x6e, 0x67, 0x12, 0x24, 0x0a, 0x0e, 0x63, 0x6f, 0x6e,
+	0x6e, 0x5f, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0c, 0x63, 0x6f, 0x6e, 0x6e, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x49, 0x64, 0x22,
+	0xde, 0x01, 0x0a, 0x12, 0x4a, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x50, 0x43, 0x44, 0x6f, 0x77, 0x6e,
+	0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x12, 0x1b, 0x0a, 0x04, 0x70, 0x69, 0x6e, 0x67, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x50, 0x49, 0x4e, 0x47, 0x48, 0x00, 0x52, 0x04, 0x70,
+	0x69, 0x6e, 0x67, 0x12, 0x1b, 0x0a, 0x04, 0x70, 0x6f, 0x6e, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x05, 0x2e, 0x50, 0x4f, 0x4e, 0x47, 0x48, 0x00, 0x52, 0x04, 0x70, 0x6f, 0x6e, 0x67,
+	0x12, 0x2d, 0x0a, 0x08, 0x67, 0x72, 0x65, 0x65, 0x74, 0x69, 0x6e, 0x67, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x47, 0x72, 0x65, 0x65, 0x74,
+	0x69, 0x6e, 0x67, 0x48, 0x00, 0x52, 0x08, 0x67, 0x72, 0x65, 0x65, 0x74, 0x69, 0x6e, 0x67, 0x12,
+	0x24, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c,
+	0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x53, 0x74, 0x61, 0x74, 0x65, 0x48, 0x00, 0x52, 0x05,
+	0x73, 0x74, 0x61, 0x74, 0x65, 0x12, 0x2e, 0x0a, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70,
+	0x65, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50,
+	0x43, 0x45, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x48, 0x00, 0x52, 0x08, 0x65, 0x6e, 0x76,
+	0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64,
+	0x22, 0x87, 0x01, 0x0a, 0x10, 0x4a, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x50, 0x43, 0x55, 0x70, 0x50,
+	0x61, 0x63, 0x6b, 0x65, 0x74, 0x12, 0x1b, 0x0a, 0x04, 0x70, 0x69, 0x6e, 0x67, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x50, 0x49, 0x4e, 0x47, 0x48, 0x00, 0x52, 0x04, 0x70, 0x69,
+	0x6e, 0x67, 0x12, 0x1b, 0x0a, 0x04, 0x70, 0x6f, 0x6e, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x05, 0x2e, 0x50, 0x4f, 0x4e, 0x47, 0x48, 0x00, 0x52, 0x04, 0x70, 0x6f, 0x6e, 0x67, 0x12,
+	0x2e, 0x0a, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x18, 0x0a, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x10, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x45, 0x6e, 0x76, 0x6f, 0x6c,
 	0x6f, 0x70, 0x65, 0x48, 0x00, 0x52, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x42,
-	0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0xf2, 0x01, 0x0a, 0x10, 0x4a,
-	0x6f, 0x69, 0x6e, 0x74, 0x52, 0x50, 0x43, 0x55, 0x70, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x12,
-	0x2f, 0x0a, 0x09, 0x63, 0x61, 0x6e, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x65, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x10, 0x2e, 0x43, 0x61, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x08, 0x63, 0x61, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x65,
-	0x12, 0x38, 0x0a, 0x0c, 0x63, 0x61, 0x6e, 0x5f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x43, 0x61, 0x6e, 0x44, 0x65, 0x6c, 0x65,
-	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0b, 0x63,
-	0x61, 0x6e, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x1b, 0x0a, 0x04, 0x70, 0x69,
-	0x6e, 0x67, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x50, 0x49, 0x4e, 0x47, 0x48,
-	0x00, 0x52, 0x04, 0x70, 0x69, 0x6e, 0x67, 0x12, 0x1b, 0x0a, 0x04, 0x70, 0x6f, 0x6e, 0x67, 0x18,
-	0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x50, 0x4f, 0x4e, 0x47, 0x48, 0x00, 0x52, 0x04,
-	0x70, 0x6f, 0x6e, 0x67, 0x12, 0x2e, 0x0a, 0x08, 0x65, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65,
-	0x18, 0x14, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43,
-	0x45, 0x6e, 0x76, 0x6f, 0x6c, 0x6f, 0x70, 0x65, 0x48, 0x00, 0x52, 0x08, 0x65, 0x6e, 0x76, 0x6f,
-	0x6c, 0x6f, 0x70, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x32,
-	0xa4, 0x02, 0x0a, 0x08, 0x4a, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x50, 0x43, 0x12, 0x38, 0x0a, 0x0b,
-	0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x13, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x14, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3e, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x44, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x12, 0x15, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x44, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2f, 0x0a, 0x04, 0x43, 0x61, 0x6c, 0x6c, 0x12, 0x13,
-	0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x43, 0x61, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x12, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x43, 0x61, 0x6c,
-	0x6c, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x37, 0x0a, 0x06, 0x4e, 0x6f, 0x74, 0x69, 0x66,
-	0x79, 0x12, 0x15, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x4e, 0x6f, 0x74, 0x69, 0x66,
-	0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52,
-	0x50, 0x43, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x34, 0x0a, 0x06, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x11, 0x2e, 0x4a, 0x6f, 0x69,
-	0x6e, 0x74, 0x52, 0x50, 0x43, 0x55, 0x70, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x1a, 0x13, 0x2e,
-	0x4a, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x50, 0x43, 0x44, 0x6f, 0x77, 0x6e, 0x50, 0x61, 0x63, 0x6b,
-	0x65, 0x74, 0x28, 0x01, 0x30, 0x01, 0x42, 0x0f, 0x5a, 0x0d, 0x69, 0x6e, 0x74, 0x66, 0x2f, 0x6a,
-	0x6f, 0x69, 0x6e, 0x74, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x32, 0xb0, 0x03, 0x0a, 0x08, 0x4a,
+	0x6f, 0x69, 0x6e, 0x74, 0x52, 0x50, 0x43, 0x12, 0x38, 0x0a, 0x0b, 0x4c, 0x69, 0x73, 0x74, 0x4d,
+	0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x12, 0x13, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x65, 0x74,
+	0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x4c, 0x69,
+	0x73, 0x74, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x3e, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
+	0x65, 0x73, 0x12, 0x15, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
+	0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x41, 0x0a, 0x0e, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x4d, 0x65, 0x74, 0x68,
+	0x6f, 0x64, 0x73, 0x12, 0x16, 0x2e, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x4d, 0x65, 0x74,
+	0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x17, 0x2e, 0x44, 0x65,
+	0x63, 0x6c, 0x61, 0x72, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2f, 0x0a, 0x04, 0x43, 0x61, 0x6c, 0x6c, 0x12, 0x13, 0x2e, 0x4a,
+	0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x43, 0x61, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x12, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x43, 0x61, 0x6c, 0x6c, 0x52,
+	0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x37, 0x0a, 0x06, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12,
+	0x15, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x50, 0x43,
+	0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34,
+	0x0a, 0x06, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x11, 0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x74,
+	0x52, 0x50, 0x43, 0x55, 0x70, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x1a, 0x13, 0x2e, 0x4a, 0x6f,
+	0x69, 0x6e, 0x74, 0x52, 0x50, 0x43, 0x44, 0x6f, 0x77, 0x6e, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74,
+	0x28, 0x01, 0x30, 0x01, 0x12, 0x47, 0x0a, 0x10, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x44,
+	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x12, 0x18, 0x2e, 0x44, 0x65, 0x63, 0x6c, 0x61,
+	0x72, 0x65, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x19, 0x2e, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0f, 0x5a,
+	0x0d, 0x69, 0x6e, 0x74, 0x66, 0x2f, 0x6a, 0x6f, 0x69, 0x6e, 0x74, 0x72, 0x70, 0x63, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1268,62 +1426,68 @@ func file_jointrpc_proto_rawDescGZIP() []byte {
 	return file_jointrpc_proto_rawDescData
 }
 
-var file_jointrpc_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_jointrpc_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_jointrpc_proto_goTypes = []interface{}{
-	(*Empty)(nil),                 // 0: Empty
-	(*ListMethodsRequest)(nil),    // 1: ListMethodsRequest
-	(*ListMethodsResponse)(nil),   // 2: ListMethodsResponse
-	(*ListDelegatesRequest)(nil),  // 3: ListDelegatesRequest
-	(*ListDelegatesResponse)(nil), // 4: ListDelegatesResponse
-	(*JSONRPCEnvolope)(nil),       // 5: JSONRPCEnvolope
-	(*JSONRPCCallRequest)(nil),    // 6: JSONRPCCallRequest
-	(*JSONRPCCallResult)(nil),     // 7: JSONRPCCallResult
-	(*JSONRPCNotifyRequest)(nil),  // 8: JSONRPCNotifyRequest
-	(*JSONRPCNotifyResponse)(nil), // 9: JSONRPCNotifyResponse
-	(*MethodInfo)(nil),            // 10: MethodInfo
-	(*CanServeRequest)(nil),       // 11: CanServeRequest
-	(*CanServeResponse)(nil),      // 12: CanServeResponse
-	(*CanDelegateRequest)(nil),    // 13: CanDelegateRequest
-	(*CanDelegateResponse)(nil),   // 14: CanDelegateResponse
-	(*PING)(nil),                  // 15: PING
-	(*PONG)(nil),                  // 16: PONG
-	(*TubeState)(nil),             // 17: TubeState
-	(*JointRPCDownPacket)(nil),    // 18: JointRPCDownPacket
-	(*JointRPCUpPacket)(nil),      // 19: JointRPCUpPacket
+	(*Empty)(nil),                    // 0: Empty
+	(*Error)(nil),                    // 1: Error
+	(*JSONRPCEnvolope)(nil),          // 2: JSONRPCEnvolope
+	(*ListMethodsRequest)(nil),       // 3: ListMethodsRequest
+	(*ListMethodsResponse)(nil),      // 4: ListMethodsResponse
+	(*ListDelegatesRequest)(nil),     // 5: ListDelegatesRequest
+	(*ListDelegatesResponse)(nil),    // 6: ListDelegatesResponse
+	(*DeclareMethodsRequest)(nil),    // 7: DeclareMethodsRequest
+	(*DeclareMethodsResponse)(nil),   // 8: DeclareMethodsResponse
+	(*WatchStateRequest)(nil),        // 9: WatchStateRequest
+	(*DeclareDelegatesRequest)(nil),  // 10: DeclareDelegatesRequest
+	(*DeclareDelegatesResponse)(nil), // 11: DeclareDelegatesResponse
+	(*JSONRPCCallRequest)(nil),       // 12: JSONRPCCallRequest
+	(*JSONRPCCallResult)(nil),        // 13: JSONRPCCallResult
+	(*JSONRPCNotifyRequest)(nil),     // 14: JSONRPCNotifyRequest
+	(*JSONRPCNotifyResponse)(nil),    // 15: JSONRPCNotifyResponse
+	(*MethodInfo)(nil),               // 16: MethodInfo
+	(*PING)(nil),                     // 17: PING
+	(*PONG)(nil),                     // 18: PONG
+	(*ServerState)(nil),              // 19: ServerState
+	(*ServerGreeting)(nil),           // 20: ServerGreeting
+	(*JointRPCDownPacket)(nil),       // 21: JointRPCDownPacket
+	(*JointRPCUpPacket)(nil),         // 22: JointRPCUpPacket
 }
 var file_jointrpc_proto_depIdxs = []int32{
-	10, // 0: ListMethodsResponse.method_infos:type_name -> MethodInfo
-	5,  // 1: JSONRPCCallRequest.envolope:type_name -> JSONRPCEnvolope
-	5,  // 2: JSONRPCCallResult.envolope:type_name -> JSONRPCEnvolope
-	5,  // 3: JSONRPCNotifyRequest.envolope:type_name -> JSONRPCEnvolope
-	10, // 4: CanServeRequest.methods:type_name -> MethodInfo
-	10, // 5: TubeState.methods:type_name -> MethodInfo
-	12, // 6: JointRPCDownPacket.can_serve:type_name -> CanServeResponse
-	14, // 7: JointRPCDownPacket.can_delegate:type_name -> CanDelegateResponse
-	15, // 8: JointRPCDownPacket.ping:type_name -> PING
-	16, // 9: JointRPCDownPacket.pong:type_name -> PONG
-	17, // 10: JointRPCDownPacket.state:type_name -> TubeState
-	5,  // 11: JointRPCDownPacket.envolope:type_name -> JSONRPCEnvolope
-	11, // 12: JointRPCUpPacket.can_serve:type_name -> CanServeRequest
-	13, // 13: JointRPCUpPacket.can_delegate:type_name -> CanDelegateRequest
-	15, // 14: JointRPCUpPacket.ping:type_name -> PING
-	16, // 15: JointRPCUpPacket.pong:type_name -> PONG
-	5,  // 16: JointRPCUpPacket.envolope:type_name -> JSONRPCEnvolope
-	1,  // 17: JointRPC.ListMethods:input_type -> ListMethodsRequest
-	3,  // 18: JointRPC.ListDelegates:input_type -> ListDelegatesRequest
-	6,  // 19: JointRPC.Call:input_type -> JSONRPCCallRequest
-	8,  // 20: JointRPC.Notify:input_type -> JSONRPCNotifyRequest
-	19, // 21: JointRPC.Handle:input_type -> JointRPCUpPacket
-	2,  // 22: JointRPC.ListMethods:output_type -> ListMethodsResponse
-	4,  // 23: JointRPC.ListDelegates:output_type -> ListDelegatesResponse
-	7,  // 24: JointRPC.Call:output_type -> JSONRPCCallResult
-	9,  // 25: JointRPC.Notify:output_type -> JSONRPCNotifyResponse
-	18, // 26: JointRPC.Handle:output_type -> JointRPCDownPacket
-	22, // [22:27] is the sub-list for method output_type
-	17, // [17:22] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	16, // 0: ListMethodsResponse.methods:type_name -> MethodInfo
+	16, // 1: DeclareMethodsRequest.methods:type_name -> MethodInfo
+	1,  // 2: DeclareMethodsResponse.error:type_name -> Error
+	1,  // 3: DeclareDelegatesResponse.error:type_name -> Error
+	2,  // 4: JSONRPCCallRequest.envolope:type_name -> JSONRPCEnvolope
+	2,  // 5: JSONRPCCallResult.envolope:type_name -> JSONRPCEnvolope
+	2,  // 6: JSONRPCNotifyRequest.envolope:type_name -> JSONRPCEnvolope
+	16, // 7: ServerState.methods:type_name -> MethodInfo
+	17, // 8: JointRPCDownPacket.ping:type_name -> PING
+	18, // 9: JointRPCDownPacket.pong:type_name -> PONG
+	20, // 10: JointRPCDownPacket.greeting:type_name -> ServerGreeting
+	19, // 11: JointRPCDownPacket.state:type_name -> ServerState
+	2,  // 12: JointRPCDownPacket.envolope:type_name -> JSONRPCEnvolope
+	17, // 13: JointRPCUpPacket.ping:type_name -> PING
+	18, // 14: JointRPCUpPacket.pong:type_name -> PONG
+	2,  // 15: JointRPCUpPacket.envolope:type_name -> JSONRPCEnvolope
+	3,  // 16: JointRPC.ListMethods:input_type -> ListMethodsRequest
+	5,  // 17: JointRPC.ListDelegates:input_type -> ListDelegatesRequest
+	7,  // 18: JointRPC.DeclareMethods:input_type -> DeclareMethodsRequest
+	12, // 19: JointRPC.Call:input_type -> JSONRPCCallRequest
+	14, // 20: JointRPC.Notify:input_type -> JSONRPCNotifyRequest
+	22, // 21: JointRPC.Handle:input_type -> JointRPCUpPacket
+	10, // 22: JointRPC.DeclareDelegates:input_type -> DeclareDelegatesRequest
+	4,  // 23: JointRPC.ListMethods:output_type -> ListMethodsResponse
+	6,  // 24: JointRPC.ListDelegates:output_type -> ListDelegatesResponse
+	8,  // 25: JointRPC.DeclareMethods:output_type -> DeclareMethodsResponse
+	13, // 26: JointRPC.Call:output_type -> JSONRPCCallResult
+	15, // 27: JointRPC.Notify:output_type -> JSONRPCNotifyResponse
+	21, // 28: JointRPC.Handle:output_type -> JointRPCDownPacket
+	11, // 29: JointRPC.DeclareDelegates:output_type -> DeclareDelegatesResponse
+	23, // [23:30] is the sub-list for method output_type
+	16, // [16:23] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_jointrpc_proto_init() }
@@ -1345,7 +1509,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListMethodsRequest); i {
+			switch v := v.(*Error); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1357,42 +1521,6 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListMethodsResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_jointrpc_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListDelegatesRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_jointrpc_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListDelegatesResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_jointrpc_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*JSONRPCEnvolope); i {
 			case 0:
 				return &v.state
@@ -1404,8 +1532,44 @@ func file_jointrpc_proto_init() {
 				return nil
 			}
 		}
+		file_jointrpc_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListMethodsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_jointrpc_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListMethodsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_jointrpc_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListDelegatesRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 		file_jointrpc_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*JSONRPCCallRequest); i {
+			switch v := v.(*ListDelegatesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1417,7 +1581,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*JSONRPCCallResult); i {
+			switch v := v.(*DeclareMethodsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1429,7 +1593,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*JSONRPCNotifyRequest); i {
+			switch v := v.(*DeclareMethodsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1441,7 +1605,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*JSONRPCNotifyResponse); i {
+			switch v := v.(*WatchStateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1453,7 +1617,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MethodInfo); i {
+			switch v := v.(*DeclareDelegatesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1465,7 +1629,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CanServeRequest); i {
+			switch v := v.(*DeclareDelegatesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1477,7 +1641,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CanServeResponse); i {
+			switch v := v.(*JSONRPCCallRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1489,7 +1653,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CanDelegateRequest); i {
+			switch v := v.(*JSONRPCCallResult); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1501,7 +1665,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CanDelegateResponse); i {
+			switch v := v.(*JSONRPCNotifyRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1513,7 +1677,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PING); i {
+			switch v := v.(*JSONRPCNotifyResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1525,7 +1689,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PONG); i {
+			switch v := v.(*MethodInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1537,7 +1701,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TubeState); i {
+			switch v := v.(*PING); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1549,7 +1713,7 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*JointRPCDownPacket); i {
+			switch v := v.(*PONG); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1561,6 +1725,42 @@ func file_jointrpc_proto_init() {
 			}
 		}
 		file_jointrpc_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ServerState); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_jointrpc_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ServerGreeting); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_jointrpc_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*JointRPCDownPacket); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_jointrpc_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*JointRPCUpPacket); i {
 			case 0:
 				return &v.state
@@ -1573,17 +1773,14 @@ func file_jointrpc_proto_init() {
 			}
 		}
 	}
-	file_jointrpc_proto_msgTypes[18].OneofWrappers = []interface{}{
-		(*JointRPCDownPacket_CanServe)(nil),
-		(*JointRPCDownPacket_CanDelegate)(nil),
+	file_jointrpc_proto_msgTypes[21].OneofWrappers = []interface{}{
 		(*JointRPCDownPacket_Ping)(nil),
 		(*JointRPCDownPacket_Pong)(nil),
+		(*JointRPCDownPacket_Greeting)(nil),
 		(*JointRPCDownPacket_State)(nil),
 		(*JointRPCDownPacket_Envolope)(nil),
 	}
-	file_jointrpc_proto_msgTypes[19].OneofWrappers = []interface{}{
-		(*JointRPCUpPacket_CanServe)(nil),
-		(*JointRPCUpPacket_CanDelegate)(nil),
+	file_jointrpc_proto_msgTypes[22].OneofWrappers = []interface{}{
 		(*JointRPCUpPacket_Ping)(nil),
 		(*JointRPCUpPacket_Pong)(nil),
 		(*JointRPCUpPacket_Envolope)(nil),
@@ -1594,7 +1791,7 @@ func file_jointrpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_jointrpc_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

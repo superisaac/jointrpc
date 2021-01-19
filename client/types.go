@@ -27,6 +27,7 @@ type ConnectedCallback func()
 type RPCClient struct {
 	handler.HandlerManager
 
+	connPublicId  string
 	serverEntry   ServerEntry
 	connected     bool
 	tubeClient    intf.JointRPCClient

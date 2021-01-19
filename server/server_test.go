@@ -1,22 +1,23 @@
 package server
 
 import (
-	//"fmt"
 	"context"
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
+	"fmt"
+	//"io/ioutil"
+	//log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	client "github.com/superisaac/jointrpc/client"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
-	"io/ioutil"
+
 	"os"
 	"testing"
 	"time"
 )
 
 func TestMain(m *testing.M) {
-	log.SetOutput(ioutil.Discard)
+	//log.SetOutput(ioutil.Discard)
 	os.Exit(m.Run())
 }
 
@@ -86,6 +87,7 @@ func TestClientAsServe(t *testing.T) {
 	res, err := c.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace11"))
 	assert.Nil(err)
 	assert.Equal("trace11", res.TraceId())
+	fmt.Printf("res %v\n", res)
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
 

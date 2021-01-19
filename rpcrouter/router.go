@@ -55,6 +55,7 @@ func (self *Router) Init(name string) *Router {
 	self.delegateConnMap = make(map[string][]MethodDelegation)
 	self.fallbackConns = make([]*ConnT, 0)
 	self.connMap = make(map[CID](*ConnT))
+	self.publicConnMap = make(map[string](*ConnT))
 
 	self.pendingRequests = make(map[interface{}]PendingT)
 	self.methodsSig = ""
@@ -295,6 +296,13 @@ func (self *Router) leaveConn(conn *ConnT) {
 		close(ct.RecvChannel)
 	}
 
+	if conn.publicId != "" {
+		if _, found := self.publicConnMap[conn.publicId]; found {
+			delete(self.publicConnMap, conn.publicId)
+			conn.publicId = ""
+		}
+	}
+
 	// remove conn from fallbackConns
 	if conn.AsFallback {
 		var fbIndex = -1
@@ -356,6 +364,13 @@ func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 		return self.fallbackConns[index], true
 	}
 	return nil, false
+}
+
+func (self *Router) GetConnByPublicId(publicId string) (*ConnT, bool) {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+	conn, found := self.publicConnMap[publicId]
+	return conn, found
 }
 
 func (self *Router) SelectReceiver(method string) (MsgChannel, bool) {
@@ -554,9 +569,9 @@ func (self *Router) RouteMessage(cmdMsg CmdMsg) *ConnT {
 	return self.routeMessage(cmdMsg)
 }
 
-func (self *Router) Join() *ConnT {
+func (self *Router) Join(genUUID bool) *ConnT {
 	conn := NewConn()
-	self.joinConn(conn)
+	self.joinConn(conn, genUUID)
 	return conn
 }
 
@@ -566,10 +581,14 @@ func (self *Router) JoinFallback() *ConnT {
 	return conn
 }
 
-func (self *Router) joinConn(conn *ConnT) {
+func (self *Router) joinConn(conn *ConnT, genUUID bool) {
 	self.lock("JoinConn")
 	defer self.unlock("JoinConn")
 	self.connMap[conn.ConnId] = conn
+	if genUUID {
+		conn.publicId = uuid.New().String()
+		self.publicConnMap[conn.publicId] = conn
+	}
 }
 
 func (self *Router) joinFallbackConn(conn *ConnT) {

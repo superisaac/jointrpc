@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strings"
 	//"time"
 	//json "encoding/json"
 	//"errors"
-	//"fmt"
+	"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
 	uuid "github.com/google/uuid"
@@ -29,6 +30,7 @@ type JointRPC struct {
 	intf.UnimplementedJointRPCServer
 }
 
+// Call
 func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest) (*intf.JSONRPCCallResult, error) {
 	remotePeer, ok := peer.FromContext(context)
 	if !ok {
@@ -67,6 +69,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 	return res, nil
 }
 
+// Notify
 func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
 	remotePeer, ok := peer.FromContext(context)
 	if !ok {
@@ -106,14 +109,85 @@ func buildMethodInfos(minfos []rpcrouter.MethodInfo) []*intf.MethodInfo {
 	return intfMInfos
 }
 
+// ListMethods
 func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
 	router := rpcrouter.RouterFromContext(context)
 	minfos := router.GetMethods()
 	intfMInfos := buildMethodInfos(minfos)
-	resp := &intf.ListMethodsResponse{MethodInfos: intfMInfos}
+	resp := &intf.ListMethodsResponse{Methods: intfMInfos}
 	return resp, nil
 }
 
+// DeclareMethods
+func (self *JointRPC) DeclareMethods(context context.Context, req *intf.DeclareMethodsRequest) (*intf.DeclareMethodsResponse, error) {
+	router := rpcrouter.RouterFromContext(context)
+	conn, found := router.GetConnByPublicId(req.ConnPublicId)
+	if !found {
+		intfErr := &intf.Error{Code: 404, Reason: "conn not found"}
+		return &intf.DeclareMethodsResponse{Error: intfErr}, nil
+	}
+
+	//log.Debugf("update methods %+v", update)
+	upMethods := make([]rpcrouter.MethodInfo, 0)
+	var methodNames []string
+	for _, iminfo := range req.Methods {
+		minfo := encoding.DecodeMethodInfo(iminfo)
+		if strings.HasPrefix(minfo.Name, ".") {
+			conn.Log().WithFields(log.Fields{
+				"rpc": "DeclareMethods",
+			}).Warnf("method %s cannot prefix with .", minfo.Name)
+			intfErr := &intf.Error{
+				Code:   11400,
+				Reason: fmt.Sprintf("method %s cannot prefix with .", minfo.Name)}
+			return &intf.DeclareMethodsResponse{Error: intfErr}, nil
+		}
+		methodNames = append(methodNames, minfo.Name)
+		_, err := minfo.SchemaOrError()
+		if err != nil {
+			if buildError, ok := err.(*schema.SchemaBuildError); ok {
+				// parse schema error
+				conn.Log().WithFields(log.Fields{
+					"rpc": "DeclareMethods",
+				}).Warnf("error build schema %s, %+v", buildError.Error(), iminfo)
+				intfErr := &intf.Error{
+					Code:   11401,
+					Reason: fmt.Sprintf("build schema error %s", buildError.Error())}
+				return &intf.DeclareMethodsResponse{Error: intfErr}, nil
+			}
+			return &intf.DeclareMethodsResponse{}, err
+		}
+		upMethods = append(upMethods, *minfo)
+	}
+
+	conn.Log().Infof("declared methods %v", methodNames)
+	cmdServe := rpcrouter.CmdServe{
+		ConnId:  conn.ConnId,
+		Methods: upMethods,
+	}
+	router.ChServe <- cmdServe
+	return &intf.DeclareMethodsResponse{}, nil
+}
+
+// DeclareDelegates
+func (self *JointRPC) DeclareDelegates(context context.Context, req *intf.DeclareDelegatesRequest) (*intf.DeclareDelegatesResponse, error) {
+	router := rpcrouter.RouterFromContext(context)
+	conn, found := router.GetConnByPublicId(req.ConnPublicId)
+	if !found {
+		intfErr := &intf.Error{Code: 404, Reason: "conn not found"}
+		return &intf.DeclareDelegatesResponse{Error: intfErr}, nil
+	}
+
+	// TODO: validate delegate methods
+	cmdDelegate := rpcrouter.CmdDelegate{
+		ConnId:      conn.ConnId,
+		MethodNames: req.Methods,
+	}
+	router.ChDelegate <- cmdDelegate
+
+	return &intf.DeclareDelegatesResponse{}, nil
+}
+
+// ListDelegates
 func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDelegatesRequest) (*intf.ListDelegatesResponse, error) {
 	router := rpcrouter.RouterFromContext(context)
 	delegates := router.GetDelegates()
@@ -121,9 +195,16 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 	return resp, nil
 }
 
-func sendState(state *rpcrouter.TubeState, stream intf.JointRPC_HandleServer) {
-	iState := encoding.EncodeTubeState(state)
+func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_HandleServer) {
+	iState := encoding.EncodeServerState(state)
 	payload := &intf.JointRPCDownPacket_State{State: iState}
+	downpac := &intf.JointRPCDownPacket{Payload: payload}
+	stream.Send(downpac)
+}
+
+func sendServerGreeting(connPublicId string, stream intf.JointRPC_HandleServer) {
+	greeting := &intf.ServerGreeting{ConnPublicId: connPublicId}
+	payload := &intf.JointRPCDownPacket_Greeting{Greeting: greeting}
 	downpac := &intf.JointRPCDownPacket{Payload: payload}
 	stream.Send(downpac)
 }
@@ -154,7 +235,7 @@ func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream i
 	}
 }
 
-func relayMessages(context context.Context, stream intf.JointRPC_HandleServer, conn *rpcrouter.ConnT) {
+func relayDownMessages(context context.Context, stream intf.JointRPC_HandleServer, conn *rpcrouter.ConnT) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Warnf("recovered ERROR %+v", r)
@@ -189,7 +270,7 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 	}
 
 	router := rpcrouter.RouterFromContext(stream.Context())
-	conn := router.Join()
+	conn := router.Join(true)
 	conn.PeerAddr = remotePeer.Addr
 	conn.SetWatchState(true)
 	log.Debugf("Joined conn %d", conn.ConnId)
@@ -200,13 +281,15 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 		router.Leave(conn)
 	}()
 
-	log.Debugf("Handler connected, conn %d from ip %s", conn.ConnId, conn.PeerAddr.String())
+	conn.Log().WithFields(log.Fields{
+		"ip": conn.PeerAddr.String(),
+	}).Debugf("handler connected")
 
-	// send initial state
+	sendServerGreeting(conn.PublicId(), stream)
 	state := router.GetState()
 	sendState(state, stream)
 
-	go relayMessages(ctx, stream, conn)
+	go relayDownMessages(ctx, stream, conn)
 
 	for {
 		uppac, err := stream.Recv()
@@ -244,56 +327,6 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 				Msg:        msg,
 				FromConnId: conn.ConnId}
 			router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
-			continue
-		}
-
-		update := uppac.GetCanServe()
-		if update != nil {
-			//log.Debugf("update methods %+v", update)
-			upMethods := make([]rpcrouter.MethodInfo, 0)
-
-			for _, iminfo := range update.Methods {
-				minfo := encoding.DecodeMethodInfo(iminfo)
-				_, err := minfo.SchemaOrError()
-				if err != nil {
-					if buildError, ok := err.(*schema.SchemaBuildError); ok {
-						// parse schema error
-						log.Warnf("error build schema %s, %+v", buildError.Error(), iminfo)
-						resp := &intf.CanServeResponse{Text: buildError.Error()}
-						payload := &intf.JointRPCDownPacket_CanServe{CanServe: resp}
-						down_pac := &intf.JointRPCDownPacket{Payload: payload}
-						stream.Send(down_pac)
-						// close the handle
-						return nil
-					}
-					return err
-				}
-				upMethods = append(upMethods, *minfo)
-			}
-			log.Debugf("conn %d, update methods %+v", conn.ConnId, update.Methods)
-			cmdServe := rpcrouter.CmdServe{
-				ConnId:  conn.ConnId,
-				Methods: upMethods,
-			}
-			router.ChServe <- cmdServe
-			continue
-		}
-
-		delegate := uppac.GetCanDelegate()
-		if delegate != nil {
-			log.Debugf("conn %d, delegate methods %+v", conn.ConnId, delegate.Methods)
-			// TODO: validate delegate methods
-			cmdDelegate := rpcrouter.CmdDelegate{
-				ConnId:      conn.ConnId,
-				MethodNames: delegate.Methods,
-			}
-			router.ChDelegate <- cmdDelegate
-
-			resp := &intf.CanDelegateResponse{Text: "ok"}
-			payload := &intf.JointRPCDownPacket_CanDelegate{CanDelegate: resp}
-			down_pac := &intf.JointRPCDownPacket{Payload: payload}
-			stream.Send(down_pac)
-
 			continue
 		}
 

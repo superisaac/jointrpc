@@ -16,7 +16,7 @@ func TestJoinConn(t *testing.T) {
 
 	//cid := CID(1002)
 	//ch := make(MsgChannel, 100)
-	conn := router.Join() //cid, ch)
+	conn := router.Join(false) //cid, ch)
 	assert.Equal(1, len(router.connMap))
 
 	router.UpdateServeMethods(conn, []MethodInfo{{"abc", "method abc", "", nil}})
@@ -31,7 +31,7 @@ func TestRouteMessage(t *testing.T) {
 
 	//cid := CID(1002)
 	//ch := make(MsgChannel, 100)
-	conn := router.Join()
+	conn := router.Join(false)
 
 	assert.Equal(1, len(router.connMap))
 	router.UpdateServeMethods(conn, []MethodInfo{{"abc", "", "", nil}, {"def", "", "", nil}})
@@ -44,7 +44,7 @@ func TestRouteMessage(t *testing.T) {
 	assert.Equal("abc", localMethods[0].Name)
 	assert.Equal("def", localMethods[1].Name)
 
-	_ = router.Join()
+	_ = router.Join(false)
 
 	j1 := `{
 "id": 100002,
@@ -71,13 +71,13 @@ func TestRouteRoutine(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	conn := router.Join()
+	conn := router.Join(false)
 	cid := conn.ConnId
 	ch := conn.RecvChannel
 
 	router.ChServe <- CmdServe{ConnId: cid, Methods: []MethodInfo{{"abc", "method abc", "", nil}}}
 
-	conn1 := router.Join()
+	conn1 := router.Join(false)
 	cid1 := conn1.ConnId
 	j1 := `{
 "id": 100002,
@@ -96,7 +96,7 @@ func TestRouteRoutine(t *testing.T) {
 	assert.True(rcvmsg.Msg.IsRequest())
 
 	// wrong target id
-	conn2 := router.Join()
+	conn2 := router.Join(false)
 	cid2 := conn2.ConnId
 	j2 := `{
 "id": 100003,

@@ -72,7 +72,7 @@ func (self *NeighborService) connectRemote(rootCtx context.Context, entry client
 	edge.remoteClient = c
 	self.edges[entry.ServerUrl] = edge
 
-	c.OnStateChange(func(state *rpcrouter.TubeState) {
+	c.OnStateChange(func(state *rpcrouter.ServerState) {
 		self.ChState <- CmdStateChange{
 			ServerUrl: entry.ServerUrl,
 			State:     state,
@@ -90,7 +90,7 @@ func (self *NeighborService) Start(rootCtx context.Context) error {
 	}
 
 	// join connection
-	self.conn = self.router.Join()
+	self.conn = self.router.Join(false)
 	defer func() {
 		self.router.Leave(self.conn)
 		self.conn = nil

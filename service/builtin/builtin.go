@@ -36,7 +36,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 		log.Debug("buildin handlermanager context canceled")
 	}()
 
-	self.conn = self.router.Join()
+	self.conn = self.router.Join(false)
 
 	defer func() {
 		log.Debugf("conn %d leave router", self.conn.ConnId)
@@ -44,7 +44,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 		self.conn = nil
 	}()
 
-	self.updateMethods()
+	self.declareMethods()
 
 	for {
 		select {
@@ -117,12 +117,12 @@ func (self *BuiltinService) Init() *BuiltinService {
 	}, handler.WithSchema(echoSchema))
 
 	self.OnChange(func() {
-		self.updateMethods()
+		self.declareMethods()
 	})
 	return self
 }
 
-func (self *BuiltinService) updateMethods() {
+func (self *BuiltinService) declareMethods() {
 	if self.conn != nil {
 		minfos := make([]rpcrouter.MethodInfo, 0)
 		for m, info := range self.MethodHandlers {

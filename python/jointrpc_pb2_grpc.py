@@ -24,6 +24,11 @@ class JointRPCStub(object):
                 request_serializer=jointrpc__pb2.ListDelegatesRequest.SerializeToString,
                 response_deserializer=jointrpc__pb2.ListDelegatesResponse.FromString,
                 )
+        self.DeclareMethods = channel.unary_unary(
+                '/JointRPC/DeclareMethods',
+                request_serializer=jointrpc__pb2.DeclareMethodsRequest.SerializeToString,
+                response_deserializer=jointrpc__pb2.DeclareMethodsResponse.FromString,
+                )
         self.Call = channel.unary_unary(
                 '/JointRPC/Call',
                 request_serializer=jointrpc__pb2.JSONRPCCallRequest.SerializeToString,
@@ -38,6 +43,11 @@ class JointRPCStub(object):
                 '/JointRPC/Handle',
                 request_serializer=jointrpc__pb2.JointRPCUpPacket.SerializeToString,
                 response_deserializer=jointrpc__pb2.JointRPCDownPacket.FromString,
+                )
+        self.DeclareDelegates = channel.unary_unary(
+                '/JointRPC/DeclareDelegates',
+                request_serializer=jointrpc__pb2.DeclareDelegatesRequest.SerializeToString,
+                response_deserializer=jointrpc__pb2.DeclareDelegatesResponse.FromString,
                 )
 
 
@@ -56,9 +66,14 @@ class JointRPCServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DeclareMethods(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def Call(self, request, context):
-        """rpc WatchMethods(WatchMethodsRequest) returns (stream MethodUpdate);
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -71,6 +86,14 @@ class JointRPCServicer(object):
 
     def Handle(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeclareDelegates(self, request, context):
+        """cluster aware RPCs
+        rpc WatchState(WatchStateRequest) returns (stream ServerState);
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -88,6 +111,11 @@ def add_JointRPCServicer_to_server(servicer, server):
                     request_deserializer=jointrpc__pb2.ListDelegatesRequest.FromString,
                     response_serializer=jointrpc__pb2.ListDelegatesResponse.SerializeToString,
             ),
+            'DeclareMethods': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeclareMethods,
+                    request_deserializer=jointrpc__pb2.DeclareMethodsRequest.FromString,
+                    response_serializer=jointrpc__pb2.DeclareMethodsResponse.SerializeToString,
+            ),
             'Call': grpc.unary_unary_rpc_method_handler(
                     servicer.Call,
                     request_deserializer=jointrpc__pb2.JSONRPCCallRequest.FromString,
@@ -102,6 +130,11 @@ def add_JointRPCServicer_to_server(servicer, server):
                     servicer.Handle,
                     request_deserializer=jointrpc__pb2.JointRPCUpPacket.FromString,
                     response_serializer=jointrpc__pb2.JointRPCDownPacket.SerializeToString,
+            ),
+            'DeclareDelegates': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeclareDelegates,
+                    request_deserializer=jointrpc__pb2.DeclareDelegatesRequest.FromString,
+                    response_serializer=jointrpc__pb2.DeclareDelegatesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -144,6 +177,23 @@ class JointRPC(object):
         return grpc.experimental.unary_unary(request, target, '/JointRPC/ListDelegates',
             jointrpc__pb2.ListDelegatesRequest.SerializeToString,
             jointrpc__pb2.ListDelegatesResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DeclareMethods(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/JointRPC/DeclareMethods',
+            jointrpc__pb2.DeclareMethodsRequest.SerializeToString,
+            jointrpc__pb2.DeclareMethodsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -195,5 +245,22 @@ class JointRPC(object):
         return grpc.experimental.stream_stream(request_iterator, target, '/JointRPC/Handle',
             jointrpc__pb2.JointRPCUpPacket.SerializeToString,
             jointrpc__pb2.JointRPCDownPacket.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DeclareDelegates(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/JointRPC/DeclareDelegates',
+            jointrpc__pb2.DeclareDelegatesRequest.SerializeToString,
+            jointrpc__pb2.DeclareDelegatesResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

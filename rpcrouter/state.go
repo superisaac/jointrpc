@@ -43,7 +43,7 @@ func (self *Router) notifyStateChange() {
 	}
 }
 
-func (self *Router) GetState() *TubeState {
-	state := &TubeState{Methods: self.getMethods()}
+func (self *Router) GetState() *ServerState {
+	state := &ServerState{Methods: self.getMethods()}
 	return state
 }

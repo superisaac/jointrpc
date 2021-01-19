@@ -100,7 +100,7 @@ func (self *Bridge) exchangeDelegateMethodsForEdge(aEdge *Edge) {
 			uni.Add(mname)
 		}
 	}
-	aEdge.UpdateDelegateMethods(uni.Result())
+	aEdge.DeclareDelegateMethods(uni.Result())
 }
 
 func (self *Bridge) exchangeDelegateMethods(fromEdge *Edge) {
@@ -125,7 +125,7 @@ func (self Edge) hasMethod(methodName string) bool {
 	return ok
 }
 
-func (self *Edge) onStateChange(state *rpcrouter.TubeState) {
+func (self *Edge) onStateChange(state *rpcrouter.ServerState) {
 	//fmt.Printf("state change %v\b", state)
 	// update edge records
 	methodNames := make(misc.StringSet)
@@ -145,7 +145,7 @@ func (self *Edge) onStateChange(state *rpcrouter.TubeState) {
 
 func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	entry := self.remoteClient.ServerEntry()
-	self.remoteClient.OnStateChange(func(state *rpcrouter.TubeState) {
+	self.remoteClient.OnStateChange(func(state *rpcrouter.ServerState) {
 		self.onStateChange(state)
 		bridge.ChState <- CmdStateChange{
 			serverUrl: entry.ServerUrl,
@@ -155,7 +155,9 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	self.remoteClient.OnConnected(func() {
 		log.Debugf("bridge client connected %s\n", entry.ServerUrl)
 		if self.delegateMethods != nil || len(self.delegateMethods) > 0 {
-			self.remoteClient.UpdateDelegateMethods(self.delegateMethods)
+			ctx, cancel := context.WithCancel(rootCtx)
+			defer cancel()
+			self.remoteClient.DeclareDelegates(ctx, self.delegateMethods)
 		}
 	})
 	self.remoteClient.OnConnectionLost(func() {
@@ -179,11 +181,13 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	return self.remoteClient.Handle(rootCtx)
 }
 
-func (self *Edge) UpdateDelegateMethods(methods []string) {
+func (self *Edge) DeclareDelegateMethods(methods []string) {
 	//log.Infof("delegate %v", methods)
 	self.delegateMethods = methods
 	if self.remoteClient.Connected() {
 		//log.Infof("client %s update methods %+v", self.remoteClient.ServerEntry().ServerUrl, self.delegateMethods)
-		self.remoteClient.UpdateDelegateMethods(self.delegateMethods)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		self.remoteClient.DeclareDelegates(ctx, self.delegateMethods)
 	}
 }

@@ -41,6 +41,10 @@ func (self RPCClient) ServerEntry() ServerEntry {
 	return self.serverEntry
 }
 
+func (self RPCClient) ConnPublicId() string {
+	return self.connPublicId
+}
+
 func (self RPCClient) Connected() bool {
 	return self.connected
 }
@@ -92,28 +96,19 @@ func (self *RPCClient) Connect() error {
 
 // Override Handler.OnHandlerChanged
 func (self *RPCClient) OnHandlerChanged() {
-	if self.tubeClient != nil {
-		self.updateMethods()
+	if self.tubeClient != nil && self.connPublicId != "" {
+		self.declareMethods(context.Background())
 	}
 }
 
-func (self *RPCClient) updateMethods() {
+func (self *RPCClient) declareMethods(rootCtx context.Context) error {
 	upMethods := make([](*intf.MethodInfo), 0)
 	for m, info := range self.MethodHandlers {
 		minfo := &intf.MethodInfo{Name: m, Help: info.Help, SchemaJson: info.SchemaJson}
 		upMethods = append(upMethods, minfo)
 	}
-	up := &intf.CanServeRequest{Methods: upMethods}
-	payload := &intf.JointRPCUpPacket_CanServe{CanServe: up}
-	uppac := &intf.JointRPCUpPacket{Payload: payload}
-	self.sendUpChannel <- uppac
-}
-
-func (self *RPCClient) UpdateDelegateMethods(methods []string) {
-	up := &intf.CanDelegateRequest{Methods: methods}
-	payload := &intf.JointRPCUpPacket_CanDelegate{CanDelegate: up}
-	uppac := &intf.JointRPCUpPacket{Payload: payload}
-	self.sendUpChannel <- uppac
+	log.Infof("declare methods %+v, %s", upMethods, self.connPublicId)
+	return self.DeclareMethods(rootCtx, upMethods)
 }
 
 func (self *RPCClient) Handle(rootCtx context.Context) error {
@@ -189,9 +184,12 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 	defer sendCancel()
 
 	go self.sendUpResult(sendCtx, stream)
-	if len(self.MethodHandlers) > 0 {
-		self.updateMethods()
-	}
+	// if len(self.MethodHandlers) > 0 {
+	// 	err := self.declareMethods(rootCtx)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	for {
 		downpac, err := stream.Recv()
@@ -219,12 +217,23 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 			continue
 		}
 
+		// subscribed state
 		istate := downpac.GetState()
 		if istate != nil {
-			state := encoding.DecodeTubeState(istate)
+			state := encoding.DecodeServerState(istate)
 			if self.StateHandler != nil {
 				self.StateHandler(state)
 			}
+			continue
+		}
+
+		// Set connPublicId
+		greeting := downpac.GetGreeting()
+		if greeting != nil {
+			self.connPublicId = greeting.ConnPublicId
+			log.Infof("Handle() got conn public id %s", self.connPublicId)
+			self.TriggerChange()
+			continue
 		}
 
 		// Handle JSONRPC Request

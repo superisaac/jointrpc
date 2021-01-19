@@ -49,13 +49,14 @@ type MethodInfo struct {
 }
 
 // tube state
-type TubeState struct {
+type ServerState struct {
 	Methods []MethodInfo
 }
 
 // Connect Struct
 type ConnT struct {
 	ConnId      CID
+	publicId    string
 	PeerAddr    net.Addr
 	RecvChannel MsgChannel
 
@@ -65,7 +66,7 @@ type ConnT struct {
 	AsFallback bool
 	watchState bool
 
-	stateChannel chan *TubeState
+	stateChannel chan *ServerState
 }
 
 type MethodDesc struct {
@@ -115,19 +116,15 @@ type Router struct {
 
 	fallbackConns []*ConnT
 
-	connMap         map[CID](*ConnT)
+	connMap       map[CID](*ConnT)
+	publicConnMap map[string](*ConnT)
+
 	pendingRequests map[interface{}]PendingT
 
 	// channels
-	ChMsg chan CmdMsg
-	//ChJoin     chan CmdJoin
-	//ChLeave  chan CmdLeave
+	ChMsg      chan CmdMsg
 	ChServe    chan CmdServe
 	ChDelegate chan CmdDelegate
 
 	methodsSig string
 }
-
-// type TubeT struct {
-// 	Router *Router
-// }

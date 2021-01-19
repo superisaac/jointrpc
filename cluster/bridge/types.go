@@ -15,7 +15,7 @@ type Edge struct {
 
 type CmdStateChange struct {
 	serverUrl string
-	state     *rpcrouter.TubeState
+	state     *rpcrouter.ServerState
 }
 
 type Bridge struct {
