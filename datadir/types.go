@@ -28,6 +28,10 @@ type PeerConfig struct {
 	CertFile string `yaml:"cert,omitempty"`
 }
 
+type MetricsConfig struct {
+	BearerToken string `yaml:"bearer_token,omitempty"`
+}
+
 type ClusterConfig struct {
 	AdvertisedURL string       `yaml:"advertised_url"`
 	NeighborPeers   []PeerConfig `yaml:neighbor_peers,omitempty"`
@@ -38,5 +42,6 @@ type Config struct {
 	Version string        `yaml:"version"`
 	Logging LoggingConfig `yaml:"log,omitempty"`
 	Server  ServerConfig  `yaml:"server"`
+	Metrics MetricsConfig `yaml:"metrics"`
 	Cluster ClusterConfig `yaml:"cluster,omitempty"`
 }

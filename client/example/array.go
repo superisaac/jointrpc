@@ -2,6 +2,7 @@ package example
 
 import (
 	"context"
+	"fmt"
 	client "github.com/superisaac/jointrpc/client"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
@@ -89,6 +90,17 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 
 		},
 		handler.WithHelp("pop two integers from the array, add them and push the result to array"))
+
+	rpcClient.On("metrics.collect",
+		func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+
+			lines := []string{
+				"# TYPE array_size gauge",
+				"# HELP array_size array size",
+				fmt.Sprintf(`array_size{collect="example.array"} %d`, len(items)),
+			}
+			return lines, nil
+		})
 
 	rpcClient.OnDefault(func(req *handler.RPCRequest, method string, params []interface{}) (interface{}, error) {
 		return "I don't know how to respond", nil

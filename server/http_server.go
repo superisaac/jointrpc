@@ -33,10 +33,10 @@ func StartHTTPServer(rootCtx context.Context, bind string, opts ...HTTPOptionFun
 		opt(httpOption)
 	}
 
-	router := rpcrouter.RouterFromContext(rootCtx)
 	log.Infof("start http proxy at %s", bind)
 	mux := http.NewServeMux()
-	mux.Handle("/", NewJSONRPCHTTPServer(router))
+	mux.Handle("/metrics", NewMetricsCollector(rootCtx))
+	mux.Handle("/", NewJSONRPCHTTPServer(rootCtx))
 
 	server := &http.Server{Addr: bind, Handler: mux}
 	listener, err := net.Listen("tcp", bind)
@@ -70,11 +70,12 @@ func StartHTTPServer(rootCtx context.Context, bind string, opts ...HTTPOptionFun
 //type handlerFunc func(w http.ResponseWriter, r *http.Request)
 
 type JSONRPCHTTPServer struct {
-	router *rpcrouter.Router
+	//router *rpcrouter.Router
+	rootCtx context.Context
 }
 
-func NewJSONRPCHTTPServer(router *rpcrouter.Router) *JSONRPCHTTPServer {
-	return &JSONRPCHTTPServer{router: router}
+func NewJSONRPCHTTPServer(rootCtx context.Context) *JSONRPCHTTPServer {
+	return &JSONRPCHTTPServer{rootCtx: rootCtx}
 }
 
 func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +105,8 @@ func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	msgvec := rpcrouter.MsgVec{Msg: msg}
-	result, err := self.router.CallOrNotify(msgvec, false)
+	router := rpcrouter.RouterFromContext(self.rootCtx)
+	result, err := router.CallOrNotify(msgvec, false)
 	if err != nil {
 		jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 		return

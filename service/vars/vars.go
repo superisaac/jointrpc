@@ -40,7 +40,7 @@ func (self VarsService) CanRun(rootCtx context.Context) bool {
 }
 
 func (self *VarsService) BroadcastVars() error {
-	notify := jsonrpc.NewNotifyMessage(".vars.change", []interface{}{self.vars}, nil)
+	notify := jsonrpc.NewNotifyMessage("vars.change", []interface{}{self.vars}, nil)
 	notify.SetTraceId(uuid.New().String())
 	notify.Log().Infof("broadcast vars.change")
 	msgvec := rpcrouter.MsgVec{Msg: notify}
