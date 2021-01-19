@@ -7,7 +7,7 @@ type ServerTLSConfig struct {
 
 type ServerConfig struct {
 	Bind      string `yaml:"bind,omitempty"`
-	ProxyBind string `yaml:"proxy_bind,omitempty"`
+	HttpBind  string `yaml:"http_bind,omitempty"`
 	TLS       ServerTLSConfig `yaml:"tls,omitempty"`
 }
 

@@ -26,7 +26,7 @@ func ServerContext(rootCtx context.Context, router *rpcrouter.Router, cfg *datad
 	return aCtx
 }
 
-func StartServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption) {
+func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOption) {
 	lis, err := net.Listen("tcp", bind)
 	if err != nil {
 		log.Panicf("failed to listen: %v", err)

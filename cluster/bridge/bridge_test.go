@@ -46,11 +46,11 @@ func TestBridgeRun(t *testing.T) {
 	defer cancel()
 
 	// start server1
-	go server.StartServer(rootCtx, "localhost:10020")
+	go server.StartGRPCServer(rootCtx, "localhost:10020")
 	// start server2
-	go server.StartServer(rootCtx, "localhost:10021")
+	go server.StartGRPCServer(rootCtx, "localhost:10021")
 	// start server3
-	go server.StartServer(rootCtx, "localhost:10022")
+	go server.StartGRPCServer(rootCtx, "localhost:10022")
 
 	time.Sleep(200 * time.Millisecond)
 
@@ -135,11 +135,11 @@ func TestServerBreak(t *testing.T) {
 
 	// start server1
 	ctx1, cancelServer1 := context.WithCancel(rootCtx)
-	go server.StartServer(ctx1, "localhost:10030")
+	go server.StartGRPCServer(ctx1, "localhost:10030")
 	// start server2
-	go server.StartServer(rootCtx, "localhost:10031")
+	go server.StartGRPCServer(rootCtx, "localhost:10031")
 	// start server3
-	go server.StartServer(rootCtx, "localhost:10032")
+	go server.StartGRPCServer(rootCtx, "localhost:10032")
 
 	time.Sleep(100 * time.Millisecond)
 

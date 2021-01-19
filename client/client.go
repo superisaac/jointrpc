@@ -22,8 +22,19 @@ import (
 
 func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	sendUpChannel := make(chan *intf.JointRPCUpPacket)
+	serverUrl, err := url.Parse(serverEntry.ServerUrl)
+	if err != nil {
+		log.Panicf("parse url error %s %s", serverEntry.ServerUrl, err.Error())
+	}
+
+	scm := serverUrl.Scheme
+	if !(scm == "h2" || scm == "h2c" || scm == "http" || scm == "https") {
+		log.Panicf("urls scheme not allowed, %s", serverUrl)
+	}
+
 	c := &RPCClient{
 		serverEntry:   serverEntry,
+		serverUrl:     serverUrl,
 		sendUpChannel: sendUpChannel,
 	}
 	c.InitHandlerManager()
@@ -39,6 +50,14 @@ func (self RPCClient) String() string {
 
 func (self RPCClient) ServerEntry() ServerEntry {
 	return self.serverEntry
+}
+
+func (self RPCClient) IsHttp() bool {
+	return self.serverUrl.Scheme == "http" || self.serverUrl.Scheme == "https"
+}
+
+func (self RPCClient) IsH2() bool {
+	return self.serverUrl.Scheme == "h2" || self.serverUrl.Scheme == "h2c"
 }
 
 func (self RPCClient) ConnPublicId() string {
@@ -64,15 +83,13 @@ func (self RPCClient) certFileFromFragment(serverUrl *url.URL) string {
 func (self *RPCClient) Connect() error {
 	var opts []grpc.DialOption
 
-	serverUrl, err := url.Parse(self.serverEntry.ServerUrl)
-	if err != nil {
-		log.Panicf("error parse server entry url %s, %+v", self.serverEntry.ServerUrl, err)
-	}
-
-	if serverUrl.Scheme == "h2c" {
+	if self.IsHttp() {
+		// http method does nothing
+		return nil
+	} else if self.serverUrl.Scheme == "h2c" {
 		opts = append(opts, grpc.WithInsecure())
-	} else if serverUrl.Scheme == "h2" {
-		certFile := self.certFileFromFragment(serverUrl)
+	} else if self.serverUrl.Scheme == "h2" {
+		certFile := self.certFileFromFragment(self.serverUrl)
 		if certFile == "" {
 			certFile = self.serverEntry.CertFile
 		}
@@ -84,9 +101,9 @@ func (self *RPCClient) Connect() error {
 			opts = append(opts, grpc.WithTransportCredentials(creds))
 		}
 	} else {
-		log.Panicf("invalid server url scheme %s", serverUrl.Scheme)
+		log.Panicf("invalid server url scheme %s", self.serverUrl.Scheme)
 	}
-	conn, err := grpc.Dial(serverUrl.Host, opts...)
+	conn, err := grpc.Dial(self.serverUrl.Host, opts...)
 	if err != nil {
 		return err
 	}

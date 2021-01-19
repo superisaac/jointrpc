@@ -27,7 +27,7 @@ func ConfigFromContext(ctx context.Context) *Config {
 }
 
 func (self *Config) ParseDatadir() error {
-	cfgPath := Datapath("config.yml")
+	cfgPath := Datapath("server.yml")
 	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
 		err = self.validateValues()
 		if err != nil {

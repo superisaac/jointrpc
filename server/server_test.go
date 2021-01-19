@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	client "github.com/superisaac/jointrpc/client"
@@ -74,7 +74,7 @@ func TestClientAsServe(t *testing.T) {
 		cancel()
 	}()
 
-	go StartServer(ctx, "127.0.0.1:10002")
+	go StartGRPCServer(ctx, "127.0.0.1:10002")
 	time.Sleep(100 * time.Millisecond)
 
 	go StartTestServe(ctx, "h2c://127.0.0.1:10002", "testclent")
@@ -87,10 +87,41 @@ func TestClientAsServe(t *testing.T) {
 	res, err := c.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace11"))
 	assert.Nil(err)
 	assert.Equal("trace11", res.TraceId())
-	fmt.Printf("res %v\n", res)
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
+}
 
+func TestHTTPClient(t *testing.T) {
+	assert := assert.New(t)
+
+	ctx1, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+	}()
+
+	ctx := ServerContext(ctx1, nil, nil)
+
+	go StartGRPCServer(ctx, "127.0.0.1:10072")
+	time.Sleep(100 * time.Millisecond)
+
+	go StartHTTPServer(ctx, "127.0.0.1:10073")
+
+	go StartTestServe(ctx, "h2c://127.0.0.1:10072", "testclent")
+	time.Sleep(100 * time.Millisecond)
+
+	c := client.NewRPCClient(client.ServerEntry{"http://127.0.0.1:10073", ""})
+	assert.True(c.IsHttp())
+	err := c.Connect()
+	assert.Nil(err)
+
+	res, err := c.CallRPC(ctx, "add2int", [](interface{}){9, 36}, client.WithTraceId("trace11"))
+	assert.Nil(err)
+	assert.Equal("trace11", res.TraceId())
+	assert.True(res.IsResult())
+	assert.Equal(json.Number("45"), res.MustResult())
+
+	err = c.SendNotify(ctx, "nosuchmethod", [](interface{}){}, client.WithTraceId("trace31"))
+	assert.Nil(err)
 }
 
 func TestBroadcastRequest(t *testing.T) {
@@ -101,7 +132,7 @@ func TestBroadcastRequest(t *testing.T) {
 		cancel()
 	}()
 
-	go StartServer(ctx, "127.0.0.1:10005")
+	go StartGRPCServer(ctx, "127.0.0.1:10005")
 	time.Sleep(100 * time.Millisecond)
 
 	go StartTestServe(ctx, "h2c://127.0.0.1:10005", "jack")

@@ -29,7 +29,7 @@ func CommandStartServer() {
 	pDatadir := serverFlags.String("d", "", "The datadir to store configs")
 	pCertFile := serverFlags.String("cert", "", "tls cert file")
 	pKeyFile := serverFlags.String("key", "", "tls key file")
-	//httpBind := serverFlags.String("httpd", "127.0.0.1:50056", "http address and port")
+	pHttpBind := serverFlags.String("http_bind", "", "http address and port")
 
 	serverFlags.Parse(os.Args[2:])
 	if *pDatadir != "" {
@@ -40,12 +40,17 @@ func CommandStartServer() {
 	cfg.ParseDatadir()
 	cfg.SetupLogger()
 
-	//go StartHTTPd(*httpBind)
 	var opts []grpc.ServerOption
+	var httpOpts []server.HTTPOptionFunc
 	// server bind
 	bind := *pBind
 	if bind == "" {
 		bind = cfg.Server.Bind
+	}
+
+	httpBind := *pHttpBind
+	if httpBind == "" {
+		httpBind = cfg.Server.HttpBind
 	}
 
 	// tls settings
@@ -59,12 +64,13 @@ func CommandStartServer() {
 		keyFile = cfg.Server.TLS.KeyFile
 	}
 
-	if certFile != "" || keyFile != "" {
+	if certFile != "" && keyFile != "" {
 		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 		if err != nil {
 			panic(err)
 		}
 		opts = append(opts, grpc.Creds(creds))
+		httpOpts = append(httpOpts, server.WithTLS(certFile, keyFile))
 	}
 
 	rootCtx := server.ServerContext(context.Background(), nil, nil)
@@ -82,6 +88,10 @@ func CommandStartServer() {
 			service.TryStartService(rootCtx, srv)
 		}
 	}()
+	if httpBind != "" {
+		log.Infof("http server starts at %s", httpBind)
+		go server.StartHTTPServer(rootCtx, httpBind, httpOpts...)
+	}
 	log.Infof("server starts at %s", bind)
-	server.StartServer(rootCtx, bind, opts...)
+	server.StartGRPCServer(rootCtx, bind, opts...)
 }

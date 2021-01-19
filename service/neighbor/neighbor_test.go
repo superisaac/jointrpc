@@ -47,13 +47,13 @@ func TestNeighborRun(t *testing.T) {
 	defer cancel()
 
 	// start server1
-	go server.StartServer(rootCtx, "localhost:10010")
+	go server.StartGRPCServer(rootCtx, "localhost:10010")
 
 	// start server2
 	cfg := datadir.NewConfig()
 	cfg.Cluster.NeighborPeers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
 	rootCtx1 := server.ServerContext(rootCtx, nil, cfg)
-	go server.StartServer(rootCtx1, "localhost:10011")
+	go server.StartGRPCServer(rootCtx1, "localhost:10011")
 	time.Sleep(100 * time.Millisecond)
 
 	srv := NewNeighborService()
@@ -61,7 +61,7 @@ func TestNeighborRun(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// start server3
-	go server.StartServer(rootCtx, "localhost:10012")
+	go server.StartGRPCServer(rootCtx, "localhost:10012")
 
 	// start client1, the serve of add2int()
 	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10010", ""})

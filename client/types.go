@@ -4,6 +4,7 @@ import (
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	"net/url"
 )
 
 type ServerEntry struct {
@@ -29,6 +30,7 @@ type RPCClient struct {
 
 	connPublicId  string
 	serverEntry   ServerEntry
+	serverUrl     *url.URL
 	connected     bool
 	tubeClient    intf.JointRPCClient
 	sendUpChannel chan *intf.JointRPCUpPacket

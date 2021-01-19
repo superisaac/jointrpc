@@ -25,7 +25,7 @@ func TestBuiltinMethods(t *testing.T) {
 	defer cancel()
 
 	ctx := server.ServerContext(ctx0, nil, nil)
-	go server.StartServer(ctx, "127.0.0.1:10001")
+	go server.StartGRPCServer(ctx, "127.0.0.1:10001")
 
 	time.Sleep(100 * time.Millisecond)
 	srv := NewBuiltinService()

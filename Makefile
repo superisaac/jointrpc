@@ -38,7 +38,6 @@ test:
 
 clean:
 	rm -rf bin/jointrpc
-	rm ./tmp/protoc.ts
 
 gofmt:
 	go fmt misc/*.go
