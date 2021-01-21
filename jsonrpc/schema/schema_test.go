@@ -17,10 +17,21 @@ func TestBuildBasicSchema(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal("number", s.Type())
 
+	s1 = []byte(`"string"`)
+	builder = NewSchemaBuilder()
+	s, err = builder.BuildBytes(s1)
+	assert.Nil(err)
+	assert.Equal("string", s.Type())
+
 	s1 = []byte(`{"type": "bad"}`)
 	s, err = builder.BuildBytes(s1)
 	assert.NotNil(err)
 	assert.Equal("SchemaBuildError unknown type", err.Error())
+
+	s1 = []byte(`"bad2"`)
+	s, err = builder.BuildBytes(s1)
+	assert.NotNil(err)
+	assert.Equal("SchemaBuildError data is not an object", err.Error())
 
 	s1 = []byte(`{"aa": 4}`)
 	s, err = builder.BuildBytes(s1)
@@ -55,7 +66,7 @@ func TestBuildListSchema(t *testing.T) {
 
 	s1 = []byte(`{
 "type": "list",
-"items": {"type": "number"}
+"items": "number"
 }`)
 	builder = NewSchemaBuilder()
 	s, err := builder.BuildBytes(s1)
@@ -65,9 +76,9 @@ func TestBuildListSchema(t *testing.T) {
 	s1 = []byte(`{
 "type": "list",
 "items": [
-{"type": "number"},
+"number",
 {"type": "string"},
-{"type": "bool"}
+"bool"
 ]}`)
 	builder = NewSchemaBuilder()
 	s, err = builder.BuildBytes(s1)
@@ -93,7 +104,7 @@ func TestBuildObjectSchema(t *testing.T) {
 	s1 = []byte(`{
 "type": "object",
 "properties": {
-  "aaa": {"type": "string"},
+  "aaa": "string",
   "bbb": {"type": "number"}
 }
 }`)

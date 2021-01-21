@@ -1,18 +1,30 @@
 package schema
 
+import (
+	"github.com/superisaac/jointrpc/misc"
+)
+
 // util functions
-func convertMap(node map[string]interface{}, attrName string, optional bool) (map[string]interface{}, bool) {
+func convertTypeMap(maybeType interface{}) (map[string]interface{}, bool) {
+	if typeStr, ok := maybeType.(string); ok && misc.StringInList(typeStr, "string", "number", "bool", "null") {
+		typeMap := map[string](interface{}){"type": typeStr}
+		return typeMap, true
+	}
+	typeMap, ok := maybeType.(map[string]interface{})
+	return typeMap, ok
+}
+
+func convertAttrMap(node map[string]interface{}, attrName string, optional bool) (map[string]interface{}, bool) {
 	if v, ok := node[attrName]; ok {
-		if aMap, ok := v.(map[string]interface{}); ok {
-			return aMap, ok
-		}
+		return convertTypeMap(v)
 	} else if optional {
-		return make(map[string]interface{}), true
+		//return make(map[string]interface{}), true
+		return map[string](interface{}){}, true
 	}
 	return nil, false
 }
 
-func convertList(node map[string]interface{}, attrName string, optional bool) ([]interface{}, bool) {
+func convertAttrList(node map[string]interface{}, attrName string, optional bool) ([]interface{}, bool) {
 	if v, ok := node[attrName]; ok {
 		if aList, ok := v.([]interface{}); ok {
 			return aList, ok
@@ -23,11 +35,11 @@ func convertList(node map[string]interface{}, attrName string, optional bool) ([
 	return nil, false
 }
 
-func convertMapOfMap(node map[string](interface{}), attrName string, optional bool) (map[string](map[string]interface{}), bool) {
-	if mm, ok := convertMap(node, attrName, optional); ok {
+func convertAttrMapOfMap(node map[string](interface{}), attrName string, optional bool) (map[string](map[string]interface{}), bool) {
+	if mm, ok := convertAttrMap(node, attrName, optional); ok {
 		resMap := make(map[string](map[string]interface{}))
 		for name, value := range mm {
-			mv, ok := value.(map[string]interface{})
+			mv, ok := convertTypeMap(value)
 			if !ok {
 				return nil, false
 			}
@@ -38,12 +50,12 @@ func convertMapOfMap(node map[string](interface{}), attrName string, optional bo
 	return nil, false
 }
 
-func convertListOfMap(node map[string]interface{}, attrName string, optional bool) ([](map[string]interface{}), bool) {
+func convertAttrListOfMap(node map[string]interface{}, attrName string, optional bool) ([](map[string]interface{}), bool) {
 	if v, ok := node[attrName]; ok {
 		if aList, ok := v.([]interface{}); ok {
 			arr := make([](map[string]interface{}), 0)
 			for _, item := range aList {
-				itemMap, ok := item.(map[string]interface{})
+				itemMap, ok := convertTypeMap(item)
 				if !ok {
 					return nil, false
 				}
@@ -57,7 +69,7 @@ func convertListOfMap(node map[string]interface{}, attrName string, optional boo
 	return nil, false
 }
 
-func convertListOfString(node map[string]interface{}, attrName string, optional bool) ([]string, bool) {
+func convertAttrListOfString(node map[string]interface{}, attrName string, optional bool) ([]string, bool) {
 	if v, ok := node[attrName]; ok {
 		if aList, ok := v.([]interface{}); ok {
 			arr := make([]string, 0)

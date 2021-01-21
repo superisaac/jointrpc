@@ -40,3 +40,13 @@ func (self *StringUnifier) Result() []string {
 	return self.dest
 
 }
+
+// InList
+func StringInList(a string, candidates ...string) bool {
+	for _, ca := range candidates {
+		if ca == a {
+			return true
+		}
+	}
+	return false
+}

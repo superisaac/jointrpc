@@ -251,7 +251,7 @@ func (self *MethodSchema) Scan(validator *SchemaValidator, data interface{}) *Er
 		return validator.NewErrorPos("data is not object")
 	}
 
-	if params, ok := convertList(dataMap, "params", false); ok {
+	if params, ok := convertAttrList(dataMap, "params", false); ok {
 		errPos := self.ScanParams(validator, params)
 		if errPos != nil {
 			return errPos
