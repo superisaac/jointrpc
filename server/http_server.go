@@ -6,6 +6,7 @@ import (
 	"errors"
 	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
+	datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 	"net"
@@ -78,10 +79,33 @@ func NewJSONRPCHTTPServer(rootCtx context.Context) *JSONRPCHTTPServer {
 	return &JSONRPCHTTPServer{rootCtx: rootCtx}
 }
 
+func (self *JSONRPCHTTPServer) Authorize(r *http.Request) bool {
+	// basic auth
+	cfg := datadir.ConfigFromContext(self.rootCtx)
+	if len(cfg.Authorizations) >= 1 {
+		if username, password, ok := r.BasicAuth(); ok {
+			for _, bauth := range cfg.Authorizations {
+				if bauth.Username == username && bauth.Password == password {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	return true
+}
+
 func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// only support POST
 	if r.Method != "POST" {
 		jsonrpc.ErrorResponse(w, r, errors.New("method not allowed"), 405, "Method not allowed")
+		return
+	}
+
+	if !self.Authorize(r) {
+		log.Warnf("http auth failed %d", 401)
+		w.WriteHeader(401)
+		w.Write([]byte("auth failed"))
 		return
 	}
 

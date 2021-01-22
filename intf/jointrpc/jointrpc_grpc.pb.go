@@ -24,7 +24,6 @@ type JointRPCClient interface {
 	Notify(ctx context.Context, in *JSONRPCNotifyRequest, opts ...grpc.CallOption) (*JSONRPCNotifyResponse, error)
 	Handle(ctx context.Context, opts ...grpc.CallOption) (JointRPC_HandleClient, error)
 	// cluster aware RPCs
-	//rpc WatchState(WatchStateRequest) returns (stream ServerState);
 	DeclareDelegates(ctx context.Context, in *DeclareDelegatesRequest, opts ...grpc.CallOption) (*DeclareDelegatesResponse, error)
 }
 
@@ -132,7 +131,6 @@ type JointRPCServer interface {
 	Notify(context.Context, *JSONRPCNotifyRequest) (*JSONRPCNotifyResponse, error)
 	Handle(JointRPC_HandleServer) error
 	// cluster aware RPCs
-	//rpc WatchState(WatchStateRequest) returns (stream ServerState);
 	DeclareDelegates(context.Context, *DeclareDelegatesRequest) (*DeclareDelegatesResponse, error)
 	mustEmbedUnimplementedJointRPCServer()
 }

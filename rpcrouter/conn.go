@@ -62,7 +62,8 @@ func (self *ConnT) StateChannel() chan *ServerState {
 
 func (self ConnT) Log() *log.Entry {
 	return log.WithFields(log.Fields{
-		"conn_id":   self.ConnId,
-		"public_id": self.publicId,
+		"conn_id":     self.ConnId,
+		"public_id":   self.publicId,
+		"remote_addr": self.PeerAddr,
 	})
 }

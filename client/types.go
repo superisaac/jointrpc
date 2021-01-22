@@ -22,6 +22,12 @@ type RPCRequest struct {
 	// TODO: add more fields
 }
 
+type RPCStatusError struct {
+	Method string
+	Code   int
+	Reason string
+}
+
 type ConnectionLostCallback func()
 type ConnectedCallback func()
 

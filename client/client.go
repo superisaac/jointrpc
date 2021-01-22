@@ -1,9 +1,9 @@
 package client
 
 import (
-	//"fmt"
 	"context"
 	"flag"
+	"fmt"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
@@ -19,6 +19,10 @@ import (
 	codes "google.golang.org/grpc/codes"
 	credentials "google.golang.org/grpc/credentials"
 )
+
+func (self RPCStatusError) Error() string {
+	return fmt.Sprintf("RPC Response status %s %d %s", self.Method, self.Code, self.Reason)
+}
 
 func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	sendUpChannel := make(chan *intf.JointRPCUpPacket)
@@ -42,6 +46,22 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 		c.OnHandlerChanged()
 	})
 	return c
+}
+
+func (self RPCClient) ClientAuth() *intf.ClientAuth {
+	if self.serverUrl.User == nil {
+		return &intf.ClientAuth{}
+	}
+	pwd, ok := self.serverUrl.User.Password()
+	if !ok {
+		pwd = ""
+	}
+
+	auth := &intf.ClientAuth{
+		Username: self.serverUrl.User.Username(),
+		Password: pwd,
+	}
+	return auth
 }
 
 func (self RPCClient) String() string {
@@ -181,6 +201,12 @@ func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
 	self.sendUpChannel <- uppack
 }
 
+func (self *RPCClient) requestAuth(rootCtx context.Context, stream intf.JointRPC_HandleClient) error {
+	payload := &intf.JointRPCUpPacket_Auth{Auth: self.ClientAuth()}
+	uppac := &intf.JointRPCUpPacket{Payload: payload}
+	return stream.Send(uppac)
+}
+
 func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
@@ -191,10 +217,14 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 		log.Warnf("error on handle %v", err)
 		return err
 	}
-	log.Debugf("connected")
 	self.connected = true
 	if self.onConnected != nil {
 		self.onConnected()
+	}
+
+	err = self.requestAuth(rootCtx, stream)
+	if err != nil {
+		return err
 	}
 
 	sendCtx, sendCancel := context.WithCancel(rootCtx)
@@ -219,7 +249,7 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 		ping := downpac.GetPing()
 		if ping != nil {
 			// Send Pong
-			pong := &intf.PONG{Text: ping.Text}
+			pong := &intf.Pong{Text: ping.Text}
 			payload := &intf.JointRPCUpPacket_Pong{Pong: pong}
 			uppac := &intf.JointRPCUpPacket{Payload: payload}
 
@@ -239,9 +269,14 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 		}
 
 		// Set connPublicId
-		greeting := downpac.GetGreeting()
-		if greeting != nil {
-			self.connPublicId = greeting.ConnPublicId
+		echo := downpac.GetEcho()
+		if echo != nil {
+			err := self.CheckStatus(echo.Status, "Handle.Auth")
+			if err != nil {
+				log.Warn(err.Error())
+				return err
+			}
+			self.connPublicId = echo.ConnPublicId
 			log.Infof("Handle() got conn public id %s", self.connPublicId)
 			self.TriggerChange()
 			continue
@@ -271,6 +306,17 @@ func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string) {
 		Msg:        msg,
 		FromConnId: 0}
 	self.HandleRequestMessage(msgvec)
+}
+
+func (self *RPCClient) CheckStatus(status *intf.Status, methodName string) error {
+	if status == nil || status.Code == 0 {
+		return nil
+	} else {
+		return &RPCStatusError{
+			Method: methodName,
+			Code:   int(status.Code),
+			Reason: status.Reason}
+	}
 }
 
 // misc functions

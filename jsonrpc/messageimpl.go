@@ -1,9 +1,15 @@
 package jsonrpc
 
 import (
+	"fmt"
 	"github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
 )
+
+func NewErrMsgType(additional string) *RPCError {
+	r := fmt.Sprintf("wrong message type %s", additional)
+	return &RPCError{10403, r, false}
+}
 
 func (self BaseMessage) IsRequest() bool {
 	return self.messageType == MTRequest
@@ -98,7 +104,7 @@ func (self RequestMessage) MustId() interface{} {
 	return self.Id
 }
 func (self NotifyMessage) MustId() interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustId"))
 }
 func (self ResultMessage) MustId() interface{} {
 	return self.Id
@@ -115,11 +121,11 @@ func (self NotifyMessage) MustMethod() string {
 	return self.Method
 }
 func (self ResultMessage) MustMethod() string {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustMethod"))
 }
 
 func (self ErrorMessage) MustMethod() string {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustMethod"))
 }
 
 // MustParams
@@ -130,35 +136,35 @@ func (self NotifyMessage) MustParams() []interface{} {
 	return self.Params
 }
 func (self ResultMessage) MustParams() []interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustParams"))
 }
 func (self ErrorMessage) MustParams() []interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustParams"))
 }
 
 // MustResult
 func (self RequestMessage) MustResult() interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustResult"))
 }
 func (self NotifyMessage) MustResult() interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustResult"))
 }
 func (self ResultMessage) MustResult() interface{} {
 	return self.Result
 }
 func (self ErrorMessage) MustResult() interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustResult"))
 }
 
 // MustError
 func (self RequestMessage) MustError() interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustError"))
 }
 func (self NotifyMessage) MustError() interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustError"))
 }
 func (self ResultMessage) MustError() interface{} {
-	panic(ErrMessageType)
+	panic(NewErrMsgType("MustError"))
 }
 func (self ErrorMessage) MustError() interface{} {
 	return self.Error

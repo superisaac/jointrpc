@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	client "github.com/superisaac/jointrpc/client"
+	datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	"io/ioutil"
@@ -89,6 +90,62 @@ func TestClientAsServe(t *testing.T) {
 	assert.Equal("trace11", res.TraceId())
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
+}
+
+func TestClientAuth(t *testing.T) {
+	assert := assert.New(t)
+
+	ctx1, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+	}()
+
+	cfg := datadir.NewConfig()
+	cfg.Authorizations = []datadir.BasicAuth{{"abc", "1111"}}
+	ctx := ServerContext(ctx1, nil, cfg)
+
+	go StartGRPCServer(ctx, "127.0.0.1:10092")
+	time.Sleep(100 * time.Millisecond)
+
+	go StartHTTPServer(ctx, "127.0.0.1:10093")
+
+	go StartTestServe(ctx, "h2c://abc:1111@127.0.0.1:10092", "testclent")
+	time.Sleep(100 * time.Millisecond)
+
+	c := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10092", ""})
+	err := c.Connect()
+	assert.Nil(err)
+
+	_, err = c.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace11"))
+	assert.NotNil(err)
+	statusErr, ok := err.(*client.RPCStatusError)
+	assert.True(ok)
+	assert.Equal(401, statusErr.Code)
+	assert.Equal("auth failed", statusErr.Reason)
+
+	c1 := client.NewRPCClient(client.ServerEntry{"h2c://abc:1111@127.0.0.1:10092", ""})
+	err1 := c1.Connect()
+	assert.Nil(err1)
+
+	res1, err := c1.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace811"))
+	assert.Nil(err)
+	assert.Equal("trace811", res1.TraceId())
+	assert.True(res1.IsResult())
+	assert.Equal(json.Number("11"), res1.MustResult())
+
+	c2 := client.NewRPCClient(client.ServerEntry{"http://abc:1111@127.0.0.1:10093", ""})
+	res2, err := c2.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace811"))
+	assert.Nil(err)
+	assert.Equal("trace811", res2.TraceId())
+	assert.True(res2.IsResult())
+	assert.Equal(json.Number("11"), res2.MustResult())
+
+	// bad password
+	c3 := client.NewRPCClient(client.ServerEntry{"http://abc:1113@127.0.0.1:10093", ""})
+	_, err3 := c3.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace811"))
+	assert.NotNil(err3)
+	assert.Equal("bad resp 401", err3.Error())
+
 }
 
 func TestHTTPClient(t *testing.T) {

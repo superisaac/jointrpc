@@ -21,6 +21,7 @@ import (
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	//misc "github.com/superisaac/jointrpc/misc"
+	datadir "github.com/superisaac/jointrpc/datadir"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	peer "google.golang.org/grpc/peer"
@@ -30,11 +31,29 @@ type JointRPC struct {
 	intf.UnimplementedJointRPCServer
 }
 
+func (self JointRPC) Authorize(context context.Context, auth *intf.ClientAuth) *intf.Status {
+	cfg := datadir.ConfigFromContext(context)
+	if len(cfg.Authorizations) == 0 {
+		return nil
+	}
+	for _, bauth := range cfg.Authorizations {
+		if auth.Username == bauth.Username && auth.Password == bauth.Password {
+			return nil
+		}
+	}
+	return &intf.Status{Code: 401, Reason: "auth failed"}
+}
+
 // Call
 func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest) (*intf.JSONRPCCallResult, error) {
 	remotePeer, ok := peer.FromContext(context)
 	if !ok {
 		return nil, errors.New("cannot get peer info from Call()")
+	}
+
+	if status := self.Authorize(context, req.Auth); status != nil {
+		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
+		return &intf.JSONRPCCallResult{Status: status}, nil
 	}
 
 	reqmsg, err := encoding.MessageFromEnvolope(req.Envolope)
@@ -71,9 +90,15 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 
 // Notify
 func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyRequest) (*intf.JSONRPCNotifyResponse, error) {
+
 	remotePeer, ok := peer.FromContext(context)
 	if !ok {
 		return nil, errors.New("cannot get peer info from Notify()")
+	}
+
+	if status := self.Authorize(context, req.Auth); status != nil {
+		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
+		return &intf.JSONRPCNotifyResponse{Status: status}, nil
 	}
 
 	notifymsg, err := encoding.MessageFromEnvolope(req.Envolope)
@@ -111,6 +136,16 @@ func buildMethodInfos(minfos []rpcrouter.MethodInfo) []*intf.MethodInfo {
 
 // ListMethods
 func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethodsRequest) (*intf.ListMethodsResponse, error) {
+	remotePeer, ok := peer.FromContext(context)
+	if !ok {
+		return nil, errors.New("cannot get peer info from ListMethods()")
+	}
+
+	if status := self.Authorize(context, req.Auth); status != nil {
+		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
+		return &intf.ListMethodsResponse{Status: status}, nil
+	}
+
 	router := rpcrouter.RouterFromContext(context)
 	minfos := router.GetMethods()
 	intfMInfos := buildMethodInfos(minfos)
@@ -120,11 +155,21 @@ func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethods
 
 // DeclareMethods
 func (self *JointRPC) DeclareMethods(context context.Context, req *intf.DeclareMethodsRequest) (*intf.DeclareMethodsResponse, error) {
+	remotePeer, ok := peer.FromContext(context)
+	if !ok {
+		return nil, errors.New("cannot get peer info from DeclareMethods()")
+	}
+
+	if status := self.Authorize(context, req.Auth); status != nil {
+		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
+		return &intf.DeclareMethodsResponse{Status: status}, nil
+	}
+
 	router := rpcrouter.RouterFromContext(context)
 	conn, found := router.GetConnByPublicId(req.ConnPublicId)
 	if !found {
-		intfErr := &intf.Error{Code: 404, Reason: "conn not found"}
-		return &intf.DeclareMethodsResponse{Error: intfErr}, nil
+		intfErr := &intf.Status{Code: 404, Reason: "conn not found"}
+		return &intf.DeclareMethodsResponse{Status: intfErr}, nil
 	}
 
 	//log.Debugf("update methods %+v", update)
@@ -136,10 +181,10 @@ func (self *JointRPC) DeclareMethods(context context.Context, req *intf.DeclareM
 			conn.Log().WithFields(log.Fields{
 				"rpc": "DeclareMethods",
 			}).Warnf("method %s cannot prefix with .", minfo.Name)
-			intfErr := &intf.Error{
+			intfErr := &intf.Status{
 				Code:   11400,
 				Reason: fmt.Sprintf("method %s cannot prefix with .", minfo.Name)}
-			return &intf.DeclareMethodsResponse{Error: intfErr}, nil
+			return &intf.DeclareMethodsResponse{Status: intfErr}, nil
 		}
 		methodNames = append(methodNames, minfo.Name)
 		_, err := minfo.SchemaOrError()
@@ -149,10 +194,10 @@ func (self *JointRPC) DeclareMethods(context context.Context, req *intf.DeclareM
 				conn.Log().WithFields(log.Fields{
 					"rpc": "DeclareMethods",
 				}).Warnf("error build schema %s, %+v", buildError.Error(), iminfo)
-				intfErr := &intf.Error{
+				intfErr := &intf.Status{
 					Code:   11401,
 					Reason: fmt.Sprintf("build schema error %s", buildError.Error())}
-				return &intf.DeclareMethodsResponse{Error: intfErr}, nil
+				return &intf.DeclareMethodsResponse{Status: intfErr}, nil
 			}
 			return &intf.DeclareMethodsResponse{}, err
 		}
@@ -170,11 +215,21 @@ func (self *JointRPC) DeclareMethods(context context.Context, req *intf.DeclareM
 
 // DeclareDelegates
 func (self *JointRPC) DeclareDelegates(context context.Context, req *intf.DeclareDelegatesRequest) (*intf.DeclareDelegatesResponse, error) {
+	remotePeer, ok := peer.FromContext(context)
+	if !ok {
+		return nil, errors.New("cannot get peer info from DeclareDelegates()")
+	}
+
+	if status := self.Authorize(context, req.Auth); status != nil {
+		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
+		return &intf.DeclareDelegatesResponse{Status: status}, nil
+	}
+
 	router := rpcrouter.RouterFromContext(context)
 	conn, found := router.GetConnByPublicId(req.ConnPublicId)
 	if !found {
-		intfErr := &intf.Error{Code: 404, Reason: "conn not found"}
-		return &intf.DeclareDelegatesResponse{Error: intfErr}, nil
+		intfErr := &intf.Status{Code: 404, Reason: "conn not found"}
+		return &intf.DeclareDelegatesResponse{Status: intfErr}, nil
 	}
 
 	// TODO: validate delegate methods
@@ -189,6 +244,16 @@ func (self *JointRPC) DeclareDelegates(context context.Context, req *intf.Declar
 
 // ListDelegates
 func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDelegatesRequest) (*intf.ListDelegatesResponse, error) {
+	remotePeer, ok := peer.FromContext(context)
+	if !ok {
+		return nil, errors.New("cannot get peer info from ListDelegates()")
+	}
+
+	if status := self.Authorize(context, req.Auth); status != nil {
+		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
+		return &intf.ListDelegatesResponse{Status: status}, nil
+	}
+
 	router := rpcrouter.RouterFromContext(context)
 	delegates := router.GetDelegates()
 	resp := &intf.ListDelegatesResponse{Delegates: delegates}
@@ -202,9 +267,9 @@ func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_HandleServer) 
 	stream.Send(downpac)
 }
 
-func sendServerGreeting(connPublicId string, stream intf.JointRPC_HandleServer) {
-	greeting := &intf.ServerGreeting{ConnPublicId: connPublicId}
-	payload := &intf.JointRPCDownPacket_Greeting{Greeting: greeting}
+func sendServerEcho(connPublicId string, stream intf.JointRPC_HandleServer) {
+	greeting := &intf.ServerEcho{ConnPublicId: connPublicId}
+	payload := &intf.JointRPCDownPacket_Echo{Echo: greeting}
 	downpac := &intf.JointRPCDownPacket{Payload: payload}
 	stream.Send(downpac)
 }
@@ -233,6 +298,49 @@ func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream i
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (self *JointRPC) requireAuth(stream intf.JointRPC_HandleServer) (*rpcrouter.ConnT, error) {
+	remotePeer, ok := peer.FromContext(stream.Context())
+	if !ok {
+		return nil, errors.New("cannot get peer info from stream")
+	}
+
+	logger := log.WithFields(log.Fields{"ip": remotePeer.Addr})
+	uppac, err := stream.Recv()
+	if err != nil {
+		if err == io.EOF {
+			log.Debugf("eof met")
+			return nil, nil
+		} else if grpc.Code(err) == codes.Canceled {
+			log.Debugf("stream canceled")
+			return nil, nil
+		}
+		log.Warnf("error on stream Recv() %s", err.Error())
+		return nil, err
+	}
+
+	auth := uppac.GetAuth()
+	if auth != nil {
+		if status := self.Authorize(stream.Context(), auth); status != nil {
+			logger.Warnf("client auth failed")
+
+			echo := &intf.ServerEcho{Status: status}
+			payload := &intf.JointRPCDownPacket_Echo{Echo: echo}
+			down_pac := &intf.JointRPCDownPacket{Payload: payload}
+			stream.Send(down_pac)
+			return nil, errors.New("client auth failed")
+		}
+	} else {
+		logger.Warnf("bad up packet %+v", uppac)
+		return nil, errors.New("bad up packet")
+	}
+
+	router := rpcrouter.RouterFromContext(stream.Context())
+	conn := router.Join(true)
+	conn.PeerAddr = remotePeer.Addr
+	sendServerEcho(conn.PublicId(), stream)
+	return conn, nil
 }
 
 func relayDownMessages(context context.Context, stream intf.JointRPC_HandleServer, conn *rpcrouter.ConnT) {
@@ -264,28 +372,22 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_HandleServe
 }
 
 func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
-	remotePeer, ok := peer.FromContext(stream.Context())
-	if !ok {
-		return errors.New("cannot get peer info from stream")
+	conn, err := self.requireAuth(stream)
+	if err != nil {
+		return err
+	}
+	if conn == nil {
+		return nil
 	}
 
 	router := rpcrouter.RouterFromContext(stream.Context())
-	conn := router.Join(true)
-	conn.PeerAddr = remotePeer.Addr
 	conn.SetWatchState(true)
-	log.Debugf("Joined conn %d", conn.ConnId)
-
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
 		router.Leave(conn)
 	}()
 
-	conn.Log().WithFields(log.Fields{
-		"ip": conn.PeerAddr.String(),
-	}).Debugf("handler connected")
-
-	sendServerGreeting(conn.PublicId(), stream)
 	state := router.GetState()
 	sendState(state, stream)
 
@@ -307,7 +409,7 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 		// Pong on Ping
 		ping := uppac.GetPing()
 		if ping != nil {
-			pong := &intf.PONG{Text: ping.Text}
+			pong := &intf.Pong{Text: ping.Text}
 			payload := &intf.JointRPCDownPacket_Pong{Pong: pong}
 			down_pac := &intf.JointRPCDownPacket{Payload: payload}
 
@@ -329,7 +431,7 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 			router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
 			continue
 		}
-
+		conn.Log().Warnf("bad up packet %+v", uppac)
 	}
 }
 

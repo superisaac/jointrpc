@@ -11,6 +11,11 @@ type ServerConfig struct {
 	TLS       ServerTLSConfig `yaml:"tls,omitempty"`
 }
 
+type BasicAuth  struct {
+	Username  string `yaml:"username"`
+	Password  string `yaml:"password"`
+}
+
 type SyslogConfig struct {
 	Enabled  bool   `yaml:"enabled,omitempty"`
 	URL      string `yaml:"url,omitempty"`
@@ -42,6 +47,7 @@ type Config struct {
 	Version string        `yaml:"version"`
 	Logging LoggingConfig `yaml:"log,omitempty"`
 	Server  ServerConfig  `yaml:"server"`
+	Authorizations    []BasicAuth        `yaml:"auth,omitempty"`
 	Metrics MetricsConfig `yaml:"metrics"`
 	Cluster ClusterConfig `yaml:"cluster,omitempty"`
 }

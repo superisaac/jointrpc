@@ -92,7 +92,6 @@ class JointRPCServicer(object):
 
     def DeclareDelegates(self, request, context):
         """cluster aware RPCs
-        rpc WatchState(WatchStateRequest) returns (stream ServerState);
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

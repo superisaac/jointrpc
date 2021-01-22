@@ -3,6 +3,8 @@ package client
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	uuid "github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
@@ -34,7 +36,6 @@ func WithBroadcast(b bool) CallOptionFunc {
 
 func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
 	msgId := 1
-
 	reqmsg := jsonrpc.NewRequestMessage(msgId, method, params, nil)
 	return self.CallMessage(rootCtx, reqmsg, opts...)
 }
@@ -82,6 +83,9 @@ func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonrpc.I
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode != 200 {
+		return nil, errors.New(fmt.Sprintf("bad resp %d", resp.StatusCode))
+	}
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -115,11 +119,18 @@ func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonrpc.I
 	}
 	reqmsg.Log().Debug("request message created")
 	envolope := encoding.MessageToEnvolope(reqmsg)
-	req := &intf.JSONRPCCallRequest{Envolope: envolope, Broadcast: opt.broadcast}
-
+	req := &intf.JSONRPCCallRequest{
+		Auth:      self.ClientAuth(),
+		Envolope:  envolope,
+		Broadcast: opt.broadcast,
+	}
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	res, err := self.tubeClient.Call(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	err = self.CheckStatus(res.Status, "Call")
 	if err != nil {
 		return nil, err
 	}
@@ -176,6 +187,10 @@ func (self *RPCClient) SendHTTPNotify(rootCtx context.Context, method string, pa
 	if err != nil {
 		return err
 	}
+	if resp.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("bad resp %d", resp.StatusCode))
+	}
+
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
@@ -200,16 +215,24 @@ func (self *RPCClient) SendGRPCNotify(rootCtx context.Context, method string, pa
 		Body:    notify.MustString(),
 		TraceId: opt.traceId}
 	req := &intf.JSONRPCNotifyRequest{
+		Auth:      self.ClientAuth(),
 		Envolope:  env,
 		Broadcast: opt.broadcast,
 	}
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	notify.Log().Debug("notify message created")
-	resp, err := self.tubeClient.Notify(ctx, req)
+	res, err := self.tubeClient.Notify(ctx, req)
 	if err != nil {
 		return err
 	}
-	notify.Log().Debugf("notify result %s", resp.Text)
+
+	err = self.CheckStatus(res.Status, "Notify")
+	if err != nil {
+		notify.Log().Warn(err.Error())
+		return err
+	}
+
+	notify.Log().Debugf("notify result %s", res.Text)
 	return nil
 }

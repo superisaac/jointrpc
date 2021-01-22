@@ -12,14 +12,18 @@ service JointRPC {
   rpc Handle(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
 
   // cluster aware RPCs
-  //rpc WatchState(WatchStateRequest) returns (stream ServerState);
   rpc DeclareDelegates(DeclareDelegatesRequest) returns (DeclareDelegatesResponse);    
 }
 
 message Empty {}
-message Error {
+message Status {
   int32 code = 1;
   string reason = 2;
+}
+
+message ClientAuth {
+  string username = 1;
+  string password = 2;
 }
 
 message JSONRPCEnvolope {
@@ -28,60 +32,64 @@ message JSONRPCEnvolope {
 }
 
 message ListMethodsRequest {
+  ClientAuth auth = 1;
 }
 
 message ListMethodsResponse {
-  repeated MethodInfo methods = 1;
+  Status status = 1;
+  repeated MethodInfo methods = 2;
 }
 
 message ListDelegatesRequest {
+  ClientAuth auth = 1;
 }
 
 message ListDelegatesResponse {
-  repeated string delegates = 1;
+  Status status = 1;
+  repeated string delegates = 2;
 }
 
 message DeclareMethodsRequest {
-  string token = 1;  
+  ClientAuth auth = 1;
   string conn_public_id = 2;
   repeated MethodInfo methods = 3;
 }
 
 message DeclareMethodsResponse {
-  Error error = 1;
-}
-
-message WatchStateRequest {
-  string cluster_token = 1;
+  Status status = 1;
 }
 
 message DeclareDelegatesRequest {
-  string token = 1;
-  string conn_public_id = 2;  
+  ClientAuth auth = 1;
+  string conn_public_id = 2;
   repeated string methods = 3;
 }
 
 message DeclareDelegatesResponse {
-  Error error = 1;
+  Status status = 1;
 }
 
 message JSONRPCCallRequest {
-  JSONRPCEnvolope envolope = 1;
-  bool  broadcast = 2;
+  ClientAuth auth = 1;
+  JSONRPCEnvolope envolope = 2;
+  bool  broadcast = 3;
 }
 
 
 message JSONRPCCallResult {
-  JSONRPCEnvolope envolope = 1;
+  Status status = 1;
+  JSONRPCEnvolope envolope = 2;
 }
 
 message JSONRPCNotifyRequest {
-  JSONRPCEnvolope envolope = 1;
-  bool broadcast = 2;
+  ClientAuth  auth = 1;
+  JSONRPCEnvolope envolope = 2;
+  bool broadcast = 3;
 }
 
 message JSONRPCNotifyResponse {
-  string text = 1;
+  Status status = 1;
+  string text = 2;
 }
 
 message MethodInfo {
@@ -91,11 +99,11 @@ message MethodInfo {
   string schema_json = 3;
 }
 
-message PING {
+message Ping {
   string text = 1;
 }
 
-message PONG {
+message Pong {
   string text = 1;
 }
 
@@ -103,26 +111,28 @@ message ServerState {
   repeated MethodInfo methods = 1;
 }
 
-message ServerGreeting {
-  string conn_public_id = 1;
+message ServerEcho {
+  Status status = 1;
+  string conn_public_id = 2;
 }
 
 message JointRPCDownPacket {
   oneof payload {
-    PING ping = 1;
-    PONG pong = 2;
-    ServerGreeting greeting = 3;
-    ServerState state = 4;
+    ServerEcho echo = 1;
     
-    JSONRPCEnvolope envolope = 10;    
+    Ping ping = 2;
+    Pong pong = 3;
+
+    JSONRPCEnvolope envolope = 10;
+    ServerState state = 11;    
   }
 }
 
 message JointRPCUpPacket {
   oneof payload {
-    PING ping = 1;
-    PONG pong = 2;
-    
+    ClientAuth auth = 1;
+    Ping ping = 2;
+    Pong pong = 3;
     JSONRPCEnvolope envolope = 10;
   }
 }
