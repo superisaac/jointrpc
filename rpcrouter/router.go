@@ -403,6 +403,37 @@ func (self *Router) ClearTimeoutRequests() {
 	self.pendingRequests = tmpMap
 }
 
+func (self *Router) TryClearPendingRequest(msgId interface{}) {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+
+	if _, found := self.pendingRequests[msgId]; found {
+		go func() {
+			// sleep for another 1 second
+			time.Sleep(1 * time.Second)
+			self.ClearPendingRequest(msgId)
+		}()
+	}
+}
+
+func (self *Router) ClearPendingRequest(msgId interface{}) {
+	self.lock("ClearPendingRequest")
+	defer self.unlock("ClearPendingRequest")
+
+	if reqt, found := self.pendingRequests[msgId]; found {
+		now := time.Now()
+		if !now.After(reqt.Expire) {
+			reqt.OrigMsgVec.Msg.Log().Errorf("Expire is not reached even during collecting routine")
+		}
+		errMsg := jsonrpc.RPCErrorMessage(reqt.OrigMsgVec.Msg, 408, "request timeout", true)
+		msgvec := MsgVec{Msg: errMsg}
+		_ = self.deliverMessage(reqt.OrigMsgVec.FromConnId, msgvec)
+
+		// delete from self.pendingRequests
+		delete(self.pendingRequests, msgId)
+	}
+}
+
 func (self *Router) ClearPending(connId CID) {
 	for msgId, reqt := range self.pendingRequests {
 		if reqt.ToConnId == connId || reqt.OrigMsgVec.FromConnId == connId {
@@ -437,7 +468,13 @@ func (self *Router) routeRequest(cmdMsg CmdMsg) *ConnT {
 	fromConnId := cmdMsg.MsgVec.FromConnId
 	toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.TargetConnId)
 	if found {
-		expireTime := time.Now().Add(DefaultRequestTimeout)
+		timeout := cmdMsg.Timeout
+		if timeout <= 0 {
+			timeout = DefaultRequestTimeout
+		}
+
+		//fmt.Printf("timeout %d\n", timeout)
+		expireTime := time.Now().Add(timeout)
 		reqMsg, ok := msg.(*jsonrpc.RequestMessage)
 		misc.Assert(ok, "bad msg type other than request")
 
@@ -455,6 +492,12 @@ func (self *Router) routeRequest(cmdMsg CmdMsg) *ConnT {
 		}
 		targetVec := cmdMsg.MsgVec
 		targetVec.Msg = reqMsg
+		go func() {
+			time.Sleep(timeout)
+			time.Sleep(1 * time.Second)
+			//time.Sleep(int64(timeout.Seconds() + 1) * time.Second)
+			self.TryClearPendingRequest(msgId)
+		}()
 		return self.deliverMessage(toConn.ConnId, targetVec)
 	} else {
 		errMsg := jsonrpc.RPCErrorMessage(msg, 404, "method not found", false)

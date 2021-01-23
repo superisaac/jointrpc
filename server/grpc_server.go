@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"time"
 	//"time"
 	//json "encoding/json"
 	//"errors"
@@ -69,14 +70,16 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 	}
 	reqmsg.Log().Infof("from ip %s", remotePeer.Addr)
 	router := rpcrouter.RouterFromContext(context)
-	msgvec := rpcrouter.MsgVec{Msg: reqmsg}
-	recvmsg, err := router.CallOrNotify(msgvec, req.Broadcast)
+
+	recvmsg, err := router.CallOrNotify(reqmsg,
+		rpcrouter.WithBroadcast(req.Broadcast),
+		rpcrouter.WithTimeout(time.Second*time.Duration(req.Timeout)))
 
 	if err != nil {
 		return nil, err
 	}
 	if recvmsg == nil {
-		misc.AssertEqual(recvmsg.TraceId(), msgvec.Msg.TraceId(), "")
+		misc.AssertEqual(recvmsg.TraceId(), reqmsg.TraceId(), "")
 		recvmsg = jsonrpc.NewResultMessage(reqmsg, nil, nil)
 	}
 	if !recvmsg.IsResultOrError() {
@@ -115,9 +118,9 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 
 	notifymsg.Log().Infof("from ip %s", remotePeer.Addr)
 	router := rpcrouter.RouterFromContext(context)
-	msgvec := rpcrouter.MsgVec{Msg: notifymsg}
 
-	_, err = router.CallOrNotify(msgvec, req.Broadcast)
+	_, err = router.CallOrNotify(notifymsg,
+		rpcrouter.WithBroadcast(req.Broadcast))
 
 	if err != nil {
 		return nil, err

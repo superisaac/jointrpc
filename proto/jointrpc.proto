@@ -73,6 +73,7 @@ message JSONRPCCallRequest {
   ClientAuth auth = 1;
   JSONRPCEnvolope envolope = 2;
   bool  broadcast = 3;
+  int32   timeout = 4;     // the seconds from expire this rpc
 }
 
 

@@ -10,11 +10,9 @@ import (
 	"time"
 )
 
-// 5 seconds
 const (
-	DefaultRequestTimeout time.Duration = 1000000 * 5
-
-	//IntentLocal string = "local"
+	// 5 seconds
+	DefaultRequestTimeout time.Duration = time.Second * 5
 )
 
 var (
@@ -84,8 +82,9 @@ type MethodInfoMap map[string](interface{})
 
 // Channel commands
 type CmdMsg struct {
-	MsgVec    MsgVec
-	Broadcast bool
+	MsgVec MsgVec
+	//Broadcast bool
+	Timeout time.Duration
 }
 
 // type CmdJoin struct {

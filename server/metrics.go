@@ -61,10 +61,8 @@ func (self *MetricsCollector) Collect() ([]string, error) {
 	msgId := uuid.New().String()
 	emptyArr := make([]interface{}, 0)
 	reqmsg := jsonrpc.NewRequestMessage(msgId, "metrics.collect", emptyArr, nil)
-	msgvec := rpcrouter.MsgVec{Msg: reqmsg}
-
 	router := rpcrouter.RouterFromContext(self.rootCtx)
-	resmsg, err := router.CallOrNotify(msgvec, true)
+	resmsg, err := router.CallOrNotify(reqmsg, rpcrouter.WithBroadcast(true))
 	if err != nil {
 		return nil, nil
 	}

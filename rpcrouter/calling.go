@@ -5,10 +5,29 @@ import (
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
+	"time"
 )
 
-func (self *Router) SingleCall(msgvec MsgVec) (jsonrpc.IMessage, error) {
-	msg := msgvec.Msg
+type CallOption struct {
+	broadcast bool
+	timeout   time.Duration
+}
+
+type CallOptionFunc func(opt *CallOption)
+
+func WithBroadcast(b bool) CallOptionFunc {
+	return func(opt *CallOption) {
+		opt.broadcast = b
+	}
+}
+
+func WithTimeout(timeout time.Duration) CallOptionFunc {
+	return func(opt *CallOption) {
+		opt.timeout = timeout
+	}
+}
+
+func (self *Router) SingleCall(msg jsonrpc.IMessage, callOption *CallOption) (jsonrpc.IMessage, error) {
 	if msg.IsRequest() {
 		conn := self.Join(false)
 		defer self.Leave(conn)
@@ -16,7 +35,10 @@ func (self *Router) SingleCall(msgvec MsgVec) (jsonrpc.IMessage, error) {
 		self.ChMsg <- CmdMsg{
 			MsgVec: MsgVec{
 				Msg:        msg,
-				FromConnId: conn.ConnId}}
+				FromConnId: conn.ConnId,
+			},
+			Timeout: callOption.timeout,
+		}
 		resvec := <-conn.RecvChannel
 		misc.AssertEqual(resvec.Msg.TraceId(), msg.TraceId(), "")
 		return resvec.Msg, nil
@@ -25,6 +47,7 @@ func (self *Router) SingleCall(msgvec MsgVec) (jsonrpc.IMessage, error) {
 			MsgVec: MsgVec{
 				Msg:        msg,
 				FromConnId: ZeroCID},
+			Timeout: callOption.timeout,
 		}
 		return nil, nil
 	} else {
@@ -32,8 +55,7 @@ func (self *Router) SingleCall(msgvec MsgVec) (jsonrpc.IMessage, error) {
 	}
 }
 
-func (self *Router) GatherCall(msgvec MsgVec, limit int) (resmsg jsonrpc.IMessage, err error) {
-	msg := msgvec.Msg
+func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int, callOption *CallOption) (resmsg jsonrpc.IMessage, err error) {
 	if msg.IsRequest() {
 		conn := self.Join(false)
 		defer self.Leave(conn)
@@ -52,6 +74,7 @@ func (self *Router) GatherCall(msgvec MsgVec, limit int) (resmsg jsonrpc.IMessag
 					Msg:          newmsg,
 					FromConnId:   conn.ConnId,
 					TargetConnId: servoId},
+				Timeout: callOption.timeout,
 			}
 		}
 		log.Infof("send request %s to %d handlers", reqmsg.Method, len(servoIds))
@@ -78,6 +101,7 @@ func (self *Router) GatherCall(msgvec MsgVec, limit int) (resmsg jsonrpc.IMessag
 					Msg:          notifymsg,
 					FromConnId:   conn.ConnId,
 					TargetConnId: servoId},
+				Timeout: callOption.timeout,
 			}
 		}
 		log.Infof("send notify %s to %d handlers", notifymsg.Method, len(servoIds))
@@ -87,10 +111,14 @@ func (self *Router) GatherCall(msgvec MsgVec, limit int) (resmsg jsonrpc.IMessag
 	}
 }
 
-func (self *Router) CallOrNotify(msgvec MsgVec, broadcast bool) (jsonrpc.IMessage, error) {
-	if broadcast {
-		return self.GatherCall(msgvec, 100)
+func (self *Router) CallOrNotify(msg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
+	callOption := &CallOption{timeout: DefaultRequestTimeout}
+	for _, optfunc := range opts {
+		optfunc(callOption)
+	}
+	if callOption.broadcast {
+		return self.GatherCall(msg, 100, callOption)
 	} else {
-		return self.SingleCall(msgvec)
+		return self.SingleCall(msg, callOption)
 	}
 }

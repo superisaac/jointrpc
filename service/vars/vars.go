@@ -43,8 +43,9 @@ func (self *VarsService) BroadcastVars() error {
 	notify := jsonrpc.NewNotifyMessage("vars.change", []interface{}{self.vars}, nil)
 	notify.SetTraceId(uuid.New().String())
 	notify.Log().Infof("broadcast vars.change")
-	msgvec := rpcrouter.MsgVec{Msg: notify}
-	_, err := self.router.CallOrNotify(msgvec, true)
+
+	_, err := self.router.CallOrNotify(notify,
+		rpcrouter.WithBroadcast(true))
 	if err != nil {
 		return err
 	}

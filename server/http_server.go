@@ -128,9 +128,8 @@ func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		msg.SetTraceId(uuid.New().String())
 	}
 
-	msgvec := rpcrouter.MsgVec{Msg: msg}
 	router := rpcrouter.RouterFromContext(self.rootCtx)
-	result, err := router.CallOrNotify(msgvec, false)
+	result, err := router.CallOrNotify(msg)
 	if err != nil {
 		jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 		return

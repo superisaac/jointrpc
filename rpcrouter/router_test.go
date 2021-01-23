@@ -55,7 +55,9 @@ func TestRouteMessage(t *testing.T) {
 	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.MustId())
-	router.RouteMessage(CmdMsg{MsgVec{Msg: msg, FromConnId: conn.ConnId}, false})
+	router.RouteMessage(CmdMsg{
+		MsgVec: MsgVec{Msg: msg, FromConnId: conn.ConnId},
+	})
 
 	rcvmsg := <-conn.RecvChannel
 	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
@@ -89,7 +91,8 @@ func TestRouteRoutine(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.MustId())
 
-	router.ChMsg <- CmdMsg{MsgVec{Msg: msg, FromConnId: cid1, TargetConnId: cid}, false}
+	router.ChMsg <- CmdMsg{
+		MsgVec: MsgVec{Msg: msg, FromConnId: cid1, TargetConnId: cid}}
 
 	rcvmsg := <-ch
 	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
@@ -106,7 +109,8 @@ func TestRouteRoutine(t *testing.T) {
 	msg2, err := jsonrpc.ParseBytes([]byte(j2))
 	assert.Nil(err)
 	assert.Equal(json.Number("100003"), msg2.MustId())
-	router.ChMsg <- CmdMsg{MsgVec{Msg: msg2, FromConnId: cid2, TargetConnId: CID(int(cid) + 100)}, false}
+	router.ChMsg <- CmdMsg{
+		MsgVec: MsgVec{Msg: msg2, FromConnId: cid2, TargetConnId: CID(int(cid) + 100)}}
 	rcvmsg2 := <-conn2.RecvChannel
 	assert.Equal(msg2.MustId(), rcvmsg2.Msg.MustId())
 	assert.True(rcvmsg2.Msg.IsError())
