@@ -28,15 +28,17 @@ const ZeroCID = CID(0)
 type MsgVec struct {
 	Msg          jsonrpc.IMessage
 	FromConnId   CID
-	TargetConnId CID
+	ToConnId CID
 }
 type MsgChannel chan MsgVec
 
 // Pending Struct
 type PendingT struct {
-	OrigMsgVec MsgVec
-	Expire     time.Time
+	//OrigMsgVec MsgVec
+	ReqMsg     *jsonrpc.RequestMessage
+	FromConnId CID
 	ToConnId   CID
+	Expire     time.Time
 }
 
 type MethodInfo struct {
@@ -83,7 +85,6 @@ type MethodInfoMap map[string](interface{})
 // Channel commands
 type CmdMsg struct {
 	MsgVec MsgVec
-	//Broadcast bool
 	Timeout time.Duration
 }
 

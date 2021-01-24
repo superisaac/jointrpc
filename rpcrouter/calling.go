@@ -73,7 +73,7 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int, callOption *Call
 				MsgVec: MsgVec{
 					Msg:          newmsg,
 					FromConnId:   conn.ConnId,
-					TargetConnId: servoId},
+					ToConnId:     servoId},
 				Timeout: callOption.timeout,
 			}
 		}
@@ -100,7 +100,7 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int, callOption *Call
 				MsgVec: MsgVec{
 					Msg:          notifymsg,
 					FromConnId:   conn.ConnId,
-					TargetConnId: servoId},
+					ToConnId:     servoId},
 				Timeout: callOption.timeout,
 			}
 		}
