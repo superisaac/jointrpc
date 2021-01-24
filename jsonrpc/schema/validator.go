@@ -18,7 +18,7 @@ func (self ErrorPos) Error() string {
 }
 
 func (self ErrorPos) ToMessage(reqmsg jsonrpc.IMessage) *jsonrpc.ErrorMessage {
-	err := &jsonrpc.RPCError{10401, self.Error(), false}
+	err := &jsonrpc.RPCError{10901, self.Error(), false}
 	return err.ToMessage(reqmsg)
 }
 

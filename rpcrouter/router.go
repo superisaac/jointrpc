@@ -64,7 +64,7 @@ func (self *Router) Init(name string) *Router {
 }
 
 func (self *Router) setupChannels() {
-	self.ChMsg = make(chan CmdMsg, 1000)
+	self.chMsg = make(chan CmdMsg, 1000)
 	//self.ChLeave = make(chan CmdLeave, 100)
 	self.ChServe = make(chan CmdServe, 1000)
 	self.ChDelegate = make(chan CmdDelegate, 1000)
@@ -460,10 +460,10 @@ func (self *Router) Loop(ctx context.Context) {
 				}
 			}
 
-		case cmdMsg, ok := <-self.ChMsg:
+		case cmdMsg, ok := <-self.chMsg:
 			{
 				if !ok {
-					log.Warnf("ChMsg channel not ok")
+					log.Warnf("chMsg channel not ok")
 					return
 				}
 

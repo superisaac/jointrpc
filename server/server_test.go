@@ -90,6 +90,16 @@ func TestClientAsServe(t *testing.T) {
 	assert.Equal("trace11", res.TraceId())
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
+
+	// invalid schema tests
+	res1, err := c.CallRPC(ctx, "add2int", [](interface{}){5, "sss"}, client.WithTraceId("trace13"))
+	assert.Nil(err)
+	assert.Equal("trace13", res1.TraceId())
+	assert.True(res1.IsError())
+	errbody, ok := res1.MustError().(map[string](interface{}))
+	assert.True(ok)
+	assert.Equal(json.Number("10901"), errbody["code"])
+	assert.Equal("Validation Error: .params[1] data is not number", errbody["reason"])
 }
 
 func TestClientAuth(t *testing.T) {

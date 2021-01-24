@@ -32,23 +32,16 @@ func (self *Router) SingleCall(msg jsonrpc.IMessage, callOption *CallOption) (js
 		conn := self.Join(false)
 		defer self.Leave(conn)
 
-		self.ChMsg <- CmdMsg{
-			MsgVec: MsgVec{
-				Msg:        msg,
-				FromConnId: conn.ConnId,
-			},
-			Timeout: callOption.timeout,
+		msgvec := MsgVec{
+			Msg:        msg,
+			FromConnId: conn.ConnId,
 		}
+		self.DeliverRequest(msgvec, callOption.timeout)
 		resvec := <-conn.RecvChannel
 		misc.AssertEqual(resvec.Msg.TraceId(), msg.TraceId(), "")
 		return resvec.Msg, nil
 	} else if msg.IsNotify() {
-		self.ChMsg <- CmdMsg{
-			MsgVec: MsgVec{
-				Msg:        msg,
-				FromConnId: ZeroCID},
-			Timeout: callOption.timeout,
-		}
+		self.DeliverNotify(MsgVec{Msg: msg})
 		return nil, nil
 	} else {
 		return nil, ErrRequestNotifyRequired
@@ -69,13 +62,12 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int, callOption *Call
 		for _, servoId := range servoIds {
 			newId := uuid.New().String()
 			newmsg := reqmsg.Clone(newId)
-			self.ChMsg <- CmdMsg{
-				MsgVec: MsgVec{
-					Msg:          newmsg,
-					FromConnId:   conn.ConnId,
-					ToConnId:     servoId},
-				Timeout: callOption.timeout,
-			}
+			msgvec := MsgVec{
+				Msg:        newmsg,
+				FromConnId: conn.ConnId,
+				ToConnId:   servoId}
+
+			self.DeliverRequest(msgvec, callOption.timeout)
 		}
 		log.Infof("send request %s to %d handlers", reqmsg.Method, len(servoIds))
 		// wait for results
@@ -96,13 +88,11 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int, callOption *Call
 		servoIds := self.ListConns(notifymsg.Method, limit)
 
 		for _, servoId := range servoIds {
-			self.ChMsg <- CmdMsg{
-				MsgVec: MsgVec{
-					Msg:          notifymsg,
-					FromConnId:   conn.ConnId,
-					ToConnId:     servoId},
-				Timeout: callOption.timeout,
-			}
+			msgvec := MsgVec{
+				Msg:        notifymsg,
+				FromConnId: conn.ConnId,
+				ToConnId:   servoId}
+			self.DeliverNotify(msgvec)
 		}
 		log.Infof("send notify %s to %d handlers", notifymsg.Method, len(servoIds))
 		return nil, nil

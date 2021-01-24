@@ -140,10 +140,9 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				log.Infof("result channel closed, return")
 				return nil
 			}
-			self.router.ChMsg <- rpcrouter.CmdMsg{
-				MsgVec: rpcrouter.MsgVec{
-					Msg:        resmsg,
-					FromConnId: self.conn.ConnId}}
+			self.router.DeliverResultOrError(rpcrouter.MsgVec{
+				Msg:        resmsg,
+				FromConnId: self.conn.ConnId})
 		}
 	}
 	return nil

@@ -3,52 +3,65 @@ package rpcrouter
 import (
 	"time"
 
-	uuid "github.com/google/uuid"	
+	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	misc "github.com/superisaac/jointrpc/misc"		
+	misc "github.com/superisaac/jointrpc/misc"
 )
 
 func (self *Router) DeliverMessage(cmdMsg CmdMsg) *ConnT {
+	msgvec := cmdMsg.MsgVec
 	msg := cmdMsg.MsgVec.Msg
-	msg.Log().WithFields(log.Fields{"from": cmdMsg.MsgVec.FromConnId}).Debugf("Deliver message")
+	msg.Log().WithFields(log.Fields{"from": msgvec.FromConnId}).Debugf("Deliver message")
 	if msg.IsRequest() {
-		return self.deliverRequest(cmdMsg)
+		return self.DeliverRequest(msgvec, cmdMsg.Timeout)
 	} else if msg.IsNotify() {
-		return self.deliverNotify(cmdMsg)
+		return self.DeliverNotify(msgvec)
 	} else if msg.IsResultOrError() {
-		return self.deliverResultOrError(cmdMsg)
+		return self.DeliverResultOrError(msgvec)
 	}
 	return nil
 }
 
-func (self *Router) deliverNotify(cmdMsg CmdMsg) *ConnT {
-	msg := cmdMsg.MsgVec.Msg
-	toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.ToConnId)
+func (self *Router) DeliverNotify(msgvec MsgVec) *ConnT {
+	notifyMsg, ok := msgvec.Msg.(*jsonrpc.NotifyMessage)
+	misc.Assert(ok, "bad msg type other than notify")
+	toConn, found := self.SelectConn(notifyMsg.Method, msgvec.ToConnId)
 	if found {
+		if v, errmsg := toConn.ValidateMsg(notifyMsg); !v && errmsg != nil {
+			errVec := MsgVec{
+				Msg:        errmsg,
+				FromConnId: toConn.ConnId,
+			}
+			return self.SendTo(msgvec.FromConnId, errVec)
+		}
+
 		return self.SendTo(
-			toConn.ConnId, cmdMsg.MsgVec)
+			toConn.ConnId, msgvec)
 	}
 	return nil
 }
 
-func (self *Router) deliverRequest(cmdMsg CmdMsg) *ConnT {
-	msg := cmdMsg.MsgVec.Msg
-	fromConnId := cmdMsg.MsgVec.FromConnId
-	toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.ToConnId)
+func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT {
+	reqMsg, ok := msgvec.Msg.(*jsonrpc.RequestMessage)
+	misc.Assert(ok, "bad msg type other than request")
+	msgId := reqMsg.Id
+	fromConnId := msgvec.FromConnId
+	toConn, found := self.SelectConn(reqMsg.Method, msgvec.ToConnId)
 	if found {
-		timeout := cmdMsg.Timeout
+		if v, errmsg := toConn.ValidateMsg(reqMsg); !v && errmsg != nil {
+
+			errVec := MsgVec{
+				Msg:        errmsg,
+				FromConnId: toConn.ConnId,
+			}
+			return self.SendTo(fromConnId, errVec)
+		}
 		if timeout <= 0 {
 			timeout = DefaultRequestTimeout
 		}
-
 		//fmt.Printf("timeout %d\n", timeout)
 		expireTime := time.Now().Add(timeout)
-		reqMsg, ok := msg.(*jsonrpc.RequestMessage)
-		misc.Assert(ok, "bad msg type other than request")
-
-		msgId := reqMsg.Id
-
 		func() {
 			// update pending Request
 			self.lock("deliverRequest")
@@ -61,8 +74,8 @@ func (self *Router) deliverRequest(cmdMsg CmdMsg) *ConnT {
 			}
 			self.pendingRequests[msgId] = PendingT{
 				ReqMsg:     reqMsg,
-				FromConnId: cmdMsg.MsgVec.FromConnId,
-				ToConnId:   toConn.ConnId,			
+				FromConnId: msgvec.FromConnId,
+				ToConnId:   toConn.ConnId,
 				Expire:     expireTime,
 			}
 		}()
@@ -72,26 +85,26 @@ func (self *Router) deliverRequest(cmdMsg CmdMsg) *ConnT {
 			//time.Sleep(int64(timeout.Seconds() + 1) * time.Second)
 			self.TryClearPendingRequest(msgId)
 		}()
-		targetVec := cmdMsg.MsgVec
+		targetVec := msgvec
 		targetVec.Msg = reqMsg
 		return self.SendTo(toConn.ConnId, targetVec)
 	} else {
-		errMsg := jsonrpc.RPCErrorMessage(msg, 404, "method not found", false)
-		errMsg.SetTraceId(msg.TraceId())
+		errMsg := jsonrpc.RPCErrorMessage(reqMsg, 404, "method not found", false)
+		errMsg.SetTraceId(reqMsg.TraceId())
 		errMsgVec := MsgVec{Msg: errMsg}
 		return self.SendTo(fromConnId, errMsgVec)
 	}
 }
 
-func (self *Router) deliverResultOrError(cmdMsg CmdMsg) *ConnT {
-	msg := cmdMsg.MsgVec.Msg
+func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
+	msg := msgvec.Msg
 	//if msgId, ok := msg.MustId().(string); ok {
 	msgId := msg.MustId()
 	if reqt, ok := self.pendingRequests[msgId]; ok {
 		self.DeletePending(msgId)
-		
-		if cmdMsg.MsgVec.FromConnId != reqt.ToConnId {
-			msg.Log().Warnf("msg conn %d not from the delivered conn %d", cmdMsg.MsgVec.FromConnId, reqt.ToConnId)
+
+		if msgvec.FromConnId != reqt.ToConnId {
+			msg.Log().Warnf("msg conn %d not from the delivered conn %d", msgvec.FromConnId, reqt.ToConnId)
 		}
 		origReq := reqt.ReqMsg
 		if msg.TraceId() != origReq.TraceId() {
@@ -99,12 +112,12 @@ func (self *Router) deliverResultOrError(cmdMsg CmdMsg) *ConnT {
 		}
 		if resMsg, ok := msg.(*jsonrpc.ResultMessage); ok {
 			newRes := jsonrpc.NewResultMessage(origReq, resMsg.Result, nil)
-			newVec := cmdMsg.MsgVec
+			newVec := msgvec
 			newVec.Msg = newRes
 			return self.SendTo(reqt.FromConnId, newVec)
 		} else if errMsg, ok := msg.(*jsonrpc.ErrorMessage); ok {
 			newErr := jsonrpc.NewErrorMessage(origReq, errMsg.Error, nil)
-			newVec := cmdMsg.MsgVec
+			newVec := msgvec
 			newVec.Msg = newErr
 			return self.SendTo(reqt.FromConnId, newVec)
 		} else {

@@ -26,9 +26,9 @@ const ZeroCID = CID(0)
 
 // Commands
 type MsgVec struct {
-	Msg          jsonrpc.IMessage
-	FromConnId   CID
-	ToConnId CID
+	Msg        jsonrpc.IMessage
+	FromConnId CID
+	ToConnId   CID
 }
 type MsgChannel chan MsgVec
 
@@ -84,7 +84,7 @@ type MethodInfoMap map[string](interface{})
 
 // Channel commands
 type CmdMsg struct {
-	MsgVec MsgVec
+	MsgVec  MsgVec
 	Timeout time.Duration
 }
 
@@ -122,7 +122,7 @@ type Router struct {
 	pendingRequests map[interface{}]PendingT
 
 	// channels
-	ChMsg      chan CmdMsg
+	chMsg      chan CmdMsg
 	ChServe    chan CmdServe
 	ChDelegate chan CmdDelegate
 

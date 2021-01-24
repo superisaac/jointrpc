@@ -123,12 +123,11 @@ func (self *NeighborService) Start(rootCtx context.Context) error {
 				// TODO: log
 				return nil
 			}
-			self.router.ChMsg <- rpcrouter.CmdMsg{
-				MsgVec: rpcrouter.MsgVec{
+			self.router.DeliverResultOrError(
+				rpcrouter.MsgVec{
 					Msg:        resmsg,
 					FromConnId: self.conn.ConnId,
-				},
-			}
+				})
 		}
 	}
 	return nil

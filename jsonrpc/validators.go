@@ -25,7 +25,7 @@ func ValidateFloat(v interface{}, prefix string) (float64, error) {
 	f, err := n.Float64()
 	if err != nil {
 		reason := fmt.Sprintf("%s requires a float number", prefix)
-		return 0, &RPCError{10401, reason, false}
+		return 0, &RPCError{10900, reason, false}
 	}
 	return f, nil
 }

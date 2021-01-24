@@ -280,19 +280,6 @@ func sendServerEcho(connPublicId string, stream intf.JointRPC_HandleServer) {
 // Handler
 func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream intf.JointRPC_HandleServer, conn *rpcrouter.ConnT) {
 	msg := msgvec.Msg
-
-	router := rpcrouter.RouterFromContext(context)
-	if msg.IsRequestOrNotify() {
-		// validate params
-		if validated, errmsg := conn.ValidateMsg(msg); !validated && errmsg != nil {
-			msgvec := rpcrouter.MsgVec{
-				Msg:        errmsg,
-				FromConnId: conn.ConnId,
-			}
-			router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
-		}
-	}
-
 	msg.Log().Infof("message down to client")
 	env := encoding.MessageToEnvolope(msg)
 	payload := &intf.JointRPCDownPacket_Envolope{Envolope: env}
@@ -431,7 +418,7 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 			msgvec := rpcrouter.MsgVec{
 				Msg:        msg,
 				FromConnId: conn.ConnId}
-			router.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
+			router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
 			continue
 		}
 		conn.Log().Warnf("bad up packet %+v", uppac)
