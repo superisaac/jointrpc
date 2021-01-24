@@ -1,6 +1,7 @@
 package rpcrouter
 
 import (
+	//"fmt"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
@@ -31,19 +32,39 @@ func (self ConnT) PublicId() string {
 	return self.publicId
 }
 
-func (self ConnT) ValidateMsg(msg jsonrpc.IMessage) (bool, jsonrpc.IMessage) {
-	if info, ok := self.ServeMethods[msg.MustMethod()]; ok && info.Schema() != nil {
+func (self ConnT) ValidateRequestMsg(reqMsg *jsonrpc.RequestMessage) (bool, jsonrpc.IMessage) {
+	if info, ok := self.ServeMethods[reqMsg.Method]; ok && info.Schema() != nil {
 		s := info.Schema()
 		validator := schema.NewSchemaValidator()
-		errPos := validator.Validate(s, msg.Interface())
+		errPos := validator.Validate(s, reqMsg.Interface())
 		if errPos != nil {
-			if msg.IsRequest() {
-				errmsg := errPos.ToMessage(msg)
-				return false, errmsg
-			} else {
-				log.Warnf("validate error %s", errPos.Error())
-				return false, nil
-			}
+			errmsg := errPos.ToMessage(reqMsg)
+			return false, errmsg
+		}
+	}
+	return true, nil
+}
+
+func (self ConnT) ValidateNotifyMsg(notifyMsg *jsonrpc.NotifyMessage) (bool, error) {
+	if info, ok := self.ServeMethods[notifyMsg.Method]; ok && info.Schema() != nil {
+		s := info.Schema()
+		validator := schema.NewSchemaValidator()
+		errPos := validator.Validate(s, notifyMsg.Interface())
+		if errPos != nil {
+			return false, errPos
+		}
+	}
+	return true, nil
+}
+
+func (self ConnT) ValidateResultMsg(resMsg *jsonrpc.ResultMessage, reqMsg *jsonrpc.RequestMessage) (bool, jsonrpc.IMessage) {
+	if info, ok := self.ServeMethods[reqMsg.Method]; ok && info.Schema() != nil {
+		s := info.Schema()
+		validator := schema.NewSchemaValidator()
+		errPos := validator.Validate(s, resMsg.Interface())
+		if errPos != nil {
+			errmsg := errPos.ToMessage(reqMsg)
+			return false, errmsg
 		}
 	}
 	return true, nil

@@ -76,13 +76,6 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 func (self *BuiltinService) requestReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		validated, errmsg := self.conn.ValidateMsg(msg)
-		if !validated {
-			if errmsg != nil {
-				self.ReturnResultMessage(errmsg)
-			}
-			return
-		}
 		self.HandleRequestMessage(msgvec)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)

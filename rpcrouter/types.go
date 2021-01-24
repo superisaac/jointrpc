@@ -45,7 +45,7 @@ type MethodInfo struct {
 	Name       string
 	Help       string
 	SchemaJson string
-	schemaObj  schema.Schema
+	schemaObj  *schema.MethodSchema
 }
 
 // tube state

@@ -373,6 +373,13 @@ func (self *Router) GetConnByPublicId(publicId string) (*ConnT, bool) {
 	return conn, found
 }
 
+func (self *Router) GetConn(connId CID) (*ConnT, bool) {
+	self.routerLock.RLock()
+	defer self.routerLock.RUnlock()
+	conn, found := self.connMap[connId]
+	return conn, found
+}
+
 func (self *Router) TryClearPendingRequest(msgId interface{}) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()

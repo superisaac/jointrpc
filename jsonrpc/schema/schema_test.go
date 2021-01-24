@@ -299,7 +299,7 @@ func TestMethodValidator(t *testing.T) {
     "requires": ["aaa"]
   }
 ],
-"result": {"type": "string"}
+"returns": {"type": "string"}
 }`)
 	builder = NewSchemaBuilder()
 	s, err := builder.BuildBytes(s1)

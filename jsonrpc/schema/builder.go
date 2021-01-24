@@ -175,7 +175,7 @@ func (self *SchemaBuilder) buildMethodSchema(node map[string](interface{})) (*Me
 		return nil, NewBuildError("params is not a list of objects")
 	}
 
-	if resultNode, ok := convertAttrMap(node, "result", true); ok {
+	if resultNode, ok := convertAttrMap(node, "returns", true); ok {
 		if _, ok := resultNode["type"]; !ok {
 			resultNode["type"] = "any"
 		}

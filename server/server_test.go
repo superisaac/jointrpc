@@ -46,9 +46,7 @@ const addSchema = `
       "type": "number"
     }
   ],
-  "returns": {
-    "type": "number"
-  }
+  "returns": "number"
 }
 `
 
@@ -58,6 +56,10 @@ func StartTestServe(rootCtx context.Context, serverUrl string, whoami string) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
 		b := jsonrpc.MustInt(params[1], "params[1]")
 		return a + b, nil
+	}, handler.WithSchema(addSchema))
+
+	c.On("fakeadd2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+		return "not a number", nil
 	}, handler.WithSchema(addSchema))
 
 	c.On("whoami", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
@@ -100,6 +102,16 @@ func TestClientAsServe(t *testing.T) {
 	assert.True(ok)
 	assert.Equal(json.Number("10901"), errbody["code"])
 	assert.Equal("Validation Error: .params[1] data is not number", errbody["reason"])
+
+	// invalid schema tests
+	res2, err := c.CallRPC(ctx, "fakeadd2int", [](interface{}){5, 8}, client.WithTraceId("trace73"))
+	assert.Nil(err)
+	assert.Equal("trace73", res2.TraceId())
+	assert.True(res2.IsError())
+	errbody2, ok := res2.MustError().(map[string](interface{}))
+	assert.True(ok)
+	assert.Equal(json.Number("10901"), errbody2["code"])
+	assert.Equal("Validation Error: .result data is not number", errbody2["reason"])
 }
 
 func TestClientAuth(t *testing.T) {
