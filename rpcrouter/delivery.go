@@ -46,13 +46,15 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 	fromConnId := msgvec.FromConnId
 	toConn, found := self.SelectConn(reqMsg.Method, msgvec.ToConnId)
 	if found {
-		if v, errmsg := toConn.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
+		if self.ValidateSchema {
+			if v, errmsg := toConn.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
 
-			errVec := MsgVec{
-				Msg:        errmsg,
-				FromConnId: toConn.ConnId,
+				errVec := MsgVec{
+					Msg:        errmsg,
+					FromConnId: toConn.ConnId,
+				}
+				return self.SendTo(fromConnId, errVec)
 			}
-			return self.SendTo(fromConnId, errVec)
 		}
 		if timeout <= 0 {
 			timeout = DefaultRequestTimeout
@@ -108,15 +110,16 @@ func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
 			msg.Log().Warnf("result trace is different from request %s", origReq.TraceId())
 		}
 		if resMsg, ok := msg.(*jsonrpc.ResultMessage); ok {
-			// validate result message
-			if vConn, ok := self.GetConn(reqt.ToConnId); ok {
-				//fmt.Printf("got vConn %+v\n", vConn)
-				if v, errmsg := vConn.ValidateResultMsg(resMsg, origReq); !v && errmsg != nil {
-					errVec := MsgVec{
-						Msg:        errmsg,
-						FromConnId: msgvec.FromConnId,
+			if self.ValidateSchema {
+				// validate result message
+				if vConn, ok := self.GetConn(reqt.ToConnId); ok {
+					if v, errmsg := vConn.ValidateResultMsg(resMsg, origReq); !v && errmsg != nil {
+						errVec := MsgVec{
+							Msg:        errmsg,
+							FromConnId: msgvec.FromConnId,
+						}
+						return self.SendTo(reqt.FromConnId, errVec)
 					}
-					return self.SendTo(reqt.FromConnId, errVec)
 				}
 			}
 

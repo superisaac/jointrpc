@@ -46,6 +46,14 @@ func (self *Config) ParseDatadir() error {
 	return self.validateValues()
 }
 
+func (self Config) ValidateSchema() bool {
+	if self.pValidateSchema == nil {
+		return true
+	} else {
+		return *self.pValidateSchema
+	}
+}
+
 func (self *Config) validateValues() error {
 	if self.Version == "" {
 		self.Version = "1.0"
@@ -54,6 +62,12 @@ func (self *Config) validateValues() error {
 	if self.Server.Bind == "" {
 		self.Server.Bind = "127.0.0.1:50055"
 	}
+
+	if self.pValidateSchema == nil {
+		v := true
+		self.pValidateSchema = &v
+	}
+
 
 	// tls
 	if self.Server.TLS.CertFile != "" {

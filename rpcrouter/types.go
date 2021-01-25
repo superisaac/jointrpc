@@ -127,4 +127,7 @@ type Router struct {
 	ChDelegate chan CmdDelegate
 
 	methodsSig string
+
+	// flags
+	ValidateSchema bool
 }

@@ -50,4 +50,5 @@ type Config struct {
 	Authorizations    []BasicAuth        `yaml:"auth,omitempty"`
 	Metrics MetricsConfig `yaml:"metrics"`
 	Cluster ClusterConfig `yaml:"cluster,omitempty"`
+	pValidateSchema *bool   `yaml:"validate_schema,omitempty"`
 }

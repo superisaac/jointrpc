@@ -39,12 +39,13 @@ func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOp
 		rootCtx = ServerContext(rootCtx, nil, nil)
 	}
 
+	cfg := datadir.ConfigFromContext(rootCtx)
+
 	router := rpcrouter.RouterFromContext(rootCtx)
+	router.ValidateSchema = cfg.ValidateSchema()
 	go router.Start(rootCtx)
 
 	//go handler.StartBuiltinHandlerManager(rootCtx)
-
-	cfg := datadir.ConfigFromContext(rootCtx)
 
 	opts = append(opts,
 		grpc.UnaryInterceptor(

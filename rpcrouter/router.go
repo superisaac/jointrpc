@@ -60,6 +60,8 @@ func (self *Router) Init(name string) *Router {
 	self.pendingRequests = make(map[interface{}]PendingT)
 	self.methodsSig = ""
 	self.setupChannels()
+
+	self.ValidateSchema = true
 	return self
 }
 
