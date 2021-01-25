@@ -6,7 +6,7 @@ import (
 	"errors"
 	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-	datadir "github.com/superisaac/jointrpc/datadir"
+	//datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 	"net"
@@ -81,7 +81,8 @@ func NewJSONRPCHTTPServer(rootCtx context.Context) *JSONRPCHTTPServer {
 
 func (self *JSONRPCHTTPServer) Authorize(r *http.Request) bool {
 	// basic auth
-	cfg := datadir.ConfigFromContext(self.rootCtx)
+	router := rpcrouter.RouterFromContext(self.rootCtx)
+	cfg := router.Config
 	if len(cfg.Authorizations) >= 1 {
 		if username, password, ok := r.BasicAuth(); ok {
 			for _, bauth := range cfg.Authorizations {

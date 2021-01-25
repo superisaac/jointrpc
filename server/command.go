@@ -15,14 +15,11 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-func ServerContext(rootCtx context.Context, router *rpcrouter.Router, cfg *datadir.Config) context.Context {
+func ServerContext(rootCtx context.Context, router *rpcrouter.Router) context.Context {
 	if router == nil {
 		router = rpcrouter.NewRouter("server")
 	}
-	if cfg == nil {
-		cfg = datadir.NewConfig()
-	}
-	aCtx := misc.NewBinder(rootCtx).Bind("router", router).Bind("config", cfg).Context()
+	aCtx := misc.NewBinder(rootCtx).Bind("router", router).Context()
 	return aCtx
 }
 
@@ -36,14 +33,13 @@ func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOp
 
 	if r := rootCtx.Value("router"); r == nil {
 		// no router attached, spawn a context with default router and cfg
-		rootCtx = ServerContext(rootCtx, nil, nil)
+		rootCtx = ServerContext(rootCtx, nil)
 	}
 
-	cfg := datadir.ConfigFromContext(rootCtx)
-
 	router := rpcrouter.RouterFromContext(rootCtx)
-	router.ValidateSchema = cfg.ValidateSchema()
 	go router.Start(rootCtx)
+
+	cfg := router.Config
 
 	//go handler.StartBuiltinHandlerManager(rootCtx)
 

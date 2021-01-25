@@ -6,7 +6,7 @@ import (
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
-	datadir "github.com/superisaac/jointrpc/datadir"
+	//datadir "github.com/superisaac/jointrpc/datadir"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	"strings"
@@ -31,7 +31,7 @@ func NewNeighborService() *NeighborService {
 
 func (self *NeighborService) Init(rootCtx context.Context) {
 	router := rpcrouter.RouterFromContext(rootCtx)
-	cfg := datadir.ConfigFromContext(rootCtx)
+	cfg := router.Config
 
 	var entries []client.ServerEntry
 	for _, peer := range cfg.Cluster.NeighborPeers {
@@ -53,8 +53,8 @@ func (self NeighborService) Name() string {
 }
 
 func (self NeighborService) CanRun(rootCtx context.Context) bool {
-	cfg := datadir.ConfigFromContext(rootCtx)
-	return len(cfg.Cluster.NeighborPeers) > 0
+	router := rpcrouter.RouterFromContext(rootCtx)
+	return len(router.Config.Cluster.NeighborPeers) > 0
 }
 
 func (self *NeighborService) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {

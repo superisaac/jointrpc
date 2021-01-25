@@ -28,9 +28,11 @@ func (self *Router) DeliverNotify(msgvec MsgVec) *ConnT {
 	misc.Assert(ok, "bad msg type other than notify")
 	toConn, found := self.SelectConn(notifyMsg.Method, msgvec.ToConnId)
 	if found {
-		if v, err := toConn.ValidateNotifyMsg(notifyMsg); !v && err != nil {
-			notifyMsg.Log().Errorf("notify not validated, %s", err.Error())
-			return nil
+		if self.Config.ValidateSchema() {
+			if v, err := toConn.ValidateNotifyMsg(notifyMsg); !v && err != nil {
+				notifyMsg.Log().Errorf("notify not validated, %s", err.Error())
+				return nil
+			}
 		}
 
 		return self.SendTo(
@@ -46,7 +48,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 	fromConnId := msgvec.FromConnId
 	toConn, found := self.SelectConn(reqMsg.Method, msgvec.ToConnId)
 	if found {
-		if self.ValidateSchema {
+		if self.Config.ValidateSchema() {
 			if v, errmsg := toConn.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
 
 				errVec := MsgVec{
@@ -110,7 +112,7 @@ func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
 			msg.Log().Warnf("result trace is different from request %s", origReq.TraceId())
 		}
 		if resMsg, ok := msg.(*jsonrpc.ResultMessage); ok {
-			if self.ValidateSchema {
+			if self.Config.ValidateSchema() {
 				// validate result message
 				if vConn, ok := self.GetConn(reqt.ToConnId); ok {
 					if v, errmsg := vConn.ValidateResultMsg(resMsg, origReq); !v && errmsg != nil {

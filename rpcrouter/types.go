@@ -3,6 +3,7 @@ package rpcrouter
 import (
 	//"github.com/gorilla/websocket"
 	"errors"
+	datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"net"
@@ -129,5 +130,6 @@ type Router struct {
 	methodsSig string
 
 	// flags
-	ValidateSchema bool
+	//ValidateSchema bool
+	Config *datadir.Config
 }

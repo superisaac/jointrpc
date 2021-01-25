@@ -5,8 +5,8 @@ import (
 	"context"
 	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
+	"github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	//misc "github.com/superisaac/jointrpc/misc"
 	"math/rand"
 	"sort"
 	"strings"
@@ -61,7 +61,7 @@ func (self *Router) Init(name string) *Router {
 	self.methodsSig = ""
 	self.setupChannels()
 
-	self.ValidateSchema = true
+	self.Config = datadir.NewConfig()
 	return self
 }
 
@@ -422,6 +422,7 @@ func (self *Router) DeletePending(msgId interface{}) {
 func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
+
 	ct, ok := self.connMap[connId]
 	if ok {
 		ct.RecvChannel <- msgvec

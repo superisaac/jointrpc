@@ -2,7 +2,6 @@ package datadir
 
 import (
 	"errors"
-	"context"
 	"path/filepath"
 	log "github.com/sirupsen/logrus"
 	logsyslog "github.com/sirupsen/logrus/hooks/syslog"
@@ -14,16 +13,6 @@ import (
 
 func NewConfig() *Config {
 	return new(Config)
-}
-
-func ConfigFromContext(ctx context.Context) *Config {
-	if v := ctx.Value("config"); v != nil {
-		if cfg, ok := v.(*Config); ok {
-			return cfg
-		}
-		panic("context value config is not a config instance")
-	}
-	panic("context does not have config")
 }
 
 func (self *Config) ParseDatadir() error {

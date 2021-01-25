@@ -6,10 +6,11 @@ import (
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	client "github.com/superisaac/jointrpc/client"
-	datadir "github.com/superisaac/jointrpc/datadir"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	"github.com/superisaac/jointrpc/client"
+	"github.com/superisaac/jointrpc/datadir"
+	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jointrpc/rpcrouter/handler"
 	"io/ioutil"
 
 	"os"
@@ -122,9 +123,9 @@ func TestClientAuth(t *testing.T) {
 		cancel()
 	}()
 
-	cfg := datadir.NewConfig()
-	cfg.Authorizations = []datadir.BasicAuth{{"abc", "1111"}}
-	ctx := ServerContext(ctx1, nil, cfg)
+	ctx := ServerContext(ctx1, nil)
+	router := rpcrouter.RouterFromContext(ctx)
+	router.Config.Authorizations = []datadir.BasicAuth{{"abc", "1111"}}
 
 	go StartGRPCServer(ctx, "127.0.0.1:10092")
 	time.Sleep(100 * time.Millisecond)
@@ -178,7 +179,7 @@ func TestHTTPClient(t *testing.T) {
 		cancel()
 	}()
 
-	ctx := ServerContext(ctx1, nil, nil)
+	ctx := ServerContext(ctx1, nil)
 
 	go StartGRPCServer(ctx, "127.0.0.1:10072")
 	time.Sleep(100 * time.Millisecond)

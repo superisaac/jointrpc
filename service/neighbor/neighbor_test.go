@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	client "github.com/superisaac/jointrpc/client"
-	datadir "github.com/superisaac/jointrpc/datadir"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
-	server "github.com/superisaac/jointrpc/server"
-	service "github.com/superisaac/jointrpc/service"
+	"github.com/superisaac/jointrpc/client"
+	"github.com/superisaac/jointrpc/datadir"
+	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jointrpc/rpcrouter/handler"
+	"github.com/superisaac/jointrpc/server"
+	"github.com/superisaac/jointrpc/service"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -50,9 +51,10 @@ func TestNeighborRun(t *testing.T) {
 	go server.StartGRPCServer(rootCtx, "localhost:10010")
 
 	// start server2
-	cfg := datadir.NewConfig()
-	cfg.Cluster.NeighborPeers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
-	rootCtx1 := server.ServerContext(rootCtx, nil, cfg)
+
+	rootCtx1 := server.ServerContext(rootCtx, nil)
+	router := rpcrouter.RouterFromContext(rootCtx1)
+	router.Config.Cluster.NeighborPeers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
 	go server.StartGRPCServer(rootCtx1, "localhost:10011")
 	time.Sleep(100 * time.Millisecond)
 

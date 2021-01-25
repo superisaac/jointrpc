@@ -14,7 +14,7 @@ import (
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 	"strings"
 	//"net"
-	datadir "github.com/superisaac/jointrpc/datadir"
+	//datadir "github.com/superisaac/jointrpc/datadir"
 	http "net/http"
 )
 
@@ -35,9 +35,9 @@ func (self *MetricsCollector) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cfg := datadir.ConfigFromContext(self.rootCtx)
+	router := rpcrouter.RouterFromContext(self.rootCtx)
 
-	if cfg.Metrics.BearerToken != "" && r.Header.Get("Authorization") != fmt.Sprintf("Bearer %s", cfg.Metrics.BearerToken) {
+	if router.Config.Metrics.BearerToken != "" && r.Header.Get("Authorization") != fmt.Sprintf("Bearer %s", router.Config.Metrics.BearerToken) {
 		w.WriteHeader(401)
 		w.Write([]byte("Authorization failed"))
 		return

@@ -22,7 +22,7 @@ import (
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	//misc "github.com/superisaac/jointrpc/misc"
-	datadir "github.com/superisaac/jointrpc/datadir"
+	//datadir "github.com/superisaac/jointrpc/datadir"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	peer "google.golang.org/grpc/peer"
@@ -33,7 +33,8 @@ type JointRPC struct {
 }
 
 func (self JointRPC) Authorize(context context.Context, auth *intf.ClientAuth) *intf.Status {
-	cfg := datadir.ConfigFromContext(context)
+	router := rpcrouter.RouterFromContext(context)
+	cfg := router.Config
 	if len(cfg.Authorizations) == 0 {
 		return nil
 	}

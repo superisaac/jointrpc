@@ -9,15 +9,15 @@ import (
 	"os"
 	//"fmt"
 	//grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	datadir "github.com/superisaac/jointrpc/datadir"
+	"github.com/superisaac/jointrpc/datadir"
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	server "github.com/superisaac/jointrpc/server"
+	"github.com/superisaac/jointrpc/server"
 	service "github.com/superisaac/jointrpc/service"
-	builtin "github.com/superisaac/jointrpc/service/builtin"
-	neighbor "github.com/superisaac/jointrpc/service/neighbor"
-	vars "github.com/superisaac/jointrpc/service/vars"
+	"github.com/superisaac/jointrpc/service/builtin"
+	"github.com/superisaac/jointrpc/service/neighbor"
+	"github.com/superisaac/jointrpc/service/vars"
 	//misc "github.com/superisaac/jointrpc/misc"
-	//"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jointrpc/rpcrouter"
 	//handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	grpc "google.golang.org/grpc"
 	credentials "google.golang.org/grpc/credentials"
@@ -36,32 +36,32 @@ func CommandStartServer() {
 		datadir.SetDatadir(*pDatadir)
 	}
 
-	cfg := datadir.NewConfig()
-	cfg.ParseDatadir()
-	cfg.SetupLogger()
+	router := rpcrouter.NewRouter("server")
+	router.Config.ParseDatadir()
+	router.Config.SetupLogger()
 
 	var opts []grpc.ServerOption
 	var httpOpts []server.HTTPOptionFunc
 	// server bind
 	bind := *pBind
 	if bind == "" {
-		bind = cfg.Server.Bind
+		bind = router.Config.Server.Bind
 	}
 
 	httpBind := *pHttpBind
 	if httpBind == "" {
-		httpBind = cfg.Server.HttpBind
+		httpBind = router.Config.Server.HttpBind
 	}
 
 	// tls settings
 	certFile := *pCertFile
 	if certFile == "" {
-		certFile = cfg.Server.TLS.CertFile
+		certFile = router.Config.Server.TLS.CertFile
 	}
 
 	keyFile := *pKeyFile
 	if keyFile == "" {
-		keyFile = cfg.Server.TLS.KeyFile
+		keyFile = router.Config.Server.TLS.KeyFile
 	}
 
 	if certFile != "" && keyFile != "" {
@@ -73,7 +73,7 @@ func CommandStartServer() {
 		httpOpts = append(httpOpts, server.WithTLS(certFile, keyFile))
 	}
 
-	rootCtx := server.ServerContext(context.Background(), nil, nil)
+	rootCtx := server.ServerContext(context.Background(), router)
 
 	srvs := []service.IService{
 		builtin.NewBuiltinService(),
