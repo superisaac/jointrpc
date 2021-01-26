@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net"
 	"strings"
 	"time"
 	//"time"
@@ -32,14 +33,14 @@ type JointRPC struct {
 	intf.UnimplementedJointRPCServer
 }
 
-func (self JointRPC) Authorize(context context.Context, auth *intf.ClientAuth) *intf.Status {
+func (self JointRPC) Authorize(context context.Context, auth *intf.ClientAuth, ipAddr net.Addr) *intf.Status {
 	router := rpcrouter.RouterFromContext(context)
 	cfg := router.Config
 	if len(cfg.Authorizations) == 0 {
 		return nil
 	}
 	for _, bauth := range cfg.Authorizations {
-		if auth.Username == bauth.Username && auth.Password == bauth.Password {
+		if bauth.Authorize(auth.Username, auth.Password, ipAddr.String()) {
 			return nil
 		}
 	}
@@ -53,7 +54,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 		return nil, errors.New("cannot get peer info from Call()")
 	}
 
-	if status := self.Authorize(context, req.Auth); status != nil {
+	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.JSONRPCCallResult{Status: status}, nil
 	}
@@ -100,7 +101,7 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 		return nil, errors.New("cannot get peer info from Notify()")
 	}
 
-	if status := self.Authorize(context, req.Auth); status != nil {
+	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.JSONRPCNotifyResponse{Status: status}, nil
 	}
@@ -145,7 +146,7 @@ func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethods
 		return nil, errors.New("cannot get peer info from ListMethods()")
 	}
 
-	if status := self.Authorize(context, req.Auth); status != nil {
+	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.ListMethodsResponse{Status: status}, nil
 	}
@@ -164,7 +165,7 @@ func (self *JointRPC) DeclareMethods(context context.Context, req *intf.DeclareM
 		return nil, errors.New("cannot get peer info from DeclareMethods()")
 	}
 
-	if status := self.Authorize(context, req.Auth); status != nil {
+	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.DeclareMethodsResponse{Status: status}, nil
 	}
@@ -224,7 +225,7 @@ func (self *JointRPC) DeclareDelegates(context context.Context, req *intf.Declar
 		return nil, errors.New("cannot get peer info from DeclareDelegates()")
 	}
 
-	if status := self.Authorize(context, req.Auth); status != nil {
+	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.DeclareDelegatesResponse{Status: status}, nil
 	}
@@ -253,7 +254,7 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 		return nil, errors.New("cannot get peer info from ListDelegates()")
 	}
 
-	if status := self.Authorize(context, req.Auth); status != nil {
+	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.ListDelegatesResponse{Status: status}, nil
 	}
@@ -313,7 +314,7 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_HandleServer) (*rpcrouter
 
 	auth := uppac.GetAuth()
 	if auth != nil {
-		if status := self.Authorize(stream.Context(), auth); status != nil {
+		if status := self.Authorize(stream.Context(), auth, remotePeer.Addr); status != nil {
 			logger.Warnf("client auth failed")
 
 			echo := &intf.ServerEcho{Status: status}

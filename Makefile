@@ -27,6 +27,7 @@ bin/jointrpc: ${gofiles}
 	go build -o $@ jointrpc.go
 
 test:
+	go test -v github.com/superisaac/jointrpc/datadir
 	go test -v github.com/superisaac/jointrpc/jsonrpc
 	go test -v github.com/superisaac/jointrpc/jsonrpc/schema
 	go test -v github.com/superisaac/jointrpc/rpcrouter
@@ -40,6 +41,7 @@ clean:
 	rm -rf bin/jointrpc
 
 gofmt:
+	go fmt datadir/*.go
 	go fmt misc/*.go
 	go fmt client/*.go
 	go fmt client/example/*.go

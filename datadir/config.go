@@ -2,13 +2,14 @@ package datadir
 
 import (
 	"errors"
-	"path/filepath"
 	log "github.com/sirupsen/logrus"
 	logsyslog "github.com/sirupsen/logrus/hooks/syslog"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log/syslog"
+	"net"
 	"os"
+	"path/filepath"
 )
 
 func NewConfig() *Config {
@@ -57,7 +58,6 @@ func (self *Config) validateValues() error {
 		self.pValidateSchema = &v
 	}
 
-
 	// tls
 	if self.Server.TLS.CertFile != "" {
 		certFile := filepath.Join(Datapath("tls/"), self.Server.TLS.CertFile)
@@ -74,7 +74,14 @@ func (self *Config) validateValues() error {
 		self.Server.TLS.KeyFile = keyFile
 	}
 
-	
+	// authorizations
+	for _, bauth := range self.Authorizations {
+		err := bauth.validateValues()
+		if err != nil {
+			return nil
+		}
+	}
+
 	// syslog
 	if self.Logging.Syslog.URL == "" {
 		self.Logging.Syslog.URL = "localhost:514"
@@ -134,4 +141,43 @@ func (self *Config) SetupLogger() {
 	default:
 		log.SetLevel(log.InfoLevel)
 	}
+}
+
+func (self BasicAuth) Authorize(username string, password string, ipAddr string) bool {
+	return self.checkUser(username, password) && self.checkIP(ipAddr)
+}
+
+func (self BasicAuth) checkUser(username string, password string) bool {
+	return self.Username == username && self.Password == password
+}
+
+func (self BasicAuth) checkIP(ipAddr string) bool {
+	if self.AllowedCIDR != "" {
+		ip := net.ParseIP(ipAddr)
+		if ip == nil {
+			log.Errorf("parse ip failed %s", ipAddr)
+		}
+		if self.cidrIPNet != nil {
+			return self.cidrIPNet.Contains(ip)
+		}
+
+		if self.cidrIP != nil {
+			return self.cidrIP.Equal(ip)
+		}
+		return false
+	} else {
+		return true
+	}
+}
+
+func (self *BasicAuth) validateValues() error {
+	if self.AllowedCIDR != "" {
+		cidrIP, cidrIPNet, err := net.ParseCIDR(self.AllowedCIDR)
+		if err != nil {
+			return err
+		}
+		self.cidrIP = cidrIP
+		self.cidrIPNet = cidrIPNet
+	}
+	return nil
 }

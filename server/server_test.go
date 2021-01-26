@@ -125,7 +125,7 @@ func TestClientAuth(t *testing.T) {
 
 	ctx := ServerContext(ctx1, nil)
 	router := rpcrouter.RouterFromContext(ctx)
-	router.Config.Authorizations = []datadir.BasicAuth{{"abc", "1111"}}
+	router.Config.Authorizations = []datadir.BasicAuth{{Username: "abc", Password: "1111"}}
 
 	go StartGRPCServer(ctx, "127.0.0.1:10092")
 	time.Sleep(100 * time.Millisecond)

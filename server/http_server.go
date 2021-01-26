@@ -86,7 +86,7 @@ func (self *JSONRPCHTTPServer) Authorize(r *http.Request) bool {
 	if len(cfg.Authorizations) >= 1 {
 		if username, password, ok := r.BasicAuth(); ok {
 			for _, bauth := range cfg.Authorizations {
-				if bauth.Username == username && bauth.Password == password {
+				if bauth.Authorize(username, password, r.RemoteAddr) {
 					return true
 				}
 			}
