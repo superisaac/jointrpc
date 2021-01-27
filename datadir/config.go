@@ -152,17 +152,18 @@ func (self BasicAuth) checkUser(username string, password string) bool {
 }
 
 func (self BasicAuth) checkIP(ipAddr string) bool {
-	if self.AllowedCIDR != "" {
+	if len(self.AllowedSources) > 0 {
 		ip := net.ParseIP(ipAddr)
 		if ip == nil {
 			log.Errorf("parse ip failed %s", ipAddr)
 		}
-		if self.cidrIPNet != nil {
-			return self.cidrIPNet.Contains(ip)
-		}
 
-		if self.cidrIP != nil {
-			return self.cidrIP.Equal(ip)
+		if self.allowedIPNets != nil {
+			for _, ipnet := range self.allowedIPNets {
+				if ipnet.Contains(ip) {
+					return true
+				}
+			}
 		}
 		return false
 	} else {
@@ -171,13 +172,16 @@ func (self BasicAuth) checkIP(ipAddr string) bool {
 }
 
 func (self *BasicAuth) validateValues() error {
-	if self.AllowedCIDR != "" {
-		cidrIP, cidrIPNet, err := net.ParseCIDR(self.AllowedCIDR)
-		if err != nil {
-			return err
+	if self.AllowedSources != nil {
+		allowedIPNets := make([]*net.IPNet, 0)
+		for _, cidrStr := range self.AllowedSources {
+			_, ipnet, err := net.ParseCIDR(cidrStr)
+			if err != nil {
+				return err
+			}
+			allowedIPNets = append(allowedIPNets, ipnet)
 		}
-		self.cidrIP = cidrIP
-		self.cidrIPNet = cidrIPNet
+		self.allowedIPNets = allowedIPNets
 	}
 	return nil
 }

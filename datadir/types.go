@@ -16,11 +16,10 @@ type ServerConfig struct {
 }
 
 type BasicAuth struct {
-	Username    string `yaml:"username"`
-	Password    string `yaml:"password"`
-	AllowedCIDR string `yaml:"allowedCIDR,omitempty"`
-	cidrIP      net.IP
-	cidrIPNet   *net.IPNet
+	Username       string   `yaml:"username"`
+	Password       string   `yaml:"password"`
+	AllowedSources []string `yaml:"allow,omitempty"`
+	allowedIPNets  []*net.IPNet
 }
 
 type SyslogConfig struct {
