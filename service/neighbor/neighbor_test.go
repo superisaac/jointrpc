@@ -54,7 +54,7 @@ func TestNeighborRun(t *testing.T) {
 
 	rootCtx1 := server.ServerContext(rootCtx, nil)
 	router := rpcrouter.RouterFromContext(rootCtx1)
-	router.Config.Cluster.NeighborPeers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
+	router.Config.Neighbor.Peers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
 	go server.StartGRPCServer(rootCtx1, "localhost:10011")
 	time.Sleep(100 * time.Millisecond)
 

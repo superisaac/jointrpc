@@ -34,7 +34,7 @@ func (self *NeighborService) Init(rootCtx context.Context) {
 	cfg := router.Config
 
 	var entries []client.ServerEntry
-	for _, peer := range cfg.Cluster.NeighborPeers {
+	for _, peer := range cfg.Neighbor.Peers {
 		entries = append(entries, client.ServerEntry{
 			ServerUrl: peer.ServerUrl,
 			CertFile:  peer.CertFile,
@@ -54,7 +54,7 @@ func (self NeighborService) Name() string {
 
 func (self NeighborService) CanRun(rootCtx context.Context) bool {
 	router := rpcrouter.RouterFromContext(rootCtx)
-	return len(router.Config.Cluster.NeighborPeers) > 0
+	return len(router.Config.Neighbor.Peers) > 0
 }
 
 func (self *NeighborService) connectRemote(rootCtx context.Context, entry client.ServerEntry) error {

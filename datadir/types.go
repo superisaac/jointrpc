@@ -43,18 +43,17 @@ type MetricsConfig struct {
 	BearerToken string `yaml:"bearer_token,omitempty"`
 }
 
-type ClusterConfig struct {
-	AdvertisedURL string       `yaml:"advertised_url"`
-	NeighborPeers []PeerConfig `yaml:neighbor_peers,omitempty"`
+type NeighborConfig struct {
+	Peers []PeerConfig
 }
 
 // The root config item
 type Config struct {
-	Version         string        `yaml:"version"`
-	Logging         LoggingConfig `yaml:"log,omitempty"`
-	Server          ServerConfig  `yaml:"server"`
-	Authorizations  []BasicAuth   `yaml:"auth,omitempty"`
-	Metrics         MetricsConfig `yaml:"metrics"`
-	Cluster         ClusterConfig `yaml:"cluster,omitempty"`
-	pValidateSchema *bool         `yaml:"validate_schema,omitempty"`
+	Version         string         `yaml:"version"`
+	Logging         LoggingConfig  `yaml:"log,omitempty"`
+	Server          ServerConfig   `yaml:"server"`
+	Authorizations  []BasicAuth    `yaml:"auth,omitempty"`
+	Metrics         MetricsConfig  `yaml:"metrics,omitempty"`
+	Neighbor        NeighborConfig `yaml:"neighbor,omitempty"`
+	pValidateSchema *bool          `yaml:"validate_schema,omitempty"`
 }

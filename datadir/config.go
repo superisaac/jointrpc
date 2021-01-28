@@ -94,10 +94,6 @@ func (self *Config) validateValues() error {
 		return errors.New("config, invalid syslog protocol")
 	}
 
-	// if len(self.Cluster.NeighborPeers) > 0 && self.Cluster.AdvertisedURL == "" {
-	// 	return errors.New("config, advertised url must be specified")
-	// }
-
 	return nil
 }
 
