@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	uuid "github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 	//simplejson "github.com/bitly/go-simplejson"
@@ -13,6 +12,7 @@ import (
 	encoding "github.com/superisaac/jointrpc/encoding"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 )
 
 type CallOption struct {
@@ -60,7 +60,7 @@ func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonrpc.I
 		reqmsg.SetTraceId(opt.traceId)
 	}
 	if reqmsg.TraceId() == "" {
-		reqmsg.SetTraceId(uuid.New().String())
+		reqmsg.SetTraceId(misc.NewUuid())
 	}
 
 	reqmsg.Log().Debug("request message created")
@@ -115,7 +115,7 @@ func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonrpc.I
 		reqmsg.SetTraceId(opt.traceId)
 	}
 	if reqmsg.TraceId() == "" {
-		reqmsg.SetTraceId(uuid.New().String())
+		reqmsg.SetTraceId(misc.NewUuid())
 	}
 	reqmsg.Log().Debug("request message created")
 	envolope := encoding.MessageToEnvolope(reqmsg)
@@ -164,7 +164,7 @@ func (self *RPCClient) SendHTTPNotify(rootCtx context.Context, method string, pa
 	notify := jsonrpc.NewNotifyMessage(method, params, nil)
 
 	if opt.traceId == "" {
-		opt.traceId = uuid.New().String()
+		opt.traceId = misc.NewUuid()
 	}
 
 	notify.SetTraceId(opt.traceId)
@@ -206,7 +206,7 @@ func (self *RPCClient) SendGRPCNotify(rootCtx context.Context, method string, pa
 	notify := jsonrpc.NewNotifyMessage(method, params, nil)
 
 	if opt.traceId == "" {
-		opt.traceId = uuid.New().String()
+		opt.traceId = misc.NewUuid()
 	}
 
 	notify.SetTraceId(opt.traceId)

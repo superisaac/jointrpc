@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	//datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 	"net"
 	//datadir "github.com/superisaac/jointrpc/datadir"
@@ -126,7 +126,7 @@ func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	// FIXME: sennity check against TraceId
 	msg.SetTraceId(r.Header.Get("X-Trace-Id"))
 	if msg.TraceId() == "" {
-		msg.SetTraceId(uuid.New().String())
+		msg.SetTraceId(misc.NewUuid())
 	}
 
 	router := rpcrouter.RouterFromContext(self.rootCtx)

@@ -1,11 +1,18 @@
 package misc
 
 import (
+	uuid "github.com/google/uuid"
 	"sort"
+	"strings"
 )
 
 type StringSet map[string]bool
 
+func NewUuid() string {
+	return strings.ReplaceAll(uuid.New().String(), "-", "")
+}
+
+// string unifier
 type StringUnifier struct {
 	dest       []string
 	dupChecker StringSet

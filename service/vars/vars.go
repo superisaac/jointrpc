@@ -3,10 +3,10 @@ package vars
 import (
 	"context"
 	"github.com/fsnotify/fsnotify"
-	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	yaml "gopkg.in/yaml.v2"
@@ -41,7 +41,7 @@ func (self VarsService) CanRun(rootCtx context.Context) bool {
 
 func (self *VarsService) BroadcastVars() error {
 	notify := jsonrpc.NewNotifyMessage("vars.change", []interface{}{self.vars}, nil)
-	notify.SetTraceId(uuid.New().String())
+	notify.SetTraceId(misc.NewUuid())
 	notify.Log().Infof("broadcast vars.change")
 
 	_, err := self.router.CallOrNotify(notify,

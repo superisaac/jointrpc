@@ -3,10 +3,10 @@ package rpcrouter
 import (
 	//"fmt"
 	"context"
-	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 	"math/rand"
 	"sort"
 	"strings"
@@ -500,7 +500,7 @@ func (self *Router) joinConn(conn *ConnT, genUUID bool) {
 	defer self.unlock("JoinConn")
 	self.connMap[conn.ConnId] = conn
 	if genUUID {
-		conn.publicId = uuid.New().String()
+		conn.publicId = misc.NewUuid()
 		self.publicConnMap[conn.publicId] = conn
 	}
 }

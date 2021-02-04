@@ -3,7 +3,6 @@ package rpcrouter
 import (
 	"time"
 	//"fmt"
-	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
@@ -69,7 +68,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 			defer self.unlock("deliverRequest")
 
 			if _, ok := self.pendingRequests[msgId]; ok {
-				msgId = uuid.New().String()
+				msgId = misc.NewUuid()
 				reqMsg.Log().Infof("msg id already exist, change a new one %s", msgId)
 				reqMsg = reqMsg.Clone(msgId)
 			}

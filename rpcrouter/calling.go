@@ -1,7 +1,6 @@
 package rpcrouter
 
 import (
-	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
@@ -60,7 +59,7 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int, callOption *Call
 		var arr []interface{}
 
 		for _, servoId := range servoIds {
-			newId := uuid.New().String()
+			newId := misc.NewUuid()
 			newmsg := reqmsg.Clone(newId)
 			msgvec := MsgVec{
 				Msg:        newmsg,

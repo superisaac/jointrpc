@@ -13,7 +13,6 @@ import (
 	"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
-	uuid "github.com/google/uuid"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 
@@ -68,7 +67,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 		return nil, rpcrouter.ErrRequestNotifyRequired
 	}
 	if reqmsg.TraceId() == "" {
-		reqmsg.SetTraceId(uuid.New().String())
+		reqmsg.SetTraceId(misc.NewUuid())
 	}
 	reqmsg.Log().Infof("from ip %s", remotePeer.Addr)
 	router := rpcrouter.RouterFromContext(context)
@@ -115,7 +114,7 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 		return nil, rpcrouter.ErrRequestNotifyRequired
 	}
 	if notifymsg.TraceId() == "" {
-		notifymsg.SetTraceId(uuid.New().String())
+		notifymsg.SetTraceId(misc.NewUuid())
 	}
 
 	notifymsg.Log().Infof("from ip %s", remotePeer.Addr)

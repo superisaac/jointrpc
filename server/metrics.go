@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bitly/go-simplejson"
-	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 	"strings"
 	//"net"
@@ -58,7 +58,7 @@ func (self *MetricsCollector) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 }
 
 func (self *MetricsCollector) Collect() ([]string, error) {
-	msgId := uuid.New().String()
+	msgId := misc.NewUuid()
 	emptyArr := make([]interface{}, 0)
 	reqmsg := jsonrpc.NewRequestMessage(msgId, "metrics.collect", emptyArr, nil)
 	router := rpcrouter.RouterFromContext(self.rootCtx)
