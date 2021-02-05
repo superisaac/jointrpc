@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import jointrpc_pb2 as jointrpc__pb2
+from jointrpc.pb import jointrpc_pb2 as jointrpc__pb2
 
 
 class JointRPCStub(object):

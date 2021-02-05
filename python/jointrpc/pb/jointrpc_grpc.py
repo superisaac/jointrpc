@@ -9,7 +9,7 @@ import grpclib.client
 if typing.TYPE_CHECKING:
     import grpclib.server
 
-import jointrpc_pb2
+from jointrpc.pb import jointrpc_pb2
 
 
 class JointRPCBase(abc.ABC):

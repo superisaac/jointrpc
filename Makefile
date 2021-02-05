@@ -4,9 +4,9 @@ protofiles := $(shell find ./proto -name '*.proto')
 gofiles := $(shell find . -name '*.go')
 protogofiles := intf/jointrpc/jointrpc.pb.go intf/jointrpc/jointrpc_grpc.pb.go
 
-protopyfiles := python/jointrpc_pb2.py \
-	python/jointrpc_pb2_grpc.py \
-	python/jointrpc_grpc.py
+protopyfiles := python/jointrpc/pb/jointrpc_pb2.py \
+	python/jointrpc/pb/jointrpc_pb2_grpc.py \
+	python/jointrpc/pb/jointrpc_grpc.py
 
 build: compile_proto bin/jointrpc
 
@@ -15,11 +15,14 @@ all: test build
 intf/jointrpc/%.pb.go intf/jointrpc/%_grpc.pb.go: proto/%.proto
 	protoc -I proto/ --go_out=. --go-grpc_out=. $<
 
-python/%_pb2.py python/%_pb2_grpc.py python/%_grpc.py: proto/%.proto
-	python -m grpc_tools.protoc -I proto/ \
-			--python_out=python/ \
-			--grpc_python_out=python/ \
-			--grpclib_python_out=python/ $<
+python/jointrpc/pb/%_pb2.py python/jointrpc/pb/%_pb2_grpc.py python/jointrpc/pb/%_grpc.py: proto/%.proto
+	@python -m grpc_tools.protoc -I proto/ \
+			--python_out=python/jointrpc/pb/ \
+			--grpc_python_out=python/jointrpc/pb/ \
+			--grpclib_python_out=python/jointrpc/pb/ $<
+
+	@for f in $(protopyfiles); do sed -ie 's/import jointrpc_pb2/from jointrpc.pb import jointrpc_pb2/g' $$f; done
+	@for f in $(shell find python/jointrpc -name '*.pye'); do rm $$f; done
 
 compile_proto: $(protogofiles) $(protopyfiles)
 
