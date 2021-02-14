@@ -85,7 +85,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		self.conn = nil
 	}()
 
-	self.On(".vars.list", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	self.On("_vars.list", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		return self.vars, nil
 	})
 

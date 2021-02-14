@@ -8,6 +8,13 @@ import (
 	"testing"
 )
 
+func TestValidators(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.True(IsMethod(".abc+def"))
+	assert.False(IsPublicMethod(".abc+def"))
+}
+
 func TestRequestMsg(t *testing.T) {
 	assert := assert.New(t)
 

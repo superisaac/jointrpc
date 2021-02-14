@@ -3,6 +3,7 @@ package jsonrpc
 import (
 	json "encoding/json"
 	"fmt"
+	"regexp"
 )
 
 func ValidateNumber(v interface{}, prefix string) (json.Number, error) {
@@ -76,4 +77,15 @@ func MustInt(input interface{}, prefix string) int64 {
 		panic(err)
 	}
 	return v
+}
+
+// method names
+func IsMethod(name string) bool {
+	matched, _ := regexp.MatchString(`^[0-9a-zA-Z\-\_\:\+\.]+$`, name)
+	return matched
+}
+
+func IsPublicMethod(name string) bool {
+	matched, _ := regexp.MatchString(`^[0-9a-zA-Z][0-9a-zA-Z\-\_\:\+\.]*$`, name)
+	return matched
 }

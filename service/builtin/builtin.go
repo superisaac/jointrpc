@@ -89,7 +89,7 @@ const (
 func (self *BuiltinService) Init() *BuiltinService {
 	misc.Assert(self.router == nil, "already initited")
 	self.InitHandlerManager()
-	self.On(".listMethods", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	self.On("_listMethods", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		minfos := self.router.GetMethods()
 
 		arr := make([](rpcrouter.MethodInfoMap), 0)
@@ -99,7 +99,7 @@ func (self *BuiltinService) Init() *BuiltinService {
 		return arr, nil
 	})
 
-	self.On(".echo", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	self.On("_echo", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(params) < 1 {
 			return nil, &jsonrpc.RPCError{Code: 400, Reason: "len params should be at least 1"}
 		}

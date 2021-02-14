@@ -38,7 +38,7 @@ func TestBuiltinMethods(t *testing.T) {
 	err := c.Connect()
 	assert.Nil(err)
 
-	res, err := c.CallRPC(ctx, ".echo", [](interface{}){"nice"}, client.WithTraceId("trace1"))
+	res, err := c.CallRPC(ctx, "_echo", [](interface{}){"nice"}, client.WithTraceId("trace1"))
 	assert.Nil(err)
 	assert.Equal("trace1", res.TraceId())
 
@@ -47,7 +47,7 @@ func TestBuiltinMethods(t *testing.T) {
 	assert.True(ok)
 	assert.Equal("nice", m["echo"])
 
-	res1, err := c.CallRPC(ctx, ".echo", [](interface{}){1}, client.WithTraceId("trace2"))
+	res1, err := c.CallRPC(ctx, "_echo", [](interface{}){1}, client.WithTraceId("trace2"))
 	assert.Nil(err)
 	assert.Equal("trace2", res1.TraceId())
 	assert.True(res1.IsError())

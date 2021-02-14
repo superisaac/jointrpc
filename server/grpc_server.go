@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 	"net"
-	"strings"
+	//"strings"
 	"time"
 	//"time"
 	//json "encoding/json"
@@ -181,10 +181,10 @@ func (self *JointRPC) DeclareMethods(context context.Context, req *intf.DeclareM
 	var methodNames []string
 	for _, iminfo := range req.Methods {
 		minfo := encoding.DecodeMethodInfo(iminfo)
-		if strings.HasPrefix(minfo.Name, ".") {
+		if !jsonrpc.IsPublicMethod(minfo.Name) {
 			conn.Log().WithFields(log.Fields{
 				"rpc": "DeclareMethods",
-			}).Warnf("method %s cannot prefix with .", minfo.Name)
+			}).Warnf("%s is not valid public method name", minfo.Name)
 			intfErr := &intf.Status{
 				Code:   11400,
 				Reason: fmt.Sprintf("method %s cannot prefix with .", minfo.Name)}

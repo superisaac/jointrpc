@@ -6,7 +6,7 @@ import (
 	//"errors"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
-	"strings"
+	//"strings"
 	//datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
@@ -131,7 +131,7 @@ func (self *Edge) onStateChange(state *rpcrouter.ServerState) {
 	methodNames := make(misc.StringSet)
 	if state != nil {
 		for _, minfo := range state.Methods {
-			if strings.HasPrefix(minfo.Name, ".") {
+			if !jsonrpc.IsPublicMethod(minfo.Name) {
 				continue
 			}
 			if _, ok := methodNames[minfo.Name]; ok {

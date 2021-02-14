@@ -6,6 +6,7 @@ import (
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	//datadir "github.com/superisaac/jointrpc/datadir"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
@@ -167,7 +168,7 @@ func (self *NeighborService) handleStateChange(stateChange CmdStateChange) {
 		var newMethods []rpcrouter.MethodInfo
 		methodNames := make(misc.StringSet)
 		for _, minfo := range stateChange.State.Methods {
-			if strings.HasPrefix(minfo.Name, ".") {
+			if !jsonrpc.IsPublicMethod(minfo.Name) {
 				continue
 			}
 			if _, ok := methodNames[minfo.Name]; ok {
