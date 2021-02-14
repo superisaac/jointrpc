@@ -1,7 +1,7 @@
 package handler
 
 import (
-	//"errors"
+	"errors"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
@@ -15,6 +15,9 @@ func (self *HandlerManager) InitHandlerManager() {
 }
 
 func (self *HandlerManager) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
+	if !jsonrpc.IsMethod(method) {
+		panic(errors.New("invalid method name"))
+	}
 	h := MethodHandler{function: handler}
 	for _, opt := range opts {
 		opt(&h)
