@@ -1,7 +1,10 @@
 from typing import Any, List, Dict, Union
+import abc
 
 class Message:
-    pass
+    @abc.abstractmethod
+    def encode(self) -> Dict[str, Any]:
+        raise NotImplementedError
 
 class Request(Message):
     id: Any
@@ -51,6 +54,21 @@ class Result(Message):
 class Error(Message):
     id: Any
     error: Any
+
+    @classmethod
+    def method_not_found(cls, reqid: Any, reason: str=None) -> 'Error':
+        errbody = {'code': 404,
+                   'reason': f'method not found, {reason}',
+                   'retryable': False}
+        return Error(reqid, errbody)
+
+    @classmethod
+    def server_error(cls, reqid: Any, reason: str=None, retryable: bool=False) -> 'Error':
+        errbody = {'code': 500,
+                   'reason': f'server error, {reason}',
+                   'retryable': retryable}
+        return Error(reqid, errbody)
+
     def __init__(self, id: Any, error: Any):
         assert id
         self.id = id
@@ -62,6 +80,25 @@ class Error(Message):
             'id': self.id,
             'error': self.error
         }
+
+class RPCError(Exception):
+    code: int
+    reason: str
+    retryable: bool
+    def __init__(self, code: int, reason: str, retryable: bool=False):
+        self.code = code
+        self.reason = reason
+        self.retryable = retryable
+
+    def body(self) -> Dict[str, Any]:
+        return {
+            'code': self.code,
+            'reason': self.reason,
+            'retryable': self.retryable
+        }
+
+    def error_message(self, reqid: Any) -> 'Error':
+        return Error(reqid, self.body())
 
 def parse(payload: Dict[str, Any]) -> 'Message':
     if 'id' in payload:

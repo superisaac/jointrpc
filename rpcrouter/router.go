@@ -385,8 +385,10 @@ func (self *Router) GetConn(connId CID) (*ConnT, bool) {
 func (self *Router) TryClearPendingRequest(msgId interface{}) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
+	log.Debugf("try to clear pending request %#v", msgId)
 
 	if _, found := self.pendingRequests[msgId]; found {
+		log.Infof("found pending req %#v", msgId)
 		go func() {
 			// sleep for another 1 second
 			time.Sleep(1 * time.Second)
@@ -404,12 +406,11 @@ func (self *Router) ClearPendingRequest(msgId interface{}) {
 		if !now.After(reqt.Expire) {
 			reqt.ReqMsg.Log().Errorf("Expire is not reached even during collecting routine")
 		}
-		errMsg := jsonrpc.RPCErrorMessage(reqt.ReqMsg, 408, "request timeout", true)
-		msgvec := MsgVec{Msg: errMsg}
-		_ = self.SendTo(reqt.FromConnId, msgvec)
+		errMsg := jsonrpc.RPCErrorMessage(reqt.ReqMsg, 502, "request timeout", true)
+		msgvec := MsgVec{Msg: errMsg, ToConnId: reqt.FromConnId}
+		//_ = self.SendTo(reqt.FromConnId, msgvec)
+		go self.DeliverResultOrError(msgvec)
 
-		// delete from self.pendingRequests
-		delete(self.pendingRequests, msgId)
 	}
 }
 
@@ -427,6 +428,8 @@ func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
 	if ok {
 		ct.RecvChannel <- msgvec
 		return ct
+	} else {
+		log.Warnf("conn for %d not found", connId)
 	}
 	return nil
 }

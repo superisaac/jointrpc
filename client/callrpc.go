@@ -49,7 +49,6 @@ func (self *RPCClient) CallMessage(rootCtx context.Context, reqmsg jsonrpc.IMess
 }
 
 func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
-
 	opt := &CallOption{}
 
 	for _, optfunc := range opts {

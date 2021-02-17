@@ -82,7 +82,6 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 		go func() {
 			time.Sleep(timeout)
 			time.Sleep(1 * time.Second)
-			//time.Sleep(int64(timeout.Seconds() + 1) * time.Second)
 			self.TryClearPendingRequest(msgId)
 		}()
 		targetVec := msgvec
