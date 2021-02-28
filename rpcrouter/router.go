@@ -5,7 +5,7 @@ import (
 	"context"
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/datadir"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	"math/rand"
 	"sort"
@@ -51,6 +51,7 @@ func DelegateRemoveConn(slice []MethodDelegation, conn *ConnT) []MethodDelegatio
 func (self *Router) Init(name string) *Router {
 	self.name = name
 	self.routerLock = new(sync.RWMutex)
+	self.pendingLock = new(sync.RWMutex)
 	self.methodConnMap = make(map[string]([]MethodDesc))
 	self.delegateConnMap = make(map[string][]MethodDelegation)
 	self.fallbackConns = make([]*ConnT, 0)
@@ -382,44 +383,6 @@ func (self *Router) GetConn(connId CID) (*ConnT, bool) {
 	return conn, found
 }
 
-func (self *Router) TryClearPendingRequest(msgId interface{}) {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
-	log.Debugf("try to clear pending request %#v", msgId)
-
-	if _, found := self.pendingRequests[msgId]; found {
-		log.Infof("found pending req %#v", msgId)
-		go func() {
-			// sleep for another 1 second
-			time.Sleep(1 * time.Second)
-			self.ClearPendingRequest(msgId)
-		}()
-	}
-}
-
-func (self *Router) ClearPendingRequest(msgId interface{}) {
-	self.lock("ClearPendingRequest")
-	defer self.unlock("ClearPendingRequest")
-
-	if reqt, found := self.pendingRequests[msgId]; found {
-		now := time.Now()
-		if !now.After(reqt.Expire) {
-			reqt.ReqMsg.Log().Errorf("Expire is not reached even during collecting routine")
-		}
-		errMsg := jsonrpc.RPCErrorMessage(reqt.ReqMsg, 502, "request timeout", true)
-		msgvec := MsgVec{Msg: errMsg, ToConnId: reqt.FromConnId}
-		//_ = self.SendTo(reqt.FromConnId, msgvec)
-		go self.DeliverResultOrError(msgvec)
-
-	}
-}
-
-func (self *Router) DeletePending(msgId interface{}) {
-	self.lock("DeletePending")
-	defer self.unlock("DeletePending")
-	delete(self.pendingRequests, msgId)
-}
-
 func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
@@ -482,6 +445,8 @@ func (self *Router) Loop(ctx context.Context) {
 
 				go self.DeliverMessage(cmdMsg)
 			}
+		case <-time.After(1 * time.Second):
+			self.collectPendings()
 		}
 	}
 }
@@ -525,6 +490,17 @@ func (self *Router) unlock(wrapper string) {
 	//log.Printf("router want unlock %s", wrapper)
 	self.routerLock.Unlock()
 	//log.Printf("router want unlocked %s", wrapper)
+}
+
+func (self *Router) lockPending(wrapper string) {
+	//log.Printf("router pending want lock %s", wrapper)
+	self.pendingLock.Lock()
+	//log.Printf("router pending locked %s", wrapper)
+}
+func (self *Router) unlockPending(wrapper string) {
+	//log.Printf("router pending want unlock %s", wrapper)
+	self.pendingLock.Unlock()
+	//log.Printf("router pending want unlocked %s", wrapper)
 }
 
 func (self *Router) Leave(conn *ConnT) {

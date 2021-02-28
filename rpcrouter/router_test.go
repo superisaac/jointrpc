@@ -60,8 +60,9 @@ func TestRouteMessage(t *testing.T) {
 	})
 
 	rcvmsg := <-conn.RecvChannel
-	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
+	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
+	assert.Equal("abc", rcvmsg.Msg.MustMethod())
 }
 
 func TestRouteRoutine(t *testing.T) {
@@ -97,8 +98,9 @@ func TestRouteRoutine(t *testing.T) {
 		ToConnId:   cid,
 	}, 0)
 	rcvmsg := <-ch
-	assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
+	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
+	assert.Equal("abc", rcvmsg.Msg.MustMethod())
 
 	// wrong target id
 	conn2 := router.Join(false)

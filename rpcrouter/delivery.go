@@ -62,28 +62,43 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 		}
 		//fmt.Printf("timeout %d\n", timeout)
 		expireTime := time.Now().Add(timeout)
-		func() {
-			// update pending Request
-			self.lock("deliverRequest")
-			defer self.unlock("deliverRequest")
+		// func() {
+		// 	// update pending Request
+		// 	self.lock("deliverRequest")
+		// 	defer self.unlock("deliverRequest")
 
-			if _, ok := self.pendingRequests[msgId]; ok {
-				msgId = misc.NewUuid()
-				reqMsg.Log().Infof("msg id already exist, change a new one %s", msgId)
-				reqMsg = reqMsg.Clone(msgId)
-			}
-			self.pendingRequests[msgId] = PendingT{
-				ReqMsg:     reqMsg,
-				FromConnId: msgvec.FromConnId,
-				ToConnId:   toConn.ConnId,
-				Expire:     expireTime,
-			}
-		}()
-		go func() {
-			time.Sleep(timeout)
-			time.Sleep(1 * time.Second)
-			self.TryClearPendingRequest(msgId)
-		}()
+		// 	if _, ok := self.pendingRequests[msgId]; ok {
+		// 		msgId = misc.NewUuid()
+		// 		reqMsg.Log().Infof("msg id already exist, change a new one %s", msgId)
+		// 		reqMsg = reqMsg.Clone(msgId)
+		// 	}
+		// 	self.pendingRequests[msgId] = PendingT{
+		// 		ReqMsg:     reqMsg,
+		// 		FromConnId: msgvec.FromConnId,
+		// 		ToConnId:   toConn.ConnId,
+		// 		Expire:     expireTime,
+		// 	}
+		// }()
+		//self.pendingRequests[msgId] = PendingT{
+
+		// Need to create an uniq new msg id to prevent global msgId conflict
+		origMsgId := msgId
+		msgId = misc.NewUuid()
+		reqMsg = reqMsg.Clone(msgId)
+		self.addPending(msgId, PendingT{
+			ReqMsg:     reqMsg,
+			OrigMsgId:  origMsgId,
+			FromConnId: msgvec.FromConnId,
+			ToConnId:   toConn.ConnId,
+			Expire:     expireTime,
+		})
+
+		// go func() {
+
+		// 	time.Sleep(timeout)
+		// 	time.Sleep(1 * time.Second)
+		// 	self.TryClearPendingRequest(msgId)
+		// }()
 		targetVec := msgvec
 		targetVec.Msg = reqMsg
 		return self.SendTo(toConn.ConnId, targetVec)
@@ -99,13 +114,11 @@ func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
 	msg := msgvec.Msg
 	//if msgId, ok := msg.MustId().(string); ok {
 	msgId := msg.MustId()
-	if reqt, ok := self.pendingRequests[msgId]; ok {
-		self.DeletePending(msgId)
-
+	if reqt, ok := self.getAndDeletePendings(msgId); ok {
 		if msgvec.FromConnId != reqt.ToConnId {
 			msg.Log().Warnf("msg conn %d not from the delivered conn %d", msgvec.FromConnId, reqt.ToConnId)
 		}
-		origReq := reqt.ReqMsg
+		origReq := reqt.ReqMsg.Clone(reqt.OrigMsgId)
 		if msg.TraceId() != origReq.TraceId() {
 			msg.Log().Warnf("result trace is different from request %s", origReq.TraceId())
 		}

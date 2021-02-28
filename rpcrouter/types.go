@@ -37,6 +37,7 @@ type MsgChannel chan MsgVec
 type PendingT struct {
 	//OrigMsgVec MsgVec
 	ReqMsg     *jsonrpc.RequestMessage
+	OrigMsgId  interface{}
 	FromConnId CID
 	ToConnId   CID
 	Expire     time.Time
@@ -112,6 +113,7 @@ type Router struct {
 	// channels
 	name            string
 	routerLock      *sync.RWMutex
+	pendingLock     *sync.RWMutex
 	methodConnMap   map[string]([]MethodDesc)
 	delegateConnMap map[string]([]MethodDelegation)
 
