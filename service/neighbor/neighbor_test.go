@@ -111,8 +111,8 @@ func TestNeighborRun(t *testing.T) {
 	assert.True(res3.IsError())
 	errBody, ok := res3.MustError().(map[string]interface{})
 	assert.True(ok)
-	assert.Equal(json.Number("404"), errBody["code"])
-	assert.Equal("method not found", errBody["reason"])
+	assert.Equal(json.Number(jsonrpc.ErrNoSuchMethod.CodeString()), errBody["code"])
+	assert.Equal("no such method", errBody["reason"])
 
 	// close client serve, the add2int() provider
 	cancelClient()
@@ -131,6 +131,6 @@ func TestNeighborRun(t *testing.T) {
 	assert.True(res4.IsError())
 	errBody4, ok := res4.MustError().(map[string]interface{})
 	assert.True(ok)
-	assert.Equal(json.Number("404"), errBody4["code"])
-	assert.Equal("method not found", errBody4["reason"])
+	assert.Equal(json.Number("101"), errBody4["code"])
+	assert.Equal("no such method", errBody4["reason"])
 }

@@ -8,7 +8,7 @@ import (
 
 func NewErrMsgType(additional string) *RPCError {
 	r := fmt.Sprintf("wrong message type %s", additional)
-	return &RPCError{10403, r, false}
+	return &RPCError{ErrMessageType.Code, r, false}
 }
 
 func (self BaseMessage) IsRequest() bool {
@@ -172,10 +172,10 @@ func (self ErrorMessage) MustError() interface{} {
 
 func NewRequestMessage(id interface{}, method string, params []interface{}, raw *simplejson.Json) *RequestMessage {
 	if id == nil {
-		panic(&RPCError{10400, "request message cannot have nil id", false})
+		panic(ErrNilId)
 	}
 	if method == "" {
-		panic(&RPCError{10400, "request message method cannot be empty", false})
+		panic(ErrEmptyMethod)
 	}
 
 	if raw == nil {
@@ -202,7 +202,7 @@ func (self RequestMessage) Clone(newId interface{}) *RequestMessage {
 
 func NewNotifyMessage(method string, params []interface{}, raw *simplejson.Json) *NotifyMessage {
 	if method == "" {
-		panic(&RPCError{10400, "notify message method cannot be empty", false})
+		panic(ErrEmptyMethod)
 	}
 
 	if raw == nil {
@@ -263,7 +263,6 @@ func rawErrorMessage(id interface{}, errbody interface{}, raw *simplejson.Json) 
 }
 
 func RPCErrorMessage(reqmsg IMessage, code int, reason string, retryable bool) *ErrorMessage {
-
 	errbody := map[string](interface{}){
 		"code":      code,
 		"reason":    reason,
@@ -300,6 +299,6 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 		params := parsed.Get("params").MustArray()
 		return NewNotifyMessage(method, params, parsed), nil
 	} else {
-		return nil, &RPCError{10402, "parse JSONRPC error", false}
+		return nil, ErrParseMessage
 	}
 }

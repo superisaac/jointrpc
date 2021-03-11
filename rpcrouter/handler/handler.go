@@ -122,8 +122,8 @@ func (self *HandlerManager) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
 	}
 	if err != nil {
 		log.Warnf("bad up message %w", err)
-		errmsg := jsonrpc.RPCErrorMessage(msg, 10401, "bad handler res", false)
-		self.ReturnResultMessage(errmsg)
+		errMsg := jsonrpc.ErrBadResource.ToMessage(msg)
+		self.ReturnResultMessage(errMsg)
 		return
 	}
 	if resmsg != nil {

@@ -27,10 +27,6 @@ type RPCError struct {
 	Retryable bool
 }
 
-var (
-	ErrMessageType = &RPCError{10403, "wrong message type", false}
-)
-
 const (
 	MTRequest = 1
 	MTNotify  = 2

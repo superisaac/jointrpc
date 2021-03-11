@@ -31,7 +31,7 @@ import (
 // 		if !now.After(reqt.Expire) {
 // 			reqt.ReqMsg.Log().Errorf("Expire is not reached even during collecting routine")
 // 		}
-// 		errMsg := jsonrpc.RPCErrorMessage(reqt.ReqMsg, 502, "request timeout", true)
+//		errMsg := jsonrpc.ErrTimeout.ToMessage(reqt.ReqMsg)
 // 		msgvec := MsgVec{Msg: errMsg, ToConnId: reqt.FromConnId}
 // 		//_ = self.SendTo(reqt.FromConnId, msgvec)
 // 		go self.DeliverResultOrError(msgvec)
@@ -101,9 +101,8 @@ func (self *Router) removeExpiredPendings(expiredMsgIds []interface{}) {
 			if now.After(reqt.Expire) {
 				reqt.ReqMsg.Log().Infof("removed from pending due to timeout")
 				delete(self.pendingRequests, msgId)
-				errMsg := jsonrpc.RPCErrorMessage(reqt.ReqMsg, 502, "request timeout", true)
+				errMsg := jsonrpc.ErrTimeout.ToMessage(reqt.ReqMsg)
 				msgvec := MsgVec{Msg: errMsg, ToConnId: reqt.FromConnId}
-				//_ = self.SendTo(reqt.FromConnId, msgvec)
 				go self.DeliverResultOrError(msgvec)
 			} else {
 
