@@ -29,6 +29,14 @@ compile_proto: $(protogofiles) $(protopyfiles)
 bin/jointrpc: ${gofiles}
 	go build -o $@ jointrpc.go
 
+build_arch: ${gofiles}
+	GOOS=linux GOARCH=amd64 go build -o build/arch/jointrpc.linux-amd64 jointrpc.go
+	GOOS=linux GOARCH=arm go build -o build/arch/jointrpc.linux-arm jointrpc.go
+	GOOS=linux GOARCH=arm64 go build -o build/arch/jointrpc.linux-arm64 jointrpc.go
+	GOOS=android GOARCH=arm64 go build -o build/arch/jointrpc.android-arm64 jointrpc.go
+	GOOS=darwin GOARCH=amd64 go build -o build/arch/jointrpc.darwin-amd64 jointrpc.go
+	GOOS=darwin GOARCH=arm64 go build -o build/arch/jointrpc.darwin-arm64 jointrpc.go
+
 test:
 	go test -v github.com/superisaac/jointrpc/datadir
 	go test -v github.com/superisaac/jointrpc/jsonrpc
