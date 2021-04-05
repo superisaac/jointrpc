@@ -8,14 +8,14 @@ import (
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	dispatch "github.com/superisaac/jointrpc/dispatch"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 )
 
 type VarsService struct {
-	handler.HandlerManager
+	dispatch.Dispatcher
 	//vars   map[string](map[string](interface{}))
 	vars   map[string]interface{}
 	router *rpcrouter.Router
@@ -75,7 +75,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		return err
 	}
 
-	self.InitHandlerManager()
+	self.InitDispatcher()
 	self.router = rpcrouter.RouterFromContext(rootCtx)
 	self.conn = self.router.Join(false)
 	ctx, cancel := context.WithCancel(rootCtx)
@@ -85,7 +85,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		self.conn = nil
 	}()
 
-	self.On("_vars.list", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	self.On("_vars.list", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		return self.vars, nil
 	})
 

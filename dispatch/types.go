@@ -1,4 +1,4 @@
-package handler
+package dispatch
 
 import (
 	//"context"
@@ -12,7 +12,7 @@ type RPCRequest struct {
 }
 
 var (
-	Deferred = errors.New("handler deferred")
+	Deferred = errors.New("dispatch deferred")
 )
 
 type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)
@@ -30,7 +30,7 @@ type MethodHandler struct {
 	Help       string
 }
 
-type HandlerManager struct {
+type Dispatcher struct {
 	ChResult       chan jsonrpc.IMessage
 	MethodHandlers map[string]MethodHandler
 	StateHandler   StateHandlerFunc

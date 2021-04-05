@@ -4,7 +4,7 @@ import (
 	client "github.com/superisaac/jointrpc/client"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	dispatch "github.com/superisaac/jointrpc/dispatch"
 )
 
 type Edge struct {
@@ -20,7 +20,7 @@ type CmdStateChange struct {
 }
 
 type NeighborService struct {
-	handler.HandlerManager
+	dispatch.Dispatcher
 	conn          *rpcrouter.ConnT
 	router        *rpcrouter.Router
 	serverEntries []client.ServerEntry

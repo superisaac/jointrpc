@@ -3,7 +3,7 @@ package client
 import (
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	dispatch "github.com/superisaac/jointrpc/dispatch"
 	"net/url"
 )
 
@@ -32,7 +32,7 @@ type ConnectionLostCallback func()
 type ConnectedCallback func()
 
 type RPCClient struct {
-	handler.HandlerManager
+	dispatch.Dispatcher
 
 	connPublicId  string
 	serverEntry   ServerEntry

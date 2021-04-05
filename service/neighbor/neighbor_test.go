@@ -10,7 +10,7 @@ import (
 	"github.com/superisaac/jointrpc/datadir"
 	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jointrpc/rpcrouter/handler"
+	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/server"
 	"github.com/superisaac/jointrpc/service"
 	"io/ioutil"
@@ -67,11 +67,11 @@ func TestNeighborRun(t *testing.T) {
 
 	// start client1, the serve of add2int()
 	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10010", ""})
-	c1.On("add2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	c1.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
 		b := jsonrpc.MustInt(params[1], "params[1]")
 		return a + b, nil
-	}, handler.WithSchema(addSchema))
+	}, dispatch.WithSchema(addSchema))
 	err := c1.Connect()
 	assert.Nil(err)
 	cCtx, cancelClient := context.WithCancel(context.Background())

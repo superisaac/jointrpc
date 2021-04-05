@@ -41,7 +41,7 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 		serverUrl:     serverUrl,
 		sendUpChannel: sendUpChannel,
 	}
-	c.InitHandlerManager()
+	c.InitDispatcher()
 	c.OnChange(func() {
 		c.OnHandlerChanged()
 	})

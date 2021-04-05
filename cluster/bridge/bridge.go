@@ -11,7 +11,7 @@ import (
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	"github.com/superisaac/jointrpc/dispatch"
 )
 
 // Bridge
@@ -169,7 +169,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 		}
 	})
 
-	self.remoteClient.OnDefault(func(req *handler.RPCRequest, method string, params []interface{}) (interface{}, error) {
+	self.remoteClient.OnDefault(func(req *dispatch.RPCRequest, method string, params []interface{}) (interface{}, error) {
 		return bridge.requestReceived(req.MsgVec, entry.ServerUrl)
 	})
 

@@ -43,7 +43,7 @@ func (self *NeighborService) Init(rootCtx context.Context) {
 	}
 
 	self.router = router
-	self.InitHandlerManager()
+	self.InitDispatcher()
 	self.serverEntries = entries
 	self.edges = make(map[string]*Edge)
 	self.ChState = make(chan CmdStateChange)

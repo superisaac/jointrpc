@@ -11,7 +11,7 @@ import (
 
 	client "github.com/superisaac/jointrpc/client"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	"github.com/superisaac/jointrpc/dispatch"
 	server "github.com/superisaac/jointrpc/server"
 	"testing"
 	"time"
@@ -60,11 +60,11 @@ func TestBridgeRun(t *testing.T) {
 
 	// start client1, the serve of add2int()
 	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10020", ""})
-	c1.On("add2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	c1.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
 		b := jsonrpc.MustInt(params[1], "params[1]")
 		return a + b, nil
-	}, handler.WithSchema(addSchema))
+	}, dispatch.WithSchema(addSchema))
 	err := c1.Connect()
 	assert.Nil(err)
 	cCtx, cancelServo := context.WithCancel(context.Background())
@@ -149,11 +149,11 @@ func TestServerBreak(t *testing.T) {
 
 	// start client1, the serve of add2int()
 	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10030", ""})
-	c1.On("add2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	c1.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
 		b := jsonrpc.MustInt(params[1], "params[1]")
 		return a + b, nil
-	}, handler.WithSchema(addSchema))
+	}, dispatch.WithSchema(addSchema))
 	err := c1.Connect()
 	assert.Nil(err)
 	cCtx, cancelServo := context.WithCancel(context.Background())

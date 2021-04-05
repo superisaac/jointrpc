@@ -13,7 +13,7 @@ import (
 	client "github.com/superisaac/jointrpc/client"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	"github.com/superisaac/jointrpc/dispatch"
 	"os"
 	//example "github.com/superisaac/jointrpc/client/example"
 	//grpc "google.golang.org/grpc"
@@ -189,7 +189,7 @@ func CommandWatch() {
 	rpcClient := client.NewRPCClient(serverFlag.Get())
 
 	for _, notifyName := range notifyNames {
-		rpcClient.On(notifyName, func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+		rpcClient.On(notifyName, func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			msg := req.MsgVec.Msg
 			repr, err := msg.EncodePretty()
 			if err != nil {

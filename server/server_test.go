@@ -10,7 +10,7 @@ import (
 	"github.com/superisaac/jointrpc/datadir"
 	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jointrpc/rpcrouter/handler"
+	"github.com/superisaac/jointrpc/dispatch"
 	"io/ioutil"
 
 	"os"
@@ -53,17 +53,17 @@ const addSchema = `
 
 func StartTestServe(rootCtx context.Context, serverUrl string, whoami string) {
 	c := client.NewRPCClient(client.ServerEntry{serverUrl, ""})
-	c.On("add2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	c.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
 		b := jsonrpc.MustInt(params[1], "params[1]")
 		return a + b, nil
-	}, handler.WithSchema(addSchema))
+	}, dispatch.WithSchema(addSchema))
 
-	c.On("fakeadd2int", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	c.On("fakeadd2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		return "not a number", nil
-	}, handler.WithSchema(addSchema))
+	}, dispatch.WithSchema(addSchema))
 
-	c.On("whoami", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	c.On("whoami", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		return whoami, nil
 	})
 	c.Connect()

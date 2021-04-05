@@ -9,13 +9,13 @@ import (
 	misc "github.com/superisaac/jointrpc/misc"
 
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
-	handler "github.com/superisaac/jointrpc/rpcrouter/handler"
+	"github.com/superisaac/jointrpc/dispatch"
 	//service "github.com/superisaac/jointrpc/service"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 
 type BuiltinService struct {
-	handler.HandlerManager
+	dispatch.Dispatcher
 	router *rpcrouter.Router
 	conn   *rpcrouter.ConnT
 }
@@ -33,7 +33,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()
-		log.Debug("buildin handlermanager context canceled")
+		log.Debug("buildin dispatcher context canceled")
 	}()
 
 	self.conn = self.router.Join(false)
@@ -88,8 +88,8 @@ const (
 
 func (self *BuiltinService) Init() *BuiltinService {
 	misc.Assert(self.router == nil, "already initited")
-	self.InitHandlerManager()
-	self.On("_listMethods", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	self.InitDispatcher()
+	self.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		minfos := self.router.GetMethods()
 
 		arr := make([](rpcrouter.MethodInfoMap), 0)
@@ -99,7 +99,7 @@ func (self *BuiltinService) Init() *BuiltinService {
 		return arr, nil
 	})
 
-	self.On("_echo", func(req *handler.RPCRequest, params []interface{}) (interface{}, error) {
+	self.On("_echo", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(params) < 1 {
 			return nil, &jsonrpc.RPCError{Code: 400, Reason: "len params should be at least 1"}
 		}
@@ -108,7 +108,7 @@ func (self *BuiltinService) Init() *BuiltinService {
 			return nil, &jsonrpc.RPCError{Code: 400, Reason: "string params required"}
 		}
 		return map[string]string{"echo": msg}, nil
-	}, handler.WithSchema(echoSchema))
+	}, dispatch.WithSchema(echoSchema))
 
 	self.OnChange(func() {
 		self.declareMethods()

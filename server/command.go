@@ -41,8 +41,6 @@ func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOp
 
 	cfg := router.Config
 
-	//go handler.StartBuiltinHandlerManager(rootCtx)
-
 	opts = append(opts,
 		grpc.UnaryInterceptor(
 			unaryBindContext(router, cfg)),

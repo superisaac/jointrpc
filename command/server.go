@@ -18,7 +18,6 @@ import (
 	"github.com/superisaac/jointrpc/service/vars"
 	//misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	//handler "github.com/superisaac/jointrpc/rpcrouter/handler"
 	grpc "google.golang.org/grpc"
 	credentials "google.golang.org/grpc/credentials"
 )

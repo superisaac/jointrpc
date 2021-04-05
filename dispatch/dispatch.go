@@ -1,4 +1,4 @@
-package handler
+package dispatch
 
 import (
 	"errors"
@@ -9,12 +9,12 @@ import (
 )
 
 // handler manager
-func (self *HandlerManager) InitHandlerManager() {
+func (self *Dispatcher) InitDispatcher() {
 	self.ChResult = make(chan jsonrpc.IMessage, 100)
 	self.MethodHandlers = make(map[string](MethodHandler))
 }
 
-func (self *HandlerManager) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
+func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
 	if !jsonrpc.IsMethod(method) {
 		panic(errors.New("invalid method name"))
 	}
@@ -31,20 +31,20 @@ func (self *HandlerManager) On(method string, handler HandlerFunc, opts ...func(
 	}
 }
 
-func (self *HandlerManager) OnChange(onChange OnChangeFunc) {
+func (self *Dispatcher) OnChange(onChange OnChangeFunc) {
 	self.onChange = onChange
 }
 
-func (self *HandlerManager) TriggerChange() {
+func (self *Dispatcher) TriggerChange() {
 	if self.onChange != nil {
 		self.onChange()
 	}
 }
-func (self *HandlerManager) OnStateChange(onChange StateHandlerFunc) {
+func (self *Dispatcher) OnStateChange(onChange StateHandlerFunc) {
 	self.StateHandler = onChange
 }
 
-func (self *HandlerManager) UnHandle(method string) bool {
+func (self *Dispatcher) UnHandle(method string) bool {
 	_, found := self.MethodHandlers[method]
 	if found {
 		delete(self.MethodHandlers, method)
@@ -53,7 +53,7 @@ func (self *HandlerManager) UnHandle(method string) bool {
 	return found
 }
 
-func (self *HandlerManager) wrapHandlerResult(msg jsonrpc.IMessage, res interface{}, err error) (jsonrpc.IMessage, error) {
+func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{}, err error) (jsonrpc.IMessage, error) {
 	if err != nil {
 		if rpcErr, ok := err.(*jsonrpc.RPCError); ok {
 			return rpcErr.ToMessage(msg), nil
@@ -71,11 +71,11 @@ func (self *HandlerManager) wrapHandlerResult(msg jsonrpc.IMessage, res interfac
 	}
 }
 
-func (self *HandlerManager) ReturnResultMessage(resmsg jsonrpc.IMessage) {
+func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage) {
 	self.ChResult <- resmsg
 }
 
-func (self *HandlerManager) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
+func (self *Dispatcher) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	handler, ok := self.MethodHandlers[msg.MustMethod()]
 
@@ -152,7 +152,7 @@ func WithSchema(schemaJson string) func(*MethodHandler) {
 	}
 }
 
-func (self *HandlerManager) OnDefault(handler DefaultHandlerFunc, opts ...func(*HandlerManager)) {
+func (self *Dispatcher) OnDefault(handler DefaultHandlerFunc, opts ...func(*Dispatcher)) {
 	self.defaultHandler = handler
 	for _, opt := range opts {
 		opt(self)
