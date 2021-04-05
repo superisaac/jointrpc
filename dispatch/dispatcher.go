@@ -14,6 +14,8 @@ func NewDispatcher() *Dispatcher {
 	disp := new(Dispatcher)
 	disp.ChResult = make(chan jsonrpc.IMessage, 100)
 	disp.MethodHandlers = make(map[string](MethodHandler))
+	disp.changeHandlers = make([]OnChangeFunc, 0)
+	disp.stateHandlers = make([]StateHandlerFunc, 0)
 	return disp
 }
 
@@ -29,22 +31,28 @@ func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*Met
 	_, found := self.MethodHandlers[method]
 	self.MethodHandlers[method] = h
 
-	if !found && self.onChange != nil {
-		self.onChange()
+	if !found && len(self.changeHandlers) == 0 {
+		self.TriggerChange()
 	}
 }
 
 func (self *Dispatcher) OnChange(onChange OnChangeFunc) {
-	self.onChange = onChange
+	self.changeHandlers = append(self.changeHandlers, onChange)
 }
 
 func (self *Dispatcher) TriggerChange() {
-	if self.onChange != nil {
-		self.onChange()
+	for _, changeFunc := range self.changeHandlers {
+		changeFunc()
 	}
 }
-func (self *Dispatcher) OnStateChange(onChange StateHandlerFunc) {
-	self.StateHandler = onChange
+func (self *Dispatcher) OnStateChange(stateChange StateHandlerFunc) {
+	self.stateHandlers = append(self.stateHandlers, stateChange)
+}
+
+func (self *Dispatcher) TriggerStateChange(state *rpcrouter.ServerState) {
+	for _, f := range self.stateHandlers {
+		f(state)
+	}
 }
 
 func (self *Dispatcher) UnHandle(method string) bool {

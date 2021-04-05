@@ -272,9 +272,7 @@ func (self *RPCClient) handleRPC(rootCtx context.Context, disp *dispatch.Dispatc
 		istate := downpac.GetState()
 		if istate != nil {
 			state := encoding.DecodeServerState(istate)
-			if disp.StateHandler != nil {
-				disp.StateHandler(state)
-			}
+			disp.TriggerStateChange(state)
 			continue
 		}
 

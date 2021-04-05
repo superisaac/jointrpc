@@ -31,10 +31,10 @@ type MethodHandler struct {
 }
 
 type Dispatcher struct {
-	ChResult       chan jsonrpc.IMessage
-	MethodHandlers map[string]MethodHandler
-	StateHandler   StateHandlerFunc
+	ChResult chan jsonrpc.IMessage
 
+	MethodHandlers map[string]MethodHandler
+	stateHandlers  []StateHandlerFunc
 	defaultHandler DefaultHandlerFunc
-	onChange       OnChangeFunc
+	changeHandlers []OnChangeFunc
 }
