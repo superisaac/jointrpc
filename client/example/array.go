@@ -4,24 +4,26 @@ import (
 	"context"
 	"fmt"
 	client "github.com/superisaac/jointrpc/client"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/dispatch"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 )
 
 func ExampleArray(serverEntry client.ServerEntry) error {
 	items := make([]interface{}, 0)
 
+	disp := dispatch.NewDispatcher()
+
 	rpcClient := client.NewRPCClient(serverEntry)
 
 	// hooked methods
-	rpcClient.On("array.push", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	disp.On("array.push", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		for _, elem := range params {
 			items = append(items, elem)
 		}
 		return "ok", nil
 	})
 
-	rpcClient.On("array.at", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	disp.On("array.at", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(params) != 1 {
 			return nil, &jsonrpc.RPCError{400, "params count not eq 1", false}
 		}
@@ -38,11 +40,11 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 		return items[n], nil
 	}, dispatch.WithSchema(`{"type": "method", "params": [{"type": "number"}]}`))
 
-	rpcClient.On("array.size", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	disp.On("array.size", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		return len(items), nil
 	}, dispatch.WithHelp("get the size of array"))
 
-	rpcClient.On("array.pophead", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	disp.On("array.pophead", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(items) > 0 {
 			elem := items[0]
 			items = items[1:]
@@ -52,7 +54,7 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 		}
 	}, dispatch.WithSchema(``))
 
-	rpcClient.On("array.poptail", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	disp.On("array.poptail", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(items) > 0 {
 			elem := items[len(items)-1]
 			items = items[:len(items)-1]
@@ -64,13 +66,13 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 		dispatch.WithSchema(``),
 		dispatch.WithHelp("pop the last element from the array"))
 
-	rpcClient.On("array.list",
+	disp.On("array.list",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			return items, nil
 		},
 		dispatch.WithHelp("list the array elements"))
 
-	rpcClient.On("array.add",
+	disp.On("array.add",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			if len(items) < 2 {
 				return nil, &jsonrpc.RPCError{10408, "array size < 2", false}
@@ -91,7 +93,7 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 		},
 		dispatch.WithHelp("pop two integers from the array, add them and push the result to array"))
 
-	rpcClient.On("metrics.collect",
+	disp.On("metrics.collect",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 
 			lines := []string{
@@ -102,7 +104,7 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 			return lines, nil
 		})
 
-	rpcClient.OnDefault(func(req *dispatch.RPCRequest, method string, params []interface{}) (interface{}, error) {
+	disp.OnDefault(func(req *dispatch.RPCRequest, method string, params []interface{}) (interface{}, error) {
 		return "I don't know how to respond", nil
 	})
 
@@ -110,5 +112,5 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 	if err != nil {
 		return err
 	}
-	return rpcClient.Handle(context.Background())
+	return rpcClient.Handle(context.Background(), disp)
 } // end of ExampleArray

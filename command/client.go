@@ -11,9 +11,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	client "github.com/superisaac/jointrpc/client"
+	"github.com/superisaac/jointrpc/dispatch"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jointrpc/dispatch"
 	"os"
 	//example "github.com/superisaac/jointrpc/client/example"
 	//grpc "google.golang.org/grpc"
@@ -188,8 +188,10 @@ func CommandWatch() {
 
 	rpcClient := client.NewRPCClient(serverFlag.Get())
 
+	disp := dispatch.NewDispatcher()
+
 	for _, notifyName := range notifyNames {
-		rpcClient.On(notifyName, func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+		disp.On(notifyName, func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			msg := req.MsgVec.Msg
 			repr, err := msg.EncodePretty()
 			if err != nil {
@@ -204,7 +206,7 @@ func CommandWatch() {
 		panic(err)
 	}
 
-	err = rpcClient.Handle(context.Background())
+	err = rpcClient.Handle(context.Background(), disp)
 	if err != nil {
 		panic(err)
 	}
@@ -218,15 +220,16 @@ func CommandWatchState() {
 	subFlags.Parse(os.Args[2:])
 
 	rpcClient := client.NewRPCClient(serverFlag.Get())
+	disp := dispatch.NewDispatcher()
 
 	if *pVerbose {
-		rpcClient.OnStateChange(printMethodInfos)
+		disp.OnStateChange(printMethodInfos)
 	} else {
-		rpcClient.OnStateChange(printMethodNames)
+		disp.OnStateChange(printMethodNames)
 	}
 
 	rpcClient.Connect()
-	rpcClient.Handle(context.Background())
+	rpcClient.Handle(context.Background(), disp)
 }
 
 func printMethodInfos(state *rpcrouter.ServerState) {

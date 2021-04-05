@@ -8,10 +8,10 @@ import (
 	client "github.com/superisaac/jointrpc/client"
 	//"strings"
 	//datadir "github.com/superisaac/jointrpc/datadir"
+	"github.com/superisaac/jointrpc/dispatch"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jointrpc/dispatch"
 )
 
 // Bridge
@@ -144,14 +144,8 @@ func (self *Edge) onStateChange(state *rpcrouter.ServerState) {
 }
 
 func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
+	disp := dispatch.NewDispatcher()
 	entry := self.remoteClient.ServerEntry()
-	self.remoteClient.OnStateChange(func(state *rpcrouter.ServerState) {
-		self.onStateChange(state)
-		bridge.ChState <- CmdStateChange{
-			serverUrl: entry.ServerUrl,
-			state:     state,
-		}
-	})
 	self.remoteClient.OnConnected(func() {
 		log.Debugf("bridge client connected %s\n", entry.ServerUrl)
 		if self.delegateMethods != nil || len(self.delegateMethods) > 0 {
@@ -169,7 +163,15 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 		}
 	})
 
-	self.remoteClient.OnDefault(func(req *dispatch.RPCRequest, method string, params []interface{}) (interface{}, error) {
+	disp.OnStateChange(func(state *rpcrouter.ServerState) {
+		self.onStateChange(state)
+		bridge.ChState <- CmdStateChange{
+			serverUrl: entry.ServerUrl,
+			state:     state,
+		}
+	})
+
+	disp.OnDefault(func(req *dispatch.RPCRequest, method string, params []interface{}) (interface{}, error) {
 		return bridge.requestReceived(req.MsgVec, entry.ServerUrl)
 	})
 
@@ -178,7 +180,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 		return err
 	}
 	// TODO: concurrent
-	return self.remoteClient.Handle(rootCtx)
+	return self.remoteClient.Handle(rootCtx, disp)
 }
 
 func (self *Edge) DeclareDelegateMethods(methods []string) {

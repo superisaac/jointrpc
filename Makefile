@@ -58,7 +58,7 @@ gofmt:
 	go fmt client/example/*.go
 	go fmt server/*.go
 	go fmt rpcrouter/*.go
-	go fmt rpcrouter/handler/*.go
+	go fmt dispatch/*.go
 	go fmt jsonrpc/*.go
 	go fmt jsonrpc/schema/*.go
 	go fmt encoding/*.go

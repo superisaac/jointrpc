@@ -8,6 +8,7 @@ import (
 	client "github.com/superisaac/jointrpc/client"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	//datadir "github.com/superisaac/jointrpc/datadir"
+	"github.com/superisaac/jointrpc/dispatch"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	"strings"
@@ -43,9 +44,9 @@ func (self *NeighborService) Init(rootCtx context.Context) {
 	}
 
 	self.router = router
-	self.InitDispatcher()
 	self.serverEntries = entries
 	self.edges = make(map[string]*Edge)
+	self.dispatcher = dispatch.NewDispatcher()
 	self.ChState = make(chan CmdStateChange)
 }
 
@@ -64,6 +65,7 @@ func (self *NeighborService) connectRemote(rootCtx context.Context, entry client
 		panic(errors.New("client already exists"))
 	}
 	c := client.NewRPCClient(entry)
+	disp := dispatch.NewDispatcher()
 
 	err := c.Connect()
 	if err != nil {
@@ -71,15 +73,16 @@ func (self *NeighborService) connectRemote(rootCtx context.Context, entry client
 	}
 	edge := NewEdge()
 	edge.remoteClient = c
+	edge.disp = disp
 	self.edges[entry.ServerUrl] = edge
 
-	c.OnStateChange(func(state *rpcrouter.ServerState) {
+	disp.OnStateChange(func(state *rpcrouter.ServerState) {
 		self.ChState <- CmdStateChange{
 			ServerUrl: entry.ServerUrl,
 			State:     state,
 		}
 	})
-	c.Handle(rootCtx)
+	c.Handle(rootCtx, disp)
 	return nil
 }
 
@@ -119,7 +122,7 @@ func (self *NeighborService) Start(rootCtx context.Context) error {
 			if err != nil {
 				return err
 			}
-		case resmsg, ok := <-self.ChResult:
+		case resmsg, ok := <-self.dispatcher.ChResult:
 			if !ok {
 				// TODO: log
 				return nil
@@ -152,7 +155,7 @@ func (self *NeighborService) requestReceived(msgvec rpcrouter.MsgVec) error {
 					log.Fatal("result has not the same id with origial request msg")
 				}
 
-				self.ReturnResultMessage(resmsg)
+				self.dispatcher.ReturnResultMessage(resmsg)
 				return nil
 			}
 		}

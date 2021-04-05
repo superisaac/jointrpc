@@ -13,6 +13,7 @@ import (
 	"os"
 	"time"
 	//server "github.com/superisaac/jointrpc/server"
+	"github.com/superisaac/jointrpc/dispatch"
 	encoding "github.com/superisaac/jointrpc/encoding"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	grpc "google.golang.org/grpc"
@@ -41,10 +42,11 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 		serverUrl:     serverUrl,
 		sendUpChannel: sendUpChannel,
 	}
-	c.InitDispatcher()
-	c.OnChange(func() {
-		c.OnHandlerChanged()
-	})
+	//c.disp = new(dispatch.Dispatcher)
+	//c.disp.InitDispatcher()
+	// c.disp.OnChange(func() {
+	// 	c.OnHandlerChanged()
+	// })
 	return c
 }
 
@@ -71,6 +73,10 @@ func (self RPCClient) String() string {
 func (self RPCClient) ServerEntry() ServerEntry {
 	return self.serverEntry
 }
+
+//func (self RPCClient) AttachTo(disp Dispatcher) {
+//	self.disp = disp
+//}
 
 func (self RPCClient) IsHttp() bool {
 	return self.serverUrl.Scheme == "http" || self.serverUrl.Scheme == "https"
@@ -132,15 +138,15 @@ func (self *RPCClient) Connect() error {
 }
 
 // Override Handler.OnHandlerChanged
-func (self *RPCClient) OnHandlerChanged() {
+func (self *RPCClient) OnHandlerChanged(disp *dispatch.Dispatcher) {
 	if self.tubeClient != nil && self.connPublicId != "" {
-		self.declareMethods(context.Background())
+		self.declareMethods(context.Background(), disp)
 	}
 }
 
-func (self *RPCClient) declareMethods(rootCtx context.Context) error {
+func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	upMethods := make([](*intf.MethodInfo), 0)
-	for m, info := range self.MethodHandlers {
+	for m, info := range disp.MethodHandlers {
 		minfo := &intf.MethodInfo{Name: m, Help: info.Help, SchemaJson: info.SchemaJson}
 		upMethods = append(upMethods, minfo)
 	}
@@ -148,9 +154,13 @@ func (self *RPCClient) declareMethods(rootCtx context.Context) error {
 	return self.DeclareMethods(rootCtx, upMethods)
 }
 
-func (self *RPCClient) Handle(rootCtx context.Context) error {
+func (self *RPCClient) Handle(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+	disp.OnChange(func() {
+		self.OnHandlerChanged(disp)
+	})
+
 	for {
-		err := self.handleRPC(rootCtx)
+		err := self.handleRPC(rootCtx, disp)
 		self.connected = false
 		if err != nil {
 			return err
@@ -164,7 +174,7 @@ func (self *RPCClient) Handle(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_HandleClient) {
+func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_HandleClient, disp *dispatch.Dispatcher) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -176,7 +186,7 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_Ha
 				return
 			}
 			stream.Send(uppacket)
-		case resmsg, ok := <-self.ChResult:
+		case resmsg, ok := <-disp.ChResult:
 			if !ok {
 				log.Warnf("result msg closed")
 				return
@@ -207,7 +217,7 @@ func (self *RPCClient) requestAuth(rootCtx context.Context, stream intf.JointRPC
 	return stream.Send(uppac)
 }
 
-func (self *RPCClient) handleRPC(rootCtx context.Context) error {
+func (self *RPCClient) handleRPC(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
@@ -230,7 +240,7 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 	sendCtx, sendCancel := context.WithCancel(rootCtx)
 	defer sendCancel()
 
-	go self.sendUpResult(sendCtx, stream)
+	go self.sendUpResult(sendCtx, stream, disp)
 
 	for {
 		downpac, err := stream.Recv()
@@ -262,8 +272,8 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 		istate := downpac.GetState()
 		if istate != nil {
 			state := encoding.DecodeServerState(istate)
-			if self.StateHandler != nil {
-				self.StateHandler(state)
+			if disp.StateHandler != nil {
+				disp.StateHandler(state)
 			}
 			continue
 		}
@@ -278,7 +288,7 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 			}
 			self.connPublicId = echo.ConnPublicId
 			log.Infof("Handle() got conn public id %s", self.connPublicId)
-			self.TriggerChange()
+			disp.TriggerChange()
 			continue
 		}
 
@@ -294,18 +304,18 @@ func (self *RPCClient) handleRPC(rootCtx context.Context) error {
 				log.Warnf("msg is none of reques|notify %+v ", msg)
 				continue
 			}
-			self.handleDownRequest(msg, envo.TraceId)
+			self.handleDownRequest(msg, envo.TraceId, disp)
 			continue
 		}
 	}
 	return nil
 }
 
-func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string) {
+func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher) {
 	msgvec := rpcrouter.MsgVec{
 		Msg:        msg,
 		FromConnId: 0}
-	self.HandleRequestMessage(msgvec)
+	disp.HandleRequestMessage(msgvec)
 }
 
 func (self *RPCClient) CheckStatus(status *intf.Status, methodName string) error {

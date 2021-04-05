@@ -9,9 +9,12 @@ import (
 )
 
 // handler manager
-func (self *Dispatcher) InitDispatcher() {
-	self.ChResult = make(chan jsonrpc.IMessage, 100)
-	self.MethodHandlers = make(map[string](MethodHandler))
+//func (self *Dispatcher) InitDispatcher() {
+func NewDispatcher() *Dispatcher {
+	disp := new(Dispatcher)
+	disp.ChResult = make(chan jsonrpc.IMessage, 100)
+	disp.MethodHandlers = make(map[string](MethodHandler))
+	return disp
 }
 
 func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {

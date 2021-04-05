@@ -5,17 +5,17 @@ import (
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	datadir "github.com/superisaac/jointrpc/datadir"
+	dispatch "github.com/superisaac/jointrpc/dispatch"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
-	dispatch "github.com/superisaac/jointrpc/dispatch"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 )
 
 type VarsService struct {
-	dispatch.Dispatcher
+	disp *dispatch.Dispatcher
 	//vars   map[string](map[string](interface{}))
 	vars   map[string]interface{}
 	router *rpcrouter.Router
@@ -58,7 +58,6 @@ func (self *VarsService) ReadVars(varsPath string) error {
 	if err != nil {
 		return err
 	}
-	//vars := make(map[string](map[string]interface{}))
 	vars := make(map[string]interface{})
 	err = yaml.Unmarshal(data, vars)
 	if err != nil {
@@ -75,7 +74,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		return err
 	}
 
-	self.InitDispatcher()
+	self.disp = dispatch.NewDispatcher()
 	self.router = rpcrouter.RouterFromContext(rootCtx)
 	self.conn = self.router.Join(false)
 	ctx, cancel := context.WithCancel(rootCtx)
@@ -85,7 +84,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		self.conn = nil
 	}()
 
-	self.On("_vars.list", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.disp.On("_vars.list", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		return self.vars, nil
 	})
 
@@ -135,7 +134,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(msgvec)
-		case resmsg, ok := <-self.ChResult:
+		case resmsg, ok := <-self.disp.ChResult:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return nil
@@ -151,7 +150,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 func (self *VarsService) declareMethods() {
 	if self.conn != nil {
 		minfos := make([]rpcrouter.MethodInfo, 0)
-		for m, info := range self.MethodHandlers {
+		for m, info := range self.disp.MethodHandlers {
 			minfo := rpcrouter.MethodInfo{
 				Name:       m,
 				Help:       info.Help,
@@ -167,7 +166,7 @@ func (self *VarsService) declareMethods() {
 func (self *VarsService) requestReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		self.HandleRequestMessage(msgvec)
+		self.disp.HandleRequestMessage(msgvec)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}

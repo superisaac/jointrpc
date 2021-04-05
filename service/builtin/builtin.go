@@ -15,7 +15,7 @@ import (
 )
 
 type BuiltinService struct {
-	dispatch.Dispatcher
+	disp   *dispatch.Dispatcher
 	router *rpcrouter.Router
 	conn   *rpcrouter.ConnT
 }
@@ -58,7 +58,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(msgvec)
-		case resmsg, ok := <-self.ChResult:
+		case resmsg, ok := <-self.disp.ChResult:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return nil
@@ -76,7 +76,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 func (self *BuiltinService) requestReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		self.HandleRequestMessage(msgvec)
+		self.disp.HandleRequestMessage(msgvec)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}
@@ -88,8 +88,9 @@ const (
 
 func (self *BuiltinService) Init() *BuiltinService {
 	misc.Assert(self.router == nil, "already initited")
-	self.InitDispatcher()
-	self.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.disp = dispatch.NewDispatcher()
+
+	self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		minfos := self.router.GetMethods()
 
 		arr := make([](rpcrouter.MethodInfoMap), 0)
@@ -99,7 +100,7 @@ func (self *BuiltinService) Init() *BuiltinService {
 		return arr, nil
 	})
 
-	self.On("_echo", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.disp.On("_echo", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(params) < 1 {
 			return nil, &jsonrpc.RPCError{Code: 400, Reason: "len params should be at least 1"}
 		}
@@ -110,7 +111,7 @@ func (self *BuiltinService) Init() *BuiltinService {
 		return map[string]string{"echo": msg}, nil
 	}, dispatch.WithSchema(echoSchema))
 
-	self.OnChange(func() {
+	self.disp.OnChange(func() {
 		self.declareMethods()
 	})
 	return self
@@ -119,7 +120,7 @@ func (self *BuiltinService) Init() *BuiltinService {
 func (self *BuiltinService) declareMethods() {
 	if self.conn != nil {
 		minfos := make([]rpcrouter.MethodInfo, 0)
-		for m, info := range self.MethodHandlers {
+		for m, info := range self.disp.MethodHandlers {
 			minfo := rpcrouter.MethodInfo{
 				Name:       m,
 				Help:       info.Help,
