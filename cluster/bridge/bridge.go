@@ -180,7 +180,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 		return err
 	}
 	// TODO: concurrent
-	return self.remoteClient.Handle(rootCtx, disp)
+	return self.remoteClient.Worker(rootCtx, disp)
 }
 
 func (self *Edge) DeclareDelegateMethods(methods []string) {

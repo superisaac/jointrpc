@@ -19,12 +19,11 @@ const _ = grpc.SupportPackageIsVersion7
 type JointRPCClient interface {
 	ListMethods(ctx context.Context, in *ListMethodsRequest, opts ...grpc.CallOption) (*ListMethodsResponse, error)
 	ListDelegates(ctx context.Context, in *ListDelegatesRequest, opts ...grpc.CallOption) (*ListDelegatesResponse, error)
-	DeclareMethods(ctx context.Context, in *DeclareMethodsRequest, opts ...grpc.CallOption) (*DeclareMethodsResponse, error)
 	Call(ctx context.Context, in *JSONRPCCallRequest, opts ...grpc.CallOption) (*JSONRPCCallResult, error)
 	Notify(ctx context.Context, in *JSONRPCNotifyRequest, opts ...grpc.CallOption) (*JSONRPCNotifyResponse, error)
-	Handle(ctx context.Context, opts ...grpc.CallOption) (JointRPC_HandleClient, error)
-	// cluster aware RPCs
 	DeclareDelegates(ctx context.Context, in *DeclareDelegatesRequest, opts ...grpc.CallOption) (*DeclareDelegatesResponse, error)
+	DeclareMethods(ctx context.Context, in *DeclareMethodsRequest, opts ...grpc.CallOption) (*DeclareMethodsResponse, error)
+	Worker(ctx context.Context, opts ...grpc.CallOption) (JointRPC_WorkerClient, error)
 }
 
 type jointRPCClient struct {
@@ -53,15 +52,6 @@ func (c *jointRPCClient) ListDelegates(ctx context.Context, in *ListDelegatesReq
 	return out, nil
 }
 
-func (c *jointRPCClient) DeclareMethods(ctx context.Context, in *DeclareMethodsRequest, opts ...grpc.CallOption) (*DeclareMethodsResponse, error) {
-	out := new(DeclareMethodsResponse)
-	err := c.cc.Invoke(ctx, "/JointRPC/DeclareMethods", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *jointRPCClient) Call(ctx context.Context, in *JSONRPCCallRequest, opts ...grpc.CallOption) (*JSONRPCCallResult, error) {
 	out := new(JSONRPCCallResult)
 	err := c.cc.Invoke(ctx, "/JointRPC/Call", in, out, opts...)
@@ -80,37 +70,6 @@ func (c *jointRPCClient) Notify(ctx context.Context, in *JSONRPCNotifyRequest, o
 	return out, nil
 }
 
-func (c *jointRPCClient) Handle(ctx context.Context, opts ...grpc.CallOption) (JointRPC_HandleClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_JointRPC_serviceDesc.Streams[0], "/JointRPC/Handle", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &jointRPCHandleClient{stream}
-	return x, nil
-}
-
-type JointRPC_HandleClient interface {
-	Send(*JointRPCUpPacket) error
-	Recv() (*JointRPCDownPacket, error)
-	grpc.ClientStream
-}
-
-type jointRPCHandleClient struct {
-	grpc.ClientStream
-}
-
-func (x *jointRPCHandleClient) Send(m *JointRPCUpPacket) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *jointRPCHandleClient) Recv() (*JointRPCDownPacket, error) {
-	m := new(JointRPCDownPacket)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func (c *jointRPCClient) DeclareDelegates(ctx context.Context, in *DeclareDelegatesRequest, opts ...grpc.CallOption) (*DeclareDelegatesResponse, error) {
 	out := new(DeclareDelegatesResponse)
 	err := c.cc.Invoke(ctx, "/JointRPC/DeclareDelegates", in, out, opts...)
@@ -120,18 +79,57 @@ func (c *jointRPCClient) DeclareDelegates(ctx context.Context, in *DeclareDelega
 	return out, nil
 }
 
+func (c *jointRPCClient) DeclareMethods(ctx context.Context, in *DeclareMethodsRequest, opts ...grpc.CallOption) (*DeclareMethodsResponse, error) {
+	out := new(DeclareMethodsResponse)
+	err := c.cc.Invoke(ctx, "/JointRPC/DeclareMethods", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jointRPCClient) Worker(ctx context.Context, opts ...grpc.CallOption) (JointRPC_WorkerClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_JointRPC_serviceDesc.Streams[0], "/JointRPC/Worker", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &jointRPCWorkerClient{stream}
+	return x, nil
+}
+
+type JointRPC_WorkerClient interface {
+	Send(*JointRPCUpPacket) error
+	Recv() (*JointRPCDownPacket, error)
+	grpc.ClientStream
+}
+
+type jointRPCWorkerClient struct {
+	grpc.ClientStream
+}
+
+func (x *jointRPCWorkerClient) Send(m *JointRPCUpPacket) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *jointRPCWorkerClient) Recv() (*JointRPCDownPacket, error) {
+	m := new(JointRPCDownPacket)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // JointRPCServer is the server API for JointRPC service.
 // All implementations must embed UnimplementedJointRPCServer
 // for forward compatibility
 type JointRPCServer interface {
 	ListMethods(context.Context, *ListMethodsRequest) (*ListMethodsResponse, error)
 	ListDelegates(context.Context, *ListDelegatesRequest) (*ListDelegatesResponse, error)
-	DeclareMethods(context.Context, *DeclareMethodsRequest) (*DeclareMethodsResponse, error)
 	Call(context.Context, *JSONRPCCallRequest) (*JSONRPCCallResult, error)
 	Notify(context.Context, *JSONRPCNotifyRequest) (*JSONRPCNotifyResponse, error)
-	Handle(JointRPC_HandleServer) error
-	// cluster aware RPCs
 	DeclareDelegates(context.Context, *DeclareDelegatesRequest) (*DeclareDelegatesResponse, error)
+	DeclareMethods(context.Context, *DeclareMethodsRequest) (*DeclareMethodsResponse, error)
+	Worker(JointRPC_WorkerServer) error
 	mustEmbedUnimplementedJointRPCServer()
 }
 
@@ -145,20 +143,20 @@ func (UnimplementedJointRPCServer) ListMethods(context.Context, *ListMethodsRequ
 func (UnimplementedJointRPCServer) ListDelegates(context.Context, *ListDelegatesRequest) (*ListDelegatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDelegates not implemented")
 }
-func (UnimplementedJointRPCServer) DeclareMethods(context.Context, *DeclareMethodsRequest) (*DeclareMethodsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeclareMethods not implemented")
-}
 func (UnimplementedJointRPCServer) Call(context.Context, *JSONRPCCallRequest) (*JSONRPCCallResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Call not implemented")
 }
 func (UnimplementedJointRPCServer) Notify(context.Context, *JSONRPCNotifyRequest) (*JSONRPCNotifyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Notify not implemented")
 }
-func (UnimplementedJointRPCServer) Handle(JointRPC_HandleServer) error {
-	return status.Errorf(codes.Unimplemented, "method Handle not implemented")
-}
 func (UnimplementedJointRPCServer) DeclareDelegates(context.Context, *DeclareDelegatesRequest) (*DeclareDelegatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeclareDelegates not implemented")
+}
+func (UnimplementedJointRPCServer) DeclareMethods(context.Context, *DeclareMethodsRequest) (*DeclareMethodsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeclareMethods not implemented")
+}
+func (UnimplementedJointRPCServer) Worker(JointRPC_WorkerServer) error {
+	return status.Errorf(codes.Unimplemented, "method Worker not implemented")
 }
 func (UnimplementedJointRPCServer) mustEmbedUnimplementedJointRPCServer() {}
 
@@ -209,24 +207,6 @@ func _JointRPC_ListDelegates_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _JointRPC_DeclareMethods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeclareMethodsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(JointRPCServer).DeclareMethods(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/JointRPC/DeclareMethods",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JointRPCServer).DeclareMethods(ctx, req.(*DeclareMethodsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _JointRPC_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(JSONRPCCallRequest)
 	if err := dec(in); err != nil {
@@ -263,32 +243,6 @@ func _JointRPC_Notify_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _JointRPC_Handle_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(JointRPCServer).Handle(&jointRPCHandleServer{stream})
-}
-
-type JointRPC_HandleServer interface {
-	Send(*JointRPCDownPacket) error
-	Recv() (*JointRPCUpPacket, error)
-	grpc.ServerStream
-}
-
-type jointRPCHandleServer struct {
-	grpc.ServerStream
-}
-
-func (x *jointRPCHandleServer) Send(m *JointRPCDownPacket) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *jointRPCHandleServer) Recv() (*JointRPCUpPacket, error) {
-	m := new(JointRPCUpPacket)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func _JointRPC_DeclareDelegates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeclareDelegatesRequest)
 	if err := dec(in); err != nil {
@@ -307,6 +261,50 @@ func _JointRPC_DeclareDelegates_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JointRPC_DeclareMethods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeclareMethodsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JointRPCServer).DeclareMethods(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/JointRPC/DeclareMethods",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JointRPCServer).DeclareMethods(ctx, req.(*DeclareMethodsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _JointRPC_Worker_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(JointRPCServer).Worker(&jointRPCWorkerServer{stream})
+}
+
+type JointRPC_WorkerServer interface {
+	Send(*JointRPCDownPacket) error
+	Recv() (*JointRPCUpPacket, error)
+	grpc.ServerStream
+}
+
+type jointRPCWorkerServer struct {
+	grpc.ServerStream
+}
+
+func (x *jointRPCWorkerServer) Send(m *JointRPCDownPacket) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *jointRPCWorkerServer) Recv() (*JointRPCUpPacket, error) {
+	m := new(JointRPCUpPacket)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _JointRPC_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "JointRPC",
 	HandlerType: (*JointRPCServer)(nil),
@@ -320,10 +318,6 @@ var _JointRPC_serviceDesc = grpc.ServiceDesc{
 			Handler:    _JointRPC_ListDelegates_Handler,
 		},
 		{
-			MethodName: "DeclareMethods",
-			Handler:    _JointRPC_DeclareMethods_Handler,
-		},
-		{
 			MethodName: "Call",
 			Handler:    _JointRPC_Call_Handler,
 		},
@@ -335,11 +329,15 @@ var _JointRPC_serviceDesc = grpc.ServiceDesc{
 			MethodName: "DeclareDelegates",
 			Handler:    _JointRPC_DeclareDelegates_Handler,
 		},
+		{
+			MethodName: "DeclareMethods",
+			Handler:    _JointRPC_DeclareMethods_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Handle",
-			Handler:       _JointRPC_Handle_Handler,
+			StreamName:    "Worker",
+			Handler:       _JointRPC_Worker_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

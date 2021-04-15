@@ -125,7 +125,7 @@ func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonrpc.I
 	}
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
-	res, err := self.tubeClient.Call(ctx, req)
+	res, err := self.rpcClient.Call(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (self *RPCClient) SendGRPCNotify(rootCtx context.Context, method string, pa
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	notify.Log().Debug("notify message created")
-	res, err := self.tubeClient.Notify(ctx, req)
+	res, err := self.rpcClient.Notify(ctx, req)
 	if err != nil {
 		return err
 	}

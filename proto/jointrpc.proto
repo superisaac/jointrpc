@@ -5,14 +5,16 @@ option go_package = "intf/jointrpc";
 service JointRPC {
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
   rpc ListDelegates(ListDelegatesRequest) returns (ListDelegatesResponse);
-  rpc DeclareMethods(DeclareMethodsRequest) returns (DeclareMethodsResponse);
+
 
   rpc Call(JSONRPCCallRequest) returns (JSONRPCCallResult);
   rpc Notify(JSONRPCNotifyRequest) returns (JSONRPCNotifyResponse);
-  rpc Handle(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
-
+  
+  rpc DeclareDelegates(DeclareDelegatesRequest) returns (DeclareDelegatesResponse);
+  rpc DeclareMethods(DeclareMethodsRequest) returns (DeclareMethodsResponse);
+  rpc Worker(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
   // cluster aware RPCs
-  rpc DeclareDelegates(DeclareDelegatesRequest) returns (DeclareDelegatesResponse);    
+
 }
 
 message Empty {}

@@ -2,7 +2,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(name='jointrpc',
-      version='0.0.3',
+      version='0.0.4',
       description='jointrpc python client',
       author='Zeng Ke',
       author_email='superisaac@gmail.com',

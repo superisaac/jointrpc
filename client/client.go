@@ -133,13 +133,13 @@ func (self *RPCClient) Connect() error {
 	if err != nil {
 		return err
 	}
-	self.tubeClient = intf.NewJointRPCClient(conn)
+	self.rpcClient = intf.NewJointRPCClient(conn)
 	return nil
 }
 
 // Override Handler.OnHandlerChanged
 func (self *RPCClient) OnHandlerChanged(disp *dispatch.Dispatcher) {
-	if self.tubeClient != nil && self.connPublicId != "" {
+	if self.rpcClient != nil && self.connPublicId != "" {
 		self.declareMethods(context.Background(), disp)
 	}
 }
@@ -154,13 +154,13 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	return self.DeclareMethods(rootCtx, upMethods)
 }
 
-func (self *RPCClient) Handle(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	disp.OnChange(func() {
 		self.OnHandlerChanged(disp)
 	})
 
 	for {
-		err := self.handleRPC(rootCtx, disp)
+		err := self.runWorker(rootCtx, disp)
 		self.connected = false
 		if err != nil {
 			return err
@@ -174,7 +174,7 @@ func (self *RPCClient) Handle(rootCtx context.Context, disp *dispatch.Dispatcher
 	return nil
 }
 
-func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_HandleClient, disp *dispatch.Dispatcher) {
+func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_WorkerClient, disp *dispatch.Dispatcher) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -211,17 +211,17 @@ func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
 	self.sendUpChannel <- uppack
 }
 
-func (self *RPCClient) requestAuth(rootCtx context.Context, stream intf.JointRPC_HandleClient) error {
+func (self *RPCClient) requestAuth(rootCtx context.Context, stream intf.JointRPC_WorkerClient) error {
 	payload := &intf.JointRPCUpPacket_Auth{Auth: self.ClientAuth()}
 	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	return stream.Send(uppac)
 }
 
-func (self *RPCClient) handleRPC(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
-	stream, err := self.tubeClient.Handle(ctx, grpc_retry.WithMax(500))
+	stream, err := self.rpcClient.Worker(ctx, grpc_retry.WithMax(500))
 
 	if err != nil {
 		log.Warnf("error on handle %v", err)

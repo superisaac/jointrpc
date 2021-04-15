@@ -112,5 +112,5 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 	if err != nil {
 		return err
 	}
-	return rpcClient.Handle(context.Background(), disp)
+	return rpcClient.Worker(context.Background(), disp)
 } // end of ExampleArray

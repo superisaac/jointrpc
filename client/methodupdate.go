@@ -18,7 +18,7 @@ func (self *RPCClient) ListMethods(rootCtx context.Context) ([]*intf.MethodInfo,
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	req := &intf.ListMethodsRequest{Auth: self.ClientAuth()}
-	res, err := self.tubeClient.ListMethods(ctx, req)
+	res, err := self.rpcClient.ListMethods(ctx, req)
 	if err != nil {
 		return [](*intf.MethodInfo){}, err
 	}
@@ -37,7 +37,7 @@ func (self *RPCClient) DeclareMethods(rootCtx context.Context, methodInfos [](*i
 		Auth:         self.ClientAuth(),
 		ConnPublicId: self.connPublicId,
 		Methods:      methodInfos}
-	res, err := self.tubeClient.DeclareMethods(ctx, req)
+	res, err := self.rpcClient.DeclareMethods(ctx, req)
 	if err != nil {
 		return err
 	}

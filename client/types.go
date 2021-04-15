@@ -38,7 +38,7 @@ type RPCClient struct {
 	serverEntry   ServerEntry
 	serverUrl     *url.URL
 	connected     bool
-	tubeClient    intf.JointRPCClient
+	rpcClient     intf.JointRPCClient
 	sendUpChannel chan *intf.JointRPCUpPacket
 
 	onConnected      ConnectedCallback

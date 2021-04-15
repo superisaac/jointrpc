@@ -82,7 +82,7 @@ func (self *NeighborService) connectRemote(rootCtx context.Context, entry client
 			State:     state,
 		}
 	})
-	c.Handle(rootCtx, disp)
+	c.Worker(rootCtx, disp)
 	return nil
 }
 

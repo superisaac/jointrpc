@@ -69,7 +69,7 @@ func StartTestServe(rootCtx context.Context, serverUrl string, whoami string) {
 		return whoami, nil
 	})
 	c.Connect()
-	c.Handle(rootCtx, disp)
+	c.Worker(rootCtx, disp)
 }
 
 func TestClientAsServe(t *testing.T) {

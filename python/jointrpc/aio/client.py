@@ -156,7 +156,7 @@ class HandlerStream:
             self.stream = None
 
     async def handle(self) -> None:
-        async with self.client.stub.Handle.open() as stream:
+        async with self.client.stub.Worker.open() as stream:
             self.stream = stream
             uppac = pb2.JointRPCUpPacket(auth=self.client.client_auth)
             await stream.send_message(uppac)

@@ -70,7 +70,7 @@ func TestBridgeRun(t *testing.T) {
 	assert.Nil(err)
 	cCtx, cancelServo := context.WithCancel(context.Background())
 	//defer cancelServo()
-	go c1.Handle(cCtx, disp1)
+	go c1.Worker(cCtx, disp1)
 
 	// start c2, the add2int() caller to server2
 	time.Sleep(200 * time.Millisecond)
@@ -160,7 +160,7 @@ func TestServerBreak(t *testing.T) {
 	assert.Nil(err)
 	cCtx, cancelServo := context.WithCancel(context.Background())
 	defer cancelServo()
-	go c1.Handle(cCtx, disp1)
+	go c1.Worker(cCtx, disp1)
 
 	// start c2, the add2int() caller to server2
 	time.Sleep(100 * time.Millisecond)

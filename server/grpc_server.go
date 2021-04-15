@@ -264,22 +264,22 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 	return resp, nil
 }
 
-func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_HandleServer) {
+func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_WorkerServer) {
 	iState := encoding.EncodeServerState(state)
 	payload := &intf.JointRPCDownPacket_State{State: iState}
 	downpac := &intf.JointRPCDownPacket{Payload: payload}
 	stream.Send(downpac)
 }
 
-func sendServerEcho(connPublicId string, stream intf.JointRPC_HandleServer) {
+func sendServerEcho(connPublicId string, stream intf.JointRPC_WorkerServer) {
 	greeting := &intf.ServerEcho{ConnPublicId: connPublicId}
 	payload := &intf.JointRPCDownPacket_Echo{Echo: greeting}
 	downpac := &intf.JointRPCDownPacket{Payload: payload}
 	stream.Send(downpac)
 }
 
-// Handler
-func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream intf.JointRPC_HandleServer, conn *rpcrouter.ConnT) {
+// Workerr
+func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream intf.JointRPC_WorkerServer, conn *rpcrouter.ConnT) {
 	msg := msgvec.Msg
 	msg.Log().Infof("message down to client")
 	env := encoding.MessageToEnvolope(msg)
@@ -291,7 +291,7 @@ func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream i
 	}
 }
 
-func (self *JointRPC) requireAuth(stream intf.JointRPC_HandleServer) (*rpcrouter.ConnT, error) {
+func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter.ConnT, error) {
 	remotePeer, ok := peer.FromContext(stream.Context())
 	if !ok {
 		return nil, errors.New("cannot get peer info from stream")
@@ -334,7 +334,7 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_HandleServer) (*rpcrouter
 	return conn, nil
 }
 
-func relayDownMessages(context context.Context, stream intf.JointRPC_HandleServer, conn *rpcrouter.ConnT) {
+func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServer, conn *rpcrouter.ConnT) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Warnf("recovered ERROR %+v", r)
@@ -362,7 +362,7 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_HandleServe
 	} // and for loop
 }
 
-func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
+func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 	conn, err := self.requireAuth(stream)
 	if err != nil {
 		return err
@@ -408,7 +408,7 @@ func (self *JointRPC) Handle(stream intf.JointRPC_HandleServer) error {
 			continue
 		}
 
-		// Handle JSONRPC Request
+		// Worker JSONRPC Request
 		envo := uppac.GetEnvolope()
 		if envo != nil {
 			msg, err := encoding.MessageFromEnvolope(envo)

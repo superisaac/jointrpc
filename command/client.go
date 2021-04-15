@@ -206,7 +206,7 @@ func CommandWatch() {
 		panic(err)
 	}
 
-	err = rpcClient.Handle(context.Background(), disp)
+	err = rpcClient.Worker(context.Background(), disp)
 	if err != nil {
 		panic(err)
 	}
@@ -229,7 +229,7 @@ func CommandWatchState() {
 	}
 
 	rpcClient.Connect()
-	rpcClient.Handle(context.Background(), disp)
+	rpcClient.Worker(context.Background(), disp)
 }
 
 func printMethodInfos(state *rpcrouter.ServerState) {

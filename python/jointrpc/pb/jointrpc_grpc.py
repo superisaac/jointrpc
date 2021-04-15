@@ -23,10 +23,6 @@ class JointRPCBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def DeclareMethods(self, stream: 'grpclib.server.Stream[jointrpc_pb2.DeclareMethodsRequest, jointrpc_pb2.DeclareMethodsResponse]') -> None:
-        pass
-
-    @abc.abstractmethod
     async def Call(self, stream: 'grpclib.server.Stream[jointrpc_pb2.JSONRPCCallRequest, jointrpc_pb2.JSONRPCCallResult]') -> None:
         pass
 
@@ -35,11 +31,15 @@ class JointRPCBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def Handle(self, stream: 'grpclib.server.Stream[jointrpc_pb2.JointRPCUpPacket, jointrpc_pb2.JointRPCDownPacket]') -> None:
+    async def DeclareDelegates(self, stream: 'grpclib.server.Stream[jointrpc_pb2.DeclareDelegatesRequest, jointrpc_pb2.DeclareDelegatesResponse]') -> None:
         pass
 
     @abc.abstractmethod
-    async def DeclareDelegates(self, stream: 'grpclib.server.Stream[jointrpc_pb2.DeclareDelegatesRequest, jointrpc_pb2.DeclareDelegatesResponse]') -> None:
+    async def DeclareMethods(self, stream: 'grpclib.server.Stream[jointrpc_pb2.DeclareMethodsRequest, jointrpc_pb2.DeclareMethodsResponse]') -> None:
+        pass
+
+    @abc.abstractmethod
+    async def Worker(self, stream: 'grpclib.server.Stream[jointrpc_pb2.JointRPCUpPacket, jointrpc_pb2.JointRPCDownPacket]') -> None:
         pass
 
     def __mapping__(self) -> typing.Dict[str, grpclib.const.Handler]:
@@ -56,12 +56,6 @@ class JointRPCBase(abc.ABC):
                 jointrpc_pb2.ListDelegatesRequest,
                 jointrpc_pb2.ListDelegatesResponse,
             ),
-            '/JointRPC/DeclareMethods': grpclib.const.Handler(
-                self.DeclareMethods,
-                grpclib.const.Cardinality.UNARY_UNARY,
-                jointrpc_pb2.DeclareMethodsRequest,
-                jointrpc_pb2.DeclareMethodsResponse,
-            ),
             '/JointRPC/Call': grpclib.const.Handler(
                 self.Call,
                 grpclib.const.Cardinality.UNARY_UNARY,
@@ -74,17 +68,23 @@ class JointRPCBase(abc.ABC):
                 jointrpc_pb2.JSONRPCNotifyRequest,
                 jointrpc_pb2.JSONRPCNotifyResponse,
             ),
-            '/JointRPC/Handle': grpclib.const.Handler(
-                self.Handle,
-                grpclib.const.Cardinality.STREAM_STREAM,
-                jointrpc_pb2.JointRPCUpPacket,
-                jointrpc_pb2.JointRPCDownPacket,
-            ),
             '/JointRPC/DeclareDelegates': grpclib.const.Handler(
                 self.DeclareDelegates,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 jointrpc_pb2.DeclareDelegatesRequest,
                 jointrpc_pb2.DeclareDelegatesResponse,
+            ),
+            '/JointRPC/DeclareMethods': grpclib.const.Handler(
+                self.DeclareMethods,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                jointrpc_pb2.DeclareMethodsRequest,
+                jointrpc_pb2.DeclareMethodsResponse,
+            ),
+            '/JointRPC/Worker': grpclib.const.Handler(
+                self.Worker,
+                grpclib.const.Cardinality.STREAM_STREAM,
+                jointrpc_pb2.JointRPCUpPacket,
+                jointrpc_pb2.JointRPCDownPacket,
             ),
         }
 
@@ -104,12 +104,6 @@ class JointRPCStub:
             jointrpc_pb2.ListDelegatesRequest,
             jointrpc_pb2.ListDelegatesResponse,
         )
-        self.DeclareMethods = grpclib.client.UnaryUnaryMethod(
-            channel,
-            '/JointRPC/DeclareMethods',
-            jointrpc_pb2.DeclareMethodsRequest,
-            jointrpc_pb2.DeclareMethodsResponse,
-        )
         self.Call = grpclib.client.UnaryUnaryMethod(
             channel,
             '/JointRPC/Call',
@@ -122,15 +116,21 @@ class JointRPCStub:
             jointrpc_pb2.JSONRPCNotifyRequest,
             jointrpc_pb2.JSONRPCNotifyResponse,
         )
-        self.Handle = grpclib.client.StreamStreamMethod(
-            channel,
-            '/JointRPC/Handle',
-            jointrpc_pb2.JointRPCUpPacket,
-            jointrpc_pb2.JointRPCDownPacket,
-        )
         self.DeclareDelegates = grpclib.client.UnaryUnaryMethod(
             channel,
             '/JointRPC/DeclareDelegates',
             jointrpc_pb2.DeclareDelegatesRequest,
             jointrpc_pb2.DeclareDelegatesResponse,
+        )
+        self.DeclareMethods = grpclib.client.UnaryUnaryMethod(
+            channel,
+            '/JointRPC/DeclareMethods',
+            jointrpc_pb2.DeclareMethodsRequest,
+            jointrpc_pb2.DeclareMethodsResponse,
+        )
+        self.Worker = grpclib.client.StreamStreamMethod(
+            channel,
+            '/JointRPC/Worker',
+            jointrpc_pb2.JointRPCUpPacket,
+            jointrpc_pb2.JointRPCDownPacket,
         )
