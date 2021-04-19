@@ -196,7 +196,7 @@ func (self *JointRPC) declareMethods(router *rpcrouter.Router, conn *rpcrouter.C
 		Methods: upMethods,
 	}
 	router.ChServe <- cmdServe
-	return &intf.DeclareMethodsResponse{TraceId: req.TraceId}, nil
+	return &intf.DeclareMethodsResponse{RequestId: req.RequestId}, nil
 }
 
 // DeclareDelegates
@@ -208,7 +208,7 @@ func (self *JointRPC) declareDelegates(router *rpcrouter.Router, conn *rpcrouter
 		MethodNames: req.Methods,
 	}
 	router.ChDelegate <- cmdDelegate
-	return &intf.DeclareDelegatesResponse{TraceId: req.TraceId}, nil
+	return &intf.DeclareDelegatesResponse{RequestId: req.RequestId}, nil
 }
 
 // ListDelegates
@@ -236,9 +236,9 @@ func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_WorkerServer) 
 	stream.Send(downpac)
 }
 
-func sendOkServerEcho(stream intf.JointRPC_WorkerServer) {
-	greeting := &intf.ServerEcho{}
-	payload := &intf.JointRPCDownPacket_Echo{Echo: greeting}
+func sendAuthOk(stream intf.JointRPC_WorkerServer, requestId string) {
+	authResp := &intf.AuthResponse{RequestId: requestId}
+	payload := &intf.JointRPCDownPacket_AuthResponse{AuthResponse: authResp}
 	downpac := &intf.JointRPCDownPacket{Payload: payload}
 	stream.Send(downpac)
 }
@@ -276,26 +276,25 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, err
 	}
 
-	land := uppac.GetLand()
-	if land != nil {
-		auth := land.Auth
-		if status := self.Authorize(stream.Context(), auth, remotePeer.Addr); status != nil {
-			logger.Warnf("client auth failed")
-			echo := &intf.ServerEcho{Status: status, TraceId: land.TraceId}
-			payload := &intf.JointRPCDownPacket_Echo{Echo: echo}
-			downpac := &intf.JointRPCDownPacket{Payload: payload}
-			stream.Send(downpac)
-			return nil, errors.New("client auth failed")
-		}
-	} else {
+	authReq := uppac.GetAuthRequest()
+	if authReq == nil {
 		logger.Warnf("bad up packet %+v", uppac)
 		return nil, errors.New("bad up packet")
+	}
+	auth := authReq.ClientAuth
+	if status := self.Authorize(stream.Context(), auth, remotePeer.Addr); status != nil {
+		logger.Warnf("client auth failed")
+		echo := &intf.AuthResponse{Status: status, RequestId: authReq.RequestId}
+		payload := &intf.JointRPCDownPacket_AuthResponse{AuthResponse: echo}
+		downpac := &intf.JointRPCDownPacket{Payload: payload}
+		stream.Send(downpac)
+		return nil, errors.New("client auth failed")
 	}
 
 	router := rpcrouter.RouterFromContext(stream.Context())
 	conn := router.Join()
 	conn.PeerAddr = remotePeer.Addr
-	sendOkServerEcho(stream)
+	sendAuthOk(stream, authReq.RequestId)
 	return conn, nil
 }
 
@@ -365,7 +364,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 		// Pong on Ping
 		ping := uppac.GetPing()
 		if ping != nil {
-			pong := &intf.Pong{TraceId: ping.TraceId}
+			pong := &intf.Pong{RequestId: ping.RequestId}
 			payload := &intf.JointRPCDownPacket_Pong{Pong: pong}
 			downpac := &intf.JointRPCDownPacket{Payload: payload}
 

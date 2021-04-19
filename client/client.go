@@ -149,7 +149,9 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 		upMethods = append(upMethods, minfo)
 	}
 
-	req := &intf.DeclareMethodsRequest{Methods: upMethods, TraceId: misc.NewUuid()}
+	req := &intf.DeclareMethodsRequest{
+		RequestId: misc.NewUuid(),
+		Methods:   upMethods}
 	payload := &intf.JointRPCUpPacket_MethodsRequest{MethodsRequest: req}
 	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	self.DeliverUpPacket(uppac)
@@ -213,8 +215,11 @@ func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
 }
 
 func (self *RPCClient) requestAuth(rootCtx context.Context) error {
-	land := &intf.ClientLand{Auth: self.ClientAuth(), TraceId: misc.NewUuid()}
-	payload := &intf.JointRPCUpPacket_Land{Land: land}
+	authReq := &intf.AuthRequest{
+		RequestId:  misc.NewUuid(),
+		ClientAuth: self.ClientAuth(),
+	}
+	payload := &intf.JointRPCUpPacket_AuthRequest{AuthRequest: authReq}
 	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	return self.workerStream.Send(uppac)
 }
@@ -266,7 +271,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		ping := downpac.GetPing()
 		if ping != nil {
 			// Send Pong
-			pong := &intf.Pong{TraceId: ping.TraceId}
+			pong := &intf.Pong{RequestId: ping.RequestId}
 			payload := &intf.JointRPCUpPacket_Pong{Pong: pong}
 			uppac := &intf.JointRPCUpPacket{Payload: payload}
 
@@ -305,9 +310,9 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		}
 
 		// Set connPublicId
-		echo := downpac.GetEcho()
-		if echo != nil {
-			err := self.CheckStatus(echo.Status, "Worker.Auth")
+		authResp := downpac.GetAuthResponse()
+		if authResp != nil {
+			err := self.CheckStatus(authResp.Status, "Worker.Auth")
 			if err != nil {
 				log.Warn(err.Error())
 				return err

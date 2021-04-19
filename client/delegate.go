@@ -30,7 +30,7 @@ func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []strin
 		return errors.New("worker stream not setup")
 	}
 
-	req := &intf.DeclareDelegatesRequest{Methods: methods, TraceId: misc.NewUuid()}
+	req := &intf.DeclareDelegatesRequest{Methods: methods, RequestId: misc.NewUuid()}
 	payload := &intf.JointRPCUpPacket_DelegatesRequest{DelegatesRequest: req}
 	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	self.DeliverUpPacket(uppac)

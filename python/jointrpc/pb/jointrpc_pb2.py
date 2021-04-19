@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\rintf/jointrpc',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0ejointrpc.proto\"\x07\n\x05\x45mpty\"&\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0e\n\x06reason\x18\x02 \x01(\t\"0\n\nClientAuth\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"1\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"/\n\x12ListMethodsRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"L\n\x13ListMethodsResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"1\n\x14ListDelegatesRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"C\n\x15ListDelegatesResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x11\n\tdelegates\x18\x02 \x03(\t\"G\n\x15\x44\x65\x63lareMethodsRequest\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"C\n\x16\x44\x65\x63lareMethodsResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"<\n\x17\x44\x65\x63lareDelegatesRequest\x12\x0f\n\x07methods\x18\x01 \x03(\t\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"E\n\x18\x44\x65\x63lareDelegatesResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"w\n\x12JSONRPCCallRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\x12\x0f\n\x07timeout\x18\x04 \x01(\x05\"P\n\x11JSONRPCCallResult\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\"h\n\x14JSONRPCNotifyRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\">\n\x15JSONRPCNotifyResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x0c\n\x04text\x18\x02 \x01(\t\"=\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\"\x18\n\x04Ping\x12\x10\n\x08trace_id\x18\x01 \x01(\t\"\x18\n\x04Pong\x12\x10\n\x08trace_id\x18\x01 \x01(\t\"+\n\x0bServerState\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"9\n\nClientLand\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"7\n\nServerEcho\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"\x9d\x02\n\x12JointRPCDownPacket\x12\x1b\n\x04\x65\x63ho\x18\x01 \x01(\x0b\x32\x0b.ServerEchoH\x00\x12\x15\n\x04ping\x18\x02 \x01(\x0b\x32\x05.PingH\x00\x12\x15\n\x04pong\x18\x03 \x01(\x0b\x32\x05.PongH\x00\x12\x33\n\x10methods_response\x18\x04 \x01(\x0b\x32\x17.DeclareMethodsResponseH\x00\x12\x37\n\x12\x64\x65legates_response\x18\x05 \x01(\x0b\x32\x19.DeclareDelegatesResponseH\x00\x12$\n\x08\x65nvolope\x18\n \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x12\x1d\n\x05state\x18\x0b \x01(\x0b\x32\x0c.ServerStateH\x00\x42\t\n\x07payload\"\xf8\x01\n\x10JointRPCUpPacket\x12\x1b\n\x04land\x18\x01 \x01(\x0b\x32\x0b.ClientLandH\x00\x12\x15\n\x04ping\x18\x02 \x01(\x0b\x32\x05.PingH\x00\x12\x15\n\x04pong\x18\x03 \x01(\x0b\x32\x05.PongH\x00\x12\x31\n\x0fmethods_request\x18\x04 \x01(\x0b\x32\x16.DeclareMethodsRequestH\x00\x12\x35\n\x11\x64\x65legates_request\x18\x05 \x01(\x0b\x32\x18.DeclareDelegatesRequestH\x00\x12$\n\x08\x65nvolope\x18\n \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload2\xa4\x02\n\x08JointRPC\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12>\n\rListDelegates\x12\x15.ListDelegatesRequest\x1a\x16.ListDelegatesResponse\x12\x34\n\x06Worker\x12\x11.JointRPCUpPacket\x1a\x13.JointRPCDownPacket(\x01\x30\x01\x42\x0fZ\rintf/jointrpcb\x06proto3'
+  serialized_pb=b'\n\x0ejointrpc.proto\"\x07\n\x05\x45mpty\"&\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0e\n\x06reason\x18\x02 \x01(\t\"0\n\nClientAuth\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"1\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"/\n\x12ListMethodsRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"L\n\x13ListMethodsResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"1\n\x14ListDelegatesRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"C\n\x15ListDelegatesResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x11\n\tdelegates\x18\x02 \x03(\t\"I\n\x15\x44\x65\x63lareMethodsRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"E\n\x16\x44\x65\x63lareMethodsResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x17\n\x06status\x18\x02 \x01(\x0b\x32\x07.Status\">\n\x17\x44\x65\x63lareDelegatesRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0f\n\x07methods\x18\x02 \x03(\t\"G\n\x18\x44\x65\x63lareDelegatesResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x17\n\x06status\x18\x02 \x01(\x0b\x32\x07.Status\"w\n\x12JSONRPCCallRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\x12\x0f\n\x07timeout\x18\x04 \x01(\x05\"P\n\x11JSONRPCCallResult\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\"h\n\x14JSONRPCNotifyRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\">\n\x15JSONRPCNotifyResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x0c\n\x04text\x18\x02 \x01(\t\"=\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\"\x1a\n\x04Ping\x12\x12\n\nrequest_id\x18\x01 \x01(\t\"\x1a\n\x04Pong\x12\x12\n\nrequest_id\x18\x01 \x01(\t\"+\n\x0bServerState\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"C\n\x0b\x41uthRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12 \n\x0b\x63lient_auth\x18\x02 \x01(\x0b\x32\x0b.ClientAuth\";\n\x0c\x41uthResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x12\n\nrequest_id\x18\x02 \x01(\t\"\xa8\x02\n\x12JointRPCDownPacket\x12&\n\rauth_response\x18\x01 \x01(\x0b\x32\r.AuthResponseH\x00\x12\x15\n\x04ping\x18\x02 \x01(\x0b\x32\x05.PingH\x00\x12\x15\n\x04pong\x18\x03 \x01(\x0b\x32\x05.PongH\x00\x12\x33\n\x10methods_response\x18\x04 \x01(\x0b\x32\x17.DeclareMethodsResponseH\x00\x12\x37\n\x12\x64\x65legates_response\x18\x05 \x01(\x0b\x32\x19.DeclareDelegatesResponseH\x00\x12$\n\x08\x65nvolope\x18\n \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x12\x1d\n\x05state\x18\x0b \x01(\x0b\x32\x0c.ServerStateH\x00\x42\t\n\x07payload\"\x81\x02\n\x10JointRPCUpPacket\x12$\n\x0c\x61uth_request\x18\x01 \x01(\x0b\x32\x0c.AuthRequestH\x00\x12\x15\n\x04ping\x18\x02 \x01(\x0b\x32\x05.PingH\x00\x12\x15\n\x04pong\x18\x03 \x01(\x0b\x32\x05.PongH\x00\x12\x31\n\x0fmethods_request\x18\x04 \x01(\x0b\x32\x16.DeclareMethodsRequestH\x00\x12\x35\n\x11\x64\x65legates_request\x18\x05 \x01(\x0b\x32\x18.DeclareDelegatesRequestH\x00\x12$\n\x08\x65nvolope\x18\n \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload2\xa4\x02\n\x08JointRPC\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12>\n\rListDelegates\x12\x15.ListDelegatesRequest\x1a\x16.ListDelegatesResponse\x12\x34\n\x06Worker\x12\x11.JointRPCUpPacket\x1a\x13.JointRPCDownPacket(\x01\x30\x01\x42\x0fZ\rintf/jointrpcb\x06proto3'
 )
 
 
@@ -318,16 +318,16 @@ _DECLAREMETHODSREQUEST = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='methods', full_name='DeclareMethodsRequest.methods', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
+      name='request_id', full_name='DeclareMethodsRequest.request_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='trace_id', full_name='DeclareMethodsRequest.trace_id', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='methods', full_name='DeclareMethodsRequest.methods', index=1,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -344,7 +344,7 @@ _DECLAREMETHODSREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=415,
-  serialized_end=486,
+  serialized_end=488,
 )
 
 
@@ -357,16 +357,16 @@ _DECLAREMETHODSRESPONSE = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='status', full_name='DeclareMethodsResponse.status', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='request_id', full_name='DeclareMethodsResponse.request_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='trace_id', full_name='DeclareMethodsResponse.trace_id', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='status', full_name='DeclareMethodsResponse.status', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -382,8 +382,8 @@ _DECLAREMETHODSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=488,
-  serialized_end=555,
+  serialized_start=490,
+  serialized_end=559,
 )
 
 
@@ -396,16 +396,16 @@ _DECLAREDELEGATESREQUEST = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='methods', full_name='DeclareDelegatesRequest.methods', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
+      name='request_id', full_name='DeclareDelegatesRequest.request_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='trace_id', full_name='DeclareDelegatesRequest.trace_id', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='methods', full_name='DeclareDelegatesRequest.methods', index=1,
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -421,8 +421,8 @@ _DECLAREDELEGATESREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=557,
-  serialized_end=617,
+  serialized_start=561,
+  serialized_end=623,
 )
 
 
@@ -435,16 +435,16 @@ _DECLAREDELEGATESRESPONSE = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='status', full_name='DeclareDelegatesResponse.status', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='request_id', full_name='DeclareDelegatesResponse.request_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='trace_id', full_name='DeclareDelegatesResponse.trace_id', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='status', full_name='DeclareDelegatesResponse.status', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -460,8 +460,8 @@ _DECLAREDELEGATESRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=619,
-  serialized_end=688,
+  serialized_start=625,
+  serialized_end=696,
 )
 
 
@@ -513,8 +513,8 @@ _JSONRPCCALLREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=690,
-  serialized_end=809,
+  serialized_start=698,
+  serialized_end=817,
 )
 
 
@@ -552,8 +552,8 @@ _JSONRPCCALLRESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=811,
-  serialized_end=891,
+  serialized_start=819,
+  serialized_end=899,
 )
 
 
@@ -598,8 +598,8 @@ _JSONRPCNOTIFYREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=893,
-  serialized_end=997,
+  serialized_start=901,
+  serialized_end=1005,
 )
 
 
@@ -637,8 +637,8 @@ _JSONRPCNOTIFYRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=999,
-  serialized_end=1061,
+  serialized_start=1007,
+  serialized_end=1069,
 )
 
 
@@ -683,8 +683,8 @@ _METHODINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1063,
-  serialized_end=1124,
+  serialized_start=1071,
+  serialized_end=1132,
 )
 
 
@@ -697,7 +697,7 @@ _PING = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='trace_id', full_name='Ping.trace_id', index=0,
+      name='request_id', full_name='Ping.request_id', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -715,8 +715,8 @@ _PING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1126,
-  serialized_end=1150,
+  serialized_start=1134,
+  serialized_end=1160,
 )
 
 
@@ -729,7 +729,7 @@ _PONG = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='trace_id', full_name='Pong.trace_id', index=0,
+      name='request_id', full_name='Pong.request_id', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -747,8 +747,8 @@ _PONG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1152,
-  serialized_end=1176,
+  serialized_start=1162,
+  serialized_end=1188,
 )
 
 
@@ -779,28 +779,67 @@ _SERVERSTATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1178,
-  serialized_end=1221,
+  serialized_start=1190,
+  serialized_end=1233,
 )
 
 
-_CLIENTLAND = _descriptor.Descriptor(
-  name='ClientLand',
-  full_name='ClientLand',
+_AUTHREQUEST = _descriptor.Descriptor(
+  name='AuthRequest',
+  full_name='AuthRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='auth', full_name='ClientLand.auth', index=0,
+      name='request_id', full_name='AuthRequest.request_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='client_auth', full_name='AuthRequest.client_auth', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1235,
+  serialized_end=1302,
+)
+
+
+_AUTHRESPONSE = _descriptor.Descriptor(
+  name='AuthResponse',
+  full_name='AuthResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='status', full_name='AuthResponse.status', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='trace_id', full_name='ClientLand.trace_id', index=1,
+      name='request_id', full_name='AuthResponse.request_id', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -818,47 +857,8 @@ _CLIENTLAND = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1223,
-  serialized_end=1280,
-)
-
-
-_SERVERECHO = _descriptor.Descriptor(
-  name='ServerEcho',
-  full_name='ServerEcho',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='status', full_name='ServerEcho.status', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='trace_id', full_name='ServerEcho.trace_id', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1282,
-  serialized_end=1337,
+  serialized_start=1304,
+  serialized_end=1363,
 )
 
 
@@ -871,7 +871,7 @@ _JOINTRPCDOWNPACKET = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='echo', full_name='JointRPCDownPacket.echo', index=0,
+      name='auth_response', full_name='JointRPCDownPacket.auth_response', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -936,8 +936,8 @@ _JOINTRPCDOWNPACKET = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1340,
-  serialized_end=1625,
+  serialized_start=1366,
+  serialized_end=1662,
 )
 
 
@@ -950,7 +950,7 @@ _JOINTRPCUPPACKET = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='land', full_name='JointRPCUpPacket.land', index=0,
+      name='auth_request', full_name='JointRPCUpPacket.auth_request', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -1008,8 +1008,8 @@ _JOINTRPCUPPACKET = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1628,
-  serialized_end=1876,
+  serialized_start=1665,
+  serialized_end=1922,
 )
 
 _LISTMETHODSREQUEST.fields_by_name['auth'].message_type = _CLIENTAUTH
@@ -1028,9 +1028,9 @@ _JSONRPCNOTIFYREQUEST.fields_by_name['auth'].message_type = _CLIENTAUTH
 _JSONRPCNOTIFYREQUEST.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
 _JSONRPCNOTIFYRESPONSE.fields_by_name['status'].message_type = _STATUS
 _SERVERSTATE.fields_by_name['methods'].message_type = _METHODINFO
-_CLIENTLAND.fields_by_name['auth'].message_type = _CLIENTAUTH
-_SERVERECHO.fields_by_name['status'].message_type = _STATUS
-_JOINTRPCDOWNPACKET.fields_by_name['echo'].message_type = _SERVERECHO
+_AUTHREQUEST.fields_by_name['client_auth'].message_type = _CLIENTAUTH
+_AUTHRESPONSE.fields_by_name['status'].message_type = _STATUS
+_JOINTRPCDOWNPACKET.fields_by_name['auth_response'].message_type = _AUTHRESPONSE
 _JOINTRPCDOWNPACKET.fields_by_name['ping'].message_type = _PING
 _JOINTRPCDOWNPACKET.fields_by_name['pong'].message_type = _PONG
 _JOINTRPCDOWNPACKET.fields_by_name['methods_response'].message_type = _DECLAREMETHODSRESPONSE
@@ -1038,8 +1038,8 @@ _JOINTRPCDOWNPACKET.fields_by_name['delegates_response'].message_type = _DECLARE
 _JOINTRPCDOWNPACKET.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
 _JOINTRPCDOWNPACKET.fields_by_name['state'].message_type = _SERVERSTATE
 _JOINTRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
-  _JOINTRPCDOWNPACKET.fields_by_name['echo'])
-_JOINTRPCDOWNPACKET.fields_by_name['echo'].containing_oneof = _JOINTRPCDOWNPACKET.oneofs_by_name['payload']
+  _JOINTRPCDOWNPACKET.fields_by_name['auth_response'])
+_JOINTRPCDOWNPACKET.fields_by_name['auth_response'].containing_oneof = _JOINTRPCDOWNPACKET.oneofs_by_name['payload']
 _JOINTRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
   _JOINTRPCDOWNPACKET.fields_by_name['ping'])
 _JOINTRPCDOWNPACKET.fields_by_name['ping'].containing_oneof = _JOINTRPCDOWNPACKET.oneofs_by_name['payload']
@@ -1058,15 +1058,15 @@ _JOINTRPCDOWNPACKET.fields_by_name['envolope'].containing_oneof = _JOINTRPCDOWNP
 _JOINTRPCDOWNPACKET.oneofs_by_name['payload'].fields.append(
   _JOINTRPCDOWNPACKET.fields_by_name['state'])
 _JOINTRPCDOWNPACKET.fields_by_name['state'].containing_oneof = _JOINTRPCDOWNPACKET.oneofs_by_name['payload']
-_JOINTRPCUPPACKET.fields_by_name['land'].message_type = _CLIENTLAND
+_JOINTRPCUPPACKET.fields_by_name['auth_request'].message_type = _AUTHREQUEST
 _JOINTRPCUPPACKET.fields_by_name['ping'].message_type = _PING
 _JOINTRPCUPPACKET.fields_by_name['pong'].message_type = _PONG
 _JOINTRPCUPPACKET.fields_by_name['methods_request'].message_type = _DECLAREMETHODSREQUEST
 _JOINTRPCUPPACKET.fields_by_name['delegates_request'].message_type = _DECLAREDELEGATESREQUEST
 _JOINTRPCUPPACKET.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
 _JOINTRPCUPPACKET.oneofs_by_name['payload'].fields.append(
-  _JOINTRPCUPPACKET.fields_by_name['land'])
-_JOINTRPCUPPACKET.fields_by_name['land'].containing_oneof = _JOINTRPCUPPACKET.oneofs_by_name['payload']
+  _JOINTRPCUPPACKET.fields_by_name['auth_request'])
+_JOINTRPCUPPACKET.fields_by_name['auth_request'].containing_oneof = _JOINTRPCUPPACKET.oneofs_by_name['payload']
 _JOINTRPCUPPACKET.oneofs_by_name['payload'].fields.append(
   _JOINTRPCUPPACKET.fields_by_name['ping'])
 _JOINTRPCUPPACKET.fields_by_name['ping'].containing_oneof = _JOINTRPCUPPACKET.oneofs_by_name['payload']
@@ -1102,8 +1102,8 @@ DESCRIPTOR.message_types_by_name['MethodInfo'] = _METHODINFO
 DESCRIPTOR.message_types_by_name['Ping'] = _PING
 DESCRIPTOR.message_types_by_name['Pong'] = _PONG
 DESCRIPTOR.message_types_by_name['ServerState'] = _SERVERSTATE
-DESCRIPTOR.message_types_by_name['ClientLand'] = _CLIENTLAND
-DESCRIPTOR.message_types_by_name['ServerEcho'] = _SERVERECHO
+DESCRIPTOR.message_types_by_name['AuthRequest'] = _AUTHREQUEST
+DESCRIPTOR.message_types_by_name['AuthResponse'] = _AUTHRESPONSE
 DESCRIPTOR.message_types_by_name['JointRPCDownPacket'] = _JOINTRPCDOWNPACKET
 DESCRIPTOR.message_types_by_name['JointRPCUpPacket'] = _JOINTRPCUPPACKET
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -1248,19 +1248,19 @@ ServerState = _reflection.GeneratedProtocolMessageType('ServerState', (_message.
   })
 _sym_db.RegisterMessage(ServerState)
 
-ClientLand = _reflection.GeneratedProtocolMessageType('ClientLand', (_message.Message,), {
-  'DESCRIPTOR' : _CLIENTLAND,
+AuthRequest = _reflection.GeneratedProtocolMessageType('AuthRequest', (_message.Message,), {
+  'DESCRIPTOR' : _AUTHREQUEST,
   '__module__' : 'jointrpc_pb2'
-  # @@protoc_insertion_point(class_scope:ClientLand)
+  # @@protoc_insertion_point(class_scope:AuthRequest)
   })
-_sym_db.RegisterMessage(ClientLand)
+_sym_db.RegisterMessage(AuthRequest)
 
-ServerEcho = _reflection.GeneratedProtocolMessageType('ServerEcho', (_message.Message,), {
-  'DESCRIPTOR' : _SERVERECHO,
+AuthResponse = _reflection.GeneratedProtocolMessageType('AuthResponse', (_message.Message,), {
+  'DESCRIPTOR' : _AUTHRESPONSE,
   '__module__' : 'jointrpc_pb2'
-  # @@protoc_insertion_point(class_scope:ServerEcho)
+  # @@protoc_insertion_point(class_scope:AuthResponse)
   })
-_sym_db.RegisterMessage(ServerEcho)
+_sym_db.RegisterMessage(AuthResponse)
 
 JointRPCDownPacket = _reflection.GeneratedProtocolMessageType('JointRPCDownPacket', (_message.Message,), {
   'DESCRIPTOR' : _JOINTRPCDOWNPACKET,
@@ -1286,8 +1286,8 @@ _JOINTRPC = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1879,
-  serialized_end=2171,
+  serialized_start=1925,
+  serialized_end=2217,
   methods=[
   _descriptor.MethodDescriptor(
     name='Call',

@@ -46,23 +46,25 @@ message ListDelegatesResponse {
 }
 
 message DeclareMethodsRequest {
-  repeated MethodInfo methods = 1;
-  string trace_id = 2;
+  string request_id = 1;  
+  repeated MethodInfo methods = 2;
+
 }
 
 message DeclareMethodsResponse {
-  Status status = 1;
-  string trace_id = 2;
+  string request_id = 1;  
+  Status status = 2;
 }
 
 message DeclareDelegatesRequest {
-  repeated string methods = 1;
-  string trace_id = 2;
+  string request_id = 1;  
+  repeated string methods = 2;
 }
 
 message DeclareDelegatesResponse {
-  Status status = 1;
-  string trace_id = 2;
+  string request_id = 1;  
+  Status status = 2;
+
 }
 
 message JSONRPCCallRequest {
@@ -97,30 +99,30 @@ message MethodInfo {
 }
 
 message Ping {
-  string trace_id = 1;
+  string request_id = 1;
 }
 
 message Pong {
-  string trace_id = 1;
+  string request_id = 1;
 }
 
 message ServerState {
   repeated MethodInfo methods = 1;
 }
 
-message ClientLand {
-  ClientAuth auth = 1;
-  string trace_id = 2;
+message AuthRequest {
+  string request_id = 1;  
+  ClientAuth client_auth = 2;
 }
 
-message ServerEcho {
+message AuthResponse {
   Status status = 1;
-  string trace_id = 2;
+  string request_id = 2;
 }
 
 message JointRPCDownPacket {
   oneof payload {
-    ServerEcho echo = 1;
+    AuthResponse auth_response = 1;
 
     Ping ping = 2;
     Pong pong = 3;
@@ -129,14 +131,13 @@ message JointRPCDownPacket {
     DeclareDelegatesResponse delegates_response = 5;
 
     JSONRPCEnvolope envolope = 10;
-    ServerState state = 11;
+    ServerState state = 11;  // server state notification
   }
 }
 
 message JointRPCUpPacket {
   oneof payload {
-    //ClientAuth auth = 1;
-    ClientLand land = 1;
+    AuthRequest auth_request = 1;
     Ping ping = 2;
     Pong pong = 3;
 
