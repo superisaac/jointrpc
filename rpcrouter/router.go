@@ -342,15 +342,30 @@ func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 		return conn, found
 	}
 
+	// 1st round, select a free connection randomly
 	if descs, ok := self.methodConnMap[method]; ok && len(descs) > 0 {
-		index := rand.Intn(len(descs))
-		return descs[index].Conn, true
+		// choose some free conns
+		for i := 0; i < 5; i++ {
+			index := rand.Intn(len(descs))
+			conn := descs[index].Conn
+			if len(conn.RecvChannel) <= 2 { // skip the choice if there are too many elements in channel buffer
+				return conn, true
+			}
+		}
 
 	}
 
+	// 2nd round, select a random delegate connection
 	if delgs, ok := self.delegateConnMap[method]; ok && len(delgs) > 0 {
 		index := rand.Intn(len(delgs))
 		return delgs[index].Conn, true
+	}
+
+	// 3rd round, select a random connection any way
+	if descs, ok := self.methodConnMap[method]; ok && len(descs) > 0 {
+		// if no free conns just choose the random one anyway
+		index := rand.Intn(len(descs))
+		return descs[index].Conn, true
 	}
 
 	// fallback conns
