@@ -3,18 +3,12 @@ syntax = "proto3";
 option go_package = "intf/jointrpc";
 
 service JointRPC {
-  rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
-  rpc ListDelegates(ListDelegatesRequest) returns (ListDelegatesResponse);
-
-
   rpc Call(JSONRPCCallRequest) returns (JSONRPCCallResult);
   rpc Notify(JSONRPCNotifyRequest) returns (JSONRPCNotifyResponse);
-  
-  rpc DeclareDelegates(DeclareDelegatesRequest) returns (DeclareDelegatesResponse);
-  rpc DeclareMethods(DeclareMethodsRequest) returns (DeclareMethodsResponse);
-  rpc Worker(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
-  // cluster aware RPCs
 
+  rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
+  rpc ListDelegates(ListDelegatesRequest) returns (ListDelegatesResponse);
+  rpc Worker(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
 }
 
 message Empty {}
@@ -52,8 +46,6 @@ message ListDelegatesResponse {
 }
 
 message DeclareMethodsRequest {
-  ClientAuth auth = 1;
-  string conn_public_id = 2;
   repeated MethodInfo methods = 3;
 }
 
@@ -62,8 +54,6 @@ message DeclareMethodsResponse {
 }
 
 message DeclareDelegatesRequest {
-  ClientAuth auth = 1;
-  string conn_public_id = 2;
   repeated string methods = 3;
 }
 
@@ -122,12 +112,15 @@ message ServerEcho {
 message JointRPCDownPacket {
   oneof payload {
     ServerEcho echo = 1;
-    
+
     Ping ping = 2;
     Pong pong = 3;
 
+    DeclareMethodsResponse methodsResponse = 4;
+    DeclareDelegatesResponse delegatesResponse = 5;
+
     JSONRPCEnvolope envolope = 10;
-    ServerState state = 11;    
+    ServerState state = 11;
   }
 }
 
@@ -136,6 +129,9 @@ message JointRPCUpPacket {
     ClientAuth auth = 1;
     Ping ping = 2;
     Pong pong = 3;
+
+    DeclareMethodsRequest methodsRequest = 4;
+    DeclareDelegatesRequest delegatesRequest = 5;
     JSONRPCEnvolope envolope = 10;
   }
 }

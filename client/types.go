@@ -35,6 +35,7 @@ type RPCClient struct {
 	//disp *dispatch.Dispatcher
 
 	connPublicId  string
+	workerStream  intf.JointRPC_WorkerClient
 	serverEntry   ServerEntry
 	serverUrl     *url.URL
 	connected     bool

@@ -4,6 +4,7 @@ import (
 	"context"
 	//"errors"
 	//"fmt"
+	"errors"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 )
 
@@ -24,19 +25,27 @@ func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) 
 }
 
 func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []string) error {
-	ctx, cancel := context.WithCancel(rootCtx)
-	defer cancel()
-	req := &intf.DeclareDelegatesRequest{
-		Auth:         self.ClientAuth(),
-		ConnPublicId: self.connPublicId,
-		Methods:      methods}
-	res, err := self.rpcClient.DeclareDelegates(ctx, req)
-	if err != nil {
-		return err
+	if self.workerStream == nil {
+		return errors.New("worker stream not setup")
 	}
-	err = self.CheckStatus(res.Status, "DeclareDelegates")
-	if err != nil {
-		return err
-	}
+
+	req := &intf.DeclareDelegatesRequest{Methods: methods}
+	payload := &intf.JointRPCUpPacket_DelegatesRequest{DelegatesRequest: req}
+	uppac := &intf.JointRPCUpPacket{Payload: payload}
+	self.DeliverUpPacket(uppac)
 	return nil
 }
+
+// func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []string) error {
+// 	ctx, cancel := context.WithCancel(rootCtx)
+// 	defer cancel()
+// 	res, err := self.rpcClient.DeclareDelegates(ctx, req)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = self.CheckStatus(res.Status, "DeclareDelegates")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

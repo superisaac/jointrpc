@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -139,7 +140,7 @@ func (self *RPCClient) Connect() error {
 
 // Override Handler.OnHandlerChanged
 func (self *RPCClient) OnHandlerChanged(disp *dispatch.Dispatcher) {
-	if self.rpcClient != nil && self.connPublicId != "" {
+	if self.rpcClient != nil && self.workerStream != nil {
 		self.declareMethods(context.Background(), disp)
 	}
 }
@@ -150,8 +151,12 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 		minfo := &intf.MethodInfo{Name: m, Help: info.Help, SchemaJson: info.SchemaJson}
 		upMethods = append(upMethods, minfo)
 	}
-	log.Infof("declare methods %+v, %s", upMethods, self.connPublicId)
-	return self.DeclareMethods(rootCtx, upMethods)
+
+	req := &intf.DeclareMethodsRequest{Methods: upMethods}
+	payload := &intf.JointRPCUpPacket_MethodsRequest{MethodsRequest: req}
+	uppac := &intf.JointRPCUpPacket{Payload: payload}
+	self.DeliverUpPacket(uppac)
+	return nil
 }
 
 func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
@@ -174,18 +179,17 @@ func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher
 	return nil
 }
 
-func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_WorkerClient, disp *dispatch.Dispatcher) {
+func (self *RPCClient) sendUpResult(ctx context.Context, disp *dispatch.Dispatcher) {
 	for {
 		select {
 		case <-ctx.Done():
-			//stream.
 			return
 		case uppacket, ok := <-self.sendUpChannel:
 			if !ok {
 				log.Warnf("send up channel closed")
 				return
 			}
-			stream.Send(uppacket)
+			self.workerStream.Send(uppacket)
 		case resmsg, ok := <-disp.ChResult:
 			if !ok {
 				log.Warnf("result msg closed")
@@ -195,7 +199,7 @@ func (self *RPCClient) sendUpResult(ctx context.Context, stream intf.JointRPC_Wo
 			envo := encoding.MessageToEnvolope(resmsg)
 			payload := &intf.JointRPCUpPacket_Envolope{Envolope: envo}
 			uppac := &intf.JointRPCUpPacket{Payload: payload}
-			stream.Send(uppac)
+			self.workerStream.Send(uppac)
 		}
 	}
 }
@@ -211,15 +215,19 @@ func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
 	self.sendUpChannel <- uppack
 }
 
-func (self *RPCClient) requestAuth(rootCtx context.Context, stream intf.JointRPC_WorkerClient) error {
+func (self *RPCClient) requestAuth(rootCtx context.Context) error {
 	payload := &intf.JointRPCUpPacket_Auth{Auth: self.ClientAuth()}
 	uppac := &intf.JointRPCUpPacket{Payload: payload}
-	return stream.Send(uppac)
+	return self.workerStream.Send(uppac)
 }
 
 func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
+
+	if self.workerStream != nil {
+		return errors.New("worker stream already exist")
+	}
 
 	stream, err := self.rpcClient.Worker(ctx, grpc_retry.WithMax(500))
 
@@ -228,11 +236,12 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		return err
 	}
 	self.connected = true
+	self.workerStream = stream
 	if self.onConnected != nil {
 		self.onConnected()
 	}
 
-	err = self.requestAuth(rootCtx, stream)
+	err = self.requestAuth(rootCtx)
 	if err != nil {
 		return err
 	}
@@ -240,10 +249,10 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 	sendCtx, sendCancel := context.WithCancel(rootCtx)
 	defer sendCancel()
 
-	go self.sendUpResult(sendCtx, stream, disp)
+	go self.sendUpResult(sendCtx, disp)
 
 	for {
-		downpac, err := stream.Recv()
+		downpac, err := self.workerStream.Recv()
 		if err == io.EOF {
 			log.Infof("client stream closed")
 			return nil
@@ -263,7 +272,6 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 			payload := &intf.JointRPCUpPacket_Pong{Pong: pong}
 			uppac := &intf.JointRPCUpPacket{Payload: payload}
 
-			//stream.Send(uppac)
 			self.sendUpChannel <- uppac
 			continue
 		}
@@ -276,10 +284,32 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 			continue
 		}
 
+		// methods response
+		methodsResp := downpac.GetMethodsResponse()
+		if methodsResp != nil {
+			err := self.CheckStatus(methodsResp.Status, "Worker.Methods")
+			if err != nil {
+				log.Warn(err.Error())
+				return err
+			}
+			continue
+		}
+
+		// delegates response
+		delegatesResp := downpac.GetDelegatesResponse()
+		if delegatesResp != nil {
+			err := self.CheckStatus(delegatesResp.Status, "Worker.Delegates")
+			if err != nil {
+				log.Warn(err.Error())
+				return err
+			}
+			continue
+		}
+
 		// Set connPublicId
 		echo := downpac.GetEcho()
 		if echo != nil {
-			err := self.CheckStatus(echo.Status, "Handle.Auth")
+			err := self.CheckStatus(echo.Status, "Worker.Auth")
 			if err != nil {
 				log.Warn(err.Error())
 				return err
