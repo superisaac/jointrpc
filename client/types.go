@@ -34,7 +34,7 @@ type ConnectedCallback func()
 type RPCClient struct {
 	//disp *dispatch.Dispatcher
 
-	connPublicId  string
+	//connPublicId  string
 	workerStream  intf.JointRPC_WorkerClient
 	serverEntry   ServerEntry
 	serverUrl     *url.URL

@@ -196,7 +196,7 @@ func (self *JointRPC) declareMethods(router *rpcrouter.Router, conn *rpcrouter.C
 		Methods: upMethods,
 	}
 	router.ChServe <- cmdServe
-	return &intf.DeclareMethodsResponse{}, nil
+	return &intf.DeclareMethodsResponse{TraceId: req.TraceId}, nil
 }
 
 // DeclareDelegates
@@ -208,7 +208,7 @@ func (self *JointRPC) declareDelegates(router *rpcrouter.Router, conn *rpcrouter
 		MethodNames: req.Methods,
 	}
 	router.ChDelegate <- cmdDelegate
-	return &intf.DeclareDelegatesResponse{}, nil
+	return &intf.DeclareDelegatesResponse{TraceId: req.TraceId}, nil
 }
 
 // ListDelegates
@@ -236,8 +236,8 @@ func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_WorkerServer) 
 	stream.Send(downpac)
 }
 
-func sendServerEcho(connPublicId string, stream intf.JointRPC_WorkerServer) {
-	greeting := &intf.ServerEcho{ConnPublicId: connPublicId}
+func sendOkServerEcho(stream intf.JointRPC_WorkerServer) {
+	greeting := &intf.ServerEcho{}
 	payload := &intf.JointRPCDownPacket_Echo{Echo: greeting}
 	downpac := &intf.JointRPCDownPacket{Payload: payload}
 	stream.Send(downpac)
@@ -276,12 +276,12 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, err
 	}
 
-	auth := uppac.GetAuth()
-	if auth != nil {
+	land := uppac.GetLand()
+	if land != nil {
+		auth := land.Auth
 		if status := self.Authorize(stream.Context(), auth, remotePeer.Addr); status != nil {
 			logger.Warnf("client auth failed")
-
-			echo := &intf.ServerEcho{Status: status}
+			echo := &intf.ServerEcho{Status: status, TraceId: land.TraceId}
 			payload := &intf.JointRPCDownPacket_Echo{Echo: echo}
 			downpac := &intf.JointRPCDownPacket{Payload: payload}
 			stream.Send(downpac)
@@ -293,9 +293,9 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 	}
 
 	router := rpcrouter.RouterFromContext(stream.Context())
-	conn := router.Join(true)
+	conn := router.Join()
 	conn.PeerAddr = remotePeer.Addr
-	sendServerEcho(conn.PublicId(), stream)
+	sendOkServerEcho(stream)
 	return conn, nil
 }
 
@@ -365,7 +365,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 		// Pong on Ping
 		ping := uppac.GetPing()
 		if ping != nil {
-			pong := &intf.Pong{Text: ping.Text}
+			pong := &intf.Pong{TraceId: ping.TraceId}
 			payload := &intf.JointRPCDownPacket_Pong{Pong: pong}
 			downpac := &intf.JointRPCDownPacket{Payload: payload}
 

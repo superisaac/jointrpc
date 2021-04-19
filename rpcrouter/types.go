@@ -58,7 +58,6 @@ type ServerState struct {
 // Connect Struct
 type ConnT struct {
 	ConnId      CID
-	publicId    string
 	PeerAddr    net.Addr
 	RecvChannel MsgChannel
 
@@ -119,8 +118,7 @@ type Router struct {
 
 	fallbackConns []*ConnT
 
-	connMap       map[CID](*ConnT)
-	publicConnMap map[string](*ConnT)
+	connMap map[CID](*ConnT)
 
 	pendingRequests map[interface{}]PendingT
 

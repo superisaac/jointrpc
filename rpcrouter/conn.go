@@ -28,10 +28,6 @@ func (self ConnT) GetMethods() []string {
 	return keys
 }
 
-func (self ConnT) PublicId() string {
-	return self.publicId
-}
-
 func (self ConnT) ValidateRequestMsg(reqMsg *jsonrpc.RequestMessage) (bool, jsonrpc.IMessage) {
 	if info, ok := self.ServeMethods[reqMsg.Method]; ok && info.Schema() != nil {
 		s := info.Schema()
@@ -84,7 +80,6 @@ func (self *ConnT) StateChannel() chan *ServerState {
 func (self ConnT) Log() *log.Entry {
 	return log.WithFields(log.Fields{
 		"conn_id":     self.ConnId,
-		"public_id":   self.publicId,
 		"remote_addr": self.PeerAddr,
 	})
 }

@@ -76,7 +76,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 
 	self.disp = dispatch.NewDispatcher()
 	self.router = rpcrouter.RouterFromContext(rootCtx)
-	self.conn = self.router.Join(false)
+	self.conn = self.router.Join()
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()

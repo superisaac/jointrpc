@@ -28,7 +28,7 @@ func WithTimeout(timeout time.Duration) CallOptionFunc {
 
 func (self *Router) SingleCall(msg jsonrpc.IMessage, callOption *CallOption) (jsonrpc.IMessage, error) {
 	if msg.IsRequest() {
-		conn := self.Join(false)
+		conn := self.Join()
 		defer self.Leave(conn)
 
 		msgvec := MsgVec{
@@ -49,7 +49,7 @@ func (self *Router) SingleCall(msg jsonrpc.IMessage, callOption *CallOption) (js
 
 func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int, callOption *CallOption) (resmsg jsonrpc.IMessage, err error) {
 	if msg.IsRequest() {
-		conn := self.Join(false)
+		conn := self.Join()
 		defer self.Leave(conn)
 
 		reqmsg, _ := msg.(*jsonrpc.RequestMessage)
@@ -80,7 +80,7 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, limit int, callOption *Call
 		resmsg := jsonrpc.NewResultMessage(reqmsg, arr, nil)
 		return resmsg, nil
 	} else if msg.IsNotify() {
-		conn := self.Join(false)
+		conn := self.Join()
 		defer self.Leave(conn)
 
 		notifymsg, _ := msg.(*jsonrpc.NotifyMessage)

@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/datadir"
 	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	misc "github.com/superisaac/jointrpc/misc"
+	//misc "github.com/superisaac/jointrpc/misc"
 	"math/rand"
 	"sort"
 	"strings"
@@ -56,7 +56,6 @@ func (self *Router) Init(name string) *Router {
 	self.delegateConnMap = make(map[string][]MethodDelegation)
 	self.fallbackConns = make([]*ConnT, 0)
 	self.connMap = make(map[CID](*ConnT))
-	self.publicConnMap = make(map[string](*ConnT))
 
 	self.pendingRequests = make(map[interface{}]PendingT)
 	self.methodsSig = ""
@@ -299,13 +298,6 @@ func (self *Router) leaveConn(conn *ConnT) {
 		close(ct.RecvChannel)
 	}
 
-	if conn.publicId != "" {
-		if _, found := self.publicConnMap[conn.publicId]; found {
-			delete(self.publicConnMap, conn.publicId)
-			conn.publicId = ""
-		}
-	}
-
 	// remove conn from fallbackConns
 	if conn.AsFallback {
 		var fbIndex = -1
@@ -367,13 +359,6 @@ func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 		return self.fallbackConns[index], true
 	}
 	return nil, false
-}
-
-func (self *Router) GetConnByPublicId(publicId string) (*ConnT, bool) {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
-	conn, found := self.publicConnMap[publicId]
-	return conn, found
 }
 
 func (self *Router) GetConn(connId CID) (*ConnT, bool) {
@@ -451,9 +436,9 @@ func (self *Router) Loop(ctx context.Context) {
 	}
 }
 
-func (self *Router) Join(genUUID bool) *ConnT {
+func (self *Router) Join() *ConnT {
 	conn := NewConn()
-	self.joinConn(conn, genUUID)
+	self.joinConn(conn)
 	return conn
 }
 
@@ -463,14 +448,10 @@ func (self *Router) JoinFallback() *ConnT {
 	return conn
 }
 
-func (self *Router) joinConn(conn *ConnT, genUUID bool) {
+func (self *Router) joinConn(conn *ConnT) {
 	self.lock("JoinConn")
 	defer self.unlock("JoinConn")
 	self.connMap[conn.ConnId] = conn
-	if genUUID {
-		conn.publicId = misc.NewUuid()
-		self.publicConnMap[conn.publicId] = conn
-	}
 }
 
 func (self *Router) joinFallbackConn(conn *ConnT) {

@@ -36,7 +36,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 		log.Debug("buildin dispatcher context canceled")
 	}()
 
-	self.conn = self.router.Join(false)
+	self.conn = self.router.Join()
 
 	defer func() {
 		log.Debugf("conn %d leave router", self.conn.ConnId)

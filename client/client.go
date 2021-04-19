@@ -16,6 +16,7 @@ import (
 	//server "github.com/superisaac/jointrpc/server"
 	"github.com/superisaac/jointrpc/dispatch"
 	encoding "github.com/superisaac/jointrpc/encoding"
+	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -87,10 +88,6 @@ func (self RPCClient) IsH2() bool {
 	return self.serverUrl.Scheme == "h2" || self.serverUrl.Scheme == "h2c"
 }
 
-func (self RPCClient) ConnPublicId() string {
-	return self.connPublicId
-}
-
 func (self RPCClient) Connected() bool {
 	return self.connected
 }
@@ -152,7 +149,7 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 		upMethods = append(upMethods, minfo)
 	}
 
-	req := &intf.DeclareMethodsRequest{Methods: upMethods}
+	req := &intf.DeclareMethodsRequest{Methods: upMethods, TraceId: misc.NewUuid()}
 	payload := &intf.JointRPCUpPacket_MethodsRequest{MethodsRequest: req}
 	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	self.DeliverUpPacket(uppac)
@@ -216,7 +213,8 @@ func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
 }
 
 func (self *RPCClient) requestAuth(rootCtx context.Context) error {
-	payload := &intf.JointRPCUpPacket_Auth{Auth: self.ClientAuth()}
+	land := &intf.ClientLand{Auth: self.ClientAuth(), TraceId: misc.NewUuid()}
+	payload := &intf.JointRPCUpPacket_Land{Land: land}
 	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	return self.workerStream.Send(uppac)
 }
@@ -268,7 +266,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		ping := downpac.GetPing()
 		if ping != nil {
 			// Send Pong
-			pong := &intf.Pong{Text: ping.Text}
+			pong := &intf.Pong{TraceId: ping.TraceId}
 			payload := &intf.JointRPCUpPacket_Pong{Pong: pong}
 			uppac := &intf.JointRPCUpPacket{Payload: payload}
 
@@ -314,8 +312,6 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 				log.Warn(err.Error())
 				return err
 			}
-			self.connPublicId = echo.ConnPublicId
-			log.Infof("Handle() got conn public id %s", self.connPublicId)
 			disp.TriggerChange()
 			continue
 		}

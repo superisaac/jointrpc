@@ -94,7 +94,7 @@ func (self *NeighborService) Start(rootCtx context.Context) error {
 	}
 
 	// join connection
-	self.conn = self.router.Join(false)
+	self.conn = self.router.Join()
 	defer func() {
 		self.router.Leave(self.conn)
 		self.conn = nil

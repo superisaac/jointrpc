@@ -84,6 +84,7 @@ class Client:
         envolope = pb2.JSONRPCEnvolope(
             body=json.dumps(reqmsg.encode()),
             trace_id=trace_id)
+
         req = pb2.JSONRPCCallRequest(
             auth=self.client_auth,
             envolope=envolope,
@@ -121,19 +122,17 @@ class Client:
         if res.status.code != 0:
             logger.debug('error notify %s, status=%s', method, res.status.code)
 
-    async def declare_methods(self, conn_public_id: str):
+    async def declare_methods(self):
         methods = [pb2.MethodInfo(
             name=m,
             help=h.help_text,
             schema_json=h.schema_json) for m, h in self.handlers.items()]
 
         req = pb2.DeclareMethodsRequest(
-            auth=self.client_auth,
-            conn_public_id=conn_public_id,
+            slug="methods_request",
             methods=methods)
-        resp = await self.stub.DeclareMethods(req)
-        logger.info('declare methods response %s', resp)
-        assert resp.status.code == 0
+        uppac = pb2.JointRPCUpPacket(methodsRequest=req)
+        self.stream.send_message(uppac)
 
     def handler_stream(self) -> 'HandlerStream':
         return HandlerStream(self)
@@ -158,7 +157,10 @@ class HandlerStream:
     async def handle(self) -> None:
         async with self.client.stub.Worker.open() as stream:
             self.stream = stream
-            uppac = pb2.JointRPCUpPacket(auth=self.client.client_auth)
+            land = pb2.ClientLand(
+                auth=self.client.client_auth,
+                trace_id=uuid.uuid4().hex)
+            uppac = pb2.JointRPCUpPacket(land=land)
             await stream.send_message(uppac)
 
             while self.stream:
@@ -174,18 +176,22 @@ class HandlerStream:
                     logger.warning("wait for recv messages", exc_info=True)
                     return
 
-                if downpac.echo.conn_public_id:
+                if downpac.echo.trace_id:
                     if downpac.echo.status.code == 0:
                         self.conn_public_id = downpac.echo.conn_public_id
-                        await self.client.declare_methods(self.conn_public_id)
+                        await self.client.declare_methods()
                     else:
                         logger.warning("different status %s of payload echo", downpac.echo.status)
-                elif downpac.ping.text:
+                elif downpac.ping.trace_id:
                     logger.info("ping received")
-                elif downpac.pong.text:
+                elif downpac.pong.trace_id:
                     logger.info("pong received")
                 elif downpac.state.methods:
                     logger.info("state change")
+                elif downpac.methods_response.trace_id:
+                    logger.info("methods response %s", downpac.methods_response.status)
+                elif downpac.delegates_response.trace_id:
+                    logger.info("delegates response %s", downpac.delegates_response.status)
                 elif downpac.envolope.body:
                     await self._handle_message(
                         downpac.envolope,
