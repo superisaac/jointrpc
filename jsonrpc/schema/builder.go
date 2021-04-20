@@ -36,6 +36,7 @@ func (self *SchemaBuilder) buildNode(data interface{}) (Schema, error) {
 	if typeMap, ok := convertTypeMap(data); ok {
 		return self.buildNodeMap(typeMap)
 	} else {
+		//fmt.Printf("buildNode %+v\n", data)
 		return nil, NewBuildError("data is not an object")
 	}
 }

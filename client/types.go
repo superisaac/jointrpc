@@ -32,9 +32,6 @@ type ConnectionLostCallback func()
 type ConnectedCallback func()
 
 type RPCClient struct {
-	//disp *dispatch.Dispatcher
-
-	//connPublicId  string
 	workerStream  intf.JointRPC_WorkerClient
 	serverEntry   ServerEntry
 	serverUrl     *url.URL
@@ -42,6 +39,7 @@ type RPCClient struct {
 	rpcClient     intf.JointRPCClient
 	sendUpChannel chan *intf.JointRPCUpPacket
 
+	WorkerRetryTimes int
 	onConnected      ConnectedCallback
 	onConnectionLost ConnectionLostCallback
 }

@@ -36,6 +36,10 @@ func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*Met
 	}
 }
 
+func (self *Dispatcher) SetSpawnExec(v bool) {
+	self.spawnExec = v
+}
+
 func (self *Dispatcher) OnChange(onChange OnChangeFunc) {
 	self.changeHandlers = append(self.changeHandlers, onChange)
 }
@@ -87,6 +91,14 @@ func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage) {
 }
 
 func (self *Dispatcher) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
+	if self.spawnExec {
+		go self.handleRequestMessage(msgvec)
+	} else {
+		self.handleRequestMessage(msgvec)
+	}
+}
+
+func (self *Dispatcher) handleRequestMessage(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	handler, ok := self.MethodHandlers[msg.MustMethod()]
 

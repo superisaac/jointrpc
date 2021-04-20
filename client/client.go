@@ -40,9 +40,10 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	}
 
 	c := &RPCClient{
-		serverEntry:   serverEntry,
-		serverUrl:     serverUrl,
-		sendUpChannel: sendUpChannel,
+		serverEntry:      serverEntry,
+		serverUrl:        serverUrl,
+		sendUpChannel:    sendUpChannel,
+		WorkerRetryTimes: 10,
 	}
 	//c.disp = new(dispatch.Dispatcher)
 	//c.disp.InitDispatcher()
@@ -163,7 +164,9 @@ func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher
 		self.OnHandlerChanged(disp)
 	})
 
-	for {
+	//for {
+	for i := 0; i < self.WorkerRetryTimes; i++ {
+		log.Debugf("Worker connect %d times", i)
 		err := self.runWorker(rootCtx, disp)
 		self.connected = false
 		if err != nil {
@@ -233,13 +236,21 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 	}
 
 	stream, err := self.rpcClient.Worker(ctx, grpc_retry.WithMax(500))
-
-	if err != nil {
+	if err == io.EOF {
+		log.Infof("cannot connect stream")
+		return nil
+	} else if grpc.Code(err) == codes.Unavailable {
+		log.Debugf("connect closed retrying")
+		return nil
+	} else if err != nil {
 		log.Warnf("error on handle %v", err)
 		return err
 	}
 	self.connected = true
 	self.workerStream = stream
+	defer func() {
+		self.workerStream = nil
+	}()
 	if self.onConnected != nil {
 		self.onConnected()
 	}

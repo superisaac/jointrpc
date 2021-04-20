@@ -29,7 +29,7 @@ func CommandSendNotify() {
 	callFlags.Parse(os.Args[2:])
 
 	if callFlags.NArg() < 1 {
-		fmt.Println("method params...")
+		fmt.Fprintf(os.Stderr, "method params...\n")
 		os.Exit(1)
 	}
 

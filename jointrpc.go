@@ -24,6 +24,7 @@ var commands map[string]string = map[string]string{
 	"watchstate":    "watch server state changes",
 	"methods":       "list served methods",
 	"delegates":     "list delegated methods",
+	"playbook":      "run a playbook",
 	"bridge":        "run as a bridge between servers",
 	"example.array": "start an example array service",
 	"help":          "print this methods",
@@ -113,6 +114,9 @@ func main() {
 	case "watch":
 		setupClientSideLogger("")
 		command.CommandWatch()
+	case "playbook":
+		setupClientSideLogger("")
+		command.CommandPlaybook()
 	case "bridge":
 		setupClientSideLogger("")
 		command.CommandStartBridge()

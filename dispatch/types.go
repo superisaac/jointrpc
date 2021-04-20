@@ -8,7 +8,8 @@ import (
 )
 
 type RPCRequest struct {
-	MsgVec rpcrouter.MsgVec
+	MsgVec     rpcrouter.MsgVec
+	Dispatcher *Dispatcher
 }
 
 var (
@@ -30,8 +31,11 @@ type MethodHandler struct {
 	Help       string
 }
 
+type HandlerOption func(*MethodHandler)
+
 type Dispatcher struct {
-	ChResult chan jsonrpc.IMessage
+	ChResult  chan jsonrpc.IMessage
+	spawnExec bool
 
 	MethodHandlers map[string]MethodHandler
 	stateHandlers  []StateHandlerFunc

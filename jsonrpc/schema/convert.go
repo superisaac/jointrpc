@@ -1,6 +1,7 @@
 package schema
 
 import (
+	//"fmt"
 	"github.com/superisaac/jointrpc/misc"
 )
 
@@ -10,8 +11,21 @@ func convertTypeMap(maybeType interface{}) (map[string]interface{}, bool) {
 		typeMap := map[string](interface{}){"type": typeStr}
 		return typeMap, true
 	}
-	typeMap, ok := maybeType.(map[string]interface{})
-	return typeMap, ok
+	if typeMap, ok := maybeType.(map[string]interface{}); ok {
+		return typeMap, ok
+	} else if anyMap, ok := maybeType.(map[interface{}]interface{}); ok {
+		tMap := make(map[string]interface{})
+		for k, v := range anyMap {
+			if sk, ok := k.(string); ok {
+				tMap[sk] = v
+			} else {
+				return nil, false
+			}
+		}
+		return tMap, true
+	} else {
+		return nil, false
+	}
 }
 
 func convertAttrMap(node map[string]interface{}, attrName string, optional bool) (map[string]interface{}, bool) {
