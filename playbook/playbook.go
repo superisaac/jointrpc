@@ -8,13 +8,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/jsonrpc/schema"
 	yaml "gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"time"
 )
 
 func NewPlaybook() *Playbook {
@@ -92,11 +93,23 @@ func (self MethodT) CanExec() bool {
 	return self.Shell != nil && self.Shell.Cmd != ""
 }
 
-func (self MethodT) Exec(req *dispatch.RPCRequest) (interface{}, error) {
+func (self MethodT) Exec(req *dispatch.RPCRequest, methodName string) (interface{}, error) {
 	msg := req.MsgVec.Msg
 	// if !msg.IsRequestOrNotify() {
 	// }
-	cmd := exec.Command("sh", "-c", self.Shell.Cmd)
+	var ctx context.Context
+	var cancel func()
+	if self.Shell.Timeout != nil {
+		ctx, cancel = context.WithTimeout(
+			context.Background(),
+			time.Second*time.Duration(*self.Shell.Timeout))
+		defer cancel()
+	} else {
+		ctx, cancel = context.WithCancel(context.Background())
+		defer cancel()
+	}
+	cmd := exec.CommandContext(ctx, "sh", "-c", self.Shell.Cmd)
+
 	cmd.Env = append(os.Environ(), self.Shell.Env...)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -112,7 +125,9 @@ func (self MethodT) Exec(req *dispatch.RPCRequest) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if cmd.Process != nil {
+		msg.Log().Infof("command for %s received output, pid %#v", methodName, cmd.Process.Pid)
+	}
 	parsed, err := simplejson.NewJson(out)
 	if err != nil {
 		return nil, err
@@ -145,7 +160,22 @@ func (self *Playbook) Run(serverEntry client.ServerEntry) error {
 		}
 
 		disp.On(name, func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-			return method.Exec(req)
+			req.MsgVec.Msg.Log().Infof("begin exec %s", name)
+			v, err := method.Exec(req, name)
+			if err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					req.MsgVec.Msg.Log().Warnf(
+						"command exit, code: %d, stderr: %s",
+						exitErr.ExitCode,
+						string(exitErr.Stderr)[:100])
+					return nil, jsonrpc.ErrWorkerExit
+				}
+
+				req.MsgVec.Msg.Log().Warnf("error exec %s, %s", name, err.Error())
+			} else {
+				req.MsgVec.Msg.Log().Infof("end exec %s", name)
+			}
+			return v, err
 		}, opts...)
 	}
 

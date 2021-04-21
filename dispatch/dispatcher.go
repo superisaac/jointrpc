@@ -73,7 +73,11 @@ func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{},
 		if rpcErr, ok := err.(*jsonrpc.RPCError); ok {
 			return rpcErr.ToMessage(msg), nil
 		}
-		return nil, err
+		msg.Log().Warnf("error %s", err.Error())
+		errmsg := jsonrpc.ErrServerError.ToMessage(msg)
+		self.ReturnResultMessage(errmsg)
+		return errmsg, nil
+		//return , err
 	} else if msg.IsRequest() {
 		log.Debugf("msg is request")
 		if resMsg, ok := res.(jsonrpc.IMessage); ok {

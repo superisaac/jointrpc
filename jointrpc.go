@@ -115,7 +115,7 @@ func main() {
 		setupClientSideLogger("")
 		command.CommandWatch()
 	case "playbook":
-		setupClientSideLogger("")
+		setupClientSideLogger("INFO")
 		command.CommandPlaybook()
 	case "bridge":
 		setupClientSideLogger("")

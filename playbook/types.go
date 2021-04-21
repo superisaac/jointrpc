@@ -5,8 +5,9 @@ import (
 )
 
 type ShellT struct {
-	Cmd string   `yaml:"command"`
-	Env []string `yaml:"env,omitempty"`
+	Cmd     string   `yaml:"command"`
+	Env     []string `yaml:"env,omitempty"`
+	Timeout *int     `yaml:"timeout,omitempty"`
 }
 
 type MethodT struct {
