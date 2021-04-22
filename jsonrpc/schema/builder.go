@@ -3,7 +3,9 @@ package schema
 import (
 	"fmt"
 	//"reflect"
+	"errors"
 	simplejson "github.com/bitly/go-simplejson"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Schema build error
@@ -30,6 +32,54 @@ func (self *SchemaBuilder) BuildBytes(bytes []byte) (Schema, error) {
 
 func (self *SchemaBuilder) Build(data interface{}) (Schema, error) {
 	return self.buildNode(data)
+}
+
+//
+func fixStringMaps(src interface{}) (interface{}, bool) {
+	if anyMap, ok := src.(map[interface{}]interface{}); ok {
+		strMap := make(map[string]interface{})
+		for k, v := range anyMap {
+			if sk, ok := k.(string); ok {
+				if newV, ok := fixStringMaps(v); ok {
+					strMap[sk] = newV
+				} else {
+					return nil, false
+				}
+			} else {
+				return nil, false
+			}
+		}
+		return strMap, true
+	} else if anyList, ok := src.([]interface{}); ok {
+		list1 := make([]interface{}, 0)
+		for _, elem := range anyList {
+			newElem, ok := fixStringMaps(elem)
+			if !ok {
+				return nil, false
+			}
+			list1 = append(list1, newElem)
+		}
+		return list1, true
+	} else {
+		return src, true
+	}
+}
+
+func (self *SchemaBuilder) BuildYAMLInterface(data interface{}) (Schema, error) {
+	jsonData, ok := fixStringMaps(data)
+	if !ok {
+		return nil, errors.New("data map keys can only be string")
+	}
+	return self.Build(jsonData)
+}
+
+func (self *SchemaBuilder) BuildYAMLBytes(bytes []byte) (Schema, error) {
+	data := make(map[interface{}]interface{})
+	err := yaml.Unmarshal(bytes, &data)
+	if err != nil {
+		return nil, err
+	}
+	return self.BuildYAMLInterface(data)
 }
 
 func (self *SchemaBuilder) buildNode(data interface{}) (Schema, error) {

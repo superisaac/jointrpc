@@ -3,7 +3,7 @@ package playbook
 import (
 	//"fmt"
 	"context"
-	"errors"
+	//"errors"
 	"github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
@@ -20,37 +20,6 @@ import (
 
 func NewPlaybook() *Playbook {
 	return &Playbook{}
-}
-
-//
-func fixStringMaps(src interface{}) (interface{}, bool) {
-	if anyMap, ok := src.(map[interface{}]interface{}); ok {
-		strMap := make(map[string]interface{})
-		for k, v := range anyMap {
-			if sk, ok := k.(string); ok {
-				if newV, ok := fixStringMaps(v); ok {
-					strMap[sk] = newV
-				} else {
-					return nil, false
-				}
-			} else {
-				return nil, false
-			}
-		}
-		return strMap, true
-	} else if anyList, ok := src.([]interface{}); ok {
-		list1 := make([]interface{}, 0)
-		for _, elem := range anyList {
-			newElem, ok := fixStringMaps(elem)
-			if !ok {
-				return nil, false
-			}
-			list1 = append(list1, newElem)
-		}
-		return list1, true
-	} else {
-		return src, true
-	}
 }
 
 func (self *PlaybookConfig) ReadConfig(filePath string) error {
@@ -74,13 +43,8 @@ func (self *PlaybookConfig) validateValues() error {
 
 	for _, method := range self.Methods {
 		if method.SchemaInterface != nil {
-			sintf, ok := fixStringMaps(method.SchemaInterface)
-			if !ok {
-				return errors.New("cannot convert to string map")
-			}
-			method.SchemaInterface = sintf
 			builder := schema.NewSchemaBuilder()
-			_, err := builder.Build(method.SchemaInterface)
+			_, err := builder.BuildYAMLInterface(method.SchemaInterface)
 			if err != nil {
 				return err
 			}
@@ -166,7 +130,7 @@ func (self *Playbook) Run(serverEntry client.ServerEntry) error {
 				if exitErr, ok := err.(*exec.ExitError); ok {
 					req.MsgVec.Msg.Log().Warnf(
 						"command exit, code: %d, stderr: %s",
-						exitErr.ExitCode,
+						exitErr.ExitCode(),
 						string(exitErr.Stderr)[:100])
 					return nil, jsonrpc.ErrWorkerExit
 				}

@@ -356,3 +356,18 @@ func TestMethodValidator(t *testing.T) {
 	assert.Nil(errPos)
 
 }
+
+func TestBuildYAMLSchema(t *testing.T) {
+	assert := assert.New(t)
+	s1 := []byte(`---
+type: object
+properties:
+  aaa: "string"
+  bbb:
+    type: string
+`)
+	builder := NewSchemaBuilder()
+	s, err := builder.BuildYAMLBytes(s1)
+	assert.Nil(err)
+	assert.Equal("object", s.Type())
+}
