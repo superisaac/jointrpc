@@ -28,7 +28,11 @@ func (self *PlaybookConfig) ReadConfig(filePath string) error {
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(data, self)
+	return self.ReadConfigBytes(data)
+}
+
+func (self *PlaybookConfig) ReadConfigBytes(data []byte) error {
+	err := yaml.Unmarshal(data, self)
 	if err != nil {
 		return err
 	}
@@ -44,10 +48,12 @@ func (self *PlaybookConfig) validateValues() error {
 	for _, method := range self.Methods {
 		if method.SchemaInterface != nil {
 			builder := schema.NewSchemaBuilder()
-			_, err := builder.BuildYAMLInterface(method.SchemaInterface)
+			s, err := builder.BuildYamlInterface(method.SchemaInterface)
 			if err != nil {
 				return err
 			}
+			method.innerSchema = s
+			method.SchemaInterface = s.RebuildType()
 		}
 	}
 	return nil
@@ -109,15 +115,11 @@ func (self *Playbook) Run(serverEntry client.ServerEntry) error {
 			log.Warnf("cannot exec method %s %+v %s\n", name, method, method.Shell.Cmd)
 			continue
 		}
+		log.Infof("playbook register %s", name)
 		opts := make([]func(*dispatch.MethodHandler), 0)
-		if method.SchemaInterface != nil {
-			n := simplejson.New()
-			n.SetPath(nil, method.SchemaInterface)
-			sb, err := n.MarshalJSON()
-			if err != nil {
-				return err
-			}
-			opts = append(opts, dispatch.WithSchema(string(sb)))
+		if method.innerSchema != nil {
+			schemaJson := schema.SchemaToString(method.innerSchema)
+			opts = append(opts, dispatch.WithSchema(schemaJson))
 		}
 		if method.Description != "" {
 			opts = append(opts, dispatch.WithHelp(method.Description))

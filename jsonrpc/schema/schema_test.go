@@ -357,7 +357,7 @@ func TestMethodValidator(t *testing.T) {
 
 }
 
-func TestBuildYAMLSchema(t *testing.T) {
+func TestBuildYamlSchema(t *testing.T) {
 	assert := assert.New(t)
 	s1 := []byte(`---
 type: object
@@ -367,7 +367,7 @@ properties:
     type: string
 `)
 	builder := NewSchemaBuilder()
-	s, err := builder.BuildYAMLBytes(s1)
+	s, err := builder.BuildYamlBytes(s1)
 	assert.Nil(err)
 	assert.Equal("object", s.Type())
 }

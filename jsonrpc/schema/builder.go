@@ -8,6 +8,8 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+var ErrYamlMap = errors.New("map cannot have key other than string type")
+
 // Schema build error
 func (self SchemaBuildError) Error() string {
 	return fmt.Sprintf("SchemaBuildError %s", self.info)
@@ -35,51 +37,55 @@ func (self *SchemaBuilder) Build(data interface{}) (Schema, error) {
 }
 
 //
-func fixStringMaps(src interface{}) (interface{}, bool) {
+func (self SchemaBuilder) FixYamlMaps(src interface{}) (interface{}, error) {
 	if anyMap, ok := src.(map[interface{}]interface{}); ok {
 		strMap := make(map[string]interface{})
 		for k, v := range anyMap {
 			if sk, ok := k.(string); ok {
-				if newV, ok := fixStringMaps(v); ok {
-					strMap[sk] = newV
-				} else {
-					return nil, false
+				newV, err := self.FixYamlMaps(v)
+				if err != nil {
+					return nil, err
 				}
+				strMap[sk] = newV
 			} else {
-				return nil, false
+				return nil, ErrYamlMap
 			}
 		}
-		return strMap, true
+		return strMap, nil
 	} else if anyList, ok := src.([]interface{}); ok {
 		list1 := make([]interface{}, 0)
 		for _, elem := range anyList {
-			newElem, ok := fixStringMaps(elem)
-			if !ok {
-				return nil, false
+			newElem, err := self.FixYamlMaps(elem)
+			if err != nil {
+				return nil, err
 			}
 			list1 = append(list1, newElem)
 		}
-		return list1, true
+		return list1, nil
 	} else {
-		return src, true
+		return src, nil
 	}
 }
 
-func (self *SchemaBuilder) BuildYAMLInterface(data interface{}) (Schema, error) {
-	jsonData, ok := fixStringMaps(data)
-	if !ok {
-		return nil, errors.New("data map keys can only be string")
+func (self *SchemaBuilder) BuildYamlInterface(data interface{}) (Schema, error) {
+	jsonData, err := self.FixYamlMaps(data)
+	if err != nil {
+		return nil, err
 	}
-	return self.Build(jsonData)
+	s, err := self.Build(jsonData)
+	if err != nil {
+		return nil, err
+	}
+	return s, err
 }
 
-func (self *SchemaBuilder) BuildYAMLBytes(bytes []byte) (Schema, error) {
+func (self *SchemaBuilder) BuildYamlBytes(bytes []byte) (Schema, error) {
 	data := make(map[interface{}]interface{})
 	err := yaml.Unmarshal(bytes, &data)
 	if err != nil {
 		return nil, err
 	}
-	return self.BuildYAMLInterface(data)
+	return self.BuildYamlInterface(data)
 }
 
 func (self *SchemaBuilder) buildNode(data interface{}) (Schema, error) {
