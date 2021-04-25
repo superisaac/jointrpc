@@ -2,7 +2,8 @@ package schema
 
 // Schema builder
 type SchemaBuildError struct {
-	info string
+	info  string
+	paths []string
 }
 
 type SchemaBuilder struct {
@@ -41,7 +42,7 @@ type SchemaMixin struct {
 	description string
 }
 
-// schema subclasses
+// schema sucblasses
 type AnySchema struct {
 	SchemaMixin
 }

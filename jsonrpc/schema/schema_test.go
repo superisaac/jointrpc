@@ -26,17 +26,17 @@ func TestBuildBasicSchema(t *testing.T) {
 	s1 = []byte(`{"type": "bad"}`)
 	s, err = builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError unknown type", err.Error())
+	assert.Equal("SchemaBuildError unknown type, paths: ", err.Error())
 
 	s1 = []byte(`"bad2"`)
 	s, err = builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError data is not an object", err.Error())
+	assert.Equal("SchemaBuildError data is not an object, paths: ", err.Error())
 
 	s1 = []byte(`{"aa": 4}`)
 	s, err = builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError no type presented", err.Error())
+	assert.Equal("SchemaBuildError no type presented, paths: ", err.Error())
 
 	s1 = []byte(`{"type": "string"}`)
 	s, err = builder.BuildBytes(s1)
@@ -62,7 +62,7 @@ func TestBuildListSchema(t *testing.T) {
 	builder := NewSchemaBuilder()
 	_, err := builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError no items", err.Error())
+	assert.Equal("SchemaBuildError no items, paths: ", err.Error())
 
 	s1 = []byte(`{
 "type": "list",
@@ -99,7 +99,7 @@ func TestBuildObjectSchema(t *testing.T) {
 	builder := NewSchemaBuilder()
 	_, err := builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError properties is not a map of objects", err.Error())
+	assert.Equal("SchemaBuildError properties is not a map of objects, paths: ", err.Error())
 
 	s1 = []byte(`{
 "type": "object",
@@ -129,7 +129,7 @@ func TestBuildObjectSchema(t *testing.T) {
 	builder = NewSchemaBuilder()
 	s, err = builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError cannot find required prop", err.Error())
+	assert.Equal("SchemaBuildError cannot find required prop, paths: .requires.nosuch", err.Error())
 
 	s1 = []byte(`{
 "type": "object",
@@ -177,7 +177,7 @@ func TestUnionValidator(t *testing.T) {
 	builder := NewSchemaBuilder()
 	_, err := builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError no valid anyOf attribute", err.Error())
+	assert.Equal("SchemaBuildError no valid anyOf attribute, paths: ", err.Error())
 
 	s1 = []byte(`{
 "type": "union",
@@ -284,7 +284,7 @@ func TestMethodValidator(t *testing.T) {
 	builder := NewSchemaBuilder()
 	_, err := builder.BuildBytes(s1)
 	assert.NotNil(err)
-	assert.Equal("SchemaBuildError params is not a list of objects", err.Error())
+	assert.Equal("SchemaBuildError params is not a list of objects, paths: ", err.Error())
 
 	s1 = []byte(`{
 "type": "method",

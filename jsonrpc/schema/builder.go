@@ -19,11 +19,11 @@ func (self NonStringMap) Error() string {
 
 // Schema build error
 func (self SchemaBuildError) Error() string {
-	return fmt.Sprintf("SchemaBuildError %s", self.info)
+	return fmt.Sprintf("SchemaBuildError %s, paths: %s", self.info, strings.Join(self.paths, ""))
 }
 
-func NewBuildError(info string) *SchemaBuildError {
-	return &SchemaBuildError{info: info}
+func NewBuildError(info string, paths []string) *SchemaBuildError {
+	return &SchemaBuildError{info: info, paths: paths}
 }
 
 // Builder
@@ -98,19 +98,18 @@ func (self *SchemaBuilder) BuildYamlBytes(bytes []byte) (Schema, error) {
 	return self.BuildYamlInterface(data)
 }
 
-func (self *SchemaBuilder) buildNode(data interface{}) (Schema, error) {
+func (self *SchemaBuilder) buildNode(data interface{}, paths ...string) (Schema, error) {
 	if typeMap, ok := convertTypeMap(data); ok {
-		return self.buildNodeMap(typeMap)
+		return self.buildNodeMap(typeMap, paths...)
 	} else {
-		//fmt.Printf("buildNode %+v\n", data)
-		return nil, NewBuildError("data is not an object")
+		return nil, NewBuildError("data is not an object", paths)
 	}
 }
 
-func (self *SchemaBuilder) buildNodeMap(node map[string](interface{})) (Schema, error) {
+func (self *SchemaBuilder) buildNodeMap(node map[string](interface{}), paths ...string) (Schema, error) {
 	nodeType, ok := node["type"]
 	if !ok {
-		return nil, NewBuildError("no type presented")
+		return nil, NewBuildError("no type presented", paths)
 	}
 	var schema Schema = nil
 	var err error = nil
@@ -127,22 +126,22 @@ func (self *SchemaBuilder) buildNodeMap(node map[string](interface{})) (Schema, 
 	case "bool":
 		schema = &BoolSchema{}
 	case "union":
-		schema, err = self.buildUnionSchema(node)
+		schema, err = self.buildUnionSchema(node, paths...)
 	case "list":
-		schema, err = self.buildListSchema(node)
+		schema, err = self.buildListSchema(node, paths...)
 	case "object":
-		schema, err = self.buildObjectSchema(node)
+		schema, err = self.buildObjectSchema(node, paths...)
 	case "method":
-		schema, err = self.buildMethodSchema(node)
+		schema, err = self.buildMethodSchema(node, paths...)
 	default:
-		err = NewBuildError("unknown type")
+		err = NewBuildError("unknown type", paths)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = self.buildMixin(schema, node)
+	err = self.buildMixin(schema, node, paths...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,12 +149,13 @@ func (self *SchemaBuilder) buildNodeMap(node map[string](interface{})) (Schema, 
 	return schema, nil
 }
 
-func (self *SchemaBuilder) buildMixin(schema Schema, node map[string]interface{}) error {
+func (self *SchemaBuilder) buildMixin(schema Schema, node map[string]interface{}, paths ...string) error {
 	if name, ok := node["name"]; ok {
 		if strName, ok := name.(string); ok {
 			schema.SetName(strName)
 		} else {
-			return NewBuildError("name must be string")
+			newPaths := append(paths, ".name")
+			return NewBuildError("name must be string", newPaths)
 		}
 	}
 
@@ -163,23 +163,25 @@ func (self *SchemaBuilder) buildMixin(schema Schema, node map[string]interface{}
 		if strDesc, ok := desc.(string); ok {
 			schema.SetDescription(strDesc)
 		} else {
-			return NewBuildError("decsription must be string")
+			newPaths := append(paths, ".description")
+			return NewBuildError("decsription must be string", newPaths)
 		}
 	}
 	return nil
 }
 
-func (self *SchemaBuilder) buildListSchema(node map[string](interface{})) (Schema, error) {
+func (self *SchemaBuilder) buildListSchema(node map[string](interface{}), paths ...string) (Schema, error) {
 	items, ok := node["items"]
 	if !ok {
-		return nil, NewBuildError("no items")
+		return nil, NewBuildError("no items", paths)
 	}
 
 	// build tuple
 	if itemsTuple, ok := items.([]interface{}); ok {
 		schema := NewTupleSchema()
-		for _, item := range itemsTuple {
-			childSchema, err := self.buildNode(item)
+		for i, item := range itemsTuple {
+			newPaths := append(paths, fmt.Sprintf("[%d]", i))
+			childSchema, err := self.buildNode(item, newPaths...)
 			if err != nil {
 				return nil, err
 			}
@@ -187,7 +189,8 @@ func (self *SchemaBuilder) buildListSchema(node map[string](interface{})) (Schem
 		}
 		// additional items
 		if additional, ok := node["additionalItems"]; ok {
-			addSchema, err := self.buildNode(additional)
+			newPaths := append(paths, ".additionalItems")
+			addSchema, err := self.buildNode(additional, newPaths...)
 			if err != nil {
 				return nil, err
 			}
@@ -200,7 +203,7 @@ func (self *SchemaBuilder) buildListSchema(node map[string](interface{})) (Schem
 	// build list
 	//if itemsMap, ok := items.(map[string]interface{}); ok {
 
-	itemSchema, err := self.buildNode(items)
+	itemSchema, err := self.buildNode(items, paths...)
 	if err != nil {
 		return nil, err
 	}
@@ -209,44 +212,47 @@ func (self *SchemaBuilder) buildListSchema(node map[string](interface{})) (Schem
 	return schema, nil
 	//}
 
-	return nil, NewBuildError("fail to build list schema")
+	return nil, NewBuildError("fail to build list schema", paths)
 }
 
-func (self *SchemaBuilder) buildUnionSchema(node map[string](interface{})) (*UnionSchema, error) {
+func (self *SchemaBuilder) buildUnionSchema(node map[string](interface{}), paths ...string) (*UnionSchema, error) {
 	schema := NewUnionSchema()
 	if choices, ok := convertAttrListOfMap(node, "anyOf", false); ok {
-		for _, choiceNode := range choices {
-			c, err := self.buildNodeMap(choiceNode)
+		for i, choiceNode := range choices {
+			newPaths := append(paths, ".anyOf", fmt.Sprintf("[%d]", i))
+			c, err := self.buildNodeMap(choiceNode, newPaths...)
 			if err != nil {
 				return nil, err
 			}
 			schema.Choices = append(schema.Choices, c)
 		}
 	} else {
-		return nil, NewBuildError("no valid anyOf attribute")
+		return nil, NewBuildError("no valid anyOf attribute", paths)
 	}
 	return schema, nil
 }
 
-func (self *SchemaBuilder) buildMethodSchema(node map[string](interface{})) (*MethodSchema, error) {
+func (self *SchemaBuilder) buildMethodSchema(node map[string](interface{}), paths ...string) (*MethodSchema, error) {
 	schema := NewMethodSchema()
 	if paramsNodes, ok := convertAttrListOfMap(node, "params", false); ok {
-		for _, paramNode := range paramsNodes {
-			c, err := self.buildNodeMap(paramNode)
+		for i, paramNode := range paramsNodes {
+			newPaths := append(paths, ".params", fmt.Sprintf("[%d]", i))
+			c, err := self.buildNodeMap(paramNode, newPaths...)
 			if err != nil {
 				return nil, err
 			}
 			schema.Params = append(schema.Params, c)
 		}
 	} else {
-		return nil, NewBuildError("params is not a list of objects")
+		return nil, NewBuildError("params is not a list of objects", paths)
 	}
 
 	if resultNode, ok := convertAttrMap(node, "returns", true); ok {
 		if _, ok := resultNode["type"]; !ok {
 			resultNode["type"] = "any"
 		}
-		c, err := self.buildNodeMap(resultNode)
+		newPaths := append(paths, ".returns")
+		c, err := self.buildNodeMap(resultNode, newPaths...)
 		if err != nil {
 			return nil, err
 		}
@@ -255,29 +261,32 @@ func (self *SchemaBuilder) buildMethodSchema(node map[string](interface{})) (*Me
 	return schema, nil
 }
 
-func (self *SchemaBuilder) buildObjectSchema(node map[string](interface{})) (*ObjectSchema, error) {
+func (self *SchemaBuilder) buildObjectSchema(node map[string](interface{}), paths ...string) (*ObjectSchema, error) {
 	schema := NewObjectSchema()
 	if propNodes, ok := convertAttrMapOfMap(node, "properties", false); ok {
 		for propName, propNode := range propNodes {
-			child, err := self.buildNodeMap(propNode)
+			newPaths := append(paths, ".properties", fmt.Sprintf(".%s", propName))
+			child, err := self.buildNodeMap(propNode, newPaths...)
 			if err != nil {
 				return nil, err
 			}
 			schema.Properties[propName] = child
 		}
 	} else {
-		return nil, NewBuildError("properties is not a map of objects")
+		return nil, NewBuildError("properties is not a map of objects", paths)
 	}
 
 	if requireList, ok := convertAttrListOfString(node, "requires", true); ok {
 		for _, reqProp := range requireList {
 			if _, found := schema.Properties[reqProp]; !found {
-				return nil, NewBuildError("cannot find required prop")
+				newPath := append(paths, ".requires", fmt.Sprintf(".%s", reqProp))
+				return nil, NewBuildError("cannot find required prop", newPath)
 			}
 			schema.Requires[reqProp] = true
 		}
 	} else {
-		return nil, NewBuildError("requires is not a list of strings")
+		newPaths := append(paths, ".requires")
+		return nil, NewBuildError("requires is not a list of strings", newPaths)
 	}
 	return schema, nil
 }

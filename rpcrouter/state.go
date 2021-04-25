@@ -19,7 +19,7 @@ func (self *MethodInfo) SchemaOrError() (*schema.MethodSchema, error) {
 			self.schemaObj = methodSchema
 		} else {
 			log.Warnf("is not method schema")
-			return nil, schema.NewBuildError("method schema required")
+			return nil, schema.NewBuildError("method schema required", []string{})
 		}
 	}
 	return self.schemaObj, nil
