@@ -370,4 +370,17 @@ properties:
 	s, err := builder.BuildYamlBytes(s1)
 	assert.Nil(err)
 	assert.Equal("object", s.Type())
+
+	s2 := []byte(`---
+type: object
+properties:
+  abc: "string"
+  5:
+    type: string
+`)
+
+	builder = NewSchemaBuilder()
+	s, err = builder.BuildYamlBytes(s2)
+	assert.NotNil(err)
+	assert.Contains(err.Error(), ".properties.5")
 }

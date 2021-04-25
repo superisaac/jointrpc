@@ -3,12 +3,19 @@ package schema
 import (
 	"fmt"
 	//"reflect"
-	"errors"
+	//"errors"
 	simplejson "github.com/bitly/go-simplejson"
 	yaml "gopkg.in/yaml.v2"
+	"strings"
 )
 
-var ErrYamlMap = errors.New("map cannot have key other than string type")
+func NewNonStringMap(paths ...string) *NonStringMap {
+	return &NonStringMap{paths: paths}
+}
+
+func (self NonStringMap) Error() string {
+	return fmt.Sprintf("not string key %s", strings.Join(self.paths, ""))
+}
 
 // Schema build error
 func (self SchemaBuildError) Error() string {
@@ -37,25 +44,28 @@ func (self *SchemaBuilder) Build(data interface{}) (Schema, error) {
 }
 
 //
-func (self SchemaBuilder) FixYamlMaps(src interface{}) (interface{}, error) {
+func (self SchemaBuilder) FixYamlMaps(src interface{}, paths ...string) (interface{}, error) {
 	if anyMap, ok := src.(map[interface{}]interface{}); ok {
 		strMap := make(map[string]interface{})
 		for k, v := range anyMap {
 			if sk, ok := k.(string); ok {
-				newV, err := self.FixYamlMaps(v)
+				newPaths := append(paths, fmt.Sprintf(".%s", k))
+				newV, err := self.FixYamlMaps(v, newPaths...)
 				if err != nil {
 					return nil, err
 				}
 				strMap[sk] = newV
 			} else {
-				return nil, ErrYamlMap
+				newPaths := append(paths, fmt.Sprintf(".%v", k))
+				return nil, NewNonStringMap(newPaths...)
 			}
 		}
 		return strMap, nil
 	} else if anyList, ok := src.([]interface{}); ok {
 		list1 := make([]interface{}, 0)
-		for _, elem := range anyList {
-			newElem, err := self.FixYamlMaps(elem)
+		for i, elem := range anyList {
+			newPaths := append(paths, fmt.Sprintf("[%d]", i))
+			newElem, err := self.FixYamlMaps(elem, newPaths...)
 			if err != nil {
 				return nil, err
 			}

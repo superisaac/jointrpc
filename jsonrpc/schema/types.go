@@ -8,6 +8,11 @@ type SchemaBuildError struct {
 type SchemaBuilder struct {
 }
 
+// Fix string map issue from yaml format
+type NonStringMap struct {
+	paths []string
+}
+
 // Schema validator
 type SchemaValidator struct {
 	paths     []string
