@@ -11,10 +11,10 @@ type ShellT struct {
 }
 
 type MethodT struct {
-	Description     string      `yaml:"description,omitempty"`
-	SchemaInterface interface{} `yaml:"schema,omitempty"`
-	Shell           *ShellT     `yaml:"shell,omitempty"`
-	innerSchema     schema.Schema
+	Description     string        `yaml:"description,omitempty"`
+	SchemaInterface interface{}   `yaml:"schema,omitempty"`
+	Shell           *ShellT       `yaml:"shell,omitempty"`
+	innerSchema     schema.Schema `yaml:"-"`
 }
 
 type PlaybookConfig struct {
