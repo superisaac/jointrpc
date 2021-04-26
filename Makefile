@@ -1,8 +1,9 @@
-.PHONY: build all compile_proto test gofmt
-
 protofiles := $(shell find ./proto -name '*.proto')
 gofiles := $(shell find . -name '*.go')
 protogofiles := intf/jointrpc/jointrpc.pb.go intf/jointrpc/jointrpc_grpc.pb.go
+goarchs := linux-amd64 linux-arm linux-arm64 android-arm64 darwin-amd64 darwin-arm64
+
+buildarchdirs := $(foreach a,$(goarchs),build/arch/jointrpc-$a)
 
 protopyfiles := python/jointrpc/pb/jointrpc_pb2.py \
 	python/jointrpc/pb/jointrpc_pb2_grpc.py \
@@ -29,14 +30,6 @@ compile_proto: $(protogofiles) $(protopyfiles)
 bin/jointrpc: ${gofiles}
 	go build -o $@ jointrpc.go
 
-build_arch: ${gofiles}
-	GOOS=linux GOARCH=amd64 go build -o build/arch/jointrpc.linux-amd64 jointrpc.go
-	GOOS=linux GOARCH=arm go build -o build/arch/jointrpc.linux-arm jointrpc.go
-	GOOS=linux GOARCH=arm64 go build -o build/arch/jointrpc.linux-arm64 jointrpc.go
-	GOOS=android GOARCH=arm64 go build -o build/arch/jointrpc.android-arm64 jointrpc.go
-	GOOS=darwin GOARCH=amd64 go build -o build/arch/jointrpc.darwin-amd64 jointrpc.go
-	GOOS=darwin GOARCH=arm64 go build -o build/arch/jointrpc.darwin-arm64 jointrpc.go
-
 test:
 	go test -v github.com/superisaac/jointrpc/datadir
 	go test -v github.com/superisaac/jointrpc/jsonrpc
@@ -50,7 +43,7 @@ test:
 	go test -v github.com/superisaac/jointrpc/playbook
 
 clean:
-	rm -rf bin/jointrpc
+	rm -rf bin/jointrpc build dist
 
 gofmt:
 	go fmt datadir/*.go
@@ -74,3 +67,22 @@ gofmt:
 
 install: bin/jointrpc
 	install $< /usr/local/bin
+
+
+# cross build distributions of multiple targets
+dist:
+	@for arch in $(goarchs); do \
+		$(MAKE) dist/jointrpc-$$arch.tar.gz; \
+	done
+
+dist/jointrpc-%.tar.gz: build/arch/jointrpc-%
+	@mkdir -p dist
+	tar czvf $@ $<
+
+build/arch/jointrpc-%: ${gofiles}
+	GOOS=$(shell echo $@|cut -d- -f 2) \
+	GOARCH=$(shell echo $@|cut -d- -f 3) \
+	go build -o $@/jointrpc jointrpc.go
+
+.PHONY: build all compile_proto test gofmt dist $(goarchs)
+.SECONDARY: $(buildarchdirs)
