@@ -65,7 +65,8 @@ func (self *NeighborService) connectRemote(rootCtx context.Context, entry client
 		panic(errors.New("client already exists"))
 	}
 	c := client.NewRPCClient(entry)
-	disp := dispatch.NewDispatcher()
+	//disp := dispatch.NewDispatcher()
+	stateDisp := dispatch.NewStateDispatcher()
 
 	err := c.Connect()
 	if err != nil {
@@ -73,16 +74,18 @@ func (self *NeighborService) connectRemote(rootCtx context.Context, entry client
 	}
 	edge := NewEdge()
 	edge.remoteClient = c
-	edge.disp = disp
+	//edge.disp = disp
+	edge.stateDisp = stateDisp
+
 	self.edges[entry.ServerUrl] = edge
 
-	disp.OnStateChange(func(state *rpcrouter.ServerState) {
+	stateDisp.OnStateChange(func(state *rpcrouter.ServerState) {
 		self.ChState <- CmdStateChange{
 			ServerUrl: entry.ServerUrl,
 			State:     state,
 		}
 	})
-	c.Worker(rootCtx, disp)
+	c.SubscribeState(rootCtx, stateDisp)
 	return nil
 }
 

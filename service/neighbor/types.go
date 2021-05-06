@@ -9,7 +9,8 @@ import (
 
 type Edge struct {
 	remoteClient *client.RPCClient
-	disp         *dispatch.Dispatcher
+	//disp         *dispatch.Dispatcher
+	stateDisp *dispatch.StateDispatcher
 	// set of names
 	dlgMethods  []rpcrouter.MethodInfo
 	methodNames misc.StringSet

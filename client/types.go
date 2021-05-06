@@ -33,10 +33,11 @@ type ConnectedCallback func()
 
 type RPCClient struct {
 	workerStream  intf.JointRPC_WorkerClient
+	stateStream   intf.JointRPC_SubscribeStateClient
 	serverEntry   ServerEntry
 	serverUrl     *url.URL
 	connected     bool
-	rpcClient     intf.JointRPCClient
+	grpcClient    intf.JointRPCClient
 	sendUpChannel chan *intf.JointRPCUpPacket
 
 	WorkerRetryTimes int

@@ -8,6 +8,11 @@ service JointRPC {
 
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
   rpc ListDelegates(ListDelegatesRequest) returns (ListDelegatesResponse);
+
+  // state stream
+  rpc SubscribeState(AuthRequest) returns (stream SubscribeStateResponse);
+  
+  // request/response dual streams
   rpc Worker(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
 }
 
@@ -144,5 +149,16 @@ message JointRPCUpPacket {
     DeclareMethodsRequest methods_request = 4;
     DeclareDelegatesRequest delegates_request = 5;
     JSONRPCEnvolope envolope = 10;
+  }
+}
+
+// message SubscribeStateRequest {
+//   AuthRequest auth_request = 1;
+// }
+
+message SubscribeStateResponse {
+  oneof payload {
+     AuthResponse auth_response = 1;
+     ServerState state = 2;
   }
 }

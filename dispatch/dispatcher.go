@@ -8,14 +8,11 @@ import (
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 
-// handler manager
-//func (self *Dispatcher) InitDispatcher() {
 func NewDispatcher() *Dispatcher {
 	disp := new(Dispatcher)
 	disp.ChResult = make(chan jsonrpc.IMessage, 100)
 	disp.MethodHandlers = make(map[string](MethodHandler))
 	disp.changeHandlers = make([]OnChangeFunc, 0)
-	disp.stateHandlers = make([]StateHandlerFunc, 0)
 	return disp
 }
 
@@ -47,15 +44,6 @@ func (self *Dispatcher) OnChange(onChange OnChangeFunc) {
 func (self *Dispatcher) TriggerChange() {
 	for _, changeFunc := range self.changeHandlers {
 		changeFunc()
-	}
-}
-func (self *Dispatcher) OnStateChange(stateChange StateHandlerFunc) {
-	self.stateHandlers = append(self.stateHandlers, stateChange)
-}
-
-func (self *Dispatcher) TriggerStateChange(state *rpcrouter.ServerState) {
-	for _, f := range self.stateHandlers {
-		f(state)
 	}
 }
 

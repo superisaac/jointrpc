@@ -220,16 +220,16 @@ func CommandWatchState() {
 	subFlags.Parse(os.Args[2:])
 
 	rpcClient := client.NewRPCClient(serverFlag.Get())
-	disp := dispatch.NewDispatcher()
+	stateDisp := dispatch.NewStateDispatcher()
 
 	if *pVerbose {
-		disp.OnStateChange(printMethodInfos)
+		stateDisp.OnStateChange(printMethodInfos)
 	} else {
-		disp.OnStateChange(printMethodNames)
+		stateDisp.OnStateChange(printMethodNames)
 	}
 
 	rpcClient.Connect()
-	rpcClient.Worker(context.Background(), disp)
+	rpcClient.SubscribeState(context.Background(), stateDisp)
 }
 
 func printMethodInfos(state *rpcrouter.ServerState) {

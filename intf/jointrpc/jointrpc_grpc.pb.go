@@ -21,6 +21,9 @@ type JointRPCClient interface {
 	Notify(ctx context.Context, in *JSONRPCNotifyRequest, opts ...grpc.CallOption) (*JSONRPCNotifyResponse, error)
 	ListMethods(ctx context.Context, in *ListMethodsRequest, opts ...grpc.CallOption) (*ListMethodsResponse, error)
 	ListDelegates(ctx context.Context, in *ListDelegatesRequest, opts ...grpc.CallOption) (*ListDelegatesResponse, error)
+	// state stream
+	SubscribeState(ctx context.Context, in *AuthRequest, opts ...grpc.CallOption) (JointRPC_SubscribeStateClient, error)
+	// request/response dual streams
 	Worker(ctx context.Context, opts ...grpc.CallOption) (JointRPC_WorkerClient, error)
 }
 
@@ -68,8 +71,40 @@ func (c *jointRPCClient) ListDelegates(ctx context.Context, in *ListDelegatesReq
 	return out, nil
 }
 
+func (c *jointRPCClient) SubscribeState(ctx context.Context, in *AuthRequest, opts ...grpc.CallOption) (JointRPC_SubscribeStateClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_JointRPC_serviceDesc.Streams[0], "/JointRPC/SubscribeState", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &jointRPCSubscribeStateClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type JointRPC_SubscribeStateClient interface {
+	Recv() (*SubscribeStateResponse, error)
+	grpc.ClientStream
+}
+
+type jointRPCSubscribeStateClient struct {
+	grpc.ClientStream
+}
+
+func (x *jointRPCSubscribeStateClient) Recv() (*SubscribeStateResponse, error) {
+	m := new(SubscribeStateResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *jointRPCClient) Worker(ctx context.Context, opts ...grpc.CallOption) (JointRPC_WorkerClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_JointRPC_serviceDesc.Streams[0], "/JointRPC/Worker", opts...)
+	stream, err := c.cc.NewStream(ctx, &_JointRPC_serviceDesc.Streams[1], "/JointRPC/Worker", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +142,9 @@ type JointRPCServer interface {
 	Notify(context.Context, *JSONRPCNotifyRequest) (*JSONRPCNotifyResponse, error)
 	ListMethods(context.Context, *ListMethodsRequest) (*ListMethodsResponse, error)
 	ListDelegates(context.Context, *ListDelegatesRequest) (*ListDelegatesResponse, error)
+	// state stream
+	SubscribeState(*AuthRequest, JointRPC_SubscribeStateServer) error
+	// request/response dual streams
 	Worker(JointRPC_WorkerServer) error
 	mustEmbedUnimplementedJointRPCServer()
 }
@@ -126,6 +164,9 @@ func (UnimplementedJointRPCServer) ListMethods(context.Context, *ListMethodsRequ
 }
 func (UnimplementedJointRPCServer) ListDelegates(context.Context, *ListDelegatesRequest) (*ListDelegatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDelegates not implemented")
+}
+func (UnimplementedJointRPCServer) SubscribeState(*AuthRequest, JointRPC_SubscribeStateServer) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeState not implemented")
 }
 func (UnimplementedJointRPCServer) Worker(JointRPC_WorkerServer) error {
 	return status.Errorf(codes.Unimplemented, "method Worker not implemented")
@@ -215,6 +256,27 @@ func _JointRPC_ListDelegates_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JointRPC_SubscribeState_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AuthRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(JointRPCServer).SubscribeState(m, &jointRPCSubscribeStateServer{stream})
+}
+
+type JointRPC_SubscribeStateServer interface {
+	Send(*SubscribeStateResponse) error
+	grpc.ServerStream
+}
+
+type jointRPCSubscribeStateServer struct {
+	grpc.ServerStream
+}
+
+func (x *jointRPCSubscribeStateServer) Send(m *SubscribeStateResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 func _JointRPC_Worker_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(JointRPCServer).Worker(&jointRPCWorkerServer{stream})
 }
@@ -263,6 +325,11 @@ var _JointRPC_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "SubscribeState",
+			Handler:       _JointRPC_SubscribeState_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "Worker",
 			Handler:       _JointRPC_Worker_Handler,

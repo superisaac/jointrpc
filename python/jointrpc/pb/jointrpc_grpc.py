@@ -31,6 +31,10 @@ class JointRPCBase(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def SubscribeState(self, stream: 'grpclib.server.Stream[jointrpc_pb2.AuthRequest, jointrpc_pb2.SubscribeStateResponse]') -> None:
+        pass
+
+    @abc.abstractmethod
     async def Worker(self, stream: 'grpclib.server.Stream[jointrpc_pb2.JointRPCUpPacket, jointrpc_pb2.JointRPCDownPacket]') -> None:
         pass
 
@@ -59,6 +63,12 @@ class JointRPCBase(abc.ABC):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 jointrpc_pb2.ListDelegatesRequest,
                 jointrpc_pb2.ListDelegatesResponse,
+            ),
+            '/JointRPC/SubscribeState': grpclib.const.Handler(
+                self.SubscribeState,
+                grpclib.const.Cardinality.UNARY_STREAM,
+                jointrpc_pb2.AuthRequest,
+                jointrpc_pb2.SubscribeStateResponse,
             ),
             '/JointRPC/Worker': grpclib.const.Handler(
                 self.Worker,
@@ -95,6 +105,12 @@ class JointRPCStub:
             '/JointRPC/ListDelegates',
             jointrpc_pb2.ListDelegatesRequest,
             jointrpc_pb2.ListDelegatesResponse,
+        )
+        self.SubscribeState = grpclib.client.UnaryStreamMethod(
+            channel,
+            '/JointRPC/SubscribeState',
+            jointrpc_pb2.AuthRequest,
+            jointrpc_pb2.SubscribeStateResponse,
         )
         self.Worker = grpclib.client.StreamStreamMethod(
             channel,

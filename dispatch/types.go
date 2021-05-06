@@ -19,9 +19,6 @@ var (
 type HandlerFunc func(req *RPCRequest, params []interface{}) (interface{}, error)
 type DefaultHandlerFunc func(req *RPCRequest, method string, params []interface{}) (interface{}, error)
 
-// listen to tube state change
-type StateHandlerFunc func(newState *rpcrouter.ServerState)
-
 type OnChangeFunc func()
 
 type MethodHandler struct {
@@ -34,11 +31,15 @@ type MethodHandler struct {
 type HandlerOption func(*MethodHandler)
 
 type Dispatcher struct {
-	ChResult  chan jsonrpc.IMessage
-	spawnExec bool
-
+	ChResult       chan jsonrpc.IMessage
+	spawnExec      bool
 	MethodHandlers map[string]MethodHandler
-	stateHandlers  []StateHandlerFunc
 	defaultHandler DefaultHandlerFunc
 	changeHandlers []OnChangeFunc
+}
+
+// listen to tube state change
+type StateHandlerFunc func(newState *rpcrouter.ServerState)
+type StateDispatcher struct {
+	stateHandlers []StateHandlerFunc
 }

@@ -18,7 +18,7 @@ func (self *RPCClient) ListMethods(rootCtx context.Context) ([]*intf.MethodInfo,
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	req := &intf.ListMethodsRequest{Auth: self.ClientAuth()}
-	res, err := self.rpcClient.ListMethods(ctx, req)
+	res, err := self.grpcClient.ListMethods(ctx, req)
 	if err != nil {
 		return [](*intf.MethodInfo){}, err
 	}

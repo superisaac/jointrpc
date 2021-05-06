@@ -13,7 +13,7 @@ func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) 
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	req := &intf.ListDelegatesRequest{Auth: self.ClientAuth()}
-	res, err := self.rpcClient.ListDelegates(ctx, req)
+	res, err := self.grpcClient.ListDelegates(ctx, req)
 	if err != nil {
 		return nil, err
 	}
