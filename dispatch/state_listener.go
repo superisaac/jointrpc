@@ -8,17 +8,17 @@ import (
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 
-func NewStateDispatcher() *StateDispatcher {
-	disp := new(StateDispatcher)
-	disp.stateHandlers = make([]StateHandlerFunc, 0)
-	return disp
+func NewStateListener() *StateListener {
+	listener := new(StateListener)
+	listener.stateHandlers = make([]StateHandlerFunc, 0)
+	return listener
 }
 
-func (self *StateDispatcher) OnStateChange(stateChange StateHandlerFunc) {
+func (self *StateListener) OnStateChange(stateChange StateHandlerFunc) {
 	self.stateHandlers = append(self.stateHandlers, stateChange)
 }
 
-func (self *StateDispatcher) TriggerStateChange(state *rpcrouter.ServerState) {
+func (self *StateListener) TriggerStateChange(state *rpcrouter.ServerState) {
 	for _, f := range self.stateHandlers {
 		f(state)
 	}

@@ -145,7 +145,7 @@ func (self *Edge) onStateChange(state *rpcrouter.ServerState) {
 
 func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	disp := dispatch.NewDispatcher()
-	stateDisp := dispatch.NewStateDispatcher()
+	stateListener := dispatch.NewStateListener()
 
 	entry := self.remoteClient.ServerEntry()
 	self.remoteClient.OnConnected(func() {
@@ -165,7 +165,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 		}
 	})
 
-	stateDisp.OnStateChange(func(state *rpcrouter.ServerState) {
+	stateListener.OnStateChange(func(state *rpcrouter.ServerState) {
 		self.onStateChange(state)
 		bridge.ChState <- CmdStateChange{
 			serverUrl: entry.ServerUrl,
@@ -182,7 +182,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 		return err
 	}
 	// TODO: concurrent
-	go self.remoteClient.SubscribeState(rootCtx, stateDisp)
+	go self.remoteClient.SubscribeState(rootCtx, stateListener)
 	return self.remoteClient.Worker(rootCtx, disp)
 }
 

@@ -23,7 +23,7 @@ import (
 	//credentials "google.golang.org/grpc/credentials"
 )
 
-func (self *RPCClient) SubscribeState(rootCtx context.Context, stateDisp *dispatch.StateDispatcher) error {
+func (self *RPCClient) SubscribeState(rootCtx context.Context, stateListener *dispatch.StateListener) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	if self.stateStream != nil {
@@ -78,7 +78,7 @@ func (self *RPCClient) SubscribeState(rootCtx context.Context, stateDisp *dispat
 		istate := pac.GetState()
 		if istate != nil {
 			state := encoding.DecodeServerState(istate)
-			stateDisp.TriggerStateChange(state)
+			stateListener.TriggerStateChange(state)
 			continue
 		}
 	}

@@ -40,6 +40,6 @@ type Dispatcher struct {
 
 // listen to tube state change
 type StateHandlerFunc func(newState *rpcrouter.ServerState)
-type StateDispatcher struct {
+type StateListener struct {
 	stateHandlers []StateHandlerFunc
 }
