@@ -84,6 +84,6 @@ type ObjectSchema struct {
 
 type MethodSchema struct {
 	SchemaMixin
-	Params []Schema
-	Result Schema
+	Params  []Schema
+	Returns Schema
 }

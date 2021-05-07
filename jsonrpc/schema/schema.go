@@ -228,7 +228,7 @@ func (self *TupleSchema) Scan(validator *SchemaValidator, data interface{}) *Err
 
 // type = "method"
 func NewMethodSchema() *MethodSchema {
-	return &MethodSchema{Params: make([]Schema, 0), Result: nil}
+	return &MethodSchema{Params: make([]Schema, 0), Returns: nil}
 }
 func (self MethodSchema) Type() string {
 	return "method"
@@ -241,7 +241,9 @@ func (self MethodSchema) RebuildType() map[string]interface{} {
 		arr = append(arr, p.RebuildType())
 	}
 	tp["params"] = arr
-	tp["result"] = self.Result
+	if self.Returns != nil {
+		tp["returns"] = self.Returns.RebuildType()
+	}
 	return tp
 }
 
@@ -284,8 +286,8 @@ func (self *MethodSchema) ScanParams(validator *SchemaValidator, params []interf
 }
 
 func (self *MethodSchema) ScanResult(validator *SchemaValidator, result interface{}) *ErrorPos {
-	if self.Result != nil {
-		return validator.Scan(self.Result, ".result", result)
+	if self.Returns != nil {
+		return validator.Scan(self.Returns, ".result", result)
 	}
 	return nil
 }
@@ -341,9 +343,9 @@ func (self *ObjectSchema) Scan(validator *SchemaValidator, data interface{}) *Er
 }
 
 func SchemaToString(schema Schema) string {
-	s := schema.RebuildType()
+	structData := schema.RebuildType()
 	schemaJson := simplejson.New()
-	schemaJson.SetPath(nil, s)
+	schemaJson.SetPath(nil, structData)
 	schemaBytes, err := schemaJson.MarshalJSON()
 	if err != nil {
 		panic(err)

@@ -354,7 +354,19 @@ func TestMethodValidator(t *testing.T) {
 	data = []byte(`{"result": "a string"}`)
 	errPos = validator.ValidateBytes(s, data)
 	assert.Nil(errPos)
+}
 
+func TestBuildMethodSchema(t *testing.T) {
+	assert := assert.New(t)
+	s1 := []byte(`{"type": "method", "params": ["string", "number"], "returns": {"type":"string"}}`)
+	builder := NewSchemaBuilder()
+	s, err := builder.BuildBytes(s1)
+
+	assert.Nil(err)
+	assert.Equal("method", s.Type())
+	methodSchema, ok := s.(*MethodSchema)
+	assert.True(ok)
+	assert.Equal("string", methodSchema.Returns.Type())
 }
 
 func TestBuildYamlSchema(t *testing.T) {

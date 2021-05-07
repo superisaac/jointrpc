@@ -256,7 +256,7 @@ func (self *SchemaBuilder) buildMethodSchema(node map[string](interface{}), path
 		if err != nil {
 			return nil, err
 		}
-		schema.Result = c
+		schema.Returns = c
 	}
 	return schema, nil
 }
