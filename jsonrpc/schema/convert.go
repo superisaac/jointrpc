@@ -8,21 +8,24 @@ import (
 // util functions
 func convertTypeMap(maybeType interface{}) (map[string]interface{}, bool) {
 	if typeStr, ok := maybeType.(string); ok && misc.StringInList(typeStr, "string", "number", "bool", "null") {
+		// type is single string, build a simle map
 		typeMap := map[string](interface{}){"type": typeStr}
 		return typeMap, true
 	}
 	if typeMap, ok := maybeType.(map[string]interface{}); ok {
-		return typeMap, ok
-	} else if anyMap, ok := maybeType.(map[interface{}]interface{}); ok {
-		tMap := make(map[string]interface{})
-		for k, v := range anyMap {
-			if sk, ok := k.(string); ok {
-				tMap[sk] = v
-			} else {
-				return nil, false
+		// type is map
+		if _, ok := typeMap["type"]; !ok {
+			// type field missing, guess it's type
+			if _, ok := typeMap["params"]; ok {
+				// has field `params`, so this is a method schema
+				typeMap["type"] = "method"
+			} else if _, ok := typeMap["properties"]; ok {
+				// has field `properties`, so this is a method schema
+				typeMap["type"] = "object"
 			}
+
 		}
-		return tMap, true
+		return typeMap, ok
 	} else {
 		return nil, false
 	}
@@ -32,7 +35,6 @@ func convertAttrMap(node map[string]interface{}, attrName string, optional bool)
 	if v, ok := node[attrName]; ok {
 		return convertTypeMap(v)
 	} else if optional {
-		//return make(map[string]interface{}), true
 		return map[string](interface{}){}, true
 	}
 	return nil, false

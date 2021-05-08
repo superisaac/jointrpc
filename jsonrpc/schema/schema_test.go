@@ -358,7 +358,7 @@ func TestMethodValidator(t *testing.T) {
 
 func TestBuildMethodSchema(t *testing.T) {
 	assert := assert.New(t)
-	s1 := []byte(`{"type": "method", "params": ["string", "number"], "returns": {"type":"string"}}`)
+	s1 := []byte(`{"params": ["string", "number"], "returns": "string"}`)
 	builder := NewSchemaBuilder()
 	s, err := builder.BuildBytes(s1)
 
@@ -371,6 +371,18 @@ func TestBuildMethodSchema(t *testing.T) {
 
 func TestBuildYamlSchema(t *testing.T) {
 	assert := assert.New(t)
+	// schema without type field
+	s0 := []byte(`---
+properties:
+  aaa: "string"
+  bbb:
+    type: string
+`)
+	builder := NewSchemaBuilder()
+	s, err := builder.BuildYamlBytes(s0)
+	assert.Nil(err)
+	assert.Equal("object", s.Type())
+
 	s1 := []byte(`---
 type: object
 properties:
@@ -378,8 +390,8 @@ properties:
   bbb:
     type: string
 `)
-	builder := NewSchemaBuilder()
-	s, err := builder.BuildYamlBytes(s1)
+	builder = NewSchemaBuilder()
+	s, err = builder.BuildYamlBytes(s1)
 	assert.Nil(err)
 	assert.Equal("object", s.Type())
 
