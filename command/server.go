@@ -23,14 +23,14 @@ import (
 )
 
 func CommandStartServer() {
-	serverFlags := flag.NewFlagSet("server", flag.ExitOnError)
+	serverFlags := flag.NewFlagSet("jointrpc-server", flag.ExitOnError)
 	pBind := serverFlags.String("b", "", "The grpc server address and port")
 	pDatadir := serverFlags.String("d", "", "The datadir to store configs")
 	pCertFile := serverFlags.String("cert", "", "tls cert file")
 	pKeyFile := serverFlags.String("key", "", "tls key file")
 	pHttpBind := serverFlags.String("http_bind", "", "http address and port")
 
-	serverFlags.Parse(os.Args[2:])
+	serverFlags.Parse(os.Args[1:])
 	if *pDatadir != "" {
 		datadir.SetDatadir(*pDatadir)
 	}

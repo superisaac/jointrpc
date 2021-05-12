@@ -2,21 +2,13 @@ package main
 
 import (
 	"fmt"
-	"sort"
-	//"context"
 	log "github.com/sirupsen/logrus"
-	//client "github.com/superisaac/jointrpc/client"
-	//example "github.com/superisaac/jointrpc/client/example"
-	//server "github.com/superisaac/jointrpc/server"
 	command "github.com/superisaac/jointrpc/command"
 	"os"
-	//"strings"
-	//"strings"
-	//bridge "github.com/superisaac/jointrpc/cluster/bridge"
+	"sort"
 )
 
 var commands map[string]string = map[string]string{
-	"server":        "start join server",
 	"rpc":           "call jsonrpc method, the same as call",
 	"call":          "call jsonrpc method",
 	"watch":         "watch notifies and print them",

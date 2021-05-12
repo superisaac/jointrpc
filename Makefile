@@ -9,7 +9,7 @@ protopyfiles := python/jointrpc/pb/jointrpc_pb2.py \
 	python/jointrpc/pb/jointrpc_pb2_grpc.py \
 	python/jointrpc/pb/jointrpc_grpc.py
 
-build: compile_proto bin/jointrpc
+build: compile_proto bin/jointrpc bin/jointrpc-server
 
 all: test build
 
@@ -30,6 +30,9 @@ compile_proto: $(protogofiles) $(protopyfiles)
 bin/jointrpc: ${gofiles}
 	go build -o $@ jointrpc.go
 
+bin/jointrpc-server: ${gofiles}
+	go build -o $@ jointrpc_server.go
+
 test:
 	go test -v github.com/superisaac/jointrpc/datadir
 	go test -v github.com/superisaac/jointrpc/jsonrpc
@@ -43,7 +46,7 @@ test:
 	go test -v github.com/superisaac/jointrpc/playbook
 
 clean:
-	rm -rf bin/jointrpc build dist
+	rm -rf bin/jointrpc bin/jointrpc-server build dist
 
 gofmt:
 	go fmt datadir/*.go
@@ -64,9 +67,10 @@ gofmt:
 	go fmt service/neighbor/*.go
 	go fmt service/vars/*.go
 	go fmt command/*.go
+	go fmt *.go
 
-install: bin/jointrpc
-	install $< /usr/local/bin
+install: bin/jointrpc bin/jointrpc-server
+	install $^ /usr/local/bin
 
 
 # cross build distributions of multiple targets
@@ -83,6 +87,11 @@ build/arch/jointrpc-%: ${gofiles}
 	GOOS=$(shell echo $@|cut -d- -f 2) \
 	GOARCH=$(shell echo $@|cut -d- -f 3) \
 	go build -o $@/jointrpc jointrpc.go
+
+	GOOS=$(shell echo $@|cut -d- -f 2) \
+	GOARCH=$(shell echo $@|cut -d- -f 3) \
+	go build -o $@/jointrpc-server jointrpc_server.go
+
 
 .PHONY: build all compile_proto test gofmt dist $(goarchs)
 .SECONDARY: $(buildarchdirs)
