@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	command "github.com/superisaac/jointrpc/command"
+	"github.com/superisaac/jointrpc/cmd"
 	"os"
 	"sort"
 )
@@ -84,37 +84,37 @@ func main() {
 
 	switch os.Args[1] {
 	case "server":
-		command.CommandStartServer()
+		cmd.CommandStartServer()
 	case "methods":
 		setupClientSideLogger("")
-		command.CommandListMethods()
+		cmd.CommandListMethods()
 	case "delegates":
 		setupClientSideLogger("")
-		command.CommandListDelegates()
+		cmd.CommandListDelegates()
 	case "watchstate":
 		setupClientSideLogger("")
-		command.CommandWatchState()
+		cmd.CommandWatchState()
 	case "rpc":
 		setupClientSideLogger("")
-		command.CommandCallRPC("rpc")
+		cmd.CommandCallRPC("rpc")
 	case "call":
 		setupClientSideLogger("")
-		command.CommandCallRPC("call")
+		cmd.CommandCallRPC("call")
 	case "notify":
 		setupClientSideLogger("")
-		command.CommandSendNotify()
+		cmd.CommandSendNotify()
 	case "watch":
 		setupClientSideLogger("")
-		command.CommandWatch()
+		cmd.CommandWatch()
 	case "playbook":
 		setupClientSideLogger("INFO")
-		command.CommandPlaybook()
+		cmd.CommandPlaybook()
 	case "bridge":
 		setupClientSideLogger("")
-		command.CommandStartBridge()
+		cmd.CommandStartBridge()
 	case "example.array":
 		setupClientSideLogger("")
-		command.CommandExampleArray()
+		cmd.CommandExampleArray()
 	case "help":
 		showHelp()
 	default:

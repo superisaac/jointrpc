@@ -1,9 +1,9 @@
 package main
 
 import (
-	command "github.com/superisaac/jointrpc/command"
+	"github.com/superisaac/jointrpc/cmd"
 )
 
 func main() {
-	command.CommandStartServer()
+	cmd.CommandStartServer()
 }
