@@ -15,7 +15,6 @@ func NewConn() *ConnT {
 	conn := &ConnT{ConnId: connId,
 		RecvChannel:  ch,
 		ServeMethods: methods,
-		AsFallback:   false,
 	}
 	return conn
 }
@@ -79,6 +78,7 @@ func (self *ConnT) StateChannel() chan *ServerState {
 
 func (self ConnT) Log() *log.Entry {
 	return log.WithFields(log.Fields{
+		"namespace":   self.Namespace,
 		"conn_id":     self.ConnId,
 		"remote_addr": self.PeerAddr,
 	})

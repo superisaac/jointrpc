@@ -79,13 +79,13 @@ func (self *RPCClient) sendUpResult(ctx context.Context, disp *dispatch.Dispatch
 				return
 			}
 			self.workerStream.Send(uppacket)
-		case resmsg, ok := <-disp.ChResult:
+		case result, ok := <-disp.ChResult:
 			if !ok {
 				log.Warnf("result msg closed")
 				return
 			}
 
-			envo := encoding.MessageToEnvolope(resmsg)
+			envo := encoding.MessageToEnvolope(result.ResMsg)
 			payload := &intf.JointRPCUpPacket_Envolope{Envolope: envo}
 			uppac := &intf.JointRPCUpPacket{Payload: payload}
 			self.workerStream.Send(uppac)
@@ -147,11 +147,36 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		return err
 	}
 
+	// wait for auth response
+	downpac, err := self.workerStream.Recv()
+	if err == io.EOF {
+		log.Infof("client stream closed")
+		return nil
+	} else if grpc.Code(err) == codes.Unavailable {
+		log.Debugf("connect closed retrying")
+		return nil
+	} else if err != nil {
+		log.Debugf("down pack error %+v %d", err, grpc.Code(err))
+		return err
+	}
+	authResp := downpac.GetAuthResponse()
+	if authResp == nil {
+		log.Warnf("cannot wait for auth response")
+		return err
+	}
+
+	err = self.CheckStatus(authResp.Status, "Worker.Auth")
+	if err != nil {
+		log.Warn(err.Error())
+		return err
+	}
+	namespace := authResp.Namespace
+
+	// startup sendup goroutine
 	sendCtx, sendCancel := context.WithCancel(rootCtx)
 	defer sendCancel()
-
 	go self.sendUpResult(sendCtx, disp)
-
+	disp.TriggerChange()
 	for {
 		downpac, err := self.workerStream.Recv()
 		if err == io.EOF {
@@ -199,18 +224,6 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 			continue
 		}
 
-		// Set connPublicId
-		authResp := downpac.GetAuthResponse()
-		if authResp != nil {
-			err := self.CheckStatus(authResp.Status, "Worker.Auth")
-			if err != nil {
-				log.Warn(err.Error())
-				return err
-			}
-			disp.TriggerChange()
-			continue
-		}
-
 		// Handle JSONRPC Request
 		//req := downpac.GetRequest()
 		envo := downpac.GetEnvolope()
@@ -223,16 +236,17 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 				log.Warnf("msg is none of reques|notify %+v ", msg)
 				continue
 			}
-			self.handleDownRequest(msg, envo.TraceId, disp)
+			self.handleDownRequest(msg, envo.TraceId, disp, namespace)
 			continue
 		}
 	}
 	return nil
 }
 
-func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher) {
+func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher, namespace string) {
 	msgvec := rpcrouter.MsgVec{
 		Msg:        msg,
+		Namespace:  namespace,
 		FromConnId: 0}
 	disp.HandleRequestMessage(msgvec)
 }

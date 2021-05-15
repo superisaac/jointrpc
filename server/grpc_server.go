@@ -32,18 +32,22 @@ type JointRPC struct {
 	intf.UnimplementedJointRPCServer
 }
 
-func (self JointRPC) Authorize(context context.Context, auth *intf.ClientAuth, ipAddr net.Addr) *intf.Status {
-	router := rpcrouter.RouterFromContext(context)
-	cfg := router.Config
+func (self JointRPC) Authorize(context context.Context, auth *intf.ClientAuth, ipAddr net.Addr) (*intf.Status, string) {
+	factory := rpcrouter.RouterFactoryFromContext(context)
+	cfg := factory.Config
 	if len(cfg.Authorizations) == 0 {
-		return nil
+		return nil, "default"
 	}
 	for _, bauth := range cfg.Authorizations {
 		if bauth.Authorize(auth.Username, auth.Password, ipAddr.String()) {
-			return nil
+			ns := bauth.Namespace
+			if ns == "" {
+				ns = "default"
+			}
+			return nil, ns
 		}
 	}
-	return &intf.Status{Code: 401, Reason: "auth failed"}
+	return &intf.Status{Code: 401, Reason: "auth failed"}, ""
 }
 
 // Call
@@ -53,10 +57,13 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 		return nil, errors.New("cannot get peer info from Call()")
 	}
 
-	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
+	status, namespace := self.Authorize(context, req.Auth, remotePeer.Addr)
+	if status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.JSONRPCCallResult{Status: status}, nil
 	}
+
+	factory := rpcrouter.RouterFactoryFromContext(context)
 
 	reqmsg, err := encoding.MessageFromEnvolope(req.Envolope)
 	if err != nil {
@@ -70,9 +77,14 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 		reqmsg.SetTraceId(misc.NewUuid())
 	}
 	reqmsg.Log().Infof("from ip %s", remotePeer.Addr)
-	router := rpcrouter.RouterFromContext(context)
+
+	router := factory.CommonRouter()
+	if !router.HasMethod(reqmsg.MustMethod()) {
+		router = factory.Get(namespace)
+	}
 
 	recvmsg, err := router.CallOrNotify(reqmsg,
+		namespace,
 		rpcrouter.WithBroadcast(req.Broadcast),
 		rpcrouter.WithTimeout(time.Second*time.Duration(req.Timeout)))
 
@@ -100,7 +112,8 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 		return nil, errors.New("cannot get peer info from Notify()")
 	}
 
-	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
+	status, namespace := self.Authorize(context, req.Auth, remotePeer.Addr)
+	if status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.JSONRPCNotifyResponse{Status: status}, nil
 	}
@@ -118,9 +131,14 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 	}
 
 	notifymsg.Log().Infof("from ip %s", remotePeer.Addr)
-	router := rpcrouter.RouterFromContext(context)
+	factory := rpcrouter.RouterFactoryFromContext(context)
+	router := factory.CommonRouter()
+	if !router.HasMethod(notifymsg.MustMethod()) {
+		router = factory.Get(namespace)
+	}
 
 	_, err = router.CallOrNotify(notifymsg,
+		namespace,
 		rpcrouter.WithBroadcast(req.Broadcast))
 
 	if err != nil {
@@ -145,20 +163,25 @@ func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethods
 		return nil, errors.New("cannot get peer info from ListMethods()")
 	}
 
-	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
+	status, namespace := self.Authorize(context, req.Auth, remotePeer.Addr)
+	if status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.ListMethodsResponse{Status: status}, nil
 	}
 
-	router := rpcrouter.RouterFromContext(context)
+	factory := rpcrouter.RouterFactoryFromContext(context)
+	router := factory.Get(namespace)
+
 	minfos := router.GetMethods()
+	commonInfos := factory.CommonRouter().GetMethods()
+	minfos = append(minfos, commonInfos...)
 	intfMInfos := buildMethodInfos(minfos)
 	resp := &intf.ListMethodsResponse{Methods: intfMInfos}
 	return resp, nil
 }
 
 // DeclareMethods
-func (self *JointRPC) declareMethods(router *rpcrouter.Router, conn *rpcrouter.ConnT, req *intf.DeclareMethodsRequest) (*intf.DeclareMethodsResponse, error) {
+func (self *JointRPC) declareMethods(factory *rpcrouter.RouterFactory, conn *rpcrouter.ConnT, req *intf.DeclareMethodsRequest) (*intf.DeclareMethodsResponse, error) {
 	upMethods := make([]rpcrouter.MethodInfo, 0)
 	var methodNames []string
 	for _, iminfo := range req.Methods {
@@ -191,23 +214,25 @@ func (self *JointRPC) declareMethods(router *rpcrouter.Router, conn *rpcrouter.C
 	}
 
 	conn.Log().Infof("declared methods %v", methodNames)
-	cmdServe := rpcrouter.CmdServe{
-		ConnId:  conn.ConnId,
-		Methods: upMethods,
+	cmdMethods := rpcrouter.CmdMethods{
+		Namespace: conn.Namespace,
+		ConnId:    conn.ConnId,
+		Methods:   upMethods,
 	}
-	router.ChServe <- cmdServe
+	factory.ChMethods <- cmdMethods
 	return &intf.DeclareMethodsResponse{RequestId: req.RequestId}, nil
 }
 
 // DeclareDelegates
-func (self *JointRPC) declareDelegates(router *rpcrouter.Router, conn *rpcrouter.ConnT, req *intf.DeclareDelegatesRequest) (*intf.DeclareDelegatesResponse, error) {
+func (self *JointRPC) declareDelegates(factory *rpcrouter.RouterFactory, conn *rpcrouter.ConnT, req *intf.DeclareDelegatesRequest) (*intf.DeclareDelegatesResponse, error) {
 	// TODO: validate delegate methods
 	conn.Log().Infof("declared delegates %+v", req.Methods)
-	cmdDelegate := rpcrouter.CmdDelegate{
+	cmdDelegates := rpcrouter.CmdDelegates{
+		Namespace:   conn.Namespace,
 		ConnId:      conn.ConnId,
 		MethodNames: req.Methods,
 	}
-	router.ChDelegate <- cmdDelegate
+	factory.ChDelegates <- cmdDelegates
 	return &intf.DeclareDelegatesResponse{RequestId: req.RequestId}, nil
 }
 
@@ -218,12 +243,14 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 		return nil, errors.New("cannot get peer info from ListDelegates()")
 	}
 
-	if status := self.Authorize(context, req.Auth, remotePeer.Addr); status != nil {
+	status, namespace := self.Authorize(context, req.Auth, remotePeer.Addr)
+	if status != nil {
 		log.WithFields(log.Fields{"ip": remotePeer.Addr}).Warnf("client auth failed")
 		return &intf.ListDelegatesResponse{Status: status}, nil
 	}
 
-	router := rpcrouter.RouterFromContext(context)
+	factory := rpcrouter.RouterFactoryFromContext(context)
+	router := factory.Get(namespace)
 	delegates := router.GetDelegates()
 	resp := &intf.ListDelegatesResponse{Delegates: delegates}
 	return resp, nil
@@ -236,9 +263,14 @@ func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_SubscribeState
 	stream.Send(resp)
 }
 
-func sendAuthOk(stream intf.JointRPC_WorkerServer, requestId string) {
-	authResp := &intf.AuthResponse{RequestId: requestId}
-	payload := &intf.JointRPCDownPacket_AuthResponse{AuthResponse: authResp}
+func sendAuthOk(stream intf.JointRPC_WorkerServer, requestId string, namespace string) {
+	authResp := &intf.AuthResponse{
+		RequestId: requestId,
+		Namespace: namespace,
+	}
+	payload := &intf.JointRPCDownPacket_AuthResponse{
+		AuthResponse: authResp,
+	}
 	downpac := &intf.JointRPCDownPacket{Payload: payload}
 	stream.Send(downpac)
 }
@@ -264,7 +296,8 @@ func (self *JointRPC) requireAuthState(context context.Context, authReq *intf.Au
 	logger := log.WithFields(log.Fields{"ip": remotePeer.Addr})
 
 	auth := authReq.ClientAuth
-	if status := self.Authorize(stream.Context(), auth, remotePeer.Addr); status != nil {
+	status, namespace := self.Authorize(stream.Context(), auth, remotePeer.Addr)
+	if status != nil {
 		logger.Warnf("client auth failed")
 		authResp := &intf.AuthResponse{Status: status, RequestId: authReq.RequestId}
 		payload := &intf.SubscribeStateResponse_AuthResponse{AuthResponse: authResp}
@@ -273,8 +306,8 @@ func (self *JointRPC) requireAuthState(context context.Context, authReq *intf.Au
 		return nil, errors.New("client auth failed")
 	}
 
-	router := rpcrouter.RouterFromContext(context)
-	conn := router.Join()
+	factory := rpcrouter.RouterFactoryFromContext(context)
+	conn := factory.Get(namespace).Join()
 	conn.PeerAddr = remotePeer.Addr
 
 	authResp := &intf.AuthResponse{RequestId: authReq.RequestId}
@@ -310,7 +343,8 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, errors.New("bad up packet")
 	}
 	auth := authReq.ClientAuth
-	if status := self.Authorize(stream.Context(), auth, remotePeer.Addr); status != nil {
+	status, namespace := self.Authorize(stream.Context(), auth, remotePeer.Addr)
+	if status != nil {
 		logger.Warnf("client auth failed")
 		authResp := &intf.AuthResponse{Status: status, RequestId: authReq.RequestId}
 		payload := &intf.JointRPCDownPacket_AuthResponse{AuthResponse: authResp}
@@ -319,10 +353,10 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, errors.New("client auth failed")
 	}
 
-	router := rpcrouter.RouterFromContext(stream.Context())
-	conn := router.Join()
+	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
+	conn := factory.Get(namespace).Join()
 	conn.PeerAddr = remotePeer.Addr
-	sendAuthOk(stream, authReq.RequestId)
+	sendAuthOk(stream, authReq.RequestId, namespace)
 	return conn, nil
 }
 
@@ -357,7 +391,8 @@ func (self *JointRPC) SubscribeState(authReq *intf.AuthRequest, stream intf.Join
 		return nil
 	}
 
-	router := rpcrouter.RouterFromContext(stream.Context())
+	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
+	router := factory.Get(conn.Namespace)
 	conn.SetWatchState(true)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
@@ -391,7 +426,9 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 		return nil
 	}
 
-	router := rpcrouter.RouterFromContext(stream.Context())
+	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
+	router := factory.Get(conn.Namespace)
+
 	conn.SetWatchState(true)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
@@ -428,7 +465,8 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 		// DeclareMethdosRequest
 		methodsReq := uppac.GetMethodsRequest()
 		if methodsReq != nil {
-			resp, err := self.declareMethods(router, conn, methodsReq)
+
+			resp, err := self.declareMethods(factory, conn, methodsReq)
 			if err != nil {
 				conn.Log().Warnf("methodsRequests error %s", err.Error())
 				return err
@@ -442,7 +480,8 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 		// DeclareMethdosRequest
 		delegatesReq := uppac.GetDelegatesRequest()
 		if delegatesReq != nil {
-			resp, err := self.declareDelegates(router, conn, delegatesReq)
+			resp, err := self.declareDelegates(factory, conn, delegatesReq)
+
 			if err != nil {
 				conn.Log().Warnf("delegatesRequests error %s", err.Error())
 				return err
@@ -463,6 +502,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 			}
 			msgvec := rpcrouter.MsgVec{
 				Msg:        msg,
+				Namespace:  conn.Namespace,
 				FromConnId: conn.ConnId}
 			router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
 			continue

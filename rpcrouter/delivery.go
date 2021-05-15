@@ -27,7 +27,7 @@ func (self *Router) DeliverNotify(msgvec MsgVec) *ConnT {
 	misc.Assert(ok, "bad msg type other than notify")
 	toConn, found := self.SelectConn(notifyMsg.Method, msgvec.ToConnId)
 	if found {
-		if self.Config.ValidateSchema() {
+		if self.factory.Config.ValidateSchema() {
 			if v, err := toConn.ValidateNotifyMsg(notifyMsg); !v && err != nil {
 				notifyMsg.Log().Errorf("notify not validated, %s", err.Error())
 				return nil
@@ -47,7 +47,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 	fromConnId := msgvec.FromConnId
 	toConn, found := self.SelectConn(reqMsg.Method, msgvec.ToConnId)
 	if found {
-		if self.Config.ValidateSchema() {
+		if self.factory.Config.ValidateSchema() {
 			if v, errmsg := toConn.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
 
 				errVec := MsgVec{
@@ -62,26 +62,6 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 		}
 		//fmt.Printf("timeout %d\n", timeout)
 		expireTime := time.Now().Add(timeout)
-		// func() {
-		// 	// update pending Request
-		// 	self.lock("deliverRequest")
-		// 	defer self.unlock("deliverRequest")
-
-		// 	if _, ok := self.pendingRequests[msgId]; ok {
-		// 		msgId = misc.NewUuid()
-		// 		reqMsg.Log().Infof("msg id already exist, change a new one %s", msgId)
-		// 		reqMsg = reqMsg.Clone(msgId)
-		// 	}
-		// 	self.pendingRequests[msgId] = PendingT{
-		// 		ReqMsg:     reqMsg,
-		// 		FromConnId: msgvec.FromConnId,
-		// 		ToConnId:   toConn.ConnId,
-		// 		Expire:     expireTime,
-		// 	}
-		// }()
-		//self.pendingRequests[msgId] = PendingT{
-
-		// Need to create an uniq new msg id to prevent global msgId conflict
 		origMsgId := msgId
 		msgId = misc.NewUuid()
 		reqMsg = reqMsg.Clone(msgId)
@@ -123,7 +103,7 @@ func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
 			msg.Log().Warnf("result trace is different from request %s", origReq.TraceId())
 		}
 		if resMsg, ok := msg.(*jsonrpc.ResultMessage); ok {
-			if self.Config.ValidateSchema() {
+			if self.factory.Config.ValidateSchema() {
 				// validate result message
 				if vConn, ok := self.GetConn(reqt.ToConnId); ok {
 					if v, errmsg := vConn.ValidateResultMsg(resMsg, origReq); !v && errmsg != nil {

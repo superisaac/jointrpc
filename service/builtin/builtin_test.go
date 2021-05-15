@@ -1,6 +1,7 @@
 package builtin
 
 import (
+	//"fmt"
 	"context"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +38,6 @@ func TestBuiltinMethods(t *testing.T) {
 	c := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10001", ""})
 	err := c.Connect()
 	assert.Nil(err)
-
 	res, err := c.CallRPC(ctx, "_echo", [](interface{}){"nice"}, client.WithTraceId("trace1"))
 	assert.Nil(err)
 	assert.Equal("trace1", res.TraceId())

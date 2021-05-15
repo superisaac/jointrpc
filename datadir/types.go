@@ -18,6 +18,7 @@ type ServerConfig struct {
 type BasicAuth struct {
 	Username       string       `yaml:"username"`
 	Password       string       `yaml:"password"`
+	Namespace      string       `yaml:"namespace,omitempty"`
 	AllowedSources []string     `yaml:"allow,omitempty"`
 	allowedIPNets  []*net.IPNet `yaml:"-"`
 }
@@ -49,11 +50,11 @@ type NeighborConfig struct {
 
 // The root config item
 type Config struct {
-	Version         string         `yaml:"version"`
-	Logging         LoggingConfig  `yaml:"log,omitempty"`
-	Server          ServerConfig   `yaml:"server"`
-	Authorizations  []BasicAuth    `yaml:"auth,omitempty"`
-	Metrics         MetricsConfig  `yaml:"metrics,omitempty"`
-	Neighbor        NeighborConfig `yaml:"neighbor,omitempty"`
-	pValidateSchema *bool          `yaml:"validate_schema,omitempty"`
+	Version         string                    `yaml:"version"`
+	Logging         LoggingConfig             `yaml:"log,omitempty"`
+	Server          ServerConfig              `yaml:"server"`
+	Authorizations  []BasicAuth               `yaml:"auth,omitempty"`
+	Metrics         MetricsConfig             `yaml:"metrics,omitempty"`
+	Neighbors       map[string]NeighborConfig `yaml:"neighbors,omitempty"`
+	pValidateSchema *bool                     `yaml:"validate_schema,omitempty"`
 }

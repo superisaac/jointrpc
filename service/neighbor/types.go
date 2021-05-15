@@ -16,18 +16,32 @@ type Edge struct {
 	methodNames misc.StringSet
 }
 
+type NamedServerEntry struct {
+	namespace string
+	entry     client.ServerEntry
+}
+
 type CmdStateChange struct {
 	ServerUrl string
 	State     *rpcrouter.ServerState
 }
 
-type NeighborService struct {
+type NeighborPort struct {
 	dispatcher    *dispatch.Dispatcher
-	conn          *rpcrouter.ConnT
-	router        *rpcrouter.Router
-	serverEntries []client.ServerEntry
+	namespace     string
 	edges         map[string]*Edge
+	ChState       chan CmdStateChange
+	methodSig     string
+	serverEntries []client.ServerEntry
+	conn          *rpcrouter.ConnT
+}
+
+type NeighborService struct {
+
+	//router        *rpcrouter.Router
+	//namedServerEntries []NamedServerEntry
+
+	ports map[string]*NeighborPort
 	//methodEdges map[string]StringSet
-	ChState   chan CmdStateChange
-	methodSig string
+
 }

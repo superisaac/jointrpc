@@ -5,12 +5,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
+	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 
 func NewDispatcher() *Dispatcher {
 	disp := new(Dispatcher)
-	disp.ChResult = make(chan jsonrpc.IMessage, 100)
+	disp.ChResult = make(chan ResultT, 100)
 	disp.MethodHandlers = make(map[string](MethodHandler))
 	disp.changeHandlers = make([]OnChangeFunc, 0)
 	return disp
@@ -63,7 +64,7 @@ func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{},
 		}
 		msg.Log().Warnf("error %s", err.Error())
 		errmsg := jsonrpc.ErrServerError.ToMessage(msg)
-		self.ReturnResultMessage(errmsg)
+		//self.ReturnResultMessage(errmsg)
 		return errmsg, nil
 		//return , err
 	} else if msg.IsRequest() {
@@ -78,8 +79,11 @@ func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{},
 	}
 }
 
-func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage) {
-	self.ChResult <- resmsg
+func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrouter.MsgVec) {
+	self.ChResult <- ResultT{
+		ResMsg:    resmsg,
+		ReqMsgVec: req,
+	}
 }
 
 func (self *Dispatcher) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
@@ -92,6 +96,9 @@ func (self *Dispatcher) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
 
 func (self *Dispatcher) handleRequestMessage(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
+	namespace := msgvec.Namespace
+	misc.Assert(namespace != "", "empty namespace")
+
 	handler, ok := self.MethodHandlers[msg.MustMethod()]
 
 	defer func() {
@@ -102,12 +109,12 @@ func (self *Dispatcher) handleRequestMessage(msgvec rpcrouter.MsgVec) {
 				return
 			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
 				errmsg := rpcError.ToMessage(msg)
-				self.ReturnResultMessage(errmsg)
+				self.ReturnResultMessage(errmsg, msgvec)
 				return
 			} else {
 				log.Errorf("Recovered ERROR on handling request msg %+v", r)
 				errmsg := jsonrpc.ErrServerError.ToMessage(msg)
-				self.ReturnResultMessage(errmsg)
+				self.ReturnResultMessage(errmsg, msgvec)
 			}
 		}
 	}()
@@ -138,11 +145,11 @@ func (self *Dispatcher) handleRequestMessage(msgvec rpcrouter.MsgVec) {
 	if err != nil {
 		log.Warnf("bad up message %w", err)
 		errMsg := jsonrpc.ErrBadResource.ToMessage(msg)
-		self.ReturnResultMessage(errMsg)
+		self.ReturnResultMessage(errMsg, msgvec)
 		return
 	}
 	if resmsg != nil {
-		self.ReturnResultMessage(resmsg)
+		self.ReturnResultMessage(resmsg, msgvec)
 	}
 }
 

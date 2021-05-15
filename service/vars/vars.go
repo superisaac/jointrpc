@@ -17,9 +17,9 @@ import (
 type VarsService struct {
 	disp *dispatch.Dispatcher
 	//vars   map[string](map[string](interface{}))
-	vars   map[string]interface{}
-	router *rpcrouter.Router
-	conn   *rpcrouter.ConnT
+	namedVars map[string]interface{}
+	//router *rpcrouter.Router
+	conn *rpcrouter.ConnT
 }
 
 func NewVarsService() *VarsService {
@@ -39,15 +39,21 @@ func (self VarsService) CanRun(rootCtx context.Context) bool {
 	return true
 }
 
-func (self *VarsService) BroadcastVars() error {
-	notify := jsonrpc.NewNotifyMessage("vars.change", []interface{}{self.vars}, nil)
-	notify.SetTraceId(misc.NewUuid())
-	notify.Log().Infof("broadcast vars.change")
+func (self *VarsService) BroadcastVars(factory *rpcrouter.RouterFactory) error {
+	for namespace, vars := range self.namedVars {
+		router := factory.GetOrNil(namespace)
+		if router == nil {
+			continue
+		}
+		notify := jsonrpc.NewNotifyMessage("vars.change", []interface{}{vars}, nil)
+		notify.SetTraceId(misc.NewUuid())
+		notify.Log().Infof("broadcast vars.change")
 
-	_, err := self.router.CallOrNotify(notify,
-		rpcrouter.WithBroadcast(true))
-	if err != nil {
-		return err
+		_, err := router.CallOrNotify(
+			notify, namespace, rpcrouter.WithBroadcast(true))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -58,16 +64,19 @@ func (self *VarsService) ReadVars(varsPath string) error {
 	if err != nil {
 		return err
 	}
-	vars := make(map[string]interface{})
-	err = yaml.Unmarshal(data, vars)
+	namedVars := make(map[string]interface{})
+	err = yaml.Unmarshal(data, namedVars)
 	if err != nil {
 		return err
 	}
-	self.vars = vars
+	self.namedVars = namedVars
 	return nil
 }
 
 func (self *VarsService) Start(rootCtx context.Context) error {
+	factory := rpcrouter.RouterFactoryFromContext(rootCtx)
+	commonRouter := factory.CommonRouter()
+
 	varsPath := datadir.Datapath("vars.yml")
 	err := self.ReadVars(varsPath)
 	if err != nil {
@@ -75,17 +84,21 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 	}
 
 	self.disp = dispatch.NewDispatcher()
-	self.router = rpcrouter.RouterFromContext(rootCtx)
-	self.conn = self.router.Join()
+	self.conn = commonRouter.Join()
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()
-		self.router.Leave(self.conn)
+		commonRouter.Leave(self.conn)
 		self.conn = nil
 	}()
 
 	self.disp.On("_vars.list", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		return self.vars, nil
+		//router := factory.GetOrNil(req.MsgVec.Namespace)
+		if vars, ok := self.namedVars[req.MsgVec.Namespace]; ok {
+			return vars, nil
+		} else {
+			return make(map[string]interface{}), nil
+		}
 	})
 
 	// setup watcher
@@ -100,7 +113,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		return err
 	}
 
-	self.declareMethods()
+	self.declareMethods(factory)
 	for {
 		select {
 		case <-ctx.Done():
@@ -117,7 +130,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				if err != nil {
 					return err
 				}
-				err = self.BroadcastVars()
+				err = self.BroadcastVars(factory)
 				if err != nil {
 					return err
 				}
@@ -134,20 +147,23 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(msgvec)
-		case resmsg, ok := <-self.disp.ChResult:
+		case result, ok := <-self.disp.ChResult:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return nil
 			}
-			self.router.DeliverResultOrError(rpcrouter.MsgVec{
-				Msg:        resmsg,
-				FromConnId: self.conn.ConnId})
+			commonRouter.DeliverResultOrError(
+				rpcrouter.MsgVec{
+					Msg:        result.ResMsg,
+					Namespace:  commonRouter.Name(),
+					FromConnId: self.conn.ConnId,
+				})
 		}
 	}
 	return nil
 }
 
-func (self *VarsService) declareMethods() {
+func (self *VarsService) declareMethods(factory *rpcrouter.RouterFactory) {
 	if self.conn != nil {
 		minfos := make([]rpcrouter.MethodInfo, 0)
 		for m, info := range self.disp.MethodHandlers {
@@ -158,8 +174,12 @@ func (self *VarsService) declareMethods() {
 			}
 			minfos = append(minfos, minfo)
 		}
-		cmdServe := rpcrouter.CmdServe{ConnId: self.conn.ConnId, Methods: minfos}
-		self.router.ChServe <- cmdServe
+		cmdMethods := rpcrouter.CmdMethods{
+			Namespace: factory.CommonRouter().Name(),
+			ConnId:    self.conn.ConnId,
+			Methods:   minfos,
+		}
+		factory.ChMethods <- cmdMethods
 	}
 }
 

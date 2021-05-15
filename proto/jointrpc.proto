@@ -121,8 +121,9 @@ message AuthRequest {
 }
 
 message AuthResponse {
-  Status status = 1;
-  string request_id = 2;
+  string request_id = 1;  
+  Status status = 2;
+  string namespace = 3;
 }
 
 message JointRPCDownPacket {

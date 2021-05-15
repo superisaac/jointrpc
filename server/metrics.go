@@ -35,9 +35,9 @@ func (self *MetricsCollector) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	router := rpcrouter.RouterFromContext(self.rootCtx)
+	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)
 
-	if router.Config.Metrics.BearerToken != "" && r.Header.Get("Authorization") != fmt.Sprintf("Bearer %s", router.Config.Metrics.BearerToken) {
+	if factory.Config.Metrics.BearerToken != "" && r.Header.Get("Authorization") != fmt.Sprintf("Bearer %s", factory.Config.Metrics.BearerToken) {
 		w.WriteHeader(401)
 		w.Write([]byte("Authorization failed"))
 		return
@@ -58,11 +58,27 @@ func (self *MetricsCollector) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 }
 
 func (self *MetricsCollector) Collect() ([]string, error) {
+	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)
+	var lines []string
+	for _, namespace := range factory.RouterNames() {
+		router := factory.GetOrNil(namespace)
+		if router == nil {
+			continue
+		}
+		routerLines, err := self.CollectRouter(router)
+		if err != nil {
+			return nil, err
+		}
+		lines = append(lines, routerLines...)
+	}
+	return lines, nil
+}
+
+func (self *MetricsCollector) CollectRouter(router *rpcrouter.Router) ([]string, error) {
 	msgId := misc.NewUuid()
 	emptyArr := make([]interface{}, 0)
 	reqmsg := jsonrpc.NewRequestMessage(msgId, "metrics.collect", emptyArr, nil)
-	router := rpcrouter.RouterFromContext(self.rootCtx)
-	resmsg, err := router.CallOrNotify(reqmsg, rpcrouter.WithBroadcast(true))
+	resmsg, err := router.CallOrNotify(reqmsg, router.Name(), rpcrouter.WithBroadcast(true))
 	if err != nil {
 		return nil, nil
 	}
@@ -71,7 +87,6 @@ func (self *MetricsCollector) Collect() ([]string, error) {
 	}
 	res := resmsg.MustResult()
 	resArr, ok := res.([]interface{})
-	fmt.Printf("sssssss %#v\n", resArr)
 	if !ok {
 		return nil, nil
 	}
@@ -81,7 +96,6 @@ func (self *MetricsCollector) Collect() ([]string, error) {
 		if !ok {
 			continue
 		}
-		fmt.Printf("hhhhh %#v\n", b)
 		msgProto := simplejson.New()
 		msgProto.SetPath(nil, b)
 		msgItem, err := jsonrpc.Parse(msgProto)
@@ -93,7 +107,6 @@ func (self *MetricsCollector) Collect() ([]string, error) {
 		if msgItem.IsResult() {
 			result := msgItem.MustResult()
 			childLines := self.buildMetricsLines(result)
-			fmt.Printf("metrics child lines %#v, %#v\n", result, childLines)
 			lines = append(lines, childLines...)
 		} else {
 			// TODO: log error

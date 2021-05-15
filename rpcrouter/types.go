@@ -28,9 +28,11 @@ const ZeroCID = CID(0)
 // Commands
 type MsgVec struct {
 	Msg        jsonrpc.IMessage
+	Namespace  string
 	FromConnId CID
 	ToConnId   CID
 }
+
 type MsgChannel chan MsgVec
 
 // Pending Struct
@@ -58,13 +60,13 @@ type ServerState struct {
 // Connect Struct
 type ConnT struct {
 	ConnId      CID
+	Namespace   string
 	PeerAddr    net.Addr
 	RecvChannel MsgChannel
 
 	ServeMethods    map[string]MethodInfo
 	DelegateMethods map[string]bool
 
-	AsFallback bool
 	watchState bool
 
 	stateChannel chan *ServerState
@@ -89,47 +91,41 @@ type CmdMsg struct {
 	Timeout time.Duration
 }
 
-// type CmdJoin struct {
-// 	ConnId      CID
-// 	RecvChannel MsgChannel
-// }
-
-// type CmdLeave struct {
-// 	ConnId CID
-// }
-
-type CmdServe struct {
-	ConnId  CID
-	Methods []MethodInfo
+type CmdMethods struct {
+	Namespace string
+	ConnId    CID
+	Methods   []MethodInfo
 }
 
-type CmdDelegate struct {
+type CmdDelegates struct {
+	Namespace   string
 	ConnId      CID
 	MethodNames []string
 }
 
 type Router struct {
-	// channels
 	name            string
+	factory         *RouterFactory
 	routerLock      *sync.RWMutex
 	pendingLock     *sync.RWMutex
 	methodConnMap   map[string]([]MethodDesc)
+	methodsSig      string
+	connMap         map[CID](*ConnT)
 	delegateConnMap map[string]([]MethodDelegation)
-
-	fallbackConns []*ConnT
-
-	connMap map[CID](*ConnT)
-
 	pendingRequests map[interface{}]PendingT
+}
+
+type RouterFactory struct {
+	// channels
+	name string
 
 	// channels
-	chMsg      chan CmdMsg
-	ChServe    chan CmdServe
-	ChDelegate chan CmdDelegate
+	chMsg       chan CmdMsg
+	ChMethods   chan CmdMethods
+	ChDelegates chan CmdDelegates
 
-	methodsSig string
+	routerMap map[string](*Router)
 
 	// flags
-	//ValidateSchema bool
 	Config *datadir.Config
 }

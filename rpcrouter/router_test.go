@@ -12,10 +12,9 @@ import (
 
 func TestJoinConn(t *testing.T) {
 	assert := assert.New(t)
-	router := NewRouter("test_join_conn")
+	factory := NewRouterFactory("test_join_conn")
 
-	//cid := CID(1002)
-	//ch := make(MsgChannel, 100)
+	router := factory.DefaultRouter()
 	conn := router.Join() //cid, ch)
 	assert.Equal(1, len(router.connMap))
 
@@ -27,7 +26,7 @@ func TestJoinConn(t *testing.T) {
 
 func TestRouteMessage(t *testing.T) {
 	assert := assert.New(t)
-	router := NewRouter("test_message")
+	router := NewRouterFactory("test_message").DefaultRouter()
 
 	//cid := CID(1002)
 	//ch := make(MsgChannel, 100)
@@ -55,9 +54,13 @@ func TestRouteMessage(t *testing.T) {
 	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.MustId())
-	router.DeliverMessage(CmdMsg{
-		MsgVec: MsgVec{Msg: msg, FromConnId: conn.ConnId},
-	})
+	router.DeliverMessage(
+		CmdMsg{
+			MsgVec: MsgVec{
+				Msg:        msg,
+				Namespace:  router.Name(),
+				FromConnId: conn.ConnId},
+		})
 
 	rcvmsg := <-conn.RecvChannel
 	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
@@ -67,9 +70,10 @@ func TestRouteMessage(t *testing.T) {
 
 func TestRouteRoutine(t *testing.T) {
 	assert := assert.New(t)
-	router := NewRouter("test_route_routine")
+	factory := NewRouterFactory("test_route_routine")
+	router := factory.DefaultRouter()
 	ctx, cancel := context.WithCancel(context.Background())
-	router.Start(ctx)
+	go factory.Start(ctx)
 	defer cancel()
 
 	time.Sleep(100 * time.Millisecond)
@@ -77,8 +81,11 @@ func TestRouteRoutine(t *testing.T) {
 	conn := router.Join()
 	cid := conn.ConnId
 	ch := conn.RecvChannel
-
-	router.ChServe <- CmdServe{ConnId: cid, Methods: []MethodInfo{{"abc", "method abc", "", nil}}}
+	factory.ChMethods <- CmdMethods{
+		Namespace: router.Name(),
+		ConnId:    cid,
+		Methods:   []MethodInfo{{"abc", "method abc", "", nil}},
+	}
 
 	conn1 := router.Join()
 	cid1 := conn1.ConnId
@@ -94,6 +101,7 @@ func TestRouteRoutine(t *testing.T) {
 
 	router.DeliverRequest(MsgVec{
 		Msg:        msg,
+		Namespace:  router.Name(),
 		FromConnId: cid1,
 		ToConnId:   cid,
 	}, 0)

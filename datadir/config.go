@@ -179,5 +179,9 @@ func (self *BasicAuth) validateValues() error {
 		}
 		self.allowedIPNets = allowedIPNets
 	}
+
+	if self.Namespace == "" {
+		self.Namespace = "default"
+	}
 	return nil
 }

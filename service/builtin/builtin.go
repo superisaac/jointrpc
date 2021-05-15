@@ -2,11 +2,11 @@ package builtin
 
 import (
 	"context"
-	//"fmt"
+	"fmt"
 	//"time"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	misc "github.com/superisaac/jointrpc/misc"
+	//misc "github.com/superisaac/jointrpc/misc"
 
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/dispatch"
@@ -15,9 +15,9 @@ import (
 )
 
 type BuiltinService struct {
-	disp   *dispatch.Dispatcher
-	router *rpcrouter.Router
-	conn   *rpcrouter.ConnT
+	disp *dispatch.Dispatcher
+	//router *rpcrouter.Router
+	conn *rpcrouter.ConnT
 }
 
 func (self BuiltinService) Name() string {
@@ -29,22 +29,26 @@ func (self BuiltinService) CanRun(rootCtx context.Context) bool {
 }
 
 func (self *BuiltinService) Start(rootCtx context.Context) error {
-	self.router = rpcrouter.RouterFromContext(rootCtx)
+	self.Init(rootCtx)
+
+	factory := rpcrouter.RouterFactoryFromContext(rootCtx)
+	commonRouter := factory.CommonRouter()
+
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()
 		log.Debug("buildin dispatcher context canceled")
 	}()
 
-	self.conn = self.router.Join()
+	self.conn = commonRouter.Join()
 
 	defer func() {
 		log.Debugf("conn %d leave router", self.conn.ConnId)
-		self.router.Leave(self.conn)
+		commonRouter.Leave(self.conn)
 		self.conn = nil
 	}()
 
-	self.declareMethods()
+	self.declareMethods(factory)
 
 	for {
 		select {
@@ -58,14 +62,15 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(msgvec)
-		case resmsg, ok := <-self.disp.ChResult:
+		case result, ok := <-self.disp.ChResult:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return nil
 			}
-			self.router.DeliverResultOrError(
+			commonRouter.DeliverResultOrError(
 				rpcrouter.MsgVec{
-					Msg:        resmsg,
+					Msg:        result.ResMsg,
+					Namespace:  commonRouter.Name(),
 					FromConnId: self.conn.ConnId,
 				})
 		}
@@ -86,13 +91,17 @@ const (
 	echoSchema = `{"type": "method", "params": [{"type": "string"}]}`
 )
 
-func (self *BuiltinService) Init() *BuiltinService {
-	misc.Assert(self.router == nil, "already initited")
+func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
+	factory := rpcrouter.RouterFactoryFromContext(rootCtx)
+
 	self.disp = dispatch.NewDispatcher()
 
 	self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		minfos := self.router.GetMethods()
+		fmt.Printf("list methods, %s\n", req.MsgVec.Namespace)
+		router := factory.Get(req.MsgVec.Namespace)
+		minfos := router.GetMethods()
 
+		minfos = append(minfos, factory.CommonRouter().GetMethods()...)
 		arr := make([](rpcrouter.MethodInfoMap), 0)
 		for _, minfo := range minfos {
 			arr = append(arr, minfo.ToMap())
@@ -112,12 +121,12 @@ func (self *BuiltinService) Init() *BuiltinService {
 	}, dispatch.WithSchema(echoSchema))
 
 	self.disp.OnChange(func() {
-		self.declareMethods()
+		self.declareMethods(factory)
 	})
 	return self
 }
 
-func (self *BuiltinService) declareMethods() {
+func (self *BuiltinService) declareMethods(factory *rpcrouter.RouterFactory) {
 	if self.conn != nil {
 		minfos := make([]rpcrouter.MethodInfo, 0)
 		for m, info := range self.disp.MethodHandlers {
@@ -128,11 +137,15 @@ func (self *BuiltinService) declareMethods() {
 			}
 			minfos = append(minfos, minfo)
 		}
-		cmdServe := rpcrouter.CmdServe{ConnId: self.conn.ConnId, Methods: minfos}
-		self.router.ChServe <- cmdServe
+		cmdMethods := rpcrouter.CmdMethods{
+			Namespace: factory.CommonRouter().Name(),
+			ConnId:    self.conn.ConnId,
+			Methods:   minfos,
+		}
+		factory.ChMethods <- cmdMethods
 	}
 }
 
 func NewBuiltinService() *BuiltinService {
-	return new(BuiltinService).Init()
+	return new(BuiltinService)
 }

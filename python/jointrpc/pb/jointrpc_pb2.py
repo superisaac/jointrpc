@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\rintf/jointrpc',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0ejointrpc.proto\"\x07\n\x05\x45mpty\"&\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0e\n\x06reason\x18\x02 \x01(\t\"0\n\nClientAuth\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"1\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"/\n\x12ListMethodsRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"L\n\x13ListMethodsResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"1\n\x14ListDelegatesRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"C\n\x15ListDelegatesResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x11\n\tdelegates\x18\x02 \x03(\t\"I\n\x15\x44\x65\x63lareMethodsRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"E\n\x16\x44\x65\x63lareMethodsResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x17\n\x06status\x18\x02 \x01(\x0b\x32\x07.Status\">\n\x17\x44\x65\x63lareDelegatesRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0f\n\x07methods\x18\x02 \x03(\t\"G\n\x18\x44\x65\x63lareDelegatesResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x17\n\x06status\x18\x02 \x01(\x0b\x32\x07.Status\"w\n\x12JSONRPCCallRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\x12\x0f\n\x07timeout\x18\x04 \x01(\x05\"P\n\x11JSONRPCCallResult\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\"h\n\x14JSONRPCNotifyRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\">\n\x15JSONRPCNotifyResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x0c\n\x04text\x18\x02 \x01(\t\"=\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\"\x1a\n\x04Ping\x12\x12\n\nrequest_id\x18\x01 \x01(\t\"\x1a\n\x04Pong\x12\x12\n\nrequest_id\x18\x01 \x01(\t\"+\n\x0bServerState\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"C\n\x0b\x41uthRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12 \n\x0b\x63lient_auth\x18\x02 \x01(\x0b\x32\x0b.ClientAuth\";\n\x0c\x41uthResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x12\n\nrequest_id\x18\x02 \x01(\t\"\xa8\x02\n\x12JointRPCDownPacket\x12&\n\rauth_response\x18\x01 \x01(\x0b\x32\r.AuthResponseH\x00\x12\x15\n\x04ping\x18\x02 \x01(\x0b\x32\x05.PingH\x00\x12\x15\n\x04pong\x18\x03 \x01(\x0b\x32\x05.PongH\x00\x12\x33\n\x10methods_response\x18\x04 \x01(\x0b\x32\x17.DeclareMethodsResponseH\x00\x12\x37\n\x12\x64\x65legates_response\x18\x05 \x01(\x0b\x32\x19.DeclareDelegatesResponseH\x00\x12$\n\x08\x65nvolope\x18\n \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x12\x1d\n\x05state\x18\x0b \x01(\x0b\x32\x0c.ServerStateH\x00\x42\t\n\x07payload\"\x81\x02\n\x10JointRPCUpPacket\x12$\n\x0c\x61uth_request\x18\x01 \x01(\x0b\x32\x0c.AuthRequestH\x00\x12\x15\n\x04ping\x18\x02 \x01(\x0b\x32\x05.PingH\x00\x12\x15\n\x04pong\x18\x03 \x01(\x0b\x32\x05.PongH\x00\x12\x31\n\x0fmethods_request\x18\x04 \x01(\x0b\x32\x16.DeclareMethodsRequestH\x00\x12\x35\n\x11\x64\x65legates_request\x18\x05 \x01(\x0b\x32\x18.DeclareDelegatesRequestH\x00\x12$\n\x08\x65nvolope\x18\n \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload\"j\n\x16SubscribeStateResponse\x12&\n\rauth_response\x18\x01 \x01(\x0b\x32\r.AuthResponseH\x00\x12\x1d\n\x05state\x18\x02 \x01(\x0b\x32\x0c.ServerStateH\x00\x42\t\n\x07payload2\xdf\x02\n\x08JointRPC\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12>\n\rListDelegates\x12\x15.ListDelegatesRequest\x1a\x16.ListDelegatesResponse\x12\x39\n\x0eSubscribeState\x12\x0c.AuthRequest\x1a\x17.SubscribeStateResponse0\x01\x12\x34\n\x06Worker\x12\x11.JointRPCUpPacket\x1a\x13.JointRPCDownPacket(\x01\x30\x01\x42\x0fZ\rintf/jointrpcb\x06proto3'
+  serialized_pb=b'\n\x0ejointrpc.proto\"\x07\n\x05\x45mpty\"&\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0e\n\x06reason\x18\x02 \x01(\t\"0\n\nClientAuth\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"1\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"/\n\x12ListMethodsRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"L\n\x13ListMethodsResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"1\n\x14ListDelegatesRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"C\n\x15ListDelegatesResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x11\n\tdelegates\x18\x02 \x03(\t\"I\n\x15\x44\x65\x63lareMethodsRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"E\n\x16\x44\x65\x63lareMethodsResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x17\n\x06status\x18\x02 \x01(\x0b\x32\x07.Status\">\n\x17\x44\x65\x63lareDelegatesRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0f\n\x07methods\x18\x02 \x03(\t\"G\n\x18\x44\x65\x63lareDelegatesResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x17\n\x06status\x18\x02 \x01(\x0b\x32\x07.Status\"w\n\x12JSONRPCCallRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\x12\x0f\n\x07timeout\x18\x04 \x01(\x05\"P\n\x11JSONRPCCallResult\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\"h\n\x14JSONRPCNotifyRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\">\n\x15JSONRPCNotifyResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x0c\n\x04text\x18\x02 \x01(\t\"=\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\"\x1a\n\x04Ping\x12\x12\n\nrequest_id\x18\x01 \x01(\t\"\x1a\n\x04Pong\x12\x12\n\nrequest_id\x18\x01 \x01(\t\"+\n\x0bServerState\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"C\n\x0b\x41uthRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12 \n\x0b\x63lient_auth\x18\x02 \x01(\x0b\x32\x0b.ClientAuth\"N\n\x0c\x41uthResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x17\n\x06status\x18\x02 \x01(\x0b\x32\x07.Status\x12\x11\n\tnamespace\x18\x03 \x01(\t\"\xa8\x02\n\x12JointRPCDownPacket\x12&\n\rauth_response\x18\x01 \x01(\x0b\x32\r.AuthResponseH\x00\x12\x15\n\x04ping\x18\x02 \x01(\x0b\x32\x05.PingH\x00\x12\x15\n\x04pong\x18\x03 \x01(\x0b\x32\x05.PongH\x00\x12\x33\n\x10methods_response\x18\x04 \x01(\x0b\x32\x17.DeclareMethodsResponseH\x00\x12\x37\n\x12\x64\x65legates_response\x18\x05 \x01(\x0b\x32\x19.DeclareDelegatesResponseH\x00\x12$\n\x08\x65nvolope\x18\n \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x12\x1d\n\x05state\x18\x0b \x01(\x0b\x32\x0c.ServerStateH\x00\x42\t\n\x07payload\"\x81\x02\n\x10JointRPCUpPacket\x12$\n\x0c\x61uth_request\x18\x01 \x01(\x0b\x32\x0c.AuthRequestH\x00\x12\x15\n\x04ping\x18\x02 \x01(\x0b\x32\x05.PingH\x00\x12\x15\n\x04pong\x18\x03 \x01(\x0b\x32\x05.PongH\x00\x12\x31\n\x0fmethods_request\x18\x04 \x01(\x0b\x32\x16.DeclareMethodsRequestH\x00\x12\x35\n\x11\x64\x65legates_request\x18\x05 \x01(\x0b\x32\x18.DeclareDelegatesRequestH\x00\x12$\n\x08\x65nvolope\x18\n \x01(\x0b\x32\x10.JSONRPCEnvolopeH\x00\x42\t\n\x07payload\"j\n\x16SubscribeStateResponse\x12&\n\rauth_response\x18\x01 \x01(\x0b\x32\r.AuthResponseH\x00\x12\x1d\n\x05state\x18\x02 \x01(\x0b\x32\x0c.ServerStateH\x00\x42\t\n\x07payload2\xdf\x02\n\x08JointRPC\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12>\n\rListDelegates\x12\x15.ListDelegatesRequest\x1a\x16.ListDelegatesResponse\x12\x39\n\x0eSubscribeState\x12\x0c.AuthRequest\x1a\x17.SubscribeStateResponse0\x01\x12\x34\n\x06Worker\x12\x11.JointRPCUpPacket\x1a\x13.JointRPCDownPacket(\x01\x30\x01\x42\x0fZ\rintf/jointrpcb\x06proto3'
 )
 
 
@@ -832,15 +832,22 @@ _AUTHRESPONSE = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='status', full_name='AuthResponse.status', index=0,
-      number=1, type=11, cpp_type=10, label=1,
+      name='request_id', full_name='AuthResponse.request_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='status', full_name='AuthResponse.status', index=1,
+      number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='request_id', full_name='AuthResponse.request_id', index=1,
-      number=2, type=9, cpp_type=9, label=1,
+      name='namespace', full_name='AuthResponse.namespace', index=2,
+      number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -858,7 +865,7 @@ _AUTHRESPONSE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=1304,
-  serialized_end=1363,
+  serialized_end=1382,
 )
 
 
@@ -936,8 +943,8 @@ _JOINTRPCDOWNPACKET = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1366,
-  serialized_end=1662,
+  serialized_start=1385,
+  serialized_end=1681,
 )
 
 
@@ -1008,8 +1015,8 @@ _JOINTRPCUPPACKET = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1665,
-  serialized_end=1922,
+  serialized_start=1684,
+  serialized_end=1941,
 )
 
 
@@ -1052,8 +1059,8 @@ _SUBSCRIBESTATERESPONSE = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1924,
-  serialized_end=2030,
+  serialized_start=1943,
+  serialized_end=2049,
 )
 
 _LISTMETHODSREQUEST.fields_by_name['auth'].message_type = _CLIENTAUTH
@@ -1346,8 +1353,8 @@ _JOINTRPC = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=2033,
-  serialized_end=2384,
+  serialized_start=2052,
+  serialized_end=2403,
   methods=[
   _descriptor.MethodDescriptor(
     name='Call',

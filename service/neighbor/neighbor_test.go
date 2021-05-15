@@ -53,8 +53,13 @@ func TestNeighborRun(t *testing.T) {
 	// start server2
 
 	rootCtx1 := server.ServerContext(rootCtx, nil)
-	router := rpcrouter.RouterFromContext(rootCtx1)
-	router.Config.Neighbor.Peers = []datadir.PeerConfig{{"h2c://localhost:10010", ""}}
+	factory := rpcrouter.RouterFactoryFromContext(rootCtx1)
+	factory.Config.Neighbors = make(map[string]datadir.NeighborConfig)
+
+	factory.Config.Neighbors["default"] = datadir.NeighborConfig{
+		Peers: []datadir.PeerConfig{{"h2c://localhost:10010", ""}},
+	}
+
 	go server.StartGRPCServer(rootCtx1, "localhost:10011")
 	time.Sleep(100 * time.Millisecond)
 

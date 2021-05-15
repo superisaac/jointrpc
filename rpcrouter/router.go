@@ -2,31 +2,17 @@ package rpcrouter
 
 import (
 	//"fmt"
-	"context"
+	//"context"
 	log "github.com/sirupsen/logrus"
-	"github.com/superisaac/jointrpc/datadir"
+	//"github.com/superisaac/jointrpc/datadir"
 	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	//misc "github.com/superisaac/jointrpc/misc"
 	"math/rand"
 	"sort"
 	"strings"
 	"sync"
-	"time"
+	//"time"
 )
-
-func NewRouter(name string) *Router {
-	return new(Router).Init(name)
-}
-
-func RouterFromContext(ctx context.Context) *Router {
-	if v := ctx.Value("router"); v != nil {
-		if router, ok := v.(*Router); ok {
-			return router
-		}
-		panic("context value router is not a router instance")
-	}
-	panic("context does not have router")
-}
 
 func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
 	newarr := make([]MethodDesc, 0, len(slice)-1)
@@ -48,32 +34,26 @@ func DelegateRemoveConn(slice []MethodDelegation, conn *ConnT) []MethodDelegatio
 	return newarr
 }
 
-func (self *Router) Init(name string) *Router {
-	self.name = name
-	self.routerLock = new(sync.RWMutex)
-	self.pendingLock = new(sync.RWMutex)
-	self.methodConnMap = make(map[string]([]MethodDesc))
-	self.delegateConnMap = make(map[string][]MethodDelegation)
-	self.fallbackConns = make([]*ConnT, 0)
-	self.connMap = make(map[CID](*ConnT))
-
-	self.pendingRequests = make(map[interface{}]PendingT)
-	self.methodsSig = ""
-	self.setupChannels()
-
-	self.Config = datadir.NewConfig()
-	return self
-}
-
-func (self *Router) setupChannels() {
-	self.chMsg = make(chan CmdMsg, 1000)
-	//self.ChLeave = make(chan CmdLeave, 100)
-	self.ChServe = make(chan CmdServe, 1000)
-	self.ChDelegate = make(chan CmdDelegate, 1000)
+func NewRouter(factory *RouterFactory, name string) *Router {
+	r := &Router{factory: factory, name: name}
+	r.routerLock = new(sync.RWMutex)
+	r.pendingLock = new(sync.RWMutex)
+	r.methodConnMap = make(map[string]([]MethodDesc))
+	r.delegateConnMap = make(map[string][]MethodDelegation)
+	r.connMap = make(map[CID](*ConnT))
+	r.pendingRequests = make(map[interface{}]PendingT)
+	r.methodsSig = ""
+	return r
 }
 
 func (self Router) Name() string {
 	return self.name
+}
+
+func (self Router) Log() *log.Entry {
+	return log.WithFields(log.Fields{
+		"namespace": self.name,
+	})
 }
 
 func (self MethodInfo) ToMap() MethodInfoMap {
@@ -86,6 +66,15 @@ func (self MethodInfo) ToMap() MethodInfoMap {
 		"help":   self.Help,
 		"schema": schemaIntf,
 	}
+}
+
+func (self Router) HasMethod(method string) bool {
+	if _, ok := self.methodConnMap[method]; ok {
+		return true
+	} else if _, ok := self.delegateConnMap[method]; ok {
+		return true
+	}
+	return false
 }
 
 func (self Router) GetDelegates() []string {
@@ -298,22 +287,6 @@ func (self *Router) leaveConn(conn *ConnT) {
 		close(ct.RecvChannel)
 	}
 
-	// remove conn from fallbackConns
-	if conn.AsFallback {
-		var fbIndex = -1
-		for i, c := range self.fallbackConns {
-			if c.ConnId == conn.ConnId {
-				//conn found in fallback conns
-				fbIndex = i
-				break
-			}
-		}
-		if fbIndex >= 0 {
-			self.fallbackConns = append(
-				self.fallbackConns[:fbIndex],
-				self.fallbackConns[fbIndex+1:]...)
-		}
-	}
 	self.probeMethodChange()
 }
 
@@ -334,6 +307,16 @@ func (self *Router) ListConns(method string, limit int) []CID {
 }
 
 func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
+	return self.selectConnection(method, targetConnId)
+	// conn, found := self.selectConnection(method, targetConnId)
+	// if !found && self.Name() != "*" {
+	// 	return self.factory.CommonRouter().selectConnection(
+	// 		method, targetConnId)
+	// }
+	// return conn, found
+}
+
+func (self *Router) selectConnection(method string, targetConnId CID) (*ConnT, bool) {
 	self.routerLock.RLock()
 	defer self.routerLock.RUnlock()
 
@@ -368,11 +351,6 @@ func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 		return descs[index].Conn, true
 	}
 
-	// fallback conns
-	if len(self.fallbackConns) > 0 {
-		index := rand.Intn(len(self.fallbackConns))
-		return self.fallbackConns[index], true
-	}
 	return nil, false
 }
 
@@ -397,84 +375,17 @@ func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
 	return nil
 }
 
-func (self *Router) Start(ctx context.Context) {
-	//self.setupChannels()
-	go self.Loop(ctx)
-}
-
-func (self *Router) Loop(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			log.Debugf("Router goroutine done")
-			return
-		case cmdServe, ok := <-self.ChServe:
-			{
-				if !ok {
-					log.Warnf("ChServe channel not ok")
-					return
-				}
-				conn, found := self.connMap[cmdServe.ConnId]
-				if found {
-					self.UpdateServeMethods(conn, cmdServe.Methods)
-				} else {
-					log.Infof("Conn %d not found for update serve methods", cmdServe.ConnId)
-				}
-			}
-
-		case cmdDelg, ok := <-self.ChDelegate:
-			{
-				if !ok {
-					log.Warnf("ChServe channel not ok")
-					return
-				}
-				conn, found := self.connMap[cmdDelg.ConnId]
-				if found {
-					self.UpdateDelegateMethods(conn, cmdDelg.MethodNames)
-				} else {
-					log.Infof("Conn %d not found for update methods", cmdDelg.ConnId)
-				}
-			}
-
-		case cmdMsg, ok := <-self.chMsg:
-			{
-				if !ok {
-					log.Warnf("chMsg channel not ok")
-					return
-				}
-
-				go self.DeliverMessage(cmdMsg)
-			}
-		case <-time.After(1 * time.Second):
-			self.collectPendings()
-		}
-	}
-}
-
 func (self *Router) Join() *ConnT {
 	conn := NewConn()
 	self.joinConn(conn)
 	return conn
 }
 
-func (self *Router) JoinFallback() *ConnT {
-	conn := NewConn()
-	self.joinFallbackConn(conn)
-	return conn
-}
-
 func (self *Router) joinConn(conn *ConnT) {
 	self.lock("JoinConn")
 	defer self.unlock("JoinConn")
+	conn.Namespace = self.name
 	self.connMap[conn.ConnId] = conn
-}
-
-func (self *Router) joinFallbackConn(conn *ConnT) {
-	self.lock("JoinConnFallback")
-	defer self.unlock("JoinConnFallback")
-	self.connMap[conn.ConnId] = conn
-	conn.AsFallback = true
-	self.fallbackConns = append(self.fallbackConns, conn)
 }
 
 func (self *Router) lock(wrapper string) {

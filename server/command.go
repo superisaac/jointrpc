@@ -15,11 +15,11 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-func ServerContext(rootCtx context.Context, router *rpcrouter.Router) context.Context {
-	if router == nil {
-		router = rpcrouter.NewRouter("server")
+func ServerContext(rootCtx context.Context, factory *rpcrouter.RouterFactory) context.Context {
+	if factory == nil {
+		factory = rpcrouter.NewRouterFactory("server11")
 	}
-	aCtx := misc.NewBinder(rootCtx).Bind("router", router).Context()
+	aCtx := misc.NewBinder(rootCtx).Bind("routerfactory", factory).Context()
 	return aCtx
 }
 
@@ -31,21 +31,21 @@ func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOp
 		log.Debugf("entry server listen at %s", bind)
 	}
 
-	if r := rootCtx.Value("router"); r == nil {
+	if r := rootCtx.Value("routerfactory"); r == nil {
 		// no router attached, spawn a context with default router and cfg
 		rootCtx = ServerContext(rootCtx, nil)
 	}
 
-	router := rpcrouter.RouterFromContext(rootCtx)
-	go router.Start(rootCtx)
+	factory := rpcrouter.RouterFactoryFromContext(rootCtx)
+	go factory.Start(rootCtx)
 
-	cfg := router.Config
+	cfg := factory.Config
 
 	opts = append(opts,
 		grpc.UnaryInterceptor(
-			unaryBindContext(router, cfg)),
+			unaryBindContext(factory, cfg)),
 		grpc.StreamInterceptor(
-			streamBindContext(router, cfg)))
+			streamBindContext(factory, cfg)))
 	grpcServer := grpc.NewServer(opts...)
 
 	serverCtx, cancelServer := context.WithCancel(rootCtx)
@@ -64,19 +64,19 @@ func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOp
 	grpcServer.Serve(lis)
 }
 
-func unaryBindContext(router *rpcrouter.Router, cfg *datadir.Config) grpc.UnaryServerInterceptor {
+func unaryBindContext(factory *rpcrouter.RouterFactory, cfg *datadir.Config) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context,
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp interface{}, err error) {
 		b := misc.NewBinder(ctx)
-		cCtx := b.Bind("router", router).Bind("config", cfg).Context()
+		cCtx := b.Bind("routerfactory", factory).Bind("config", cfg).Context()
 		h, err := handler(cCtx, req)
 		return h, err
 	}
 }
 
-func streamBindContext(router *rpcrouter.Router, cfg *datadir.Config) grpc.StreamServerInterceptor {
+func streamBindContext(factory *rpcrouter.RouterFactory, cfg *datadir.Config) grpc.StreamServerInterceptor {
 	return func(srv interface{},
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
@@ -84,7 +84,7 @@ func streamBindContext(router *rpcrouter.Router, cfg *datadir.Config) grpc.Strea
 
 		b := misc.NewBinder(ss.Context())
 		wrappedStream := grpc_middleware.WrapServerStream(ss)
-		wrappedStream.WrappedContext = b.Bind("router", router).Bind("config", cfg).Context()
+		wrappedStream.WrappedContext = b.Bind("routerfactory", factory).Bind("config", cfg).Context()
 		return handler(srv, wrappedStream)
 	}
 }

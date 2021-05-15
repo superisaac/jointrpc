@@ -79,21 +79,25 @@ func NewJSONRPCHTTPServer(rootCtx context.Context) *JSONRPCHTTPServer {
 	return &JSONRPCHTTPServer{rootCtx: rootCtx}
 }
 
-func (self *JSONRPCHTTPServer) Authorize(r *http.Request) bool {
+func (self *JSONRPCHTTPServer) Authorize(r *http.Request) (bool, string) {
 	// basic auth
-	router := rpcrouter.RouterFromContext(self.rootCtx)
-	cfg := router.Config
+	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)
+	cfg := factory.Config
 	if len(cfg.Authorizations) >= 1 {
 		if username, password, ok := r.BasicAuth(); ok {
 			for _, bauth := range cfg.Authorizations {
 				if bauth.Authorize(username, password, r.RemoteAddr) {
-					return true
+					ns := bauth.Namespace
+					if ns == "" {
+						ns = "default"
+					}
+					return true, ns
 				}
 			}
 		}
-		return false
+		return false, ""
 	}
-	return true
+	return true, "default"
 }
 
 func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +107,8 @@ func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if !self.Authorize(r) {
+	ok, namespace := self.Authorize(r)
+	if !ok {
 		log.Warnf("http auth failed %d", 401)
 		w.WriteHeader(401)
 		w.Write([]byte("auth failed"))
@@ -129,8 +134,9 @@ func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		msg.SetTraceId(misc.NewUuid())
 	}
 
-	router := rpcrouter.RouterFromContext(self.rootCtx)
-	result, err := router.CallOrNotify(msg)
+	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)
+
+	result, err := factory.Get(namespace).CallOrNotify(msg, namespace)
 	if err != nil {
 		jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 		return

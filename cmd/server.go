@@ -35,32 +35,32 @@ func CommandStartServer() {
 		datadir.SetDatadir(*pDatadir)
 	}
 
-	router := rpcrouter.NewRouter("server")
-	router.Config.ParseDatadir()
-	router.Config.SetupLogger()
+	factory := rpcrouter.NewRouterFactory("server22")
+	factory.Config.ParseDatadir()
+	factory.Config.SetupLogger()
 
 	var opts []grpc.ServerOption
 	var httpOpts []server.HTTPOptionFunc
 	// server bind
 	bind := *pBind
 	if bind == "" {
-		bind = router.Config.Server.Bind
+		bind = factory.Config.Server.Bind
 	}
 
 	httpBind := *pHttpBind
 	if httpBind == "" {
-		httpBind = router.Config.Server.HttpBind
+		httpBind = factory.Config.Server.HttpBind
 	}
 
 	// tls settings
 	certFile := *pCertFile
 	if certFile == "" {
-		certFile = router.Config.Server.TLS.CertFile
+		certFile = factory.Config.Server.TLS.CertFile
 	}
 
 	keyFile := *pKeyFile
 	if keyFile == "" {
-		keyFile = router.Config.Server.TLS.KeyFile
+		keyFile = factory.Config.Server.TLS.KeyFile
 	}
 
 	if certFile != "" && keyFile != "" {
@@ -72,7 +72,7 @@ func CommandStartServer() {
 		httpOpts = append(httpOpts, server.WithTLS(certFile, keyFile))
 	}
 
-	rootCtx := server.ServerContext(context.Background(), router)
+	rootCtx := server.ServerContext(context.Background(), factory)
 
 	srvs := []service.IService{
 		builtin.NewBuiltinService(),

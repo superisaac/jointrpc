@@ -30,8 +30,13 @@ type MethodHandler struct {
 
 type HandlerOption func(*MethodHandler)
 
+type ResultT struct {
+	ResMsg    jsonrpc.IMessage
+	ReqMsgVec rpcrouter.MsgVec
+}
+
 type Dispatcher struct {
-	ChResult       chan jsonrpc.IMessage
+	ChResult       chan ResultT
 	spawnExec      bool
 	MethodHandlers map[string]MethodHandler
 	defaultHandler DefaultHandlerFunc
