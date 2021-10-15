@@ -111,11 +111,11 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 
 	self.disp.On("_echo", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		if len(params) < 1 {
-			return nil, &jsonrpc.RPCError{Code: 400, Reason: "len params should be at least 1"}
+			return nil, &jsonrpc.RPCError{Code: 400, Message: "len params should be at least 1"}
 		}
 		msg, ok := params[0].(string)
 		if !ok {
-			return nil, &jsonrpc.RPCError{Code: 400, Reason: "string params required"}
+			return nil, &jsonrpc.RPCError{Code: 400, Message: "string params required"}
 		}
 		return map[string]string{"echo": msg}, nil
 	}, dispatch.WithSchema(echoSchema))

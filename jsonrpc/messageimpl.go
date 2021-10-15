@@ -6,6 +6,47 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func (self *RPCError) WithData(data interface{}) *RPCError {
+	return &RPCError{self.Code, self.Message, data}
+}
+
+func (self *RPCError) Error() string {
+	return fmt.Sprintf("code=%d, message=%s, data=%s", self.Code, self.Message, self.Data)
+}
+
+func (self RPCError) ToMessage(reqmsg IMessage) *ErrorMessage {
+	return RPCErrorMessage(reqmsg, self.Code, self.Message, self.Data)
+}
+
+func (self RPCError) ToJson() *simplejson.Json {
+	json := simplejson.New()
+	json.Set("code", self.Code)
+	json.Set("message", self.Message)
+	if self.Data != nil {
+		json.Set("data", self.Data)
+	}
+	return json
+}
+
+func (self RPCError) CodeString() string {
+	return fmt.Sprintf("%d", self.Code)
+}
+
+func parseRPCError(errIntf *simplejson.Json) (*RPCError, error) {
+	code, err := errIntf.Get("code").Int()
+	if err != nil {
+		return nil, err
+	}
+
+	message, err := errIntf.Get("message").String()
+	if err != nil {
+		return nil, err
+	}
+
+	data := errIntf.Get("data").Interface()
+	return &RPCError{code, message, data}, nil
+}
+
 func NewErrMsgType(additional string) *RPCError {
 	r := fmt.Sprintf("wrong message type %s", additional)
 	return &RPCError{ErrMessageType.Code, r, false}
@@ -157,16 +198,16 @@ func (self ErrorMessage) MustResult() interface{} {
 }
 
 // MustError
-func (self RequestMessage) MustError() interface{} {
+func (self RequestMessage) MustError() *RPCError {
 	panic(NewErrMsgType("MustError"))
 }
-func (self NotifyMessage) MustError() interface{} {
+func (self NotifyMessage) MustError() *RPCError {
 	panic(NewErrMsgType("MustError"))
 }
-func (self ResultMessage) MustError() interface{} {
+func (self ResultMessage) MustError() *RPCError {
 	panic(NewErrMsgType("MustError"))
 }
-func (self ErrorMessage) MustError() interface{} {
+func (self ErrorMessage) MustError() *RPCError {
 	return self.Error
 }
 
@@ -240,18 +281,18 @@ func NewResultMessage(reqmsg IMessage, result interface{}, raw *simplejson.Json)
 	return resmsg
 }
 
-func NewErrorMessage(reqmsg IMessage, errbody interface{}, raw *simplejson.Json) *ErrorMessage {
+func NewErrorMessage(reqmsg IMessage, errbody *RPCError, raw *simplejson.Json) *ErrorMessage {
 	errmsg := rawErrorMessage(reqmsg.MustId(), errbody, raw)
 	errmsg.SetTraceId(reqmsg.TraceId())
 	return errmsg
 }
 
-func rawErrorMessage(id interface{}, errbody interface{}, raw *simplejson.Json) *ErrorMessage {
+func rawErrorMessage(id interface{}, errbody *RPCError, raw *simplejson.Json) *ErrorMessage {
 	if raw == nil {
 		raw = simplejson.New()
 		raw.Set("version", "2.0")
 		raw.Set("id", id)
-		raw.Set("error", errbody)
+		raw.Set("error", errbody.ToJson())
 	}
 
 	msg := &ErrorMessage{}
@@ -262,11 +303,14 @@ func rawErrorMessage(id interface{}, errbody interface{}, raw *simplejson.Json) 
 	return msg
 }
 
-func RPCErrorMessage(reqmsg IMessage, code int, reason string, retryable bool) *ErrorMessage {
-	errbody := map[string](interface{}){
-		"code":      code,
-		"reason":    reason,
-		"retryable": retryable}
+func RPCErrorMessage(reqmsg IMessage, code int, message string, data interface{}) *ErrorMessage {
+	// errbody := map[string](interface{}){
+	// 	"code":      code,
+	// 	"reason":    message}
+	// if data != nil {
+	// 	errbody["data"] = data
+	// }
+	errbody := &RPCError{code, message, data}
 	return NewErrorMessage(reqmsg, errbody, nil)
 }
 
@@ -290,8 +334,12 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 			params := parsed.Get("params").MustArray()
 			return NewRequestMessage(id, method, params, parsed), nil
 		}
-		if errIntf := parsed.Get("error").Interface(); errIntf != nil {
-			return rawErrorMessage(id, errIntf, parsed), nil
+		if errIntf := parsed.Get("error"); errIntf != nil && errIntf.Interface() != nil {
+			errbody, err := parseRPCError(errIntf)
+			if err != nil {
+				return nil, err
+			}
+			return rawErrorMessage(id, errbody, parsed), nil
 		}
 		res := parsed.Get("result").Interface()
 		return rawResultMessage(id, res, parsed), nil

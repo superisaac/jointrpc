@@ -95,28 +95,26 @@ func TestClientAsServe(t *testing.T) {
 	assert.Equal("trace11", res.TraceId())
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
-
 	// invalid schema tests
 	res1, err := c.CallRPC(ctx, "add2int", [](interface{}){5, "sss"}, client.WithTraceId("trace13"))
 	assert.Nil(err)
 	assert.Equal("trace13", res1.TraceId())
 	assert.True(res1.IsError())
-	errbody, ok := res1.MustError().(map[string](interface{}))
-	assert.True(ok)
-	assert.Equal(json.Number("10901"), errbody["code"])
-	assert.Equal("Validation Error: .params[1] data is not number", errbody["reason"])
+	//errbody, ok := res1.MustError().(map[string](interface{}))
+	errbody := res1.MustError()
+	assert.Equal(10901, errbody.Code)
+	assert.Equal("Validation Error: .params[1] data is not number", errbody.Message)
 
 	// invalid schema tests
 	res2, err := c.CallRPC(ctx, "fakeadd2int", [](interface{}){5, 8}, client.WithTraceId("trace73"))
 	assert.Nil(err)
 	assert.Equal("trace73", res2.TraceId())
 	assert.True(res2.IsError())
-	errbody2, ok := res2.MustError().(map[string](interface{}))
-	assert.True(ok)
-	assert.Equal(json.Number("10901"), errbody2["code"])
-	assert.Equal("Validation Error: .result data is not number", errbody2["reason"])
+	//errbody2, ok := res2.MustError().(map[string](interface{}))
+	errbody2 := res2.MustError()
+	assert.Equal(10901, errbody2.Code)
+	assert.Equal("Validation Error: .result data is not number", errbody2.Message)
 }
-
 func TestClientAuth(t *testing.T) {
 	assert := assert.New(t)
 

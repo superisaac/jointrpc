@@ -122,10 +122,9 @@ func TestBridgeRun(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal("trace4", res4.TraceId())
 	assert.True(res4.IsError())
-	errBody4, ok := res4.MustError().(map[string]interface{})
-	assert.True(ok)
-	assert.Equal(json.Number(jsonrpc.ErrNoSuchMethod.CodeString()), errBody4["code"])
-	assert.Equal("no such method", errBody4["reason"])
+	errBody4 := res4.MustError()
+	assert.Equal(jsonrpc.ErrMethodNotFound.Code, errBody4.Code)
+	assert.Equal("method not found", errBody4.Message)
 }
 
 func TestServerBreak(t *testing.T) {
@@ -212,9 +211,7 @@ func TestServerBreak(t *testing.T) {
 	assert.Equal("trace3", res3.TraceId())
 	assert.True(res3.IsError())
 
-	errBody3, ok := res3.MustError().(map[string]interface{})
-	assert.True(ok)
-	assert.Equal(json.Number(jsonrpc.ErrNoSuchMethod.CodeString()), errBody3["code"])
-	assert.Equal("no such method", errBody3["reason"])
-
+	errBody3 := res3.MustError()
+	assert.Equal(jsonrpc.ErrMethodNotFound.Code, errBody3.Code)
+	assert.Equal("method not found", errBody3.Message)
 }

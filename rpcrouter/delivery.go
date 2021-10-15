@@ -83,7 +83,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 		targetVec.Msg = reqMsg
 		return self.SendTo(toConn.ConnId, targetVec)
 	} else {
-		errMsg := jsonrpc.ErrNoSuchMethod.ToMessage(reqMsg)
+		errMsg := jsonrpc.ErrMethodNotFound.ToMessage(reqMsg)
 		errMsg.SetTraceId(reqMsg.TraceId())
 		errMsgVec := MsgVec{Msg: errMsg}
 		return self.SendTo(fromConnId, errMsgVec)

@@ -2,23 +2,12 @@ package jsonrpc
 
 import (
 	//json "encoding/json"
-	"fmt"
+	//"fmt"
 	//"reflect"
 	//"errors"
 	simplejson "github.com/bitly/go-simplejson"
 	"strconv"
 )
-
-func (self *RPCError) Error() string {
-	return fmt.Sprintf("code=%d, reason=%s", self.Code, self.Reason)
-}
-
-func (self RPCError) ToMessage(reqmsg IMessage) *ErrorMessage {
-	return RPCErrorMessage(reqmsg, self.Code, self.Reason, self.Retryable)
-}
-func (self RPCError) CodeString() string {
-	return fmt.Sprintf("%d", self.Code)
-}
 
 func MarshalJson(data interface{}) (string, error) {
 	jsondata := simplejson.New()

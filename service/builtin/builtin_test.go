@@ -51,7 +51,6 @@ func TestBuiltinMethods(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal("trace2", res1.TraceId())
 	assert.True(res1.IsError())
-	errbody, ok := res1.MustError().(map[string]interface{})
-	assert.True(ok)
-	assert.Equal("Validation Error: .params[0] data is not string", errbody["reason"])
+	errbody := res1.MustError()
+	assert.Equal("Validation Error: .params[0] data is not string", errbody.Message)
 }

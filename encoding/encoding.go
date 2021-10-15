@@ -2,6 +2,7 @@ package encoding
 
 import (
 	//log "github.com/sirupsen/logrus"
+	//"fmt"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
@@ -51,6 +52,7 @@ func MessageToEnvolope(msg jsonrpc.IMessage) *intf.JSONRPCEnvolope {
 }
 
 func MessageFromEnvolope(envo *intf.JSONRPCEnvolope) (jsonrpc.IMessage, error) {
+
 	msg, err := jsonrpc.ParseBytes([]byte(envo.Body))
 	if err != nil {
 		return nil, err

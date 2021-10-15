@@ -134,7 +134,7 @@ func (self *Dispatcher) handleRequestMessage(msgvec rpcrouter.MsgVec) {
 		res, err := self.defaultHandler(req, msg.MustMethod(), params)
 		resmsg, err = self.wrapHandlerResult(msg, res, err)
 	} else {
-		resmsg, err = jsonrpc.ErrNoSuchMethod.ToMessage(msg), nil
+		resmsg, err = jsonrpc.ErrMethodNotFound.ToMessage(msg), nil
 	}
 
 	//log.Debugf("handle request method %+v, resmsg %+v, error %+v", msg, resmsg, err)

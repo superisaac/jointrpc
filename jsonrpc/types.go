@@ -22,9 +22,10 @@ type UID string
 } */
 
 type RPCError struct {
-	Code      int
-	Reason    string
-	Retryable bool
+	Code    int
+	Message string
+	Data    interface{}
+	//Retryable bool
 }
 
 const (
@@ -56,7 +57,7 @@ type IMessage interface {
 	MustMethod() string
 	MustParams() []interface{}
 	MustResult() interface{}
-	MustError() interface{}
+	MustError() *RPCError
 
 	Log() *log.Entry
 }
@@ -88,6 +89,7 @@ type ResultMessage struct {
 
 type ErrorMessage struct {
 	BaseMessage
-	Id    interface{}
-	Error interface{}
+	Id interface{}
+	//Error interface{}
+	Error *RPCError
 }
