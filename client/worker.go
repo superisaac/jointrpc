@@ -30,20 +30,25 @@ func (self *RPCClient) OnHandlerChanged(disp *dispatch.Dispatcher) {
 	}
 }
 
-func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Dispatcher) error {
-	upMethods := make([](*intf.MethodInfo), 0)
+func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Dispatcher) {
+	upMethods := make([](map[string](interface{})), 0)
 	for m, info := range disp.MethodHandlers {
-		minfo := &intf.MethodInfo{Name: m, Help: info.Help, SchemaJson: info.SchemaJson}
+		minfo := map[string](interface{}){
+			"name":   m,
+			"help":   info.Help,
+			"schema": info.SchemaJson,
+		}
 		upMethods = append(upMethods, minfo)
 	}
 
-	req := &intf.DeclareMethodsRequest{
-		RequestId: misc.NewUuid(),
-		Methods:   upMethods}
-	payload := &intf.JointRPCUpPacket_MethodsRequest{MethodsRequest: req}
-	uppac := &intf.JointRPCUpPacket{Payload: payload}
-	self.DeliverUpPacket(uppac)
-	return nil
+	reqId := misc.NewUuid()
+	params := make([]interface{}, 0)
+	params = append(params, upMethods)
+	reqmsg := jsonrpc.NewRequestMessage(reqId, "_conn.declareMethods", params, nil)
+
+	self.CallInWire(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+		log.Debugf("declared methods")
+	})
 }
 
 func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
@@ -232,11 +237,12 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 			if err != nil {
 				return err
 			}
-			if !msg.IsRequestOrNotify() {
-				log.Warnf("msg is none of reques|notify %+v ", msg)
-				continue
+			if msg.IsRequestOrNotify() {
+				self.handleDownRequest(msg, envo.TraceId, disp, namespace)
+			} else {
+				self.handleWireResult(msg)
 			}
-			self.handleDownRequest(msg, envo.TraceId, disp, namespace)
+
 			continue
 		}
 	}

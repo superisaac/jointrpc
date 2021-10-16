@@ -1,0 +1,59 @@
+package client
+
+import (
+	"time"
+	//"fmt"
+	"context"
+	"github.com/superisaac/jointrpc/encoding"
+	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/misc"
+)
+
+func (self *RPCClient) CallInWire(rootCtx context.Context, reqmsg jsonrpc.IMessage, callback WireCallback, opts ...CallOptionFunc) error {
+	misc.Assert(self.workerStream != nil, "worker steam is empty")
+
+	opt := &CallOption{}
+
+	for _, optfunc := range opts {
+		optfunc(opt)
+	}
+
+	if opt.traceId != "" {
+		reqmsg.SetTraceId(opt.traceId)
+	}
+	if reqmsg.TraceId() == "" {
+		reqmsg.SetTraceId(misc.NewUuid())
+	}
+	reqmsg.Log().Debug("request message created")
+	envolope := encoding.MessageToEnvolope(reqmsg)
+
+	payload := &intf.JointRPCUpPacket_Envolope{Envolope: envolope}
+
+	req := &intf.JointRPCUpPacket{Payload: payload}
+
+	// save request in pending map
+	expire := time.Now().Add(time.Second * 30)
+	reqId := reqmsg.MustId()
+	wc := WireCallT{
+		Expire:    expire,
+		Callback:  callback,
+	}
+	// TODO: assert wire pending requests
+	self.wirePendingRequests[reqId] = wc
+	//self.sendUpChannel <- req
+
+	self.workerStream.Send(req)
+	return nil
+}
+
+func (self *RPCClient) handleWireResult(res jsonrpc.IMessage) {
+	reqId := res.MustId()
+	if wc, ok := self.wirePendingRequests[reqId]; ok {
+		delete(self.wirePendingRequests, reqId)
+		// callback
+		wc.Callback(res)
+	} else {
+		res.Log().Warnf("res not found in wirePendingRequests")
+	}
+}

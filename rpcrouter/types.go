@@ -46,9 +46,9 @@ type PendingT struct {
 }
 
 type MethodInfo struct {
-	Name       string
-	Help       string
-	SchemaJson string
+	Name       string `mapstructure:"name"`
+	Help       string `mapstructure:"help"`
+	SchemaJson string `mapstructure:"schema"`
 	schemaObj  *schema.MethodSchema
 }
 

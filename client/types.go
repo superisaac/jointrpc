@@ -3,6 +3,7 @@ package client
 import (
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"time"
 	//dispatch "github.com/superisaac/jointrpc/dispatch"
 	"net/url"
 )
@@ -28,6 +29,13 @@ type RPCStatusError struct {
 	Reason string
 }
 
+type WireCallback func(jsonrpc.IMessage)
+
+type WireCallT struct {
+	Expire    time.Time
+	Callback  WireCallback
+}
+
 type ConnectionLostCallback func()
 type ConnectedCallback func()
 
@@ -43,6 +51,8 @@ type RPCClient struct {
 	WorkerRetryTimes int
 	onConnected      ConnectedCallback
 	onConnectionLost ConnectionLostCallback
+
+	wirePendingRequests map[interface{}]WireCallT
 }
 
 type MethodUpdateReceiver chan []*intf.MethodInfo

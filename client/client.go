@@ -40,16 +40,12 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	}
 
 	c := &RPCClient{
-		serverEntry:      serverEntry,
-		serverUrl:        serverUrl,
-		sendUpChannel:    sendUpChannel,
-		WorkerRetryTimes: 10,
+		serverEntry:         serverEntry,
+		serverUrl:           serverUrl,
+		sendUpChannel:       sendUpChannel,
+		WorkerRetryTimes:    10,
+		wirePendingRequests: make(map[interface{}]WireCallT),
 	}
-	//c.disp = new(dispatch.Dispatcher)
-	//c.disp.InitDispatcher()
-	// c.disp.OnChange(func() {
-	// 	c.OnHandlerChanged()
-	// })
 	return c
 }
 

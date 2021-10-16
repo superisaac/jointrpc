@@ -16,3 +16,7 @@ var (
 	ErrBadResource = &RPCError{201, "bad resource", nil}
 	ErrWorkerExit  = &RPCError{202, "worker exit", nil}
 )
+
+func ParamsError(message string) *RPCError {
+	return &RPCError{400, message, nil}
+}

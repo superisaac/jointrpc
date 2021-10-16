@@ -275,10 +275,10 @@ func sendAuthOk(stream intf.JointRPC_WorkerServer, requestId string, namespace s
 	stream.Send(downpac)
 }
 
-// Workerr
-func downMsgToDeliver(context context.Context, msgvec rpcrouter.MsgVec, stream intf.JointRPC_WorkerServer, conn *rpcrouter.ConnT) {
+// Workers
+func downMessageToSender(context context.Context, msgvec rpcrouter.MsgVec, stream intf.JointRPC_WorkerServer, conn *rpcrouter.ConnT) {
 	msg := msgvec.Msg
-	msg.Log().Infof("message down to client")
+	msg.Log().Infof("message down to client, %+v", msg)
 	env := encoding.MessageToEnvolope(msg)
 	payload := &intf.JointRPCDownPacket_Envolope{Envolope: env}
 	pac := &intf.JointRPCDownPacket{Payload: payload}
@@ -377,7 +377,7 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 				log.Debugf("recv channel closed")
 				return
 			}
-			downMsgToDeliver(context, msgvec, stream, conn)
+			downMessageToSender(context, msgvec, stream, conn)
 		}
 	} // and for loop
 }
@@ -462,7 +462,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 			continue
 		}
 
-		// DeclareMethdosRequest
+		// DeclareMethodsRequest
 		methodsReq := uppac.GetMethodsRequest()
 		if methodsReq != nil {
 
@@ -477,7 +477,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 			continue
 		}
 
-		// DeclareMethdosRequest
+		// DelegateMethodsRequest
 		delegatesReq := uppac.GetDelegatesRequest()
 		if delegatesReq != nil {
 			resp, err := self.declareDelegates(factory, conn, delegatesReq)
@@ -497,14 +497,30 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 		if envo != nil {
 			msg, err := encoding.MessageFromEnvolope(envo)
 			if err != nil {
-				conn.Log().Warnf("error on requesttomessage() %s", err.Error())
+				conn.Log().Warnf("error on recover message from envo %s", err.Error())
 				return err
 			}
-			msgvec := rpcrouter.MsgVec{
-				Msg:        msg,
-				Namespace:  conn.Namespace,
-				FromConnId: conn.ConnId}
-			router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
+			res, err := handleConnRequests(factory, conn, msg)
+			if err != nil {
+				conn.Log().Warnf("error on handle conn message %s", err.Error())
+				return err
+			}
+
+			if res != nil {
+				resvec := rpcrouter.MsgVec{
+					Msg:        res,
+					Namespace:  conn.Namespace,
+					FromConnId: conn.ConnId,
+				}
+				downMessageToSender(ctx, resvec, stream, conn)
+			} else {
+				// deliver to routers
+				msgvec := rpcrouter.MsgVec{
+					Msg:        msg,
+					Namespace:  conn.Namespace,
+					FromConnId: conn.ConnId}
+				router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
+			}
 			continue
 		}
 		conn.Log().Warnf("bad up packet %+v", uppac)
