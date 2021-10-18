@@ -6,6 +6,7 @@ import (
 	//"flag"
 	//"fmt"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/jsonrpc"
@@ -30,15 +31,20 @@ func (self *RPCClient) OnHandlerChanged(disp *dispatch.Dispatcher) {
 	}
 }
 
-func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Dispatcher) {
+func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	upMethods := make([](map[string](interface{})), 0)
-	for m, info := range disp.MethodHandlers {
-		minfo := map[string](interface{}){
-			"name":   m,
-			"help":   info.Help,
-			"schema": info.SchemaJson,
+	for _, minfo := range disp.GetMethodInfos() {
+		infoDict := make(map[string](interface{}))
+		err := mapstructure.Decode(minfo, &infoDict)
+		if err != nil {
+			return err
 		}
-		upMethods = append(upMethods, minfo)
+		// minfo := map[string](interface{}){
+		// 	"name":   m,
+		// 	"help":   info.Help,
+		// 	"schema": info.SchemaJson,
+		// }
+		upMethods = append(upMethods, infoDict)
 	}
 
 	reqId := misc.NewUuid()
@@ -46,7 +52,7 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	params = append(params, upMethods)
 	reqmsg := jsonrpc.NewRequestMessage(reqId, "_conn.declareMethods", params, nil)
 
-	self.CallInWire(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+	return self.CallInWire(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
 		log.Debugf("declared methods")
 	})
 }
@@ -235,5 +241,5 @@ func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string, d
 		Msg:        msg,
 		Namespace:  namespace,
 		FromConnId: 0}
-	disp.HandleRequestMessage(msgvec)
+	disp.Feed(msgvec)
 }

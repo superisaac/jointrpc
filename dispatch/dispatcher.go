@@ -12,9 +12,27 @@ import (
 func NewDispatcher() *Dispatcher {
 	disp := new(Dispatcher)
 	disp.ChResult = make(chan ResultT, 100)
-	disp.MethodHandlers = make(map[string](MethodHandler))
+	disp.methodHandlers = make(map[string](MethodHandler))
 	disp.changeHandlers = make([]OnChangeFunc, 0)
 	return disp
+}
+
+func (self Dispatcher) HasMethod(method string) bool {
+	_, ok := self.methodHandlers[method]
+	return ok
+}
+
+func (self Dispatcher) GetMethodInfos() []rpcrouter.MethodInfo {
+	minfos := make([]rpcrouter.MethodInfo, 0)
+	for m, info := range self.methodHandlers {
+		minfo := rpcrouter.MethodInfo{
+			Name:       m,
+			Help:       info.Help,
+			SchemaJson: info.SchemaJson,
+		}
+		minfos = append(minfos, minfo)
+	}
+	return minfos
 }
 
 func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
@@ -26,8 +44,8 @@ func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*Met
 		opt(&h)
 	}
 
-	_, found := self.MethodHandlers[method]
-	self.MethodHandlers[method] = h
+	_, found := self.methodHandlers[method]
+	self.methodHandlers[method] = h
 
 	if !found && len(self.changeHandlers) == 0 {
 		self.TriggerChange()
@@ -49,9 +67,9 @@ func (self *Dispatcher) TriggerChange() {
 }
 
 func (self *Dispatcher) UnHandle(method string) bool {
-	_, found := self.MethodHandlers[method]
+	_, found := self.methodHandlers[method]
 	if found {
-		delete(self.MethodHandlers, method)
+		delete(self.methodHandlers, method)
 		self.TriggerChange()
 	}
 	return found
@@ -68,7 +86,6 @@ func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{},
 		return errmsg, nil
 		//return , err
 	} else if msg.IsRequest() {
-		log.Debugf("msg is request")
 		if resMsg, ok := res.(jsonrpc.IMessage); ok {
 			// TODO: assert resMsg is res and resId matches
 			return resMsg, nil
@@ -86,20 +103,20 @@ func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrout
 	}
 }
 
-func (self *Dispatcher) HandleRequestMessage(msgvec rpcrouter.MsgVec) {
+func (self *Dispatcher) Feed(msgvec rpcrouter.MsgVec) {
 	if self.spawnExec {
-		go self.handleRequestMessage(msgvec)
+		go self.feed(msgvec)
 	} else {
-		self.handleRequestMessage(msgvec)
+		self.feed(msgvec)
 	}
 }
 
-func (self *Dispatcher) handleRequestMessage(msgvec rpcrouter.MsgVec) {
+func (self *Dispatcher) feed(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	namespace := msgvec.Namespace
 	misc.Assert(namespace != "", "empty namespace")
 
-	handler, ok := self.MethodHandlers[msg.MustMethod()]
+	handler, ok := self.methodHandlers[msg.MustMethod()]
 
 	defer func() {
 		if r := recover(); r != nil {

@@ -165,15 +165,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 
 func (self *VarsService) declareMethods(factory *rpcrouter.RouterFactory) {
 	if self.conn != nil {
-		minfos := make([]rpcrouter.MethodInfo, 0)
-		for m, info := range self.disp.MethodHandlers {
-			minfo := rpcrouter.MethodInfo{
-				Name:       m,
-				Help:       info.Help,
-				SchemaJson: info.SchemaJson,
-			}
-			minfos = append(minfos, minfo)
-		}
+		minfos := self.disp.GetMethodInfos()
 		cmdMethods := rpcrouter.CmdMethods{
 			Namespace: factory.CommonRouter().Name(),
 			ConnId:    self.conn.ConnId,
@@ -186,7 +178,7 @@ func (self *VarsService) declareMethods(factory *rpcrouter.RouterFactory) {
 func (self *VarsService) requestReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		self.disp.HandleRequestMessage(msgvec)
+		self.disp.Feed(msgvec)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}
