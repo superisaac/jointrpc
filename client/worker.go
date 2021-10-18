@@ -8,7 +8,7 @@ import (
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/jsonrpc"
 	"io"
 	//"net/url"
 	//"os"
@@ -138,11 +138,14 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		log.Warnf("error on handle %v", err)
 		return err
 	}
-	self.connected = true
+
 	self.workerStream = stream
+
 	defer func() {
 		self.workerStream = nil
 	}()
+
+	self.connected = true
 	if self.onConnected != nil {
 		self.onConnected()
 	}

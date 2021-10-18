@@ -126,7 +126,6 @@ func (self Edge) hasMethod(methodName string) bool {
 }
 
 func (self *Edge) onStateChange(state *rpcrouter.ServerState) {
-	//fmt.Printf("state change %v\b", state)
 	// update edge records
 	methodNames := make(misc.StringSet)
 	if state != nil {

@@ -1,10 +1,10 @@
 package client
 
 import (
-	"os"
 	"flag"
+	"os"
 )
-	
+
 // misc functions
 func NewServerFlag(flagSet *flag.FlagSet) *ServerFlag {
 	seflag := new(ServerFlag)

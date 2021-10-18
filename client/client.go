@@ -140,4 +140,3 @@ func (self *RPCClient) CheckStatus(status *intf.Status, methodName string) error
 			Reason: status.Reason}
 	}
 }
-

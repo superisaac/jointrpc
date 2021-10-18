@@ -5,7 +5,9 @@ import (
 	//"errors"
 	//"fmt"
 	"errors"
+	//log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/misc"
 )
 
@@ -30,11 +32,23 @@ func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []strin
 		return errors.New("worker stream not setup")
 	}
 
-	req := &intf.DeclareDelegatesRequest{Methods: methods, RequestId: misc.NewUuid()}
-	payload := &intf.JointRPCUpPacket_DelegatesRequest{DelegatesRequest: req}
-	uppac := &intf.JointRPCUpPacket{Payload: payload}
-	self.DeliverUpPacket(uppac)
-	return nil
+	reqId := misc.NewUuid()
+	if methods == nil {
+		methods = make([]string, 0)
+	}
+	params := [](interface{}){methods}
+
+	reqmsg := jsonrpc.NewRequestMessage(reqId, "_conn.declareDelegates", params, nil)
+
+	return self.CallInWire(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+		res.Log().Debugf("declared delegates")
+	})
+
+	// req := &intf.DeclareDelegatesRequest{Methods: methods, RequestId: misc.NewUuid()}
+	// payload := &intf.JointRPCUpPacket_DelegatesRequest{DelegatesRequest: req}
+	// uppac := &intf.JointRPCUpPacket{Payload: payload}
+	// self.DeliverUpPacket(uppac)
+	//return nil
 }
 
 // func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []string) error {

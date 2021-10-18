@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"time"
 	//"fmt"
 	"context"
@@ -8,10 +9,16 @@ import (
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/misc"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func (self *RPCClient) CallInWire(rootCtx context.Context, reqmsg jsonrpc.IMessage, callback WireCallback, opts ...CallOptionFunc) error {
-	misc.Assert(self.workerStream != nil, "worker steam is empty")
+	//misc.Assert(self.workerStream != nil, "worker steam is empty")
+	if self.workerStream == nil {
+		log.Warnf("worker stream is empty")
+		return errors.New("worker stream is empty")
+	}
 
 	opt := &CallOption{}
 
@@ -36,14 +43,14 @@ func (self *RPCClient) CallInWire(rootCtx context.Context, reqmsg jsonrpc.IMessa
 	expire := time.Now().Add(time.Second * 30)
 	reqId := reqmsg.MustId()
 	wc := WireCallT{
-		Expire:    expire,
-		Callback:  callback,
+		Expire:   expire,
+		Callback: callback,
 	}
 	// TODO: assert wire pending requests
 	self.wirePendingRequests[reqId] = wc
-	//self.sendUpChannel <- req
+	self.sendUpChannel <- req
 
-	self.workerStream.Send(req)
+	//self.workerStream.Send(req)
 	return nil
 }
 

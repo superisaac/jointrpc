@@ -32,8 +32,8 @@ type RPCStatusError struct {
 type WireCallback func(jsonrpc.IMessage)
 
 type WireCallT struct {
-	Expire    time.Time
-	Callback  WireCallback
+	Expire   time.Time
+	Callback WireCallback
 }
 
 type ConnectionLostCallback func()
