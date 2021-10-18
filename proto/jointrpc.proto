@@ -50,27 +50,27 @@ message ListDelegatesResponse {
   repeated string delegates = 2;
 }
 
-message DeclareMethodsRequest {
-  string request_id = 1;  
-  repeated MethodInfo methods = 2;
+// message DeclareMethodsRequest {
+//   string request_id = 1;  
+//   repeated MethodInfo methods = 2;
 
-}
+// }
 
-message DeclareMethodsResponse {
-  string request_id = 1;  
-  Status status = 2;
-}
+// message DeclareMethodsResponse {
+//   string request_id = 1;  
+//   Status status = 2;
+// }
 
-message DeclareDelegatesRequest {
-  string request_id = 1;  
-  repeated string methods = 2;
-}
+// message DeclareDelegatesRequest {
+//   string request_id = 1;  
+//   repeated string methods = 2;
+// }
 
-message DeclareDelegatesResponse {
-  string request_id = 1;  
-  Status status = 2;
+// message DeclareDelegatesResponse {
+//   string request_id = 1;  
+//   Status status = 2;
 
-}
+// }
 
 message JSONRPCCallRequest {
   ClientAuth auth = 1;
@@ -133,8 +133,8 @@ message JointRPCDownPacket {
     Ping ping = 2;
     Pong pong = 3;
 
-    DeclareMethodsResponse methods_response = 4;
-    DeclareDelegatesResponse delegates_response = 5;
+    // DeclareMethodsResponse methods_response = 4;
+    // DeclareDelegatesResponse delegates_response = 5;
 
     JSONRPCEnvolope envolope = 10;
     ServerState state = 11;  // server state notification
@@ -147,8 +147,8 @@ message JointRPCUpPacket {
     Ping ping = 2;
     Pong pong = 3;
 
-    DeclareMethodsRequest methods_request = 4;
-    DeclareDelegatesRequest delegates_request = 5;
+    // DeclareMethodsRequest methods_request = 4;
+    // DeclareDelegatesRequest delegates_request = 5;
     JSONRPCEnvolope envolope = 10;
   }
 }

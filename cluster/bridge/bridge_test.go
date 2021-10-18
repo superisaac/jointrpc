@@ -103,6 +103,7 @@ func TestBridgeRun(t *testing.T) {
 		client.WithTraceId("trace3"))
 	assert.Nil(err)
 	assert.Equal("trace3", res3.TraceId())
+	//fmt.Printf("res3 %+v\n", res3)
 	assert.True(res3.IsResult())
 	assert.Equal(json.Number("31"), res3.MustResult())
 

@@ -10,7 +10,7 @@ import (
 	//"time"
 	//json "encoding/json"
 	//"errors"
-	"fmt"
+	//"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
 	grpc "google.golang.org/grpc"
@@ -23,7 +23,7 @@ import (
 	misc "github.com/superisaac/jointrpc/misc"
 	//misc "github.com/superisaac/jointrpc/misc"
 	//datadir "github.com/superisaac/jointrpc/datadir"
-	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
+	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	peer "google.golang.org/grpc/peer"
 )
@@ -178,62 +178,6 @@ func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethods
 	intfMInfos := buildMethodInfos(minfos)
 	resp := &intf.ListMethodsResponse{Methods: intfMInfos}
 	return resp, nil
-}
-
-// DeclareMethods
-func (self *JointRPC) declareMethods(factory *rpcrouter.RouterFactory, conn *rpcrouter.ConnT, req *intf.DeclareMethodsRequest) (*intf.DeclareMethodsResponse, error) {
-	upMethods := make([]rpcrouter.MethodInfo, 0)
-	var methodNames []string
-	for _, iminfo := range req.Methods {
-		minfo := encoding.DecodeMethodInfo(iminfo)
-		if !jsonrpc.IsPublicMethod(minfo.Name) {
-			conn.Log().WithFields(log.Fields{
-				"rpc": "DeclareMethods",
-			}).Warnf("%s is not valid public method name", minfo.Name)
-			intfErr := &intf.Status{
-				Code:   11400,
-				Reason: fmt.Sprintf("method %s cannot prefix with .", minfo.Name)}
-			return &intf.DeclareMethodsResponse{Status: intfErr}, nil
-		}
-		methodNames = append(methodNames, minfo.Name)
-		_, err := minfo.SchemaOrError()
-		if err != nil {
-			if buildError, ok := err.(*schema.SchemaBuildError); ok {
-				// parse schema error
-				conn.Log().WithFields(log.Fields{
-					"rpc": "DeclareMethods",
-				}).Warnf("error build schema %s, %+v", buildError.Error(), iminfo)
-				intfErr := &intf.Status{
-					Code:   11401,
-					Reason: fmt.Sprintf("build schema error %s", buildError.Error())}
-				return &intf.DeclareMethodsResponse{Status: intfErr}, nil
-			}
-			return &intf.DeclareMethodsResponse{}, err
-		}
-		upMethods = append(upMethods, *minfo)
-	}
-
-	conn.Log().Infof("declared methods %v", methodNames)
-	cmdMethods := rpcrouter.CmdMethods{
-		Namespace: conn.Namespace,
-		ConnId:    conn.ConnId,
-		Methods:   upMethods,
-	}
-	factory.ChMethods <- cmdMethods
-	return &intf.DeclareMethodsResponse{RequestId: req.RequestId}, nil
-}
-
-// DeclareDelegates
-func (self *JointRPC) declareDelegates(factory *rpcrouter.RouterFactory, conn *rpcrouter.ConnT, req *intf.DeclareDelegatesRequest) (*intf.DeclareDelegatesResponse, error) {
-	// TODO: validate delegate methods
-	conn.Log().Infof("declared delegates %+v", req.Methods)
-	cmdDelegates := rpcrouter.CmdDelegates{
-		Namespace:   conn.Namespace,
-		ConnId:      conn.ConnId,
-		MethodNames: req.Methods,
-	}
-	factory.ChDelegates <- cmdDelegates
-	return &intf.DeclareDelegatesResponse{RequestId: req.RequestId}, nil
 }
 
 // ListDelegates
@@ -458,36 +402,6 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 			payload := &intf.JointRPCDownPacket_Pong{Pong: pong}
 			downpac := &intf.JointRPCDownPacket{Payload: payload}
 
-			stream.Send(downpac)
-			continue
-		}
-
-		// DeclareMethodsRequest
-		methodsReq := uppac.GetMethodsRequest()
-		if methodsReq != nil {
-
-			resp, err := self.declareMethods(factory, conn, methodsReq)
-			if err != nil {
-				conn.Log().Warnf("methodsRequests error %s", err.Error())
-				return err
-			}
-			payload := &intf.JointRPCDownPacket_MethodsResponse{MethodsResponse: resp}
-			downpac := &intf.JointRPCDownPacket{Payload: payload}
-			stream.Send(downpac)
-			continue
-		}
-
-		// DelegateMethodsRequest
-		delegatesReq := uppac.GetDelegatesRequest()
-		if delegatesReq != nil {
-			resp, err := self.declareDelegates(factory, conn, delegatesReq)
-
-			if err != nil {
-				conn.Log().Warnf("delegatesRequests error %s", err.Error())
-				return err
-			}
-			payload := &intf.JointRPCDownPacket_DelegatesResponse{DelegatesResponse: resp}
-			downpac := &intf.JointRPCDownPacket{Payload: payload}
 			stream.Send(downpac)
 			continue
 		}

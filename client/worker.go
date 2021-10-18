@@ -210,28 +210,6 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 			continue
 		}
 
-		// methods response
-		methodsResp := downpac.GetMethodsResponse()
-		if methodsResp != nil {
-			err := self.CheckStatus(methodsResp.Status, "Worker.Methods")
-			if err != nil {
-				log.Warn(err.Error())
-				return err
-			}
-			continue
-		}
-
-		// delegates response
-		delegatesResp := downpac.GetDelegatesResponse()
-		if delegatesResp != nil {
-			err := self.CheckStatus(delegatesResp.Status, "Worker.Delegates")
-			if err != nil {
-				log.Warn(err.Error())
-				return err
-			}
-			continue
-		}
-
 		// Handle JSONRPC Request
 		//req := downpac.GetRequest()
 		envo := downpac.GetEnvolope()

@@ -3,8 +3,9 @@ package server
 import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
-
+	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/jsonrpc"
+	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )
 
@@ -20,11 +21,29 @@ func handleDeclareMethods(factory *rpcrouter.RouterFactory, conn *rpcrouter.Conn
 	}
 
 	upMethods := make([]rpcrouter.MethodInfo, 0)
-
+	var methodNames []string
 	for _, infoDict := range arr {
 		var minfo rpcrouter.MethodInfo
 		err := mapstructure.Decode(infoDict, &minfo)
 		if err != nil {
+			return nil, err
+		}
+		if !jsonrpc.IsPublicMethod(minfo.Name) {
+			conn.Log().WithFields(log.Fields{
+				"rpc": "DeclareMethods",
+			}).Warnf("%s is not valid public method name", minfo.Name)
+			return nil, jsonrpc.ParamsError(fmt.Sprintf("method %s cannot prefix with .", minfo.Name))
+		}
+		methodNames = append(methodNames, minfo.Name)
+		_, err = minfo.SchemaOrError()
+		if err != nil {
+			if buildError, ok := err.(*schema.SchemaBuildError); ok {
+				// parse schema error
+				conn.Log().WithFields(log.Fields{
+					"rpc": "DeclareMethods",
+				}).Warnf("error build schema %s, %+v", buildError.Error(), minfo)
+				return nil, jsonrpc.ParamsError(fmt.Sprintf("build schema error %s", buildError.Error()))
+			}
 			return nil, err
 		}
 		upMethods = append(upMethods, minfo)
