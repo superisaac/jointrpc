@@ -7,11 +7,10 @@ import (
 	//grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	//"io"
 	"net/url"
 	//"time"
-	//server "github.com/superisaac/jointrpc/server"
 	"github.com/superisaac/jointrpc/dispatch"
 	//encoding "github.com/superisaac/jointrpc/encoding"
 	//"github.com/superisaac/jointrpc/misc"
@@ -26,7 +25,7 @@ func (self RPCStatusError) Error() string {
 }
 
 func NewRPCClient(serverEntry ServerEntry) *RPCClient {
-	sendUpChannel := make(chan *intf.JointRPCUpPacket)
+	chSendUp := make(chan jsonrpc.IMessage)
 	serverUrl, err := url.Parse(serverEntry.ServerUrl)
 	if err != nil {
 		log.Panicf("parse url error %s %s", serverEntry.ServerUrl, err.Error())
@@ -42,7 +41,7 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	c := &RPCClient{
 		serverEntry:         serverEntry,
 		serverUrl:           serverUrl,
-		sendUpChannel:       sendUpChannel,
+		chSendUp:            chSendUp,
 		WorkerRetryTimes:    10,
 		chResult:            chResult,
 		wirePendingRequests: make(map[interface{}]WireCallT),

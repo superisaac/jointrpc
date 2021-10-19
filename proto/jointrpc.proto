@@ -13,7 +13,7 @@ service JointRPC {
   rpc SubscribeState(AuthRequest) returns (stream SubscribeStateResponse);
   
   // request/response dual streams
-  rpc Worker(stream JointRPCUpPacket) returns (stream JointRPCDownPacket);
+  rpc Worker(stream JSONRPCEnvolope) returns (stream JSONRPCEnvolope);
 }
 
 message Empty {}
@@ -98,7 +98,6 @@ message JSONRPCNotifyResponse {
 
 message MethodInfo {
   string name = 1;
-  //MethodLocation location = 2;
   string help = 2;
   string schema_json = 3;
 }
@@ -117,26 +116,6 @@ message AuthResponse {
   Status status = 2;
   string namespace = 3;
 }
-
-message JointRPCDownPacket {
-  oneof payload {
-    AuthResponse auth_response = 1;
-
-    JSONRPCEnvolope envolope = 10;
-    ServerState state = 11;  // server state notification
-  }
-}
-
-message JointRPCUpPacket {
-  oneof payload {
-    AuthRequest auth_request = 1;
-    JSONRPCEnvolope envolope = 10;
-  }
-}
-
-// message SubscribeStateRequest {
-//   AuthRequest auth_request = 1;
-// }
 
 message SubscribeStateResponse {
   oneof payload {

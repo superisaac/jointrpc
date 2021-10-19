@@ -35,7 +35,7 @@ class JointRPCBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def Worker(self, stream: 'grpclib.server.Stream[jointrpc_pb2.JointRPCUpPacket, jointrpc_pb2.JointRPCDownPacket]') -> None:
+    async def Worker(self, stream: 'grpclib.server.Stream[jointrpc_pb2.JSONRPCEnvolope, jointrpc_pb2.JSONRPCEnvolope]') -> None:
         pass
 
     def __mapping__(self) -> typing.Dict[str, grpclib.const.Handler]:
@@ -73,8 +73,8 @@ class JointRPCBase(abc.ABC):
             '/JointRPC/Worker': grpclib.const.Handler(
                 self.Worker,
                 grpclib.const.Cardinality.STREAM_STREAM,
-                jointrpc_pb2.JointRPCUpPacket,
-                jointrpc_pb2.JointRPCDownPacket,
+                jointrpc_pb2.JSONRPCEnvolope,
+                jointrpc_pb2.JSONRPCEnvolope,
             ),
         }
 
@@ -115,6 +115,6 @@ class JointRPCStub:
         self.Worker = grpclib.client.StreamStreamMethod(
             channel,
             '/JointRPC/Worker',
-            jointrpc_pb2.JointRPCUpPacket,
-            jointrpc_pb2.JointRPCDownPacket,
+            jointrpc_pb2.JSONRPCEnvolope,
+            jointrpc_pb2.JSONRPCEnvolope,
         )

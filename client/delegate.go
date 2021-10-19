@@ -43,24 +43,4 @@ func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []strin
 	return self.CallInWire(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
 		res.Log().Debugf("declared delegates")
 	})
-
-	// req := &intf.DeclareDelegatesRequest{Methods: methods, RequestId: misc.NewUuid()}
-	// payload := &intf.JointRPCUpPacket_DelegatesRequest{DelegatesRequest: req}
-	// uppac := &intf.JointRPCUpPacket{Payload: payload}
-	// self.DeliverUpPacket(uppac)
-	//return nil
 }
-
-// func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []string) error {
-// 	ctx, cancel := context.WithCancel(rootCtx)
-// 	defer cancel()
-// 	res, err := self.rpcClient.DeclareDelegates(ctx, req)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = self.CheckStatus(res.Status, "DeclareDelegates")
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }

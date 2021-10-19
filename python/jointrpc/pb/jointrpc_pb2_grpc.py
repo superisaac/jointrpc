@@ -41,8 +41,8 @@ class JointRPCStub(object):
                 )
         self.Worker = channel.stream_stream(
                 '/JointRPC/Worker',
-                request_serializer=jointrpc__pb2.JointRPCUpPacket.SerializeToString,
-                response_deserializer=jointrpc__pb2.JointRPCDownPacket.FromString,
+                request_serializer=jointrpc__pb2.JSONRPCEnvolope.SerializeToString,
+                response_deserializer=jointrpc__pb2.JSONRPCEnvolope.FromString,
                 )
 
 
@@ -117,8 +117,8 @@ def add_JointRPCServicer_to_server(servicer, server):
             ),
             'Worker': grpc.stream_stream_rpc_method_handler(
                     servicer.Worker,
-                    request_deserializer=jointrpc__pb2.JointRPCUpPacket.FromString,
-                    response_serializer=jointrpc__pb2.JointRPCDownPacket.SerializeToString,
+                    request_deserializer=jointrpc__pb2.JSONRPCEnvolope.FromString,
+                    response_serializer=jointrpc__pb2.JSONRPCEnvolope.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -227,7 +227,7 @@ class JointRPC(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/JointRPC/Worker',
-            jointrpc__pb2.JointRPCUpPacket.SerializeToString,
-            jointrpc__pb2.JointRPCDownPacket.FromString,
+            jointrpc__pb2.JSONRPCEnvolope.SerializeToString,
+            jointrpc__pb2.JSONRPCEnvolope.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

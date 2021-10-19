@@ -5,8 +5,8 @@ import (
 	"time"
 	//"fmt"
 	"context"
-	"github.com/superisaac/jointrpc/encoding"
-	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	//"github.com/superisaac/jointrpc/encoding"
+	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/misc"
 
@@ -33,11 +33,6 @@ func (self *RPCClient) CallInWire(rootCtx context.Context, reqmsg jsonrpc.IMessa
 		reqmsg.SetTraceId(misc.NewUuid())
 	}
 	reqmsg.Log().Debug("request message created")
-	envolope := encoding.MessageToEnvolope(reqmsg)
-
-	payload := &intf.JointRPCUpPacket_Envolope{Envolope: envolope}
-
-	req := &intf.JointRPCUpPacket{Payload: payload}
 
 	// save request in pending map
 	expire := time.Now().Add(time.Second * 30)
@@ -48,9 +43,7 @@ func (self *RPCClient) CallInWire(rootCtx context.Context, reqmsg jsonrpc.IMessa
 	}
 	// TODO: assert wire pending requests
 	self.wirePendingRequests[reqId] = wc
-	self.sendUpChannel <- req
-
-	//self.workerStream.Send(req)
+	self.chSendUp <- reqmsg
 	return nil
 }
 

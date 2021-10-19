@@ -208,26 +208,12 @@ func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_SubscribeState
 	stream.Send(resp)
 }
 
-func sendAuthOk(stream intf.JointRPC_WorkerServer, requestId string, namespace string) {
-	authResp := &intf.AuthResponse{
-		RequestId: requestId,
-		Namespace: namespace,
-	}
-	payload := &intf.JointRPCDownPacket_AuthResponse{
-		AuthResponse: authResp,
-	}
-	downpac := &intf.JointRPCDownPacket{Payload: payload}
-	stream.Send(downpac)
-}
-
 // Workers
 func sendDownMessage(stream intf.JointRPC_WorkerServer, msg jsonrpc.IMessage) {
 	//msg := msgvec.Msg
 	msg.Log().Infof("message down to client, %+v", msg)
-	env := encoding.MessageToEnvolope(msg)
-	payload := &intf.JointRPCDownPacket_Envolope{Envolope: env}
-	pac := &intf.JointRPCDownPacket{Payload: payload}
-	err := stream.Send(pac)
+	envo := encoding.MessageToEnvolope(msg)
+	err := stream.Send(envo)
 	if err != nil {
 		panic(err)
 	}
@@ -269,7 +255,7 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 	}
 
 	logger := log.WithFields(log.Fields{"ip": remotePeer.Addr})
-	uppac, err := stream.Recv()
+	envo, err := stream.Recv()
 	if err != nil {
 		if err == io.EOF {
 			log.Debugf("eof met")
@@ -278,73 +264,46 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 			log.Debugf("stream canceled")
 			return nil, nil
 		}
-		log.Warnf("error on stream Recv() %s", err.Error())
+		logger.Warnf("error on stream Recv() %s", err.Error())
 		return nil, err
 	}
 
-	if authReq := uppac.GetAuthRequest(); authReq != nil {
-		//	if authReq == nil {
-		//		logger.Warnf("bad up packet %+v", uppac)
-		//		return nil, errors.New("bad up packet")
-		//}
-		auth := authReq.ClientAuth
-		status, namespace := self.Authorize(stream.Context(), auth, remotePeer.Addr)
-		if status != nil {
-			logger.Warnf("client auth failed")
-			authResp := &intf.AuthResponse{Status: status, RequestId: authReq.RequestId}
-			payload := &intf.JointRPCDownPacket_AuthResponse{AuthResponse: authResp}
-			downpac := &intf.JointRPCDownPacket{Payload: payload}
-			stream.Send(downpac)
-			return nil, errors.New("client auth failed")
-		}
-		factory := rpcrouter.RouterFactoryFromContext(stream.Context())
-		conn := factory.Get(namespace).Join()
-		conn.PeerAddr = remotePeer.Addr
-		sendAuthOk(stream, authReq.RequestId, namespace)
-		return conn, nil
-	} else if envo := uppac.GetEnvolope(); envo != nil {
-		msg, err := encoding.MessageFromEnvolope(envo)
-		if err != nil {
-			return nil, err
-		}
-		if !msg.IsRequest() || msg.MustMethod() != "_conn.Authorize" {
-			return nil, errors.New("expect _conn.Authorize()")
-		}
-		params := msg.MustParams()
-		if len(params) != 2 {
-			return nil, errors.New("len(params) != 2")
-		}
-
-		username, ok := params[0].(string)
-		if !ok {
-			return nil, errors.New("username is not string")
-		}
-
-		password, ok := params[1].(string)
-		if !ok {
-			return  nil, errors.New("password is not string")
-		}
-
-		auth := &intf.ClientAuth{Username: username, Password: password}
-		status, namespace := self.Authorize(stream.Context(), auth, remotePeer.Addr)
-
-		if status != nil {
-			return nil, errors.New(fmt.Sprintf("fail to authorize %s", status))
-		}
-		resmsg := jsonrpc.NewResultMessage(msg, namespace, nil)
-
-		factory := rpcrouter.RouterFactoryFromContext(stream.Context())
-		conn := factory.Get(namespace).Join()
-		conn.PeerAddr = remotePeer.Addr
-
-		sendDownMessage(stream, resmsg)
-		return conn, nil
-
-	} else {
-		logger.Warnf("bad up packet")
-		return nil, errors.New("bad up packet")
+	msg, err := encoding.MessageFromEnvolope(envo)
+	if err != nil {
+		return nil, err
+	}
+	if !msg.IsRequest() || msg.MustMethod() != "_conn.Authorize" {
+		return nil, errors.New("expect _conn.Authorize()")
+	}
+	params := msg.MustParams()
+	if len(params) != 2 {
+		return nil, errors.New("len(params) != 2")
 	}
 
+	username, ok := params[0].(string)
+	if !ok {
+		return nil, errors.New("username is not string")
+	}
+
+	password, ok := params[1].(string)
+	if !ok {
+		return nil, errors.New("password is not string")
+	}
+
+	auth := &intf.ClientAuth{Username: username, Password: password}
+	status, namespace := self.Authorize(stream.Context(), auth, remotePeer.Addr)
+
+	if status != nil {
+		return nil, errors.New(fmt.Sprintf("fail to authorize %s", status))
+	}
+	resmsg := jsonrpc.NewResultMessage(msg, namespace, nil)
+
+	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
+	conn := factory.Get(namespace).Join()
+	conn.PeerAddr = remotePeer.Addr
+
+	sendDownMessage(stream, resmsg)
+	return conn, nil
 }
 
 func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServer, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
@@ -433,7 +392,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 	go relayDownMessages(ctx, stream, conn, chResult)
 
 	for {
-		uppac, err := stream.Recv()
+		envo, err := stream.Recv()
 		if err != nil {
 			if err == io.EOF {
 				log.Debugf("eof met")
@@ -446,29 +405,24 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 			return err
 		}
 
-		// Worker JSONRPC Request
-		envo := uppac.GetEnvolope()
-		if envo != nil {
-			msg, err := encoding.MessageFromEnvolope(envo)
-			if err != nil {
-				conn.Log().Warnf("error on recover message from envo %s", err.Error())
-				return err
-			}
-			// deliver to routers
-			msgvec := rpcrouter.MsgVec{
-				Msg:        msg,
-				Namespace:  conn.Namespace,
-				FromConnId: conn.ConnId}
+		msg, err := encoding.MessageFromEnvolope(envo)
+		if err != nil {
+			conn.Log().Warnf("error on recover message from envo %s", err.Error())
+			return err
+		}
+		// deliver to routers
+		msgvec := rpcrouter.MsgVec{
+			Msg:        msg,
+			Namespace:  conn.Namespace,
+			FromConnId: conn.ConnId}
 
-			connDisp := GetConnDispatcher()
-			handled := connDisp.HandleRequest(ctx, msgvec, chResult)
-			if handled {
-				continue
-			}
-			router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
+		connDisp := GetConnDispatcher()
+		handled := connDisp.HandleRequest(ctx, msgvec, chResult)
+		if handled {
 			continue
 		}
-		conn.Log().Warnf("bad up packet %+v", uppac)
+		router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
+		continue
 	}
 }
 

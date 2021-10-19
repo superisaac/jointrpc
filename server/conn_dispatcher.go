@@ -13,7 +13,7 @@ import (
 )
 
 type ConnDispatcher struct {
-	disp *dispatch.Dispatcher
+	disp     *dispatch.Dispatcher
 	authDisp *dispatch.Dispatcher
 }
 

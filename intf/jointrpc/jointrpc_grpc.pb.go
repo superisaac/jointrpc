@@ -113,8 +113,8 @@ func (c *jointRPCClient) Worker(ctx context.Context, opts ...grpc.CallOption) (J
 }
 
 type JointRPC_WorkerClient interface {
-	Send(*JointRPCUpPacket) error
-	Recv() (*JointRPCDownPacket, error)
+	Send(*JSONRPCEnvolope) error
+	Recv() (*JSONRPCEnvolope, error)
 	grpc.ClientStream
 }
 
@@ -122,12 +122,12 @@ type jointRPCWorkerClient struct {
 	grpc.ClientStream
 }
 
-func (x *jointRPCWorkerClient) Send(m *JointRPCUpPacket) error {
+func (x *jointRPCWorkerClient) Send(m *JSONRPCEnvolope) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *jointRPCWorkerClient) Recv() (*JointRPCDownPacket, error) {
-	m := new(JointRPCDownPacket)
+func (x *jointRPCWorkerClient) Recv() (*JSONRPCEnvolope, error) {
+	m := new(JSONRPCEnvolope)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -282,8 +282,8 @@ func _JointRPC_Worker_Handler(srv interface{}, stream grpc.ServerStream) error {
 }
 
 type JointRPC_WorkerServer interface {
-	Send(*JointRPCDownPacket) error
-	Recv() (*JointRPCUpPacket, error)
+	Send(*JSONRPCEnvolope) error
+	Recv() (*JSONRPCEnvolope, error)
 	grpc.ServerStream
 }
 
@@ -291,12 +291,12 @@ type jointRPCWorkerServer struct {
 	grpc.ServerStream
 }
 
-func (x *jointRPCWorkerServer) Send(m *JointRPCDownPacket) error {
+func (x *jointRPCWorkerServer) Send(m *JSONRPCEnvolope) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *jointRPCWorkerServer) Recv() (*JointRPCUpPacket, error) {
-	m := new(JointRPCUpPacket)
+func (x *jointRPCWorkerServer) Recv() (*JSONRPCEnvolope, error) {
+	m := new(JSONRPCEnvolope)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

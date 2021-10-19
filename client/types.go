@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/superisaac/jointrpc/dispatch"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/jsonrpc"
 	"net/url"
 	"time"
 )
@@ -40,13 +40,13 @@ type ConnectionLostCallback func()
 type ConnectedCallback func()
 
 type RPCClient struct {
-	workerStream  intf.JointRPC_WorkerClient
-	stateStream   intf.JointRPC_SubscribeStateClient
-	serverEntry   ServerEntry
-	serverUrl     *url.URL
-	connected     bool
-	grpcClient    intf.JointRPCClient
-	sendUpChannel chan *intf.JointRPCUpPacket
+	workerStream intf.JointRPC_WorkerClient
+	stateStream  intf.JointRPC_SubscribeStateClient
+	serverEntry  ServerEntry
+	serverUrl    *url.URL
+	connected    bool
+	grpcClient   intf.JointRPCClient
+	chSendUp     chan jsonrpc.IMessage
 
 	WorkerRetryTimes int
 	onConnected      ConnectedCallback

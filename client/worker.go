@@ -8,7 +8,7 @@ import (
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
-	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/jsonrpc"
 	"io"
 	//"net/url"
@@ -39,11 +39,6 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 		if err != nil {
 			return err
 		}
-		// minfo := map[string](interface{}){
-		// 	"name":   m,
-		// 	"help":   info.Help,
-		// 	"schema": info.SchemaJson,
-		// }
 		upMethods = append(upMethods, infoDict)
 	}
 
@@ -62,7 +57,6 @@ func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher
 		self.OnHandlerChanged(disp)
 	})
 
-	//for {
 	for i := 0; i < self.WorkerRetryTimes; i++ {
 		log.Debugf("Worker connect %d times", i)
 		err := self.runWorker(rootCtx, disp)
@@ -84,12 +78,13 @@ func (self *RPCClient) sendUpResult(ctx context.Context, disp *dispatch.Dispatch
 		select {
 		case <-ctx.Done():
 			return
-		case uppacket, ok := <-self.sendUpChannel:
+		case msg, ok := <-self.chSendUp:
 			if !ok {
 				log.Warnf("send up channel closed")
 				return
 			}
-			self.workerStream.Send(uppacket)
+			envo := encoding.MessageToEnvolope(msg)
+			self.workerStream.Send(envo)
 		case result, ok := <-self.chResult:
 			if !ok {
 				log.Warnf("result msg closed")
@@ -97,9 +92,7 @@ func (self *RPCClient) sendUpResult(ctx context.Context, disp *dispatch.Dispatch
 			}
 
 			envo := encoding.MessageToEnvolope(result.ResMsg)
-			payload := &intf.JointRPCUpPacket_Envolope{Envolope: envo}
-			uppac := &intf.JointRPCUpPacket{Payload: payload}
-			self.workerStream.Send(uppac)
+			self.workerStream.Send(envo)
 		}
 	}
 }
@@ -111,26 +104,13 @@ func (self *RPCClient) OnConnectionLost(cb ConnectionLostCallback) {
 	self.onConnectionLost = cb
 }
 
-func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
-	self.sendUpChannel <- uppack
-}
-
 func (self *RPCClient) requestAuth(rootCtx context.Context) error {
 	reqId := misc.NewUuid()
 	auth := self.ClientAuth()
 	params := [](interface{}){auth.Username, auth.Password}
 	authmsg := jsonrpc.NewRequestMessage(reqId, "_conn.Authorize", params, nil)
 	envo := encoding.MessageToEnvolope(authmsg)
-	payload := &intf.JointRPCUpPacket_Envolope{Envolope: envo}
-	uppac := &intf.JointRPCUpPacket{Payload: payload}
-	return self.workerStream.Send(uppac)
-	// authReq := &intf.AuthRequest{
-	// 	RequestId:  misc.NewUuid(),
-	// 	ClientAuth: self.ClientAuth(),
-	// }
-	// payload := &intf.JointRPCUpPacket_AuthRequest{AuthRequest: authReq}
-	// uppac := &intf.JointRPCUpPacket{Payload: payload}
-	// return self.workerStream.Send(uppac)
+	return self.workerStream.Send(envo)
 }
 
 func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
@@ -170,8 +150,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 	}
 
 	// wait for auth response
-	downpac, err := self.workerStream.Recv()
-
+	authRespEnvo, err := self.workerStream.Recv()
 	if err == io.EOF {
 		log.Infof("client stream closed")
 		return nil
@@ -182,15 +161,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		log.Debugf("down pack error %+v %d", err, grpc.Code(err))
 		return err
 	}
-	// authResp := downpac.GetAuthResponse()
-	// if authResp == nil {
-	// 	log.Warnf("cannot wait for auth response")
-	// 	return err
-	// }
-	authRespEnvo := downpac.GetEnvolope()
-	if authRespEnvo == nil {
-		return errors.New("not envolope")
-	}
+
 	authRes, err := encoding.MessageFromEnvolope(authRespEnvo)
 	if err != nil {
 		return err
@@ -200,18 +171,12 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		rpcError := authRes.MustError()
 		return &RPCStatusError{
 			Method: "_conn.Authorize",
-			Code: rpcError.Code,
+			Code:   rpcError.Code,
 			Reason: rpcError.Message,
 		}
 	}
 	misc.Assert(authRes.IsResult(), "authres is not request")
 
-	// err = self.CheckStatus(authResp.Status, "Worker.Auth")
-	// if err != nil {
-	// 	log.Warn(err.Error())
-	// 	return err
-	// }
-	// namespace := authResp.Namespace
 	namespace, ok := authRes.MustResult().(string)
 	misc.Assert(ok, "authres.result is not string")
 
@@ -221,7 +186,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 	go self.sendUpResult(sendCtx, disp)
 	disp.TriggerChange()
 	for {
-		downpac, err := self.workerStream.Recv()
+		envo, err := self.workerStream.Recv()
 		if err == io.EOF {
 			log.Infof("client stream closed")
 			return nil
@@ -233,20 +198,14 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 			return err
 		}
 
-		// Handle JSONRPC Request
-		envo := downpac.GetEnvolope()
-		if envo != nil {
-			msg, err := encoding.MessageFromEnvolope(envo)
-			if err != nil {
-				return err
-			}
-			if msg.IsRequestOrNotify() {
-				self.handleDownRequest(rootCtx, msg, envo.TraceId, disp, namespace)
-			} else {
-				self.handleWireResult(msg)
-			}
-
-			continue
+		msg, err := encoding.MessageFromEnvolope(envo)
+		if err != nil {
+			return err
+		}
+		if msg.IsRequestOrNotify() {
+			self.handleDownRequest(rootCtx, msg, envo.TraceId, disp, namespace)
+		} else {
+			self.handleWireResult(msg)
 		}
 	}
 	return nil
