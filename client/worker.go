@@ -116,13 +116,21 @@ func (self *RPCClient) DeliverUpPacket(uppack *intf.JointRPCUpPacket) {
 }
 
 func (self *RPCClient) requestAuth(rootCtx context.Context) error {
-	authReq := &intf.AuthRequest{
-		RequestId:  misc.NewUuid(),
-		ClientAuth: self.ClientAuth(),
-	}
-	payload := &intf.JointRPCUpPacket_AuthRequest{AuthRequest: authReq}
+	reqId := misc.NewUuid()
+	auth := self.ClientAuth()
+	params := [](interface{}){auth.Username, auth.Password}
+	authmsg := jsonrpc.NewRequestMessage(reqId, "_conn.Authorize", params, nil)
+	envo := encoding.MessageToEnvolope(authmsg)
+	payload := &intf.JointRPCUpPacket_Envolope{Envolope: envo}
 	uppac := &intf.JointRPCUpPacket{Payload: payload}
 	return self.workerStream.Send(uppac)
+	// authReq := &intf.AuthRequest{
+	// 	RequestId:  misc.NewUuid(),
+	// 	ClientAuth: self.ClientAuth(),
+	// }
+	// payload := &intf.JointRPCUpPacket_AuthRequest{AuthRequest: authReq}
+	// uppac := &intf.JointRPCUpPacket{Payload: payload}
+	// return self.workerStream.Send(uppac)
 }
 
 func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
@@ -163,6 +171,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 
 	// wait for auth response
 	downpac, err := self.workerStream.Recv()
+
 	if err == io.EOF {
 		log.Infof("client stream closed")
 		return nil
@@ -173,18 +182,38 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		log.Debugf("down pack error %+v %d", err, grpc.Code(err))
 		return err
 	}
-	authResp := downpac.GetAuthResponse()
-	if authResp == nil {
-		log.Warnf("cannot wait for auth response")
+	// authResp := downpac.GetAuthResponse()
+	// if authResp == nil {
+	// 	log.Warnf("cannot wait for auth response")
+	// 	return err
+	// }
+	authRespEnvo := downpac.GetEnvolope()
+	if authRespEnvo == nil {
+		return errors.New("not envolope")
+	}
+	authRes, err := encoding.MessageFromEnvolope(authRespEnvo)
+	if err != nil {
 		return err
 	}
 
-	err = self.CheckStatus(authResp.Status, "Worker.Auth")
-	if err != nil {
-		log.Warn(err.Error())
-		return err
+	if authRes.IsError() {
+		rpcError := authRes.MustError()
+		return &RPCStatusError{
+			Method: "_conn.Authorize",
+			Code: rpcError.Code,
+			Reason: rpcError.Message,
+		}
 	}
-	namespace := authResp.Namespace
+	misc.Assert(authRes.IsResult(), "authres is not request")
+
+	// err = self.CheckStatus(authResp.Status, "Worker.Auth")
+	// if err != nil {
+	// 	log.Warn(err.Error())
+	// 	return err
+	// }
+	// namespace := authResp.Namespace
+	namespace, ok := authRes.MustResult().(string)
+	misc.Assert(ok, "authres.result is not string")
 
 	// startup sendup goroutine
 	sendCtx, sendCancel := context.WithCancel(rootCtx)
@@ -204,20 +233,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 			return err
 		}
 
-		// On Ping
-		ping := downpac.GetPing()
-		if ping != nil {
-			// Send Pong
-			pong := &intf.Pong{RequestId: ping.RequestId}
-			payload := &intf.JointRPCUpPacket_Pong{Pong: pong}
-			uppac := &intf.JointRPCUpPacket{Payload: payload}
-
-			self.sendUpChannel <- uppac
-			continue
-		}
-
 		// Handle JSONRPC Request
-		//req := downpac.GetRequest()
 		envo := downpac.GetEnvolope()
 		if envo != nil {
 			msg, err := encoding.MessageFromEnvolope(envo)
@@ -225,7 +241,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 				return err
 			}
 			if msg.IsRequestOrNotify() {
-				self.handleDownRequest(msg, envo.TraceId, disp, namespace)
+				self.handleDownRequest(rootCtx, msg, envo.TraceId, disp, namespace)
 			} else {
 				self.handleWireResult(msg)
 			}
@@ -236,10 +252,10 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 	return nil
 }
 
-func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher, namespace string) {
+func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher, namespace string) {
 	msgvec := rpcrouter.MsgVec{
 		Msg:        msg,
 		Namespace:  namespace,
 		FromConnId: 0}
-	disp.Feed(msgvec, self.chResult)
+	disp.Feed(ctx, msgvec, self.chResult)
 }

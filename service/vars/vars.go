@@ -148,7 +148,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				return nil
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
-			self.requestReceived(msgvec)
+			self.requestReceived(ctx, msgvec)
 		case result, ok := <-self.chResult:
 			if !ok {
 				log.Infof("result channel closed, return")
@@ -177,10 +177,10 @@ func (self *VarsService) declareMethods(factory *rpcrouter.RouterFactory) {
 	}
 }
 
-func (self *VarsService) requestReceived(msgvec rpcrouter.MsgVec) {
+func (self *VarsService) requestReceived(ctx context.Context, msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		self.disp.Feed(msgvec, self.chResult)
+		self.disp.Feed(ctx, msgvec, self.chResult)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}

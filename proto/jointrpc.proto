@@ -103,14 +103,6 @@ message MethodInfo {
   string schema_json = 3;
 }
 
-message Ping {
-  string request_id = 1;
-}
-
-message Pong {
-  string request_id = 1;
-}
-
 message ServerState {
   repeated MethodInfo methods = 1;
 }
@@ -130,12 +122,6 @@ message JointRPCDownPacket {
   oneof payload {
     AuthResponse auth_response = 1;
 
-    Ping ping = 2;
-    Pong pong = 3;
-
-    // DeclareMethodsResponse methods_response = 4;
-    // DeclareDelegatesResponse delegates_response = 5;
-
     JSONRPCEnvolope envolope = 10;
     ServerState state = 11;  // server state notification
   }
@@ -144,11 +130,6 @@ message JointRPCDownPacket {
 message JointRPCUpPacket {
   oneof payload {
     AuthRequest auth_request = 1;
-    Ping ping = 2;
-    Pong pong = 3;
-
-    // DeclareMethodsRequest methods_request = 4;
-    // DeclareDelegatesRequest delegates_request = 5;
     JSONRPCEnvolope envolope = 10;
   }
 }

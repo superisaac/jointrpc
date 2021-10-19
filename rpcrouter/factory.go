@@ -30,13 +30,13 @@ func RouterFactoryFromContext(ctx context.Context) *RouterFactory {
 	panic("context does not have router")
 }
 
-func (self *RouterFactory) Get(name string) *Router {
-	misc.Assert(name != "", "factory got empty namespace")
-	if r, ok := self.routerMap[name]; ok {
+func (self *RouterFactory) Get(namespace string) *Router {
+	misc.Assert(namespace != "", "factory got empty namespace")
+	if r, ok := self.routerMap[namespace]; ok {
 		return r
 	} else {
-		t := NewRouter(self, name)
-		self.routerMap[name] = t
+		t := NewRouter(self, namespace)
+		self.routerMap[namespace] = t
 		return t
 	}
 }

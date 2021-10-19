@@ -1,13 +1,14 @@
 package dispatch
 
 import (
-	//"context"
+	"context"
 	"errors"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )
 
 type RPCRequest struct {
+	Context    context.Context
 	MsgVec     rpcrouter.MsgVec
 	Dispatcher *Dispatcher
 }

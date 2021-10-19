@@ -62,7 +62,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 				return nil
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
-			self.requestReceived(msgvec)
+			self.requestReceived(ctx, msgvec)
 		case result, ok := <-self.chResult:
 			if !ok {
 				log.Infof("result channel closed, return")
@@ -79,17 +79,20 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *BuiltinService) requestReceived(msgvec rpcrouter.MsgVec) {
+func (self *BuiltinService) requestReceived(ctx context.Context, msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		self.disp.Feed(msgvec, self.chResult)
+		self.disp.Feed(ctx, msgvec, self.chResult)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}
 }
 
 const (
-	echoSchema = `{"type": "method", "params": [{"type": "string"}]}`
+	echoSchema = `{
+"type": "method",
+ "params": [{"type": "string"}]
+}`
 )
 
 func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {

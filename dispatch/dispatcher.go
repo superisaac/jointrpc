@@ -1,6 +1,7 @@
 package dispatch
 
 import (
+	"context"
 	"errors"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
@@ -11,7 +12,6 @@ import (
 
 func NewDispatcher() *Dispatcher {
 	disp := new(Dispatcher)
-	//disp.ChResult = make(chan ResultT, 100)
 	disp.methodHandlers = make(map[string](MethodHandler))
 	disp.changeHandlers = make([]OnChangeFunc, 0)
 	return disp
@@ -82,7 +82,6 @@ func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{},
 		}
 		msg.Log().Warnf("error %s", err.Error())
 		errmsg := jsonrpc.ErrServerError.ToMessage(msg)
-		//self.ReturnResultMessage(errmsg)
 		return errmsg, nil
 		//return , err
 	} else if msg.IsRequest() {
@@ -103,15 +102,15 @@ func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrout
 	}
 }
 
-func (self *Dispatcher) Feed(msgvec rpcrouter.MsgVec, chResult chan ResultT) {
+func (self *Dispatcher) Feed(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
 	if self.spawnExec {
-		go self.feed(msgvec, chResult)
+		go self.feed(ctx, msgvec, chResult)
 	} else {
-		self.feed(msgvec, chResult)
+		self.feed(ctx, msgvec, chResult)
 	}
 }
 
-func (self *Dispatcher) feed(msgvec rpcrouter.MsgVec, chResult chan ResultT) {
+func (self *Dispatcher) feed(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
 	msg := msgvec.Msg
 	namespace := msgvec.Namespace
 	misc.Assert(namespace != "", "empty namespace")
@@ -139,13 +138,13 @@ func (self *Dispatcher) feed(msgvec rpcrouter.MsgVec, chResult chan ResultT) {
 	var resmsg jsonrpc.IMessage
 	var err error
 	if ok {
-		req := &RPCRequest{MsgVec: msgvec}
+		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
 		params := msg.MustParams()
 		res, err := handler.function(req, params)
 		log.Debugf("handler function returns %+v, %+v", msg, res)
 		resmsg, err = self.wrapHandlerResult(msg, res, err)
 	} else if self.defaultHandler != nil {
-		req := &RPCRequest{MsgVec: msgvec}
+		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
 
 		params := msg.MustParams()
 		res, err := self.defaultHandler(req, msg.MustMethod(), params)
