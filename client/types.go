@@ -1,11 +1,11 @@
 package client
 
 import (
+	"github.com/superisaac/jointrpc/dispatch"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	"time"
-	//dispatch "github.com/superisaac/jointrpc/dispatch"
 	"net/url"
+	"time"
 )
 
 type ServerEntry struct {
@@ -53,6 +53,8 @@ type RPCClient struct {
 	onConnectionLost ConnectionLostCallback
 
 	wirePendingRequests map[interface{}]WireCallT
+
+	chResult chan dispatch.ResultT
 }
 
 type MethodUpdateReceiver chan []*intf.MethodInfo

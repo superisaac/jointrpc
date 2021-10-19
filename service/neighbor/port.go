@@ -43,6 +43,7 @@ func NewNeighborPort(namespace string, nbrCfg datadir.NeighborConfig) *NeighborP
 	port.serverEntries = entries
 	port.edges = make(map[string]*Edge)
 	port.dispatcher = dispatch.NewDispatcher()
+	port.chResult = make(chan dispatch.ResultT, 100)
 	port.ChState = make(chan CmdStateChange)
 	return port
 }
@@ -111,7 +112,7 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 			if err != nil {
 				panic(err)
 			}
-		case result, ok := <-self.dispatcher.ChResult:
+		case result, ok := <-self.chResult:
 			if !ok {
 				// TODO: log
 				return
@@ -145,7 +146,7 @@ func (self *NeighborPort) requestReceived(msgvec rpcrouter.MsgVec) error {
 					log.Fatal("result has not the same id with origial request msg")
 				}
 
-				self.dispatcher.ReturnResultMessage(resmsg, msgvec)
+				self.dispatcher.ReturnResultMessage(resmsg, msgvec, self.chResult)
 				return nil
 			}
 		}

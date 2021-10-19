@@ -12,7 +12,7 @@ import (
 	"net/url"
 	//"time"
 	//server "github.com/superisaac/jointrpc/server"
-	//"github.com/superisaac/jointrpc/dispatch"
+	"github.com/superisaac/jointrpc/dispatch"
 	//encoding "github.com/superisaac/jointrpc/encoding"
 	//"github.com/superisaac/jointrpc/misc"
 	//"github.com/superisaac/jointrpc/rpcrouter"
@@ -37,11 +37,14 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 		log.Panicf("urls scheme not allowed, %s", serverUrl)
 	}
 
+	chResult := make(chan dispatch.ResultT, 100)
+
 	c := &RPCClient{
 		serverEntry:         serverEntry,
 		serverUrl:           serverUrl,
 		sendUpChannel:       sendUpChannel,
 		WorkerRetryTimes:    10,
+		chResult:            chResult,
 		wirePendingRequests: make(map[interface{}]WireCallT),
 	}
 	return c

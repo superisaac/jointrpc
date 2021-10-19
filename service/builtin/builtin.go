@@ -15,7 +15,8 @@ import (
 )
 
 type BuiltinService struct {
-	disp *dispatch.Dispatcher
+	disp     *dispatch.Dispatcher
+	chResult chan dispatch.ResultT
 	//router *rpcrouter.Router
 	conn *rpcrouter.ConnT
 }
@@ -62,7 +63,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(msgvec)
-		case result, ok := <-self.disp.ChResult:
+		case result, ok := <-self.chResult:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return nil
@@ -81,7 +82,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 func (self *BuiltinService) requestReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		self.disp.Feed(msgvec)
+		self.disp.Feed(msgvec, self.chResult)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}
@@ -95,6 +96,7 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 	factory := rpcrouter.RouterFactoryFromContext(rootCtx)
 
 	self.disp = dispatch.NewDispatcher()
+	self.chResult = make(chan dispatch.ResultT, 100)
 
 	self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		fmt.Printf("list methods, %s\n", req.MsgVec.Namespace)

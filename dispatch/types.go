@@ -36,7 +36,7 @@ type ResultT struct {
 }
 
 type Dispatcher struct {
-	ChResult       chan ResultT
+	//ChResult       chan ResultT
 	spawnExec      bool
 	methodHandlers map[string]MethodHandler
 	defaultHandler DefaultHandlerFunc

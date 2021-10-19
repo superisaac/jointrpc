@@ -15,7 +15,8 @@ import (
 )
 
 type VarsService struct {
-	disp *dispatch.Dispatcher
+	disp     *dispatch.Dispatcher
+	chResult chan dispatch.ResultT
 	//vars   map[string](map[string](interface{}))
 	namedVars map[string]interface{}
 	//router *rpcrouter.Router
@@ -84,6 +85,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 	}
 
 	self.disp = dispatch.NewDispatcher()
+	self.chResult = make(chan dispatch.ResultT, 100)
 	self.conn = commonRouter.Join()
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
@@ -147,7 +149,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(msgvec)
-		case result, ok := <-self.disp.ChResult:
+		case result, ok := <-self.chResult:
 			if !ok {
 				log.Infof("result channel closed, return")
 				return nil
@@ -178,7 +180,7 @@ func (self *VarsService) declareMethods(factory *rpcrouter.RouterFactory) {
 func (self *VarsService) requestReceived(msgvec rpcrouter.MsgVec) {
 	msg := msgvec.Msg
 	if msg.IsRequest() || msg.IsNotify() {
-		self.disp.Feed(msgvec)
+		self.disp.Feed(msgvec, self.chResult)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}

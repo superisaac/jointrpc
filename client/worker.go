@@ -90,7 +90,7 @@ func (self *RPCClient) sendUpResult(ctx context.Context, disp *dispatch.Dispatch
 				return
 			}
 			self.workerStream.Send(uppacket)
-		case result, ok := <-disp.ChResult:
+		case result, ok := <-self.chResult:
 			if !ok {
 				log.Warnf("result msg closed")
 				return
@@ -241,5 +241,5 @@ func (self *RPCClient) handleDownRequest(msg jsonrpc.IMessage, traceId string, d
 		Msg:        msg,
 		Namespace:  namespace,
 		FromConnId: 0}
-	disp.Feed(msgvec)
+	disp.Feed(msgvec, self.chResult)
 }

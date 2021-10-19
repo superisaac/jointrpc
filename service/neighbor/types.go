@@ -28,6 +28,7 @@ type CmdStateChange struct {
 
 type NeighborPort struct {
 	dispatcher    *dispatch.Dispatcher
+	chResult      chan dispatch.ResultT
 	namespace     string
 	edges         map[string]*Edge
 	ChState       chan CmdStateChange

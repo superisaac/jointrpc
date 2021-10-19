@@ -11,7 +11,7 @@ import (
 
 func NewDispatcher() *Dispatcher {
 	disp := new(Dispatcher)
-	disp.ChResult = make(chan ResultT, 100)
+	//disp.ChResult = make(chan ResultT, 100)
 	disp.methodHandlers = make(map[string](MethodHandler))
 	disp.changeHandlers = make([]OnChangeFunc, 0)
 	return disp
@@ -96,22 +96,22 @@ func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{},
 	}
 }
 
-func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrouter.MsgVec) {
-	self.ChResult <- ResultT{
+func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrouter.MsgVec, chResult chan ResultT) {
+	chResult <- ResultT{
 		ResMsg:    resmsg,
 		ReqMsgVec: req,
 	}
 }
 
-func (self *Dispatcher) Feed(msgvec rpcrouter.MsgVec) {
+func (self *Dispatcher) Feed(msgvec rpcrouter.MsgVec, chResult chan ResultT) {
 	if self.spawnExec {
-		go self.feed(msgvec)
+		go self.feed(msgvec, chResult)
 	} else {
-		self.feed(msgvec)
+		self.feed(msgvec, chResult)
 	}
 }
 
-func (self *Dispatcher) feed(msgvec rpcrouter.MsgVec) {
+func (self *Dispatcher) feed(msgvec rpcrouter.MsgVec, chResult chan ResultT) {
 	msg := msgvec.Msg
 	namespace := msgvec.Namespace
 	misc.Assert(namespace != "", "empty namespace")
@@ -126,12 +126,12 @@ func (self *Dispatcher) feed(msgvec rpcrouter.MsgVec) {
 				return
 			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
 				errmsg := rpcError.ToMessage(msg)
-				self.ReturnResultMessage(errmsg, msgvec)
+				self.ReturnResultMessage(errmsg, msgvec, chResult)
 				return
 			} else {
 				log.Errorf("Recovered ERROR on handling request msg %+v", r)
 				errmsg := jsonrpc.ErrServerError.ToMessage(msg)
-				self.ReturnResultMessage(errmsg, msgvec)
+				self.ReturnResultMessage(errmsg, msgvec, chResult)
 			}
 		}
 	}()
@@ -161,12 +161,12 @@ func (self *Dispatcher) feed(msgvec rpcrouter.MsgVec) {
 	}
 	if err != nil {
 		log.Warnf("bad up message %w", err)
-		errMsg := jsonrpc.ErrBadResource.ToMessage(msg)
-		self.ReturnResultMessage(errMsg, msgvec)
+		errmsg := jsonrpc.ErrBadResource.ToMessage(msg)
+		self.ReturnResultMessage(errmsg, msgvec, chResult)
 		return
 	}
 	if resmsg != nil {
-		self.ReturnResultMessage(resmsg, msgvec)
+		self.ReturnResultMessage(resmsg, msgvec, chResult)
 	}
 }
 
