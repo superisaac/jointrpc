@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\rintf/jointrpc',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0ejointrpc.proto\"\x07\n\x05\x45mpty\"&\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0e\n\x06reason\x18\x02 \x01(\t\"0\n\nClientAuth\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"1\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"/\n\x12ListMethodsRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"L\n\x13ListMethodsResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"1\n\x14ListDelegatesRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"C\n\x15ListDelegatesResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x11\n\tdelegates\x18\x02 \x03(\t\"w\n\x12JSONRPCCallRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\x12\x0f\n\x07timeout\x18\x04 \x01(\x05\"P\n\x11JSONRPCCallResult\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\"h\n\x14JSONRPCNotifyRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\">\n\x15JSONRPCNotifyResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x0c\n\x04text\x18\x02 \x01(\t\"=\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t\"+\n\x0bServerState\x12\x1c\n\x07methods\x18\x01 \x03(\x0b\x32\x0b.MethodInfo\"C\n\x0b\x41uthRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12 \n\x0b\x63lient_auth\x18\x02 \x01(\x0b\x32\x0b.ClientAuth\"N\n\x0c\x41uthResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x17\n\x06status\x18\x02 \x01(\x0b\x32\x07.Status\x12\x11\n\tnamespace\x18\x03 \x01(\t\"j\n\x16SubscribeStateResponse\x12&\n\rauth_response\x18\x01 \x01(\x0b\x32\r.AuthResponseH\x00\x12\x1d\n\x05state\x18\x02 \x01(\x0b\x32\x0c.ServerStateH\x00\x42\t\n\x07payload2\xdb\x02\n\x08JointRPC\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12>\n\rListDelegates\x12\x15.ListDelegatesRequest\x1a\x16.ListDelegatesResponse\x12\x39\n\x0eSubscribeState\x12\x0c.AuthRequest\x1a\x17.SubscribeStateResponse0\x01\x12\x30\n\x06Worker\x12\x10.JSONRPCEnvolope\x1a\x10.JSONRPCEnvolope(\x01\x30\x01\x42\x0fZ\rintf/jointrpcb\x06proto3'
+  serialized_pb=b'\n\x0ejointrpc.proto\"\x07\n\x05\x45mpty\"&\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0e\n\x06reason\x18\x02 \x01(\t\"0\n\nClientAuth\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"1\n\x0fJSONRPCEnvolope\x12\x0c\n\x04\x62ody\x18\x01 \x01(\t\x12\x10\n\x08trace_id\x18\x02 \x01(\t\"/\n\x12ListMethodsRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"L\n\x13ListMethodsResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x1c\n\x07methods\x18\x02 \x03(\x0b\x32\x0b.MethodInfo\"1\n\x14ListDelegatesRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\"C\n\x15ListDelegatesResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x11\n\tdelegates\x18\x02 \x03(\t\"w\n\x12JSONRPCCallRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\x12\x0f\n\x07timeout\x18\x04 \x01(\x05\"P\n\x11JSONRPCCallResult\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\"h\n\x14JSONRPCNotifyRequest\x12\x19\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0b.ClientAuth\x12\"\n\x08\x65nvolope\x18\x02 \x01(\x0b\x32\x10.JSONRPCEnvolope\x12\x11\n\tbroadcast\x18\x03 \x01(\x08\">\n\x15JSONRPCNotifyResponse\x12\x17\n\x06status\x18\x01 \x01(\x0b\x32\x07.Status\x12\x0c\n\x04text\x18\x02 \x01(\t\"=\n\nMethodInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04help\x18\x02 \x01(\t\x12\x13\n\x0bschema_json\x18\x03 \x01(\t2\xa0\x02\n\x08JointRPC\x12/\n\x04\x43\x61ll\x12\x13.JSONRPCCallRequest\x1a\x12.JSONRPCCallResult\x12\x37\n\x06Notify\x12\x15.JSONRPCNotifyRequest\x1a\x16.JSONRPCNotifyResponse\x12\x38\n\x0bListMethods\x12\x13.ListMethodsRequest\x1a\x14.ListMethodsResponse\x12>\n\rListDelegates\x12\x15.ListDelegatesRequest\x1a\x16.ListDelegatesResponse\x12\x30\n\x06Worker\x12\x10.JSONRPCEnvolope\x1a\x10.JSONRPCEnvolope(\x01\x30\x01\x42\x0fZ\rintf/jointrpcb\x06proto3'
 )
 
 
@@ -531,167 +531,6 @@ _METHODINFO = _descriptor.Descriptor(
   serialized_end=849,
 )
 
-
-_SERVERSTATE = _descriptor.Descriptor(
-  name='ServerState',
-  full_name='ServerState',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='methods', full_name='ServerState.methods', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=851,
-  serialized_end=894,
-)
-
-
-_AUTHREQUEST = _descriptor.Descriptor(
-  name='AuthRequest',
-  full_name='AuthRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='request_id', full_name='AuthRequest.request_id', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='client_auth', full_name='AuthRequest.client_auth', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=896,
-  serialized_end=963,
-)
-
-
-_AUTHRESPONSE = _descriptor.Descriptor(
-  name='AuthResponse',
-  full_name='AuthResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='request_id', full_name='AuthResponse.request_id', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='status', full_name='AuthResponse.status', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='namespace', full_name='AuthResponse.namespace', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=965,
-  serialized_end=1043,
-)
-
-
-_SUBSCRIBESTATERESPONSE = _descriptor.Descriptor(
-  name='SubscribeStateResponse',
-  full_name='SubscribeStateResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='auth_response', full_name='SubscribeStateResponse.auth_response', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='state', full_name='SubscribeStateResponse.state', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='payload', full_name='SubscribeStateResponse.payload',
-      index=0, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
-  ],
-  serialized_start=1045,
-  serialized_end=1151,
-)
-
 _LISTMETHODSREQUEST.fields_by_name['auth'].message_type = _CLIENTAUTH
 _LISTMETHODSRESPONSE.fields_by_name['status'].message_type = _STATUS
 _LISTMETHODSRESPONSE.fields_by_name['methods'].message_type = _METHODINFO
@@ -704,17 +543,6 @@ _JSONRPCCALLRESULT.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
 _JSONRPCNOTIFYREQUEST.fields_by_name['auth'].message_type = _CLIENTAUTH
 _JSONRPCNOTIFYREQUEST.fields_by_name['envolope'].message_type = _JSONRPCENVOLOPE
 _JSONRPCNOTIFYRESPONSE.fields_by_name['status'].message_type = _STATUS
-_SERVERSTATE.fields_by_name['methods'].message_type = _METHODINFO
-_AUTHREQUEST.fields_by_name['client_auth'].message_type = _CLIENTAUTH
-_AUTHRESPONSE.fields_by_name['status'].message_type = _STATUS
-_SUBSCRIBESTATERESPONSE.fields_by_name['auth_response'].message_type = _AUTHRESPONSE
-_SUBSCRIBESTATERESPONSE.fields_by_name['state'].message_type = _SERVERSTATE
-_SUBSCRIBESTATERESPONSE.oneofs_by_name['payload'].fields.append(
-  _SUBSCRIBESTATERESPONSE.fields_by_name['auth_response'])
-_SUBSCRIBESTATERESPONSE.fields_by_name['auth_response'].containing_oneof = _SUBSCRIBESTATERESPONSE.oneofs_by_name['payload']
-_SUBSCRIBESTATERESPONSE.oneofs_by_name['payload'].fields.append(
-  _SUBSCRIBESTATERESPONSE.fields_by_name['state'])
-_SUBSCRIBESTATERESPONSE.fields_by_name['state'].containing_oneof = _SUBSCRIBESTATERESPONSE.oneofs_by_name['payload']
 DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
 DESCRIPTOR.message_types_by_name['Status'] = _STATUS
 DESCRIPTOR.message_types_by_name['ClientAuth'] = _CLIENTAUTH
@@ -728,10 +556,6 @@ DESCRIPTOR.message_types_by_name['JSONRPCCallResult'] = _JSONRPCCALLRESULT
 DESCRIPTOR.message_types_by_name['JSONRPCNotifyRequest'] = _JSONRPCNOTIFYREQUEST
 DESCRIPTOR.message_types_by_name['JSONRPCNotifyResponse'] = _JSONRPCNOTIFYRESPONSE
 DESCRIPTOR.message_types_by_name['MethodInfo'] = _METHODINFO
-DESCRIPTOR.message_types_by_name['ServerState'] = _SERVERSTATE
-DESCRIPTOR.message_types_by_name['AuthRequest'] = _AUTHREQUEST
-DESCRIPTOR.message_types_by_name['AuthResponse'] = _AUTHRESPONSE
-DESCRIPTOR.message_types_by_name['SubscribeStateResponse'] = _SUBSCRIBESTATERESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), {
@@ -825,34 +649,6 @@ MethodInfo = _reflection.GeneratedProtocolMessageType('MethodInfo', (_message.Me
   })
 _sym_db.RegisterMessage(MethodInfo)
 
-ServerState = _reflection.GeneratedProtocolMessageType('ServerState', (_message.Message,), {
-  'DESCRIPTOR' : _SERVERSTATE,
-  '__module__' : 'jointrpc_pb2'
-  # @@protoc_insertion_point(class_scope:ServerState)
-  })
-_sym_db.RegisterMessage(ServerState)
-
-AuthRequest = _reflection.GeneratedProtocolMessageType('AuthRequest', (_message.Message,), {
-  'DESCRIPTOR' : _AUTHREQUEST,
-  '__module__' : 'jointrpc_pb2'
-  # @@protoc_insertion_point(class_scope:AuthRequest)
-  })
-_sym_db.RegisterMessage(AuthRequest)
-
-AuthResponse = _reflection.GeneratedProtocolMessageType('AuthResponse', (_message.Message,), {
-  'DESCRIPTOR' : _AUTHRESPONSE,
-  '__module__' : 'jointrpc_pb2'
-  # @@protoc_insertion_point(class_scope:AuthResponse)
-  })
-_sym_db.RegisterMessage(AuthResponse)
-
-SubscribeStateResponse = _reflection.GeneratedProtocolMessageType('SubscribeStateResponse', (_message.Message,), {
-  'DESCRIPTOR' : _SUBSCRIBESTATERESPONSE,
-  '__module__' : 'jointrpc_pb2'
-  # @@protoc_insertion_point(class_scope:SubscribeStateResponse)
-  })
-_sym_db.RegisterMessage(SubscribeStateResponse)
-
 
 DESCRIPTOR._options = None
 
@@ -863,8 +659,8 @@ _JOINTRPC = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1154,
-  serialized_end=1501,
+  serialized_start=852,
+  serialized_end=1140,
   methods=[
   _descriptor.MethodDescriptor(
     name='Call',
@@ -907,19 +703,9 @@ _JOINTRPC = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='SubscribeState',
-    full_name='JointRPC.SubscribeState',
-    index=4,
-    containing_service=None,
-    input_type=_AUTHREQUEST,
-    output_type=_SUBSCRIBESTATERESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
     name='Worker',
     full_name='JointRPC.Worker',
-    index=5,
+    index=4,
     containing_service=None,
     input_type=_JSONRPCENVOLOPE,
     output_type=_JSONRPCENVOLOPE,

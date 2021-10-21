@@ -9,9 +9,6 @@ service JointRPC {
   rpc ListMethods(ListMethodsRequest) returns (ListMethodsResponse);
   rpc ListDelegates(ListDelegatesRequest) returns (ListDelegatesResponse);
 
-  // state stream
-  rpc SubscribeState(AuthRequest) returns (stream SubscribeStateResponse);
-  
   // request/response dual streams
   rpc Worker(stream JSONRPCEnvolope) returns (stream JSONRPCEnvolope);
 }
@@ -50,35 +47,12 @@ message ListDelegatesResponse {
   repeated string delegates = 2;
 }
 
-// message DeclareMethodsRequest {
-//   string request_id = 1;  
-//   repeated MethodInfo methods = 2;
-
-// }
-
-// message DeclareMethodsResponse {
-//   string request_id = 1;  
-//   Status status = 2;
-// }
-
-// message DeclareDelegatesRequest {
-//   string request_id = 1;  
-//   repeated string methods = 2;
-// }
-
-// message DeclareDelegatesResponse {
-//   string request_id = 1;  
-//   Status status = 2;
-
-// }
-
 message JSONRPCCallRequest {
   ClientAuth auth = 1;
   JSONRPCEnvolope envolope = 2;
   bool  broadcast = 3;
   int32   timeout = 4;     // the seconds from expire this rpc
 }
-
 
 message JSONRPCCallResult {
   Status status = 1;
@@ -100,26 +74,4 @@ message MethodInfo {
   string name = 1;
   string help = 2;
   string schema_json = 3;
-}
-
-message ServerState {
-  repeated MethodInfo methods = 1;
-}
-
-message AuthRequest {
-  string request_id = 1;  
-  ClientAuth client_auth = 2;
-}
-
-message AuthResponse {
-  string request_id = 1;  
-  Status status = 2;
-  string namespace = 3;
-}
-
-message SubscribeStateResponse {
-  oneof payload {
-     AuthResponse auth_response = 1;
-     ServerState state = 2;
-  }
 }

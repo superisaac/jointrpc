@@ -13,15 +13,13 @@ import (
 	"io"
 	//"net/url"
 	//"os"
-	"time"
-	//server "github.com/superisaac/jointrpc/server"
 	"github.com/superisaac/jointrpc/dispatch"
 	encoding "github.com/superisaac/jointrpc/encoding"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
-	//credentials "google.golang.org/grpc/credentials"
+	"time"
 )
 
 // Override Handler.OnHandlerChanged
@@ -108,7 +106,7 @@ func (self *RPCClient) requestAuth(rootCtx context.Context) error {
 	reqId := misc.NewUuid()
 	auth := self.ClientAuth()
 	params := [](interface{}){auth.Username, auth.Password}
-	authmsg := jsonrpc.NewRequestMessage(reqId, "_conn.Authorize", params, nil)
+	authmsg := jsonrpc.NewRequestMessage(reqId, "_conn.authorize", params, nil)
 	envo := encoding.MessageToEnvolope(authmsg)
 	return self.workerStream.Send(envo)
 }
@@ -170,7 +168,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 	if authRes.IsError() {
 		rpcError := authRes.MustError()
 		return &RPCStatusError{
-			Method: "_conn.Authorize",
+			Method: "_conn.authorize",
 			Code:   rpcError.Code,
 			Reason: rpcError.Message,
 		}

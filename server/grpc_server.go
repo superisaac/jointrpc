@@ -202,13 +202,6 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 	return resp, nil
 }
 
-func sendState(state *rpcrouter.ServerState, stream intf.JointRPC_SubscribeStateServer) {
-	iState := encoding.EncodeServerState(state)
-	payload := &intf.SubscribeStateResponse_State{State: iState}
-	resp := &intf.SubscribeStateResponse{Payload: payload}
-	stream.Send(resp)
-}
-
 // Workers
 func sendDownMessage(stream intf.JointRPC_WorkerServer, msg jsonrpc.IMessage) {
 	//msg := msgvec.Msg
@@ -218,35 +211,6 @@ func sendDownMessage(stream intf.JointRPC_WorkerServer, msg jsonrpc.IMessage) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (self *JointRPC) requireAuthState(context context.Context, authReq *intf.AuthRequest, stream intf.JointRPC_SubscribeStateServer) (*rpcrouter.ConnT, error) {
-	remotePeer, ok := peer.FromContext(context)
-	if !ok {
-		return nil, errors.New("cannot get peer info from stream")
-	}
-	logger := log.WithFields(log.Fields{"ip": remotePeer.Addr})
-
-	auth := authReq.ClientAuth
-	status, namespace := self.Authorize(stream.Context(), auth, remotePeer.Addr)
-	if status != nil {
-		logger.Warnf("client auth failed")
-		authResp := &intf.AuthResponse{Status: status, RequestId: authReq.RequestId}
-		payload := &intf.SubscribeStateResponse_AuthResponse{AuthResponse: authResp}
-		resp := &intf.SubscribeStateResponse{Payload: payload}
-		stream.Send(resp)
-		return nil, errors.New("client auth failed")
-	}
-
-	factory := rpcrouter.RouterFactoryFromContext(context)
-	conn := factory.Get(namespace).Join()
-	conn.PeerAddr = remotePeer.Addr
-
-	authResp := &intf.AuthResponse{RequestId: authReq.RequestId}
-	payload := &intf.SubscribeStateResponse_AuthResponse{AuthResponse: authResp}
-	resppac := &intf.SubscribeStateResponse{Payload: payload}
-	stream.Send(resppac)
-	return conn, nil
 }
 
 func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter.ConnT, error) {
@@ -276,8 +240,8 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, err
 	}
 
-	if !reqmsg.IsRequest() || reqmsg.MustMethod() != "_conn.Authorize" {
-		return nil, errors.New("expect _conn.Authorize()")
+	if !reqmsg.IsRequest() || reqmsg.MustMethod() != "_conn.authorize" {
+		return nil, errors.New("expect _conn.authorize()")
 	}
 
 	connDisp := GetConnDispatcher()
@@ -334,41 +298,6 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 			sendDownMessage(stream, ntf)
 		}
 	} // and for loop
-}
-
-func (self *JointRPC) SubscribeState(authReq *intf.AuthRequest, stream intf.JointRPC_SubscribeStateServer) error {
-	conn, err := self.requireAuthState(stream.Context(), authReq, stream)
-	if err != nil {
-		return err
-	}
-	if conn == nil {
-		return nil
-	}
-
-	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
-	router := factory.Get(conn.Namespace)
-	conn.SetWatchState(true)
-	ctx, cancel := context.WithCancel(stream.Context())
-	defer func() {
-		cancel()
-		router.Leave(conn)
-	}()
-
-	state := router.GetState()
-	sendState(state, stream)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case state, ok := <-conn.StateChannel():
-			if !ok {
-				log.Infof("state channel closed")
-				return errors.New("state channnel closed")
-			}
-			sendState(state, stream)
-		}
-	}
 }
 
 func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {

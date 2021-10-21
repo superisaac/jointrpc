@@ -34,11 +34,6 @@ class JointRPCStub(object):
                 request_serializer=jointrpc__pb2.ListDelegatesRequest.SerializeToString,
                 response_deserializer=jointrpc__pb2.ListDelegatesResponse.FromString,
                 )
-        self.SubscribeState = channel.unary_stream(
-                '/JointRPC/SubscribeState',
-                request_serializer=jointrpc__pb2.AuthRequest.SerializeToString,
-                response_deserializer=jointrpc__pb2.SubscribeStateResponse.FromString,
-                )
         self.Worker = channel.stream_stream(
                 '/JointRPC/Worker',
                 request_serializer=jointrpc__pb2.JSONRPCEnvolope.SerializeToString,
@@ -73,13 +68,6 @@ class JointRPCServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SubscribeState(self, request, context):
-        """state stream
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def Worker(self, request_iterator, context):
         """request/response dual streams
         """
@@ -109,11 +97,6 @@ def add_JointRPCServicer_to_server(servicer, server):
                     servicer.ListDelegates,
                     request_deserializer=jointrpc__pb2.ListDelegatesRequest.FromString,
                     response_serializer=jointrpc__pb2.ListDelegatesResponse.SerializeToString,
-            ),
-            'SubscribeState': grpc.unary_stream_rpc_method_handler(
-                    servicer.SubscribeState,
-                    request_deserializer=jointrpc__pb2.AuthRequest.FromString,
-                    response_serializer=jointrpc__pb2.SubscribeStateResponse.SerializeToString,
             ),
             'Worker': grpc.stream_stream_rpc_method_handler(
                     servicer.Worker,
@@ -195,23 +178,6 @@ class JointRPC(object):
         return grpc.experimental.unary_unary(request, target, '/JointRPC/ListDelegates',
             jointrpc__pb2.ListDelegatesRequest.SerializeToString,
             jointrpc__pb2.ListDelegatesResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def SubscribeState(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/JointRPC/SubscribeState',
-            jointrpc__pb2.AuthRequest.SerializeToString,
-            jointrpc__pb2.SubscribeStateResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

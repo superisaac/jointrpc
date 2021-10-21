@@ -140,7 +140,7 @@ func (self *ConnDispatcher) Init() {
 			return "ok", nil
 		}, dispatch.WithSchema(declareDelegatesSchema))
 
-	self.authDisp.On("_conn.Authorize",
+	self.authDisp.On("_conn.authorize",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			v := req.Context.Value("remoteAddress")
 			remoteAddress := ""

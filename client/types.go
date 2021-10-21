@@ -41,7 +41,6 @@ type ConnectedCallback func()
 
 type RPCClient struct {
 	workerStream intf.JointRPC_WorkerClient
-	stateStream  intf.JointRPC_SubscribeStateClient
 	serverEntry  ServerEntry
 	serverUrl    *url.URL
 	connected    bool
