@@ -31,7 +31,7 @@ func (self ConnT) ValidateRequestMsg(reqMsg *jsonrpc.RequestMessage) (bool, json
 	if info, ok := self.ServeMethods[reqMsg.Method]; ok && info.Schema() != nil {
 		s := info.Schema()
 		validator := schema.NewSchemaValidator()
-		errPos := validator.Validate(s, reqMsg.Interface())
+		errPos := validator.Validate(s, jsonrpc.GetMessageInterface(reqMsg))
 		if errPos != nil {
 			errmsg := errPos.ToMessage(reqMsg)
 			return false, errmsg
@@ -44,7 +44,7 @@ func (self ConnT) ValidateNotifyMsg(notifyMsg *jsonrpc.NotifyMessage) (bool, err
 	if info, ok := self.ServeMethods[notifyMsg.Method]; ok && info.Schema() != nil {
 		s := info.Schema()
 		validator := schema.NewSchemaValidator()
-		errPos := validator.Validate(s, notifyMsg.Interface())
+		errPos := validator.Validate(s, jsonrpc.GetMessageInterface(notifyMsg))
 		if errPos != nil {
 			return false, errPos
 		}
@@ -56,7 +56,7 @@ func (self ConnT) ValidateResultMsg(resMsg *jsonrpc.ResultMessage, reqMsg *jsonr
 	if info, ok := self.ServeMethods[reqMsg.Method]; ok && info.Schema() != nil {
 		s := info.Schema()
 		validator := schema.NewSchemaValidator()
-		errPos := validator.Validate(s, resMsg.Interface())
+		errPos := validator.Validate(s, jsonrpc.GetMessageInterface(resMsg))
 		if errPos != nil {
 			errmsg := errPos.ToMessage(reqMsg)
 			return false, errmsg

@@ -30,7 +30,7 @@ func DecodeMethodInfo(iminfo *intf.MethodInfo) *rpcrouter.MethodInfo {
 
 func MessageToEnvolope(msg jsonrpc.IMessage) *intf.JSONRPCEnvolope {
 	return &intf.JSONRPCEnvolope{
-		Body:    msg.MustString(),
+		Body:    jsonrpc.GetMessageString(msg),
 		TraceId: msg.TraceId()}
 }
 

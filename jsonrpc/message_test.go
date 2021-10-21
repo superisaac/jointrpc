@@ -71,7 +71,7 @@ func TestNotifyMsg(t *testing.T) {
 	assert.Equal(params[2], "hello")
 
 	arr := [](interface{}){3, "uu"}
-	msg = NewNotifyMessage("hahaha", arr, nil)
+	msg = NewNotifyMessage("hahaha", arr)
 	assert.Equal("hahaha", msg.MustMethod())
 	params = msg.MustParams()
 

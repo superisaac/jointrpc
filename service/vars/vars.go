@@ -46,7 +46,7 @@ func (self *VarsService) BroadcastVars(factory *rpcrouter.RouterFactory) error {
 		if router == nil {
 			continue
 		}
-		notify := jsonrpc.NewNotifyMessage("vars.change", []interface{}{vars}, nil)
+		notify := jsonrpc.NewNotifyMessage("vars.change", []interface{}{vars})
 		notify.SetTraceId(misc.NewUuid())
 		notify.Log().Infof("broadcast vars.change")
 

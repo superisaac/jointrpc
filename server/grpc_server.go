@@ -95,7 +95,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 	}
 	if recvmsg == nil {
 		misc.AssertEqual(recvmsg.TraceId(), reqmsg.TraceId(), "")
-		recvmsg = jsonrpc.NewResultMessage(reqmsg, nil, nil)
+		recvmsg = jsonrpc.NewResultMessage(reqmsg, nil)
 	}
 	if !recvmsg.IsResultOrError() {
 		log.Warnf("bad recvmsg is neither result nor error %+v", recvmsg)
@@ -294,7 +294,7 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 			if err != nil {
 				panic(err)
 			}
-			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson}, nil)
+			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
 			sendDownMessage(stream, ntf)
 		}
 	} // and for loop

@@ -142,7 +142,7 @@ func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if result != nil {
-		data, err1 := result.Bytes()
+		data, err1 := jsonrpc.GetMessageBytes(result)
 		if err1 != nil {
 			jsonrpc.ErrorResponse(w, r, err1, 500, "Server error")
 			return

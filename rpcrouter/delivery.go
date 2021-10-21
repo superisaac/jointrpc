@@ -116,12 +116,12 @@ func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
 				}
 			}
 
-			newRes := jsonrpc.NewResultMessage(origReq, resMsg.Result, nil)
+			newRes := jsonrpc.NewResultMessage(origReq, resMsg.Result)
 			newVec := msgvec
 			newVec.Msg = newRes
 			return self.SendTo(reqt.FromConnId, newVec)
 		} else if errMsg, ok := msg.(*jsonrpc.ErrorMessage); ok {
-			newErr := jsonrpc.NewErrorMessage(origReq, errMsg.Error, nil)
+			newErr := jsonrpc.NewErrorMessage(origReq, errMsg.Error)
 			newVec := msgvec
 			newVec.Msg = newErr
 			return self.SendTo(reqt.FromConnId, newVec)

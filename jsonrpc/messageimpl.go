@@ -52,6 +52,10 @@ func NewErrMsgType(additional string) *RPCError {
 	return &RPCError{ErrMessageType.Code, r, false}
 }
 
+func (self *BaseMessage) SetRaw(raw *simplejson.Json) {
+	self.raw = raw
+}
+
 func (self BaseMessage) IsRequest() bool {
 	return self.messageType == MTRequest
 }
@@ -74,28 +78,29 @@ func (self BaseMessage) IsResultOrError() bool {
 	return self.IsResult() || self.IsError()
 }
 
-func (self BaseMessage) EncodePretty() (string, error) {
-	bytes, err := self.raw.EncodePretty()
+// IMessage methods
+func EncodePretty(msg IMessage) (string, error) {
+	bytes, err := msg.GetJson().EncodePretty()
 	if err != nil {
 		return "", err
 	}
 	return string(bytes), nil
 }
 
-func (self BaseMessage) Interface() interface{} {
-	return self.raw.Interface()
+func GetMessageInterface(msg IMessage) interface{} {
+	return msg.GetJson().Interface()
 }
 
-func (self BaseMessage) MustString() string {
-	bytes, err := self.Bytes()
+func GetMessageString(msg IMessage) string {
+	bytes, err := GetMessageBytes(msg)
 	if err != nil {
 		panic(err)
 	}
 	return string(bytes)
 }
 
-func (self BaseMessage) Bytes() ([]byte, error) {
-	return self.raw.MarshalJSON()
+func GetMessageBytes(msg IMessage) ([]byte, error) {
+	return msg.GetJson().MarshalJSON()
 }
 
 func (self *BaseMessage) SetTraceId(traceId string) {
@@ -211,7 +216,49 @@ func (self ErrorMessage) MustError() *RPCError {
 	return self.Error
 }
 
-func NewRequestMessage(id interface{}, method string, params []interface{}, raw *simplejson.Json) *RequestMessage {
+// Get Json
+func (self *RequestMessage) GetJson() *simplejson.Json {
+	if self.raw == nil {
+		self.raw = simplejson.New()
+		self.raw.Set("version", "2.0")
+		self.raw.Set("id", self.Id)
+		self.raw.Set("method", self.Method)
+		self.raw.Set("params", self.Params)
+	}
+	return self.raw
+}
+
+func (self *NotifyMessage) GetJson() *simplejson.Json {
+	if self.raw == nil {
+		self.raw = simplejson.New()
+		self.raw.Set("version", "2.0")
+		self.raw.Set("method", self.Method)
+		self.raw.Set("params", self.Params)
+	}
+	return self.raw
+}
+
+func (self *ResultMessage) GetJson() *simplejson.Json {
+	if self.raw == nil {
+		self.raw = simplejson.New()
+		self.raw.Set("version", "2.0")
+		self.raw.Set("id", self.Id)
+		self.raw.Set("result", self.Result)
+	}
+	return self.raw
+}
+
+func (self *ErrorMessage) GetJson() *simplejson.Json {
+	if self.raw == nil {
+		self.raw = simplejson.New()
+		self.raw.Set("version", "2.0")
+		self.raw.Set("id", self.Id)
+		self.raw.Set("error", self.Error.ToJson())
+	}
+	return self.raw
+}
+
+func NewRequestMessage(id interface{}, method string, params []interface{}) *RequestMessage {
 	if id == nil {
 		panic(ErrNilId)
 	}
@@ -219,16 +266,8 @@ func NewRequestMessage(id interface{}, method string, params []interface{}, raw 
 		panic(ErrEmptyMethod)
 	}
 
-	if raw == nil {
-		raw = simplejson.New()
-		raw.Set("version", "2.0")
-		raw.Set("id", id)
-		raw.Set("method", method)
-		raw.Set("params", params)
-	}
 	msg := &RequestMessage{}
 	msg.messageType = MTRequest
-	msg.raw = raw
 	msg.Id = id
 	msg.Method = method
 	msg.Params = params
@@ -236,82 +275,54 @@ func NewRequestMessage(id interface{}, method string, params []interface{}, raw 
 }
 
 func (self RequestMessage) Clone(newId interface{}) *RequestMessage {
-	newReq := NewRequestMessage(newId, self.Method, self.Params, nil)
+	newReq := NewRequestMessage(newId, self.Method, self.Params)
 	newReq.SetTraceId(self.traceId)
 	return newReq
 }
 
-func NewNotifyMessage(method string, params []interface{}, raw *simplejson.Json) *NotifyMessage {
+func NewNotifyMessage(method string, params []interface{}) *NotifyMessage {
 	if method == "" {
 		panic(ErrEmptyMethod)
 	}
 
-	if raw == nil {
-		raw = simplejson.New()
-		raw.Set("version", "2.0")
-		raw.Set("method", method)
-		raw.Set("params", params)
-	}
 	msg := &NotifyMessage{}
 	msg.messageType = MTNotify
-	msg.raw = raw
 	msg.Method = method
 	msg.Params = params
 	return msg
 }
 
-func rawResultMessage(id interface{}, result interface{}, raw *simplejson.Json) *ResultMessage {
-	if raw == nil {
-		raw = simplejson.New()
-		raw.Set("version", "2.0")
-		raw.Set("id", id)
-		raw.Set("result", result)
-	}
+func rawResultMessage(id interface{}, result interface{}) *ResultMessage {
 	msg := &ResultMessage{}
 	msg.messageType = MTResult
-	msg.raw = raw
 	msg.Id = id
 	msg.Result = result
 	return msg
 }
 
-func NewResultMessage(reqmsg IMessage, result interface{}, raw *simplejson.Json) *ResultMessage {
-	resmsg := rawResultMessage(reqmsg.MustId(), result, raw)
+func NewResultMessage(reqmsg IMessage, result interface{}) *ResultMessage {
+	resmsg := rawResultMessage(reqmsg.MustId(), result)
 	resmsg.SetTraceId(reqmsg.TraceId())
 	return resmsg
 }
 
-func NewErrorMessage(reqmsg IMessage, errbody *RPCError, raw *simplejson.Json) *ErrorMessage {
-	errmsg := rawErrorMessage(reqmsg.MustId(), errbody, raw)
+func NewErrorMessage(reqmsg IMessage, errbody *RPCError) *ErrorMessage {
+	errmsg := rawErrorMessage(reqmsg.MustId(), errbody)
 	errmsg.SetTraceId(reqmsg.TraceId())
 	return errmsg
 }
 
-func rawErrorMessage(id interface{}, errbody *RPCError, raw *simplejson.Json) *ErrorMessage {
-	if raw == nil {
-		raw = simplejson.New()
-		raw.Set("version", "2.0")
-		raw.Set("id", id)
-		raw.Set("error", errbody.ToJson())
-	}
-
+func rawErrorMessage(id interface{}, errbody *RPCError) *ErrorMessage {
 	msg := &ErrorMessage{}
 	msg.messageType = MTError
-	msg.raw = raw
 	msg.Id = id
 	msg.Error = errbody
 	return msg
 }
 
 func RPCErrorMessage(reqmsg IMessage, code int, message string, data interface{}) *ErrorMessage {
-	// errbody := map[string](interface{}){
-	// 	"code":      code,
-	// 	"reason":    message}
-	// if data != nil {
-	// 	errbody["data"] = data
-	// }
 	errbody := &RPCError{code, message, data}
-	return NewErrorMessage(reqmsg, errbody, nil)
+	return NewErrorMessage(reqmsg, errbody)
 }
 
 func ParseBytes(data []byte) (IMessage, error) {
@@ -332,20 +343,28 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 		if method != "" {
 			// request
 			params := parsed.Get("params").MustArray()
-			return NewRequestMessage(id, method, params, parsed), nil
+			reqmsg := NewRequestMessage(id, method, params)
+			reqmsg.SetRaw(parsed)
+			return reqmsg, nil
 		}
 		if errIntf := parsed.Get("error"); errIntf != nil && errIntf.Interface() != nil {
 			errbody, err := parseRPCError(errIntf)
 			if err != nil {
 				return nil, err
 			}
-			return rawErrorMessage(id, errbody, parsed), nil
+			errmsg := rawErrorMessage(id, errbody)
+			errmsg.SetRaw(parsed)
+			return errmsg, nil
 		}
 		res := parsed.Get("result").Interface()
-		return rawResultMessage(id, res, parsed), nil
+		rmsg := rawResultMessage(id, res)
+		rmsg.SetRaw(parsed)
+		return rmsg, nil
 	} else if method != "" {
 		params := parsed.Get("params").MustArray()
-		return NewNotifyMessage(method, params, parsed), nil
+		ntfmsg := NewNotifyMessage(method, params)
+		ntfmsg.SetRaw(parsed)
+		return ntfmsg, nil
 	} else {
 		return nil, ErrParseMessage
 	}

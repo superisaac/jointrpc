@@ -31,16 +31,12 @@ type IMessage interface {
 	IsError() bool
 	IsResultOrError() bool
 
-	EncodePretty() (string, error)
-	Interface() interface{}
-	MustString() string
-	Bytes() ([]byte, error)
-
 	// TraceId
 	SetTraceId(traceId string)
 	TraceId() string
 
 	// upvote
+	GetJson() *simplejson.Json
 	MustId() interface{}
 	MustMethod() string
 	MustParams() []interface{}

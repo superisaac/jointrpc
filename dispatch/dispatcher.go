@@ -90,7 +90,7 @@ func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{},
 			// TODO: assert resMsg is res and resId matches
 			return resMsg, nil
 		}
-		return jsonrpc.NewResultMessage(msg, res, nil), nil
+		return jsonrpc.NewResultMessage(msg, res), nil
 	} else {
 		return nil, nil
 	}

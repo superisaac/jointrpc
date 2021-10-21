@@ -105,7 +105,7 @@ func RunCallRPC(serverEntry client.ServerEntry, method string, params []interfac
 		return err
 	}
 	log.Debugf("result got trace id %s", res.TraceId())
-	repr, err := res.EncodePretty()
+	repr, err := jsonrpc.EncodePretty(res)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func CommandWatch() {
 	for _, notifyName := range notifyNames {
 		disp.On(notifyName, func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			msg := req.MsgVec.Msg
-			repr, err := msg.EncodePretty()
+			repr, err := jsonrpc.EncodePretty(msg)
 			if err != nil {
 				panic(err)
 			}

@@ -77,7 +77,7 @@ func (self *MetricsCollector) Collect() ([]string, error) {
 func (self *MetricsCollector) CollectRouter(router *rpcrouter.Router) ([]string, error) {
 	msgId := misc.NewUuid()
 	emptyArr := make([]interface{}, 0)
-	reqmsg := jsonrpc.NewRequestMessage(msgId, "metrics.collect", emptyArr, nil)
+	reqmsg := jsonrpc.NewRequestMessage(msgId, "metrics.collect", emptyArr)
 	resmsg, err := router.CallOrNotify(reqmsg, router.Name(), rpcrouter.WithBroadcast(true))
 	if err != nil {
 		return nil, nil
