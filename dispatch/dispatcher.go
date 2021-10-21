@@ -102,6 +102,13 @@ func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrout
 	}
 }
 
+func (self *Dispatcher) Expect(ctx context.Context, msgvec rpcrouter.MsgVec) jsonrpc.IMessage {
+	chResult := make(chan ResultT, 2)
+	self.Feed(ctx, msgvec, chResult)
+	res := <-chResult
+	return res.ResMsg
+}
+
 func (self *Dispatcher) Feed(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
 	if self.spawnExec {
 		go self.feed(ctx, msgvec, chResult)

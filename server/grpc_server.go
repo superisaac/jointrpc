@@ -10,7 +10,7 @@ import (
 	//"time"
 	//json "encoding/json"
 	//"errors"
-	"fmt"
+	//"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
 	grpc "google.golang.org/grpc"
@@ -249,6 +249,7 @@ func (self *JointRPC) requireAuthState(context context.Context, authReq *intf.Au
 }
 
 func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter.ConnT, error) {
+
 	remotePeer, ok := peer.FromContext(stream.Context())
 	if !ok {
 		return nil, errors.New("cannot get peer info from stream")
@@ -268,41 +269,29 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, err
 	}
 
-	msg, err := encoding.MessageFromEnvolope(envo)
+	reqmsg, err := encoding.MessageFromEnvolope(envo)
+
 	if err != nil {
 		return nil, err
 	}
-	if !msg.IsRequest() || msg.MustMethod() != "_conn.Authorize" {
+
+	if !reqmsg.IsRequest() || reqmsg.MustMethod() != "_conn.Authorize" {
 		return nil, errors.New("expect _conn.Authorize()")
 	}
-	params := msg.MustParams()
-	if len(params) != 2 {
-		return nil, errors.New("len(params) != 2")
+
+	connDisp := GetConnDispatcher()
+	msgvec := rpcrouter.MsgVec{Msg: reqmsg, Namespace: "unknown"}
+
+	resmsg := connDisp.authDisp.Expect(stream.Context(), msgvec)
+	sendDownMessage(stream, resmsg)
+
+	if resmsg.IsError() {
+		return nil, errors.New("bad auth")
 	}
-
-	username, ok := params[0].(string)
-	if !ok {
-		return nil, errors.New("username is not string")
-	}
-
-	password, ok := params[1].(string)
-	if !ok {
-		return nil, errors.New("password is not string")
-	}
-
-	auth := &intf.ClientAuth{Username: username, Password: password}
-	status, namespace := self.Authorize(stream.Context(), auth, remotePeer.Addr)
-
-	if status != nil {
-		return nil, errors.New(fmt.Sprintf("fail to authorize %s", status))
-	}
-	resmsg := jsonrpc.NewResultMessage(msg, namespace, nil)
-
+	namespace := jsonrpc.ConvertString(resmsg.MustResult())
 	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
 	conn := factory.Get(namespace).Join()
 	conn.PeerAddr = remotePeer.Addr
-
-	sendDownMessage(stream, resmsg)
 	return conn, nil
 }
 

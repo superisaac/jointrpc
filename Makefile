@@ -9,6 +9,8 @@ protopyfiles := python/jointrpc/pb/jointrpc_pb2.py \
 	python/jointrpc/pb/jointrpc_pb2_grpc.py \
 	python/jointrpc/pb/jointrpc_grpc.py
 
+# goflag := -gcflags=-G=3
+
 build: compile_proto bin/jointrpc bin/jointrpc-server
 
 all: test build
@@ -28,10 +30,10 @@ python/jointrpc/pb/%_pb2.py python/jointrpc/pb/%_pb2_grpc.py python/jointrpc/pb/
 compile_proto: $(protogofiles) $(protopyfiles)
 
 bin/jointrpc: ${gofiles}
-	go build -o $@ jointrpc.go
+	go build $(goflag) -o $@ jointrpc.go
 
 bin/jointrpc-server: ${gofiles}
-	go build -o $@ jointrpc_server.go
+	go build $(goflag) -o $@ jointrpc_server.go
 
 test:
 	go test -v github.com/superisaac/jointrpc/datadir
@@ -86,11 +88,11 @@ dist/jointrpc-%.tar.gz: build/arch/jointrpc-%
 build/arch/jointrpc-%: ${gofiles}
 	GOOS=$(shell echo $@|cut -d- -f 2) \
 	GOARCH=$(shell echo $@|cut -d- -f 3) \
-	go build -o $@/jointrpc jointrpc.go
+	go build $(goflag) -o $@/jointrpc jointrpc.go
 
 	GOOS=$(shell echo $@|cut -d- -f 2) \
 	GOARCH=$(shell echo $@|cut -d- -f 3) \
-	go build -o $@/jointrpc-server jointrpc_server.go
+	go build $(goflag) -o $@/jointrpc-server jointrpc_server.go
 
 
 .PHONY: build all compile_proto test gofmt dist $(goarchs)

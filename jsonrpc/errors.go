@@ -15,6 +15,8 @@ var (
 	ErrTimeout     = &RPCError{200, "request timeout", nil}
 	ErrBadResource = &RPCError{201, "bad resource", nil}
 	ErrWorkerExit  = &RPCError{202, "worker exit", nil}
+
+	ErrAuthFailed = &RPCError{401, "auth failed", nil}
 )
 
 func ParamsError(message string) *RPCError {

@@ -5,6 +5,7 @@ import (
 	//"fmt"
 	//"reflect"
 	//"errors"
+	//log "github.com/sirupsen/logrus"
 	simplejson "github.com/bitly/go-simplejson"
 	"strconv"
 )
@@ -67,4 +68,32 @@ func GuessJsonArray(inputArr []string) ([]interface{}, error) {
 		arr = append(arr, v)
 	}
 	return arr, nil
+}
+
+func ConvertString(v interface{}) string {
+	if strv, ok := v.(string); ok {
+		return strv
+	}
+	panic("cannot convert to string")
+	//log.Fatalf("cannot convert %s to string", v)
+	//return ""
+}
+
+func ConvertStringList(v interface{}) []string {
+	if arr, ok := v.([]interface{}); ok {
+		strarr := make([]string, 0)
+		for _, a := range arr {
+			s := ConvertString(a)
+			strarr = append(strarr, s)
+		}
+		return strarr
+	}
+	panic("cannot convert to string array")
+}
+
+func ConvertInt(v interface{}) int {
+	if intv, ok := v.(int); ok {
+		return intv
+	}
+	panic("cannot convert to int")
 }

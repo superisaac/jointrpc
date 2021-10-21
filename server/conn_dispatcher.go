@@ -10,6 +10,7 @@ import (
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
+	"net"
 )
 
 type ConnDispatcher struct {
@@ -32,6 +33,37 @@ func GetConnDispatcher() *ConnDispatcher {
 	}
 	return connDisp
 }
+
+const (
+	declareMethodsSchema = `{
+"type": "method",
+"params": [{
+  "type": "object",
+  "properties": {
+     "name": "string",
+     "help": "string",
+     "schema": "string" 
+    },
+  "requires": ["name"]
+  }],
+"returns": "string"
+}`
+
+	declareDelegatesSchema = `{
+"type": "method",
+"params": [{
+  "type": "list",
+  "items": "string"
+  }],
+"returns": "string"
+}`
+
+	authorizeSchema = `{
+"type": "method",
+"params": ["string", "string"],
+"returns": "string"
+}`
+)
 
 func (self *ConnDispatcher) Init() {
 	self.disp = dispatch.NewDispatcher()
@@ -85,7 +117,7 @@ func (self *ConnDispatcher) Init() {
 
 			factory.ChMethods <- cmdMethods
 			return "ok", nil
-		})
+		}, dispatch.WithSchema(declareMethodsSchema))
 
 	self.disp.On("_conn.declareDelegates",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
@@ -96,26 +128,8 @@ func (self *ConnDispatcher) Init() {
 			if !found {
 				return nil, jsonrpc.ParamsError("conn not found")
 			}
-			var arr []string
-			if params[0] == nil {
-				arr = make([]string, 0)
-			} else {
-				if iarr, ok := params[0].([]interface{}); ok {
-					for _, item := range iarr {
-						arr = append(arr, fmt.Sprintf("%s", item))
-					}
-				} else {
-					req.MsgVec.Msg.Log().Warnf("params[0] is not array, =%+v", params[0])
-					return nil, jsonrpc.ParamsError("params[0] is not an array")
-				}
-			}
 
-			methodNames := make([]string, 0)
-
-			for _, methodName := range arr {
-				methodNames = append(methodNames, methodName)
-			}
-
+			methodNames := jsonrpc.ConvertStringList(params[0])
 			conn.Log().Infof("declared delegates %+v", methodNames)
 			cmdDelegates := rpcrouter.CmdDelegates{
 				Namespace:   conn.Namespace,
@@ -124,7 +138,37 @@ func (self *ConnDispatcher) Init() {
 			}
 			factory.ChDelegates <- cmdDelegates
 			return "ok", nil
-		})
+		}, dispatch.WithSchema(declareDelegatesSchema))
+
+	self.authDisp.On("_conn.Authorize",
+		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+			v := req.Context.Value("remoteAddress")
+			remoteAddress := ""
+			if v != nil {
+				remoteAddr, isAddr := v.(net.Addr)
+				misc.Assert(isAddr, "context value remoteAddress is not net.Addr")
+				remoteAddress = remoteAddr.String()
+			}
+
+			username := jsonrpc.ConvertString(params[0])
+			password := jsonrpc.ConvertString(params[1])
+
+			factory := rpcrouter.RouterFactoryFromContext(req.Context)
+			cfg := factory.Config
+			if len(cfg.Authorizations) == 0 {
+				return "default", nil
+			}
+			for _, bauth := range cfg.Authorizations {
+				if bauth.Authorize(username, password, remoteAddress) {
+					ns := bauth.Namespace
+					if ns == "" {
+						ns = "default"
+					}
+					return ns, nil
+				}
+			}
+			return nil, jsonrpc.ErrAuthFailed
+		}, dispatch.WithSchema(authorizeSchema))
 } // end of Init()
 
 func (self *ConnDispatcher) HandleRequest(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan dispatch.ResultT) bool {
