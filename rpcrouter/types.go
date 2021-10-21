@@ -54,7 +54,7 @@ type MethodInfo struct {
 
 // tube state
 type ServerState struct {
-	Methods []MethodInfo
+	Methods []MethodInfo `mapstructure:"methods"`
 }
 
 // Connect Struct

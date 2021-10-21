@@ -72,7 +72,12 @@ func (self *NeighborPort) connectRemote(rootCtx context.Context, entry client.Se
 			State:     state,
 		}
 	})
-	c.SubscribeState(rootCtx, stateListener)
+	//c.SubscribeState(rootCtx, stateListener)
+
+	disp := dispatch.NewDispatcher()
+	client.OnStateChanged(disp, stateListener)
+	c.Worker(rootCtx, disp)
+
 	return nil
 }
 

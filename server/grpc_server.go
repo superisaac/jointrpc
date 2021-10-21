@@ -13,6 +13,7 @@ import (
 	//"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
+	"github.com/mitchellh/mapstructure"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 
@@ -319,6 +320,18 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 				return
 			}
 			sendDownMessage(stream, msgvec.Msg)
+		case state, ok := <-conn.StateChannel():
+			if !ok {
+				log.Debugf("state channel closed")
+				return
+			}
+			stateJson := make(map[string]interface{})
+			err := mapstructure.Decode(state, &stateJson)
+			if err != nil {
+				panic(err)
+			}
+			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson}, nil)
+			sendDownMessage(stream, ntf)
 		}
 	} // and for loop
 }

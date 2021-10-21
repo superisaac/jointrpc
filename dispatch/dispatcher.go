@@ -3,6 +3,7 @@ package dispatch
 import (
 	"context"
 	"errors"
+	//"fmt"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
@@ -128,16 +129,23 @@ func (self *Dispatcher) feed(ctx context.Context, msgvec rpcrouter.MsgVec, chRes
 		if r := recover(); r != nil {
 
 			if r == Deferred {
-				log.Infof("handler is deferred")
+				msg.Log().Infof("handler is deferred")
 				return
 			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
-				errmsg := rpcError.ToMessage(msg)
-				self.ReturnResultMessage(errmsg, msgvec, chResult)
+				if msg.IsRequest() {
+					errmsg := rpcError.ToMessage(msg)
+					self.ReturnResultMessage(errmsg, msgvec, chResult)
+				} else {
+					msg.Log().Warnf("RPCError code=%s, message=%s", rpcError.Code, rpcError.Message)
+					//fmt.Printf("RPCError code=%s, message=%s\n", rpcError.Code, rpcError.Message)
+				}
 				return
 			} else {
-				log.Errorf("Recovered ERROR on handling request msg %+v", r)
-				errmsg := jsonrpc.ErrServerError.ToMessage(msg)
-				self.ReturnResultMessage(errmsg, msgvec, chResult)
+				msg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
+				if msg.IsRequest() {
+					errmsg := jsonrpc.ErrServerError.ToMessage(msg)
+					self.ReturnResultMessage(errmsg, msgvec, chResult)
+				}
 			}
 		}
 	}()

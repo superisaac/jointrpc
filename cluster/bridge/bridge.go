@@ -181,7 +181,8 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 		return err
 	}
 	// TODO: concurrent
-	go self.remoteClient.SubscribeState(rootCtx, stateListener)
+	//go self.remoteClient.SubscribeState(rootCtx, stateListener)
+	client.OnStateChanged(disp, stateListener)
 	return self.remoteClient.Worker(rootCtx, disp)
 }
 

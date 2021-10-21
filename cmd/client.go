@@ -228,8 +228,14 @@ func CommandWatchState() {
 		stateListener.OnStateChange(printMethodNames)
 	}
 
-	rpcClient.Connect()
-	rpcClient.SubscribeState(context.Background(), stateListener)
+	err := rpcClient.Connect()
+	if err != nil {
+		panic(err)
+	}
+	disp := dispatch.NewDispatcher()
+	client.OnStateChanged(disp, stateListener)
+	//rpcClient.SubscribeState(context.Background(), stateListener)
+	rpcClient.Worker(context.Background(), disp)
 }
 
 func printMethodInfos(state *rpcrouter.ServerState) {

@@ -14,16 +14,48 @@ import (
 	//"os"
 	//"time"
 	//server "github.com/superisaac/jointrpc/server"
+	"github.com/mitchellh/mapstructure"
 	"github.com/superisaac/jointrpc/dispatch"
 	encoding "github.com/superisaac/jointrpc/encoding"
 	"github.com/superisaac/jointrpc/misc"
-	//"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jointrpc/rpcrouter"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	//credentials "google.golang.org/grpc/credentials"
 )
 
-func (self *RPCClient) SubscribeState(rootCtx context.Context, stateListener *dispatch.StateListener) error {
+const (
+	stateChangedSchema = `{
+"type": "method",
+"params": [{
+   "type": "list",
+   "items": {
+     "type": "object",
+     "properties": {
+       "name": "string",
+       "help": "string",
+       "schema": "string" 
+    },
+    "requires": ["name"]
+   }
+}]
+}`
+)
+
+func OnStateChanged(disp *dispatch.Dispatcher, stateListener *dispatch.StateListener) {
+	disp.On("_state.changed",
+		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+			var serverState rpcrouter.ServerState
+			err := mapstructure.Decode(params[0], &serverState)
+			if err != nil {
+				return nil, err
+			}
+			stateListener.TriggerStateChange(&serverState)
+			return nil, nil
+		}, dispatch.WithSchema(stateChangedSchema))
+}
+
+func (self *RPCClient) OldSubscribeState(rootCtx context.Context, stateListener *dispatch.StateListener) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 	if self.stateStream != nil {
