@@ -19,9 +19,15 @@ func CommandPlaybook() {
 		fmt.Fprintf(os.Stderr, "need playbook.yml\n")
 		os.Exit(1)
 	}
+	pbYamlPath := pbFlags.Args()[0]
+
+	if _, err := os.Stat(pbYamlPath); os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "playbook yaml %s does not exist\n", pbYamlPath)
+		os.Exit(1)
+	}
 
 	pb := playbook.NewPlaybook()
-	err := pb.Config.ReadConfig(pbFlags.Args()[0])
+	err := pb.Config.ReadConfig(pbYamlPath)
 	if err != nil {
 		panic(err)
 	}
