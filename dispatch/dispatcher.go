@@ -119,32 +119,37 @@ func (self *Dispatcher) Feed(ctx context.Context, msgvec rpcrouter.MsgVec, chRes
 }
 
 func (self *Dispatcher) feed(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
-	msg := msgvec.Msg
+	if msgvec.Msg.IsRequest() {
+		self.feedRequest(ctx, msgvec, chResult)
+	} else {
+		misc.Assert(msgvec.Msg.IsNotify(), "invalid msg type")
+		self.feedNotify(ctx, msgvec, chResult)
+	}
+}
+
+func (self *Dispatcher) feedRequest(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
+	reqmsg, ok := msgvec.Msg.(*jsonrpc.RequestMessage)
+
+	misc.Assert(ok, "msg is not request")
+
 	namespace := msgvec.Namespace
 	misc.Assert(namespace != "", "empty namespace")
 
-	handler, ok := self.methodHandlers[msg.MustMethod()]
+	handler, ok := self.methodHandlers[reqmsg.Method]
 
 	defer func() {
 		if r := recover(); r != nil {
 			if r == Deferred {
-				msg.Log().Debugf("handler is deferred")
+				reqmsg.Log().Debugf("handler is deferred")
 				return
 			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
-				if msg.IsRequest() {
-					errmsg := rpcError.ToMessage(msg)
-					self.ReturnResultMessage(errmsg, msgvec, chResult)
-				} else {
-					msg.Log().Warnf("RPCError code=%d, message=%s", rpcError.Code, rpcError.Message)
-					//fmt.Printf("RPCError code=%s, message=%s\n", rpcError.Code, rpcError.Message)
-				}
+				errmsg := rpcError.ToMessage(reqmsg)
+				self.ReturnResultMessage(errmsg, msgvec, chResult)
 				return
 			} else {
-				msg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
-				if msg.IsRequest() {
-					errmsg := jsonrpc.ErrServerError.ToMessage(msg)
-					self.ReturnResultMessage(errmsg, msgvec, chResult)
-				}
+				reqmsg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
+				errmsg := jsonrpc.ErrServerError.ToMessage(reqmsg)
+				self.ReturnResultMessage(errmsg, msgvec, chResult)
 			}
 		}
 	}()
@@ -153,22 +158,15 @@ func (self *Dispatcher) feed(ctx context.Context, msgvec rpcrouter.MsgVec, chRes
 	var err error
 	if ok {
 		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
-		params := msg.MustParams()
-		res, err := handler.function(req, params)
-		log.Debugf("handler function returns %+v, %+v", msg, res)
-		resmsg, err = self.wrapHandlerResult(msg, res, err)
+		res, err := handler.function(req, reqmsg.Params)
+		log.Debugf("handler function returns %+v, %+v", reqmsg, res)
+		resmsg, err = self.wrapHandlerResult(reqmsg, res, err)
 	} else if self.defaultHandler != nil {
 		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
-
-		params := msg.MustParams()
-		res, err := self.defaultHandler(req, msg.MustMethod(), params)
-		resmsg, err = self.wrapHandlerResult(msg, res, err)
+		res, err := self.defaultHandler(req, reqmsg.Method, reqmsg.Params)
+		resmsg, err = self.wrapHandlerResult(reqmsg, res, err)
 	} else {
-		if msg.IsRequest() {
-			resmsg, err = jsonrpc.ErrMethodNotFound.ToMessage(msg), nil
-		} else {
-			msg.Log().Infof("handler of %s not found", msg.MustMethod())
-		}
+		resmsg, err = jsonrpc.ErrMethodNotFound.ToMessage(reqmsg), nil
 	}
 
 	//log.Debugf("handle request method %+v, resmsg %+v, error %+v", msg, resmsg, err)
@@ -178,14 +176,58 @@ func (self *Dispatcher) feed(ctx context.Context, msgvec rpcrouter.MsgVec, chRes
 	}
 	if err != nil {
 		log.Warnf("bad up message %w", err)
-		if msg.IsRequest() {
-			errmsg := jsonrpc.ErrBadResource.ToMessage(msg)
-			self.ReturnResultMessage(errmsg, msgvec, chResult)
-		}
+		errmsg := jsonrpc.ErrBadResource.ToMessage(reqmsg)
+		self.ReturnResultMessage(errmsg, msgvec, chResult)
 		return
 	}
 	if resmsg != nil {
 		self.ReturnResultMessage(resmsg, msgvec, chResult)
+	}
+}
+
+func (self *Dispatcher) feedNotify(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
+	ntfmsg, ok := msgvec.Msg.(*jsonrpc.NotifyMessage)
+	misc.Assert(ok, "message is not ok")
+	namespace := msgvec.Namespace
+	misc.Assert(namespace != "", "empty namespace")
+
+	handler, ok := self.methodHandlers[ntfmsg.Method]
+
+	defer func() {
+		if r := recover(); r != nil {
+			if r == Deferred {
+				ntfmsg.Log().Debugf("handler is deferred")
+				return
+			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+				ntfmsg.Log().Warnf("RPCError code=%d, message=%s", rpcError.Code, rpcError.Message)
+				return
+			} else {
+				ntfmsg.Log().Errorf("Recovered ERROR on handling notify msg %+v", r)
+			}
+		}
+	}()
+
+	var res interface{}
+	var err error
+	if ok {
+		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
+		res, err = handler.function(req, ntfmsg.Params)
+		if res != nil {
+			ntfmsg.Log().Infof("res is not nil, %+v", res)
+		}
+	} else if self.defaultHandler != nil {
+		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
+		res, err = self.defaultHandler(req, ntfmsg.Method, ntfmsg.Params)
+		if res != nil {
+			ntfmsg.Log().Infof("res of default handler is not nil, %+v", res)
+		}
+	}
+
+	//log.Debugf("handle request method %+v, resmsg %+v, error %+v", msg, resmsg, err)
+	if err == Deferred {
+		log.Infof("handler is deferred")
+	} else if err != nil {
+		log.Warnf("bad up message %w", err)
 	}
 }
 
