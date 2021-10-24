@@ -40,7 +40,7 @@ func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []strin
 
 	reqmsg := jsonrpc.NewRequestMessage(reqId, "_stream.declareDelegates", params)
 
-	return self.CallInWire(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+	return self.CallInStream(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
 		res.Log().Debugf("declared delegates")
 	})
 }

@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (self *RPCClient) CallInWire(rootCtx context.Context, reqmsg jsonrpc.IMessage, callback WireCallback, opts ...CallOptionFunc) error {
+func (self *RPCClient) CallInStream(rootCtx context.Context, reqmsg jsonrpc.IMessage, callback WireCallback, opts ...CallOptionFunc) error {
 	//misc.Assert(self.workerStream != nil, "worker steam is empty")
 	if self.workerStream == nil {
 		log.Warnf("worker stream is empty")

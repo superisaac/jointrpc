@@ -45,7 +45,7 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	params = append(params, upMethods)
 	reqmsg := jsonrpc.NewRequestMessage(reqId, "_stream.declareMethods", params)
 
-	return self.CallInWire(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+	return self.CallInStream(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
 		log.Debugf("declared methods")
 	})
 }
