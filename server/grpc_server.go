@@ -240,8 +240,8 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, err
 	}
 
-	if !reqmsg.IsRequest() || reqmsg.MustMethod() != "_conn.authorize" {
-		return nil, errors.New("expect _conn.authorize()")
+	if !reqmsg.IsRequest() || reqmsg.MustMethod() != "_stream.authorize" {
+		return nil, errors.New("expect _stream.authorize()")
 	}
 
 	connDisp := GetConnDispatcher()

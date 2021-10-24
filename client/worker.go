@@ -43,7 +43,7 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	reqId := misc.NewUuid()
 	params := make([]interface{}, 0)
 	params = append(params, upMethods)
-	reqmsg := jsonrpc.NewRequestMessage(reqId, "_conn.declareMethods", params)
+	reqmsg := jsonrpc.NewRequestMessage(reqId, "_stream.declareMethods", params)
 
 	return self.CallInWire(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
 		log.Debugf("declared methods")
@@ -106,7 +106,7 @@ func (self *RPCClient) requestAuth(rootCtx context.Context) error {
 	reqId := misc.NewUuid()
 	auth := self.ClientAuth()
 	params := [](interface{}){auth.Username, auth.Password}
-	authmsg := jsonrpc.NewRequestMessage(reqId, "_conn.authorize", params)
+	authmsg := jsonrpc.NewRequestMessage(reqId, "_stream.authorize", params)
 	envo := encoding.MessageToEnvolope(authmsg)
 	return self.workerStream.Send(envo)
 }
@@ -168,7 +168,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 	if authRes.IsError() {
 		rpcError := authRes.MustError()
 		return &RPCStatusError{
-			Method: "_conn.authorize",
+			Method: "_stream.authorize",
 			Code:   rpcError.Code,
 			Reason: rpcError.Message,
 		}

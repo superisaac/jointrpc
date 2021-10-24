@@ -69,7 +69,7 @@ func (self *ConnDispatcher) Init() {
 	self.disp = dispatch.NewDispatcher()
 	self.authDisp = dispatch.NewDispatcher()
 
-	self.disp.On("_conn.declareMethods",
+	self.disp.On("_stream.declareMethods",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
 			router := factory.Get(req.MsgVec.Namespace)
@@ -119,7 +119,7 @@ func (self *ConnDispatcher) Init() {
 			return "ok", nil
 		}, dispatch.WithSchema(declareMethodsSchema))
 
-	self.disp.On("_conn.declareDelegates",
+	self.disp.On("_stream.declareDelegates",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
 			router := factory.Get(req.MsgVec.Namespace)
@@ -140,7 +140,7 @@ func (self *ConnDispatcher) Init() {
 			return "ok", nil
 		}, dispatch.WithSchema(declareDelegatesSchema))
 
-	self.authDisp.On("_conn.authorize",
+	self.authDisp.On("_stream.authorize",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			v := req.Context.Value("remoteAddress")
 			remoteAddress := ""
