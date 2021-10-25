@@ -8,9 +8,9 @@ import (
 )
 
 type RPCRequest struct {
-	Context    context.Context
-	MsgVec     rpcrouter.MsgVec
-	Dispatcher *Dispatcher
+	Context context.Context
+	MsgVec  rpcrouter.MsgVec
+	Data    interface{} // user defined data
 }
 
 var (

@@ -11,6 +11,23 @@ import (
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 
+// methods of RPCRequest
+func NewRPCRequest(ctx context.Context, msgvec rpcrouter.MsgVec) *RPCRequest {
+	return &RPCRequest{Context: ctx, MsgVec: msgvec}
+}
+
+func (self *RPCRequest) WithData(data interface{}) *RPCRequest {
+	self.Data = data
+	return self
+}
+
+func WithRequestData(data interface{}) func(*RPCRequest) {
+	return func(req *RPCRequest) {
+		req.WithData(data)
+	}
+}
+
+// methods of dispatcher
 func NewDispatcher() *Dispatcher {
 	disp := new(Dispatcher)
 	disp.methodHandlers = make(map[string](MethodHandler))
@@ -103,37 +120,42 @@ func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrout
 	}
 }
 
-func (self *Dispatcher) Expect(ctx context.Context, msgvec rpcrouter.MsgVec) jsonrpc.IMessage {
+func (self *Dispatcher) Expect(ctx context.Context, msgvec rpcrouter.MsgVec, opts ...func(*RPCRequest)) jsonrpc.IMessage {
 	chResult := make(chan ResultT, 2)
-	self.Feed(ctx, msgvec, chResult)
+	self.Feed(ctx, msgvec, chResult, opts...)
 	res := <-chResult
 	return res.ResMsg
 }
 
-func (self *Dispatcher) Feed(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
+func (self *Dispatcher) Feed(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT, opts ...func(*RPCRequest)) {
+	req := NewRPCRequest(ctx, msgvec)
+	for _, opt := range opts {
+		opt(req)
+	}
 	if self.spawnExec {
-		go self.feed(ctx, msgvec, chResult)
+		go self.feed(req, chResult)
 	} else {
-		self.feed(ctx, msgvec, chResult)
+		self.feed(req, chResult)
 	}
 }
 
-func (self *Dispatcher) feed(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
-	if msgvec.Msg.IsRequest() {
-		self.feedRequest(ctx, msgvec, chResult)
+func (self *Dispatcher) feed(req *RPCRequest, chResult chan ResultT) {
+	if req.MsgVec.Msg.IsRequest() {
+		self.feedRequest(req, chResult)
 	} else {
-		misc.Assert(msgvec.Msg.IsNotify(), "invalid msg type")
-		self.feedNotify(ctx, msgvec, chResult)
+		misc.Assert(req.MsgVec.Msg.IsNotify(), "invalid msg type")
+		self.feedNotify(req, chResult)
 	}
 }
 
-func (self *Dispatcher) feedRequest(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
+func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
+	msgvec := req.MsgVec
 	reqmsg, ok := msgvec.Msg.(*jsonrpc.RequestMessage)
 
 	misc.Assert(ok, "msg is not request")
 
-	namespace := msgvec.Namespace
-	misc.Assert(namespace != "", "empty namespace")
+	//namespace := msgvec.Namespace
+	//misc.Assert(namespace != "", "empty namespace")
 
 	handler, ok := self.methodHandlers[reqmsg.Method]
 
@@ -157,12 +179,11 @@ func (self *Dispatcher) feedRequest(ctx context.Context, msgvec rpcrouter.MsgVec
 	var resmsg jsonrpc.IMessage
 	var err error
 	if ok {
-		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
+
 		res, err := handler.function(req, reqmsg.Params)
 		log.Debugf("handler function returns %+v, %+v", reqmsg, res)
 		resmsg, err = self.wrapHandlerResult(reqmsg, res, err)
 	} else if self.defaultHandler != nil {
-		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
 		res, err := self.defaultHandler(req, reqmsg.Method, reqmsg.Params)
 		resmsg, err = self.wrapHandlerResult(reqmsg, res, err)
 	} else {
@@ -185,11 +206,12 @@ func (self *Dispatcher) feedRequest(ctx context.Context, msgvec rpcrouter.MsgVec
 	}
 }
 
-func (self *Dispatcher) feedNotify(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT) {
+func (self *Dispatcher) feedNotify(req *RPCRequest, chResult chan ResultT) {
+	msgvec := req.MsgVec
 	ntfmsg, ok := msgvec.Msg.(*jsonrpc.NotifyMessage)
 	misc.Assert(ok, "message is not ok")
-	namespace := msgvec.Namespace
-	misc.Assert(namespace != "", "empty namespace")
+	//namespace := msgvec.Namespace
+	//misc.Assert(namespace != "", "empty namespace")
 
 	handler, ok := self.methodHandlers[ntfmsg.Method]
 
@@ -210,13 +232,12 @@ func (self *Dispatcher) feedNotify(ctx context.Context, msgvec rpcrouter.MsgVec,
 	var res interface{}
 	var err error
 	if ok {
-		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
 		res, err = handler.function(req, ntfmsg.Params)
 		if res != nil {
 			ntfmsg.Log().Infof("res is not nil, %+v", res)
 		}
 	} else if self.defaultHandler != nil {
-		req := &RPCRequest{Context: ctx, MsgVec: msgvec}
+
 		res, err = self.defaultHandler(req, ntfmsg.Method, ntfmsg.Params)
 		if res != nil {
 			ntfmsg.Log().Infof("res of default handler is not nil, %+v", res)

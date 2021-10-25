@@ -244,7 +244,7 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, errors.New("expect _stream.authorize()")
 	}
 
-	connDisp := GetConnDispatcher()
+	connDisp := GetStreamDispatcher()
 	msgvec := rpcrouter.MsgVec{Msg: reqmsg, Namespace: "unknown"}
 
 	resmsg := connDisp.authDisp.Expect(stream.Context(), msgvec)
@@ -278,6 +278,12 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 				return
 			}
 			sendDownMessage(stream, rest.ResMsg)
+			//if rest.ResMsg.IsError() {
+			if false {
+				rest.ResMsg.Log().Warnf("error, exit send routine")
+				// break on error message
+				return
+			}
 		case msgvec, ok := <-conn.RecvChannel:
 			if !ok {
 				log.Debugf("recv channel closed")
@@ -301,22 +307,26 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 }
 
 func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
-	conn, err := self.requireAuth(stream)
-	if err != nil {
-		return err
-	}
-	if conn == nil {
-		return nil
-	}
+	conn := rpcrouter.NewConn()
+	// conn, err := self.requireAuth(stream)
+	// if err != nil {
+	// 	return err
+	// }
+	// if conn == nil {
+	// 	return nil
+	// }
 
 	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
-	router := factory.Get(conn.Namespace)
+	//router := factory.Get(conn.Namespace)
 
-	conn.SetWatchState(true)
+	//conn.SetWatchState(true)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
-		router.Leave(conn)
+		if conn.Joined() {
+			router := factory.Get(conn.Namespace)
+			router.Leave(conn)
+		}
 	}()
 
 	chResult := make(chan dispatch.ResultT, 100)
@@ -347,13 +357,22 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 			Namespace:  conn.Namespace,
 			FromConnId: conn.ConnId}
 
-		connDisp := GetConnDispatcher()
-		handled := connDisp.HandleRequest(ctx, msgvec, chResult)
-		if handled {
-			continue
+		streamDisp := GetStreamDispatcher()
+		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn)
+		if instRes != nil {
+			sendDownMessage(stream, instRes)
+			if instRes.IsError() {
+				return nil
+			}
 		}
-		router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
-		continue
+		// if handled {
+		// 	continue
+		// }
+		// if conn.Joined() {
+		// 	router := factory.Get(conn.Namespace)
+		// 	router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
+		// }
+		//continue
 	}
 }
 

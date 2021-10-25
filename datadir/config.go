@@ -44,6 +44,23 @@ func (self Config) ValidateSchema() bool {
 	}
 }
 
+func (self Config) Authorize(username string, password string, remoteAddress string) string {
+	if len(self.Authorizations) == 0 {
+		return "default"
+	} else {
+		for _, bauth := range self.Authorizations {
+			if bauth.Authorize(username, password, remoteAddress) {
+				namespace := bauth.Namespace
+				if namespace == "" {
+					namespace = "default"
+				}
+				return namespace
+			}
+		}
+	}
+	return ""
+}
+
 func (self *Config) validateValues() error {
 	if self.Version == "" {
 		self.Version = "1.0"

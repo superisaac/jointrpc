@@ -13,23 +13,23 @@ import (
 	"net"
 )
 
-type ConnDispatcher struct {
+type StreamDispatcher struct {
 	disp     *dispatch.Dispatcher
 	authDisp *dispatch.Dispatcher
 }
 
-func NewConnDispatcher() *ConnDispatcher {
+func NewStreamDispatcher() *StreamDispatcher {
 	disp := dispatch.NewDispatcher()
-	h := &ConnDispatcher{disp: disp}
+	h := &StreamDispatcher{disp: disp}
 	h.Init()
 	return h
 }
 
-var connDisp *ConnDispatcher
+var connDisp *StreamDispatcher
 
-func GetConnDispatcher() *ConnDispatcher {
+func GetStreamDispatcher() *StreamDispatcher {
 	if connDisp == nil {
-		connDisp = NewConnDispatcher()
+		connDisp = NewStreamDispatcher()
 	}
 	return connDisp
 }
@@ -42,7 +42,7 @@ const (
   "properties": {
      "name": "string",
      "help": "string",
-     "schema": "string" 
+     "schema": "string"
     },
   "requires": ["name"]
   }],
@@ -65,16 +65,14 @@ const (
 }`
 )
 
-func (self *ConnDispatcher) Init() {
+func (self *StreamDispatcher) Init() {
 	self.disp = dispatch.NewDispatcher()
 	self.authDisp = dispatch.NewDispatcher()
 
 	self.disp.On("_stream.declareMethods",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-			factory := rpcrouter.RouterFactoryFromContext(req.Context)
-			router := factory.Get(req.MsgVec.Namespace)
 
-			conn, found := router.GetConn(req.MsgVec.FromConnId)
+			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
 				return nil, jsonrpc.ParamsError("conn not found")
 			}
@@ -115,16 +113,14 @@ func (self *ConnDispatcher) Init() {
 				Methods:   upMethods,
 			}
 
+			factory := rpcrouter.RouterFactoryFromContext(req.Context)
 			factory.ChMethods <- cmdMethods
 			return "ok", nil
 		}, dispatch.WithSchema(declareMethodsSchema))
 
 	self.disp.On("_stream.declareDelegates",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-			factory := rpcrouter.RouterFactoryFromContext(req.Context)
-			router := factory.Get(req.MsgVec.Namespace)
-
-			conn, found := router.GetConn(req.MsgVec.FromConnId)
+			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
 				return nil, jsonrpc.ParamsError("conn not found")
 			}
@@ -136,12 +132,18 @@ func (self *ConnDispatcher) Init() {
 				ConnId:      conn.ConnId,
 				MethodNames: methodNames,
 			}
+			factory := rpcrouter.RouterFactoryFromContext(req.Context)
 			factory.ChDelegates <- cmdDelegates
 			return "ok", nil
 		}, dispatch.WithSchema(declareDelegatesSchema))
 
 	self.authDisp.On("_stream.authorize",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+			conn, found := req.Data.(*rpcrouter.ConnT)
+			if !found {
+				return nil, jsonrpc.ParamsError("conn not found")
+			}
+
 			v := req.Context.Value("remoteAddress")
 			remoteAddress := ""
 			if v != nil {
@@ -155,33 +157,30 @@ func (self *ConnDispatcher) Init() {
 
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
 			cfg := factory.Config
-			if len(cfg.Authorizations) == 0 {
-				return "default", nil
-			}
-			for _, bauth := range cfg.Authorizations {
-				if bauth.Authorize(username, password, remoteAddress) {
-					ns := bauth.Namespace
-					if ns == "" {
-						ns = "default"
-					}
-					return ns, nil
-				}
+			namespace := cfg.Authorize(username, password, remoteAddress)
+			if namespace != "" {
+				router := factory.Get(namespace)
+				router.JoinConn(conn)
+				conn.SetWatchState(true)
+				return namespace, nil
 			}
 			return nil, jsonrpc.ErrAuthFailed
 		}, dispatch.WithSchema(authorizeSchema))
 } // end of Init()
 
-func (self *ConnDispatcher) HandleRequest(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan dispatch.ResultT) bool {
-	msg := msgvec.Msg
-	if !msg.IsRequest() {
-		return false
+func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan dispatch.ResultT, conn *rpcrouter.ConnT) jsonrpc.IMessage {
+	if !conn.Joined() {
+		instRes := self.authDisp.Expect(ctx, msgvec, dispatch.WithRequestData(conn))
+		return instRes
+	} else {
+		msg := msgvec.Msg
+		if msg.IsRequestOrNotify() && self.disp.HasMethod(msg.MustMethod()) {
+			self.disp.Feed(ctx, msgvec, chResult, dispatch.WithRequestData(conn))
+		} else {
+			factory := rpcrouter.RouterFactoryFromContext(ctx)
+			router := factory.Get(conn.Namespace)
+			router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
+		}
+		return nil
 	}
-
-	methodName := msg.MustMethod()
-	if !self.disp.HasMethod(methodName) {
-		return false
-	}
-
-	self.disp.Feed(ctx, msgvec, chResult)
-	return true
 }

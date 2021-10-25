@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	//"github.com/superisaac/jointrpc/datadir"
 	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/misc"
 	//misc "github.com/superisaac/jointrpc/misc"
 	"math/rand"
 	"sort"
@@ -284,6 +285,7 @@ func (self *Router) leaveConn(conn *ConnT) {
 	ct, ok := self.connMap[conn.ConnId]
 	if ok {
 		delete(self.connMap, conn.ConnId)
+		conn.Namespace = ""
 		close(ct.RecvChannel)
 	}
 
@@ -377,11 +379,12 @@ func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
 
 func (self *Router) Join() *ConnT {
 	conn := NewConn()
-	self.joinConn(conn)
+	self.JoinConn(conn)
 	return conn
 }
 
-func (self *Router) joinConn(conn *ConnT) {
+func (self *Router) JoinConn(conn *ConnT) {
+	misc.Assert(!conn.Joined(), "conn already joined")
 	self.lock("JoinConn")
 	defer self.unlock("JoinConn")
 	conn.Namespace = self.name

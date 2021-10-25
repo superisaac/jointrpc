@@ -19,6 +19,10 @@ func NewConn() *ConnT {
 	return conn
 }
 
+func (self ConnT) Joined() bool {
+	return self.Namespace != ""
+}
+
 func (self ConnT) GetMethods() []string {
 	var keys []string
 	for k := range self.ServeMethods {

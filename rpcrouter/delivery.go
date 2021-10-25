@@ -1,11 +1,11 @@
 package rpcrouter
 
 import (
-	"time"
-	//"fmt"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
+	"time"
 )
 
 func (self *Router) DeliverMessage(cmdMsg CmdMsg) *ConnT {
@@ -83,7 +83,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 		targetVec.Msg = reqMsg
 		return self.SendTo(toConn.ConnId, targetVec)
 	} else {
-		errMsg := jsonrpc.ErrMethodNotFound.ToMessage(reqMsg)
+		errMsg := jsonrpc.ErrMethodNotFound.WithData(fmt.Sprintf("request method %s", reqMsg.Method)).ToMessage(reqMsg)
 		errMsg.SetTraceId(reqMsg.TraceId())
 		errMsgVec := MsgVec{Msg: errMsg}
 		return self.SendTo(fromConnId, errMsgVec)
