@@ -19,3 +19,14 @@ func CommandExampleArray() {
 		panic(err)
 	}
 }
+
+func CommandExampleBenchmark() {
+	examFlags := flag.NewFlagSet("example.benchmark", flag.ExitOnError)
+	serverFlag := client.NewServerFlag(examFlags)
+	examFlags.Parse(os.Args[2:])
+
+	err := example.ExampleBenchmark(serverFlag.Get())
+	if err != nil {
+		panic(err)
+	}
+}

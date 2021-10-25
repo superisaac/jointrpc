@@ -9,17 +9,19 @@ import (
 )
 
 var commands map[string]string = map[string]string{
-	"rpc":           "call jsonrpc method, the same as call",
-	"call":          "call jsonrpc method",
-	"watch":         "watch notifies and print them",
-	"notify":        "send notify",
-	"watchstate":    "watch server state changes",
-	"methods":       "list served methods",
-	"delegates":     "list delegated methods",
-	"playbook":      "run a playbook",
-	"bridge":        "run as a bridge between servers",
-	"example.array": "start an example array service",
-	"help":          "print this methods",
+	"rpc":               "call jsonrpc method, the same as call",
+	"call":              "call jsonrpc method",
+	"benchmark":         "benchmark jsonrpc method using call",
+	"watch":             "watch notifies and print them",
+	"notify":            "send notify",
+	"watchstate":        "watch server state changes",
+	"methods":           "list served methods",
+	"delegates":         "list delegated methods",
+	"playbook":          "run a playbook",
+	"bridge":            "run as a bridge between servers",
+	"example.array":     "start an example array service",
+	"example.benchmark": "start an example service for benchmark",
+	"help":              "print this methods",
 }
 
 func setupClientSideLogger(logLevel string) {
@@ -100,6 +102,9 @@ func main() {
 	case "call":
 		setupClientSideLogger("")
 		cmd.CommandCallRPC("call")
+	case "benchmark":
+		setupClientSideLogger("")
+		cmd.CommandCallBenchmark()
 	case "notify":
 		setupClientSideLogger("")
 		cmd.CommandSendNotify()
@@ -115,6 +120,9 @@ func main() {
 	case "example.array":
 		setupClientSideLogger("")
 		cmd.CommandExampleArray()
+	case "example.benchmark":
+		setupClientSideLogger("")
+		cmd.CommandExampleBenchmark()
 	case "help":
 		showHelp()
 	default:
