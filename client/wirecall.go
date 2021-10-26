@@ -37,20 +37,22 @@ func (self *RPCClient) CallInStream(rootCtx context.Context, reqmsg jsonrpc.IMes
 	// save request in pending map
 	expire := time.Now().Add(time.Second * 30)
 	reqId := reqmsg.MustId()
-	wc := WireCallT{
+	wc := &WireCallT{
 		Expire:   expire,
 		Callback: callback,
 	}
 	// TODO: assert wire pending requests
-	self.wirePendingRequests[reqId] = wc
+	self.wirePendingRequests.Store(reqId, wc)
 	self.chSendUp <- reqmsg
 	return nil
 }
 
 func (self *RPCClient) handleWireResult(res jsonrpc.IMessage) {
 	reqId := res.MustId()
-	if wc, ok := self.wirePendingRequests[reqId]; ok {
-		delete(self.wirePendingRequests, reqId)
+	if r, ok := self.wirePendingRequests.Load(reqId); ok {
+		wc, _ := r.(*WireCallT)
+		//delete(self.wirePendingRequests, reqId)
+		self.wirePendingRequests.Delete(reqId)
 		// callback
 		wc.Callback(res)
 	} else {

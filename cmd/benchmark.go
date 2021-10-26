@@ -23,7 +23,7 @@ func CommandCallBenchmark() {
 	pTraceId := callFlags.String("traceid", "", "trace id during the workflow")
 
 	pConcurrency := callFlags.Uint("con", 10, "the number of concurrent clients")
-	pNum := callFlags.Uint("num", 10, "the number of calls each client can call")
+	pNum := callFlags.Uint("n", 10, "the number of calls each client can call")
 
 	callFlags.Parse(os.Args[2:])
 	// TODO, check the sanity agains traceId
@@ -95,7 +95,7 @@ func callNTimes(chResults chan uint, serverEntry client.ServerEntry, method stri
 		}
 		endTime := time.Now()
 		chResults <- uint(endTime.Sub(startTime))
-		time.Sleep(10 * time.Millisecond)
+		//time.Sleep(10 * time.Millisecond)
 	}
 	return nil
 }

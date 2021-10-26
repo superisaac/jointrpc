@@ -49,6 +49,9 @@ func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOp
 		grpc.StreamInterceptor(
 			streamBindContext(factory, cfg)),
 		grpc.MaxConcurrentStreams(math.MaxUint32),
+		grpc.WriteBufferSize(1024000),
+		grpc.ReadBufferSize(1024000),
+		grpc.ReadBufferSize(1024000),
 	)
 	grpcServer := grpc.NewServer(opts...)
 

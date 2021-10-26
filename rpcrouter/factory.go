@@ -103,12 +103,7 @@ func (self *RouterFactory) Loop(ctx context.Context) {
 
 				misc.Assert(cmdMethods.Namespace != "", "bad cmdMethods")
 				router := self.Get(cmdMethods.Namespace)
-				conn, found := router.connMap[cmdMethods.ConnId]
-				if found {
-					router.UpdateServeMethods(conn, cmdMethods.Methods)
-				} else {
-					router.Log().Infof("Conn %d not found for update serve methods", cmdMethods.ConnId)
-				}
+				router.OnCmdMethods(cmdMethods)
 			}
 
 		case cmdDelg, ok := <-self.ChDelegates:
@@ -119,12 +114,7 @@ func (self *RouterFactory) Loop(ctx context.Context) {
 				}
 				misc.Assert(cmdDelg.Namespace != "", "bad cmdDelg namespace")
 				router := self.Get(cmdDelg.Namespace)
-				conn, found := router.connMap[cmdDelg.ConnId]
-				if found {
-					router.UpdateDelegateMethods(conn, cmdDelg.MethodNames)
-				} else {
-					router.Log().Infof("Conn %d not found for update methods", cmdDelg.ConnId)
-				}
+				router.OnCmdDelegates(cmdDelg)
 			}
 
 		case cmdMsg, ok := <-self.chMsg:
@@ -135,7 +125,7 @@ func (self *RouterFactory) Loop(ctx context.Context) {
 				}
 				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
 				router := self.Get(cmdMsg.MsgVec.Namespace)
-				go router.DeliverMessage(cmdMsg)
+				router.DeliverMessage(cmdMsg)
 			}
 		case <-time.After(10 * time.Second):
 			//for _, router := range self.routerMap {

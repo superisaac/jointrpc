@@ -2,7 +2,7 @@ package builtin
 
 import (
 	"context"
-	"fmt"
+	//"fmt"
 	//"time"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
@@ -102,7 +102,6 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
 
 	self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		fmt.Printf("list methods, %s\n", req.MsgVec.Namespace)
 		router := factory.Get(req.MsgVec.Namespace)
 		minfos := router.GetMethods()
 

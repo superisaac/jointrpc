@@ -38,12 +38,12 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
 
 	c := &RPCClient{
-		serverEntry:         serverEntry,
-		serverUrl:           serverUrl,
-		chSendUp:            chSendUp,
-		WorkerRetryTimes:    10,
-		chResult:            chResult,
-		wirePendingRequests: make(map[interface{}]WireCallT),
+		serverEntry:      serverEntry,
+		serverUrl:        serverUrl,
+		chSendUp:         chSendUp,
+		WorkerRetryTimes: 10,
+		chResult:         chResult,
+		//wirePendingRequests: make(map[interface{}]WireCallT),
 	}
 	return c
 }

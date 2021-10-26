@@ -5,6 +5,7 @@ import (
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/jsonrpc"
 	"net/url"
+	"sync"
 	"time"
 )
 
@@ -51,7 +52,8 @@ type RPCClient struct {
 	onConnected      ConnectedCallback
 	onConnectionLost ConnectionLostCallback
 
-	wirePendingRequests map[interface{}]WireCallT
+	//wirePendingRequests map[interface{}]WireCallT
+	wirePendingRequests sync.Map
 
 	chResult chan dispatch.ResultT
 }

@@ -109,9 +109,12 @@ func (self Router) GetMethodNames() []string {
 func (self Router) getMethods() []MethodInfo {
 	minfos := []MethodInfo{}
 	for _, descs := range self.methodConnMap {
-		for _, desc := range descs {
-			minfos = append(minfos, desc.Info)
+		if len(descs) > 0 {
+			minfos = append(minfos, descs[0].Info)
 		}
+		// for _, desc := range descs {
+		// 	minfos = append(minfos, desc.Info)
+		// }
 	}
 	sort.Slice(minfos, func(i, j int) bool { return minfos[i].Name < minfos[j].Name })
 	return minfos
@@ -127,6 +130,28 @@ func (self Router) getMethodsSig() string {
 		}
 	}
 	return strings.Join(arr, ",")
+}
+
+func (self *Router) OnCmdMethods(cmdMethods CmdMethods) {
+	self.lock("OnCmdMethods")
+	defer self.unlock("OnCmdMethods")
+	conn, found := self.connMap[cmdMethods.ConnId]
+	if found {
+		self.updateServeMethods(conn, cmdMethods.Methods)
+	} else {
+		self.Log().Infof("Conn %d not found for update serve methods", cmdMethods.ConnId)
+	}
+}
+
+func (self *Router) OnCmdDelegates(cmdDelg CmdDelegates) {
+	self.lock("OnCmdDelegates")
+	defer self.unlock("OnCmdDelegates")
+	conn, found := self.connMap[cmdDelg.ConnId]
+	if found {
+		self.updateDelegateMethods(conn, cmdDelg.MethodNames)
+	} else {
+		self.Log().Infof("Conn %d not found for update methods", cmdDelg.ConnId)
+	}
 }
 
 func (self *Router) UpdateServeMethods(conn *ConnT, methods []MethodInfo) bool {
