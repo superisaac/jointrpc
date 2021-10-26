@@ -92,7 +92,7 @@ func callNTimes(chResults chan uint, serverEntry client.ServerEntry, method stri
 		startTime := time.Now()
 		_, err := c.CallRPC(ctx, method, params, opts...)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "bad results %+v\n", err)
+			fmt.Fprintf(os.Stderr, "bad results %d %s\n", i, err)
 		}
 		endTime := time.Now()
 		chResults <- uint(endTime.Sub(startTime))

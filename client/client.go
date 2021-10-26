@@ -12,8 +12,7 @@ import (
 	"net/url"
 	//"time"
 	"github.com/superisaac/jointrpc/dispatch"
-	//encoding "github.com/superisaac/jointrpc/encoding"
-	//"github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/misc"
 	//"github.com/superisaac/jointrpc/rpcrouter"
 	grpc "google.golang.org/grpc"
 	//codes "google.golang.org/grpc/codes"
@@ -25,7 +24,7 @@ func (self RPCStatusError) Error() string {
 }
 
 func NewRPCClient(serverEntry ServerEntry) *RPCClient {
-	chSendUp := make(chan jsonrpc.IMessage)
+	chSendUp := make(chan jsonrpc.IMessage, misc.DefaultChanSize())
 	serverUrl, err := url.Parse(serverEntry.ServerUrl)
 	if err != nil {
 		log.Panicf("parse url error %s %s", serverEntry.ServerUrl, err.Error())
@@ -36,7 +35,7 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 		log.Panicf("urls scheme not allowed, %s", serverUrl)
 	}
 
-	chResult := make(chan dispatch.ResultT, 100)
+	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
 
 	c := &RPCClient{
 		serverEntry:         serverEntry,

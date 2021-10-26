@@ -23,7 +23,7 @@ func (self *ServerFlag) ptrValue() ServerEntry {
 func (self *ServerFlag) Get() ServerEntry {
 	value := self.ptrValue()
 	if value.ServerUrl == "" {
-		value.ServerUrl = os.Getenv("TUBE_CONNECT")
+		value.ServerUrl = os.Getenv("RPC_CONNECT")
 	}
 
 	if value.ServerUrl == "" {
@@ -31,7 +31,7 @@ func (self *ServerFlag) Get() ServerEntry {
 	}
 
 	if value.CertFile == "" {
-		value.CertFile = os.Getenv("TUBE_CONNECT")
+		value.CertFile = os.Getenv("RPC_CERT")
 	}
 	return value
 }

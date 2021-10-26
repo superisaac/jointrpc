@@ -85,7 +85,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 	}
 
 	self.disp = dispatch.NewDispatcher()
-	self.chResult = make(chan dispatch.ResultT, 100)
+	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
 	self.conn = commonRouter.Join()
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {

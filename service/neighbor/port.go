@@ -43,7 +43,7 @@ func NewNeighborPort(namespace string, nbrCfg datadir.NeighborConfig) *NeighborP
 	port.serverEntries = entries
 	port.edges = make(map[string]*Edge)
 	port.dispatcher = dispatch.NewDispatcher()
-	port.chResult = make(chan dispatch.ResultT, 100)
+	port.chResult = make(chan dispatch.ResultT, 1000)
 	port.ChState = make(chan CmdStateChange)
 	return port
 }

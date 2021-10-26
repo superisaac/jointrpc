@@ -67,9 +67,9 @@ func (self *RouterFactory) DefaultRouter() *Router {
 }
 
 func (self *RouterFactory) setupChannels() {
-	self.chMsg = make(chan CmdMsg, 1000)
-	self.ChMethods = make(chan CmdMethods, 1000)
-	self.ChDelegates = make(chan CmdDelegates, 1000)
+	self.chMsg = make(chan CmdMsg, 10000)
+	self.ChMethods = make(chan CmdMethods, 10000)
+	self.ChDelegates = make(chan CmdDelegates, 10000)
 }
 
 func (self RouterFactory) Name() string {

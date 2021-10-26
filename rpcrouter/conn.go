@@ -5,12 +5,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
+	"github.com/superisaac/jointrpc/misc"
 )
 
 func NewConn() *ConnT {
 	connId := NextCID()
 	ch := make(MsgChannel, 100)
-	//chState := make(chan TuebState, 100)
 	methods := make(map[string]MethodInfo)
 	conn := &ConnT{ConnId: connId,
 		RecvChannel:  ch,
@@ -75,7 +75,7 @@ func (self *ConnT) SetWatchState(w bool) {
 
 func (self *ConnT) StateChannel() chan *ServerState {
 	if self.stateChannel == nil {
-		self.stateChannel = make(chan *ServerState, 100)
+		self.stateChannel = make(chan *ServerState, misc.DefaultChanSize())
 	}
 	return self.stateChannel
 }

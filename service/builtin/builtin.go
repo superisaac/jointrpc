@@ -6,7 +6,7 @@ import (
 	//"time"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	//misc "github.com/superisaac/jointrpc/misc"
+	misc "github.com/superisaac/jointrpc/misc"
 
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/dispatch"
@@ -99,7 +99,7 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 	factory := rpcrouter.RouterFactoryFromContext(rootCtx)
 
 	self.disp = dispatch.NewDispatcher()
-	self.chResult = make(chan dispatch.ResultT, 100)
+	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
 
 	self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		fmt.Printf("list methods, %s\n", req.MsgVec.Namespace)

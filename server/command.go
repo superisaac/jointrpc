@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"math"
 	//"flag"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -46,7 +47,9 @@ func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOp
 		grpc.UnaryInterceptor(
 			unaryBindContext(factory, cfg)),
 		grpc.StreamInterceptor(
-			streamBindContext(factory, cfg)))
+			streamBindContext(factory, cfg)),
+		grpc.MaxConcurrentStreams(math.MaxUint32),
+	)
 	grpcServer := grpc.NewServer(opts...)
 
 	serverCtx, cancelServer := context.WithCancel(rootCtx)

@@ -78,7 +78,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 	if reqmsg.TraceId() == "" {
 		reqmsg.SetTraceId(misc.NewUuid())
 	}
-	reqmsg.Log().Infof("from ip %s", remotePeer.Addr)
+	reqmsg.Log().Debug("from ip %s", remotePeer.Addr)
 
 	router := factory.CommonRouter()
 	if !router.HasMethod(reqmsg.MustMethod()) {
@@ -132,7 +132,7 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 		notifymsg.SetTraceId(misc.NewUuid())
 	}
 
-	notifymsg.Log().Infof("from ip %s", remotePeer.Addr)
+	notifymsg.Log().Debug("from ip %s", remotePeer.Addr)
 	factory := rpcrouter.RouterFactoryFromContext(context)
 	router := factory.CommonRouter()
 	if !router.HasMethod(notifymsg.MustMethod()) {
@@ -205,7 +205,7 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 // Workers
 func sendDownMessage(stream intf.JointRPC_WorkerServer, msg jsonrpc.IMessage) {
 	//msg := msgvec.Msg
-	msg.Log().Infof("message down to client, %+v", msg)
+	msg.Log().Debugf("message down to client, %+v", msg)
 	envo := encoding.MessageToEnvolope(msg)
 	err := stream.Send(envo)
 	if err != nil {
@@ -329,7 +329,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 		}
 	}()
 
-	chResult := make(chan dispatch.ResultT, 100)
+	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
 	go relayDownMessages(ctx, stream, conn, chResult)
 
 	for {
