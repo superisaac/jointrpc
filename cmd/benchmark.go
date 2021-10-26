@@ -23,8 +23,8 @@ func CommandCallBenchmark() {
 	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
 	pTraceId := callFlags.String("traceid", "", "trace id during the workflow")
 
-	pConcurrency := callFlags.Int("con", 10, "the number of concurrent clients")
-	pNum := callFlags.Int("num", 10, "the number of calls each client can call")
+	pConcurrency := callFlags.Uint("con", 10, "the number of concurrent clients")
+	pNum := callFlags.Uint("num", 10, "the number of calls each client can call")
 
 	callFlags.Parse(os.Args[2:])
 	// TODO, check the sanity agains traceId
@@ -50,28 +50,29 @@ func CommandCallBenchmark() {
 		client.WithBroadcast(*pBroadcast), client.WithTraceId(*pTraceId))
 }
 
-func toS(ns int) float64 {
+func toS(ns uint) float64 {
 	return float64(ns) / float64(time.Second)
 }
 
-func RunCallBenchmark(serverEntry client.ServerEntry, method string, params []interface{}, concurrency int, num int, opts ...client.CallOptionFunc) {
-	chResults := make(chan int, concurrency*num)
-	results := make([]int, concurrency*num)
-	var sum int = 0
+func RunCallBenchmark(serverEntry client.ServerEntry, method string, params []interface{}, concurrency uint, num uint, opts ...client.CallOptionFunc) {
+	chResults := make(chan uint, concurrency*num)
+	results := make([]uint, concurrency*num)
+	var sum uint = 0
 
-	for a := 0; a < concurrency; a++ {
+	for a := uint(0); a < concurrency; a++ {
 		go callNTimes(chResults, serverEntry, method, params, num, opts...)
 	}
 
-	for i := 0; i < concurrency*num; i++ {
+	for i := uint(0); i < concurrency*num; i++ {
 		usedTime := <-chResults
 		sum += usedTime
 		results[i] = usedTime
 	}
 
-	sort.Ints(results)
+	//sort.Uints(results)
+	sort.Slice(results, func(i, j int) bool { return results[i] < results[j] })
 
-	avg := sum / len(results)
+	avg := sum / uint(len(results))
 	pos95 := int(0.95 * float64(len(results)))
 	t95 := results[pos95]
 	maxv := results[len(results)-1]
@@ -79,7 +80,7 @@ func RunCallBenchmark(serverEntry client.ServerEntry, method string, params []in
 	fmt.Printf("avg=%g, min=%g, p95=%g, max=%g\n", toS(avg), toS(minv), toS(t95), toS(maxv))
 }
 
-func callNTimes(chResults chan int, serverEntry client.ServerEntry, method string, params []interface{}, num int, opts ...client.CallOptionFunc) error {
+func callNTimes(chResults chan uint, serverEntry client.ServerEntry, method string, params []interface{}, num uint, opts ...client.CallOptionFunc) error {
 	ctx := context.Background()
 	c := client.NewRPCClient(serverEntry)
 	err := c.Connect()
@@ -87,14 +88,14 @@ func callNTimes(chResults chan int, serverEntry client.ServerEntry, method strin
 		return err
 	}
 
-	for i := 0; i < num; i++ {
+	for i := uint(0); i < num; i++ {
 		startTime := time.Now()
 		_, err := c.CallRPC(ctx, method, params, opts...)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "bad results %+v\n", err)
 		}
 		endTime := time.Now()
-		chResults <- int(endTime.Sub(startTime))
+		chResults <- uint(endTime.Sub(startTime))
 	}
 	return nil
 }
