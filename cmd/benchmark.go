@@ -20,7 +20,6 @@ import (
 func CommandCallBenchmark() {
 	callFlags := flag.NewFlagSet("benchmark", flag.ExitOnError)
 	serverFlag := client.NewServerFlag(callFlags)
-	pBroadcast := callFlags.Bool("broadcast", false, "broadcast the notify to all listeners")
 	pTraceId := callFlags.String("traceid", "", "trace id during the workflow")
 
 	pConcurrency := callFlags.Uint("con", 10, "the number of concurrent clients")
@@ -47,7 +46,7 @@ func CommandCallBenchmark() {
 		serverFlag.Get(),
 		method, params,
 		*pConcurrency, *pNum,
-		client.WithBroadcast(*pBroadcast), client.WithTraceId(*pTraceId))
+		client.WithTraceId(*pTraceId))
 }
 
 func toS(ns uint) float64 {
@@ -77,7 +76,7 @@ func RunCallBenchmark(serverEntry client.ServerEntry, method string, params []in
 	t95 := results[pos95]
 	maxv := results[len(results)-1]
 	minv := results[0]
-	fmt.Printf("avg=%g, min=%g, p95=%g, max=%g\n", toS(avg), toS(minv), toS(t95), toS(maxv))
+	fmt.Printf("avg=%gs, min=%gs, p95=%gs, max=%gs\n", toS(avg), toS(minv), toS(t95), toS(maxv))
 }
 
 func callNTimes(chResults chan uint, serverEntry client.ServerEntry, method string, params []interface{}, num uint, opts ...client.CallOptionFunc) error {
@@ -96,6 +95,7 @@ func callNTimes(chResults chan uint, serverEntry client.ServerEntry, method stri
 		}
 		endTime := time.Now()
 		chResults <- uint(endTime.Sub(startTime))
+		time.Sleep(10 * time.Millisecond)
 	}
 	return nil
 }

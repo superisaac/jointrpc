@@ -15,7 +15,7 @@ func NewRouterFactory(name string) *RouterFactory {
 
 	factory := &RouterFactory{name: name}
 	factory.Config = datadir.NewConfig()
-	factory.routerMap = make(map[string](*Router))
+	//factory.routerMap = make(map[string](*Router))
 	factory.setupChannels()
 	return factory
 }
@@ -32,27 +32,35 @@ func RouterFactoryFromContext(ctx context.Context) *RouterFactory {
 
 func (self *RouterFactory) Get(namespace string) *Router {
 	misc.Assert(namespace != "", "factory got empty namespace")
-	if r, ok := self.routerMap[namespace]; ok {
-		return r
+	if r, ok := self.routerMap.Load(namespace); ok {
+		router, _ := r.(*Router)
+		return router
 	} else {
-		t := NewRouter(self, namespace)
-		self.routerMap[namespace] = t
-		return t
+		router := NewRouter(self, namespace)
+		//self.routerMap[namespace] = t
+		self.routerMap.Store(namespace, router)
+		return router
 	}
 }
 
 func (self RouterFactory) RouterNames() []string {
 	names := make([]string, 0)
-	for namespace, _ := range self.routerMap {
+	self.routerMap.Range(func(key interface{}, value interface{}) bool {
+		namespace, _ := key.(string)
 		names = append(names, namespace)
-	}
+		return true
+	})
+	// for namespace, _ := range self.routerMap {
+	// 	names = append(names, namespace)
+	// }
 	return names
 }
 
 func (self RouterFactory) GetOrNil(name string) *Router {
 	misc.Assert(name != "", "factory got empty namespace")
-	if r, ok := self.routerMap[name]; ok {
-		return r
+	if r, ok := self.routerMap.Load(name); ok {
+		router, _ := r.(*Router)
+		return router
 	} else {
 		return nil
 	}
@@ -130,9 +138,14 @@ func (self *RouterFactory) Loop(ctx context.Context) {
 				go router.DeliverMessage(cmdMsg)
 			}
 		case <-time.After(10 * time.Second):
-			for _, router := range self.routerMap {
+			//for _, router := range self.routerMap {
+			//	router.collectPendings()
+			//}
+			self.routerMap.Range(func(key, value interface{}) bool {
+				router, _ := value.(*Router)
 				router.collectPendings()
-			}
+				return true
+			})
 		}
 	}
 }

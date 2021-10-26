@@ -124,7 +124,7 @@ type RouterFactory struct {
 	ChMethods   chan CmdMethods
 	ChDelegates chan CmdDelegates
 
-	routerMap map[string](*Router)
+	routerMap sync.Map
 
 	// flags
 	Config *datadir.Config

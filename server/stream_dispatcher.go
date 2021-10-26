@@ -11,6 +11,12 @@ import (
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	"net"
+	"sync"
+)
+
+var (
+	once       sync.Once
+	streamDisp *StreamDispatcher
 )
 
 type StreamDispatcher struct {
@@ -25,13 +31,11 @@ func NewStreamDispatcher() *StreamDispatcher {
 	return h
 }
 
-var connDisp *StreamDispatcher
-
 func GetStreamDispatcher() *StreamDispatcher {
-	if connDisp == nil {
-		connDisp = NewStreamDispatcher()
-	}
-	return connDisp
+	once.Do(func() {
+		streamDisp = NewStreamDispatcher()
+	})
+	return streamDisp
 }
 
 const (
