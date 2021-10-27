@@ -66,7 +66,7 @@ func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonrpc.I
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
-	marshaled, err := jsonrpc.GetMessageBytes(reqmsg)
+	marshaled, err := jsonrpc.MessageBytes(reqmsg)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,6 @@ func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonrpc.I
 	if err != nil {
 		return nil, err
 	}
-	resmsg.SetTraceId(res.Envolope.TraceId)
 	if !resmsg.IsResultOrError() {
 		log.Warnf("bad result or error message %+v", res.Envolope.Body)
 		return nil, &jsonrpc.RPCError{10409, "msg is neither result nor error", false}
@@ -168,7 +167,7 @@ func (self *RPCClient) SendHTTPNotify(rootCtx context.Context, method string, pa
 
 	notify.SetTraceId(opt.traceId)
 
-	marshaled, err := jsonrpc.GetMessageBytes(notify)
+	marshaled, err := jsonrpc.MessageBytes(notify)
 	if err != nil {
 		return err
 	}
@@ -211,8 +210,9 @@ func (self *RPCClient) SendGRPCNotify(rootCtx context.Context, method string, pa
 	notify.SetTraceId(opt.traceId)
 
 	env := &intf.JSONRPCEnvolope{
-		Body:    jsonrpc.GetMessageString(notify),
-		TraceId: opt.traceId}
+		Body: jsonrpc.MessageString(notify),
+	}
+	//		TraceId: opt.traceId}
 	req := &intf.JSONRPCNotifyRequest{
 		Auth:      self.ClientAuth(),
 		Envolope:  env,

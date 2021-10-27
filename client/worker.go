@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"errors"
+	"net"
+	"reflect"
 	//"flag"
 	//"fmt"
 	"github.com/gorilla/websocket"
@@ -34,6 +36,7 @@ func (self *RPCClient) OnHandlerChanged(disp *dispatch.Dispatcher) {
 }
 
 func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+
 	upMethods := make([](map[string](interface{})), 0)
 	for _, minfo := range disp.GetMethodInfos() {
 		infoDict := make(map[string](interface{}))
@@ -43,7 +46,6 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 		}
 		upMethods = append(upMethods, infoDict)
 	}
-
 	reqId := misc.NewUuid()
 	params := make([]interface{}, 0)
 	params = append(params, upMethods)
@@ -175,7 +177,13 @@ func (self *RPCClient) runHTTPWorker(rootCtx context.Context, disp *dispatch.Dis
 
 	ws, _, err := websocket.DefaultDialer.Dial(self.WebsocketUrlString(), nil)
 	if err != nil {
-		log.Warnf("error on dailing websocket %s", err)
+		if opErr, isOpErr := err.(*net.OpError); isOpErr {
+			log.Infof("close failed %s", opErr)
+			return nil
+		}
+
+		log.Warnf("error on dailing websocket type %s, %s",
+			reflect.TypeOf(err), err)
 		return err
 	}
 
@@ -195,10 +203,15 @@ func (self *RPCClient) runHTTPWorker(rootCtx context.Context, disp *dispatch.Dis
 
 	// wait for auth response
 	authRes, err := msgutil.WSRecv(ws)
-	if err == io.EOF {
-		log.Infof("websocket conn failed")
-		return nil
-	} else if err != nil {
+	if err != nil {
+		if err == io.EOF {
+			log.Infof("websocket conn failed")
+			return nil
+		} else if closeErr, isCloseError := err.(*websocket.CloseError); isCloseError {
+			log.Infof("websocket close error %d %s", closeErr.Code, closeErr.Text)
+			return nil
+
+		}
 		return err
 	}
 
@@ -222,10 +235,15 @@ func (self *RPCClient) runHTTPWorker(rootCtx context.Context, disp *dispatch.Dis
 	disp.TriggerChange()
 	for {
 		msg, err := msgutil.WSRecv(ws)
-		if err == io.EOF {
-			log.Infof("websocket conn failed")
-			return nil
-		} else if err != nil {
+		if err != nil {
+			if err == io.EOF {
+				log.Infof("websocket conn failed")
+				return nil
+			} else if closeErr, isCloseError := err.(*websocket.CloseError); isCloseError {
+				log.Infof("websocket close error %d %s", closeErr.Code, closeErr.Text)
+				return nil
+
+			}
 			return err
 		}
 

@@ -80,27 +80,35 @@ func (self BaseMessage) IsResultOrError() bool {
 
 // IMessage methods
 func EncodePretty(msg IMessage) (string, error) {
-	bytes, err := msg.GetJson().EncodePretty()
+	bytes, err := MessageJson(msg).EncodePretty()
 	if err != nil {
 		return "", err
 	}
 	return string(bytes), nil
 }
 
-func GetMessageInterface(msg IMessage) interface{} {
-	return msg.GetJson().Interface()
+func MessageJson(msg IMessage) *simplejson.Json {
+	jsonObj := msg.GetJson()
+	if traceId := msg.TraceId(); traceId != "" {
+		jsonObj.Set("traceid", traceId)
+	}
+	return jsonObj
 }
 
-func GetMessageString(msg IMessage) string {
-	bytes, err := GetMessageBytes(msg)
+func MessageInterface(msg IMessage) interface{} {
+	return MessageJson(msg).Interface()
+}
+
+func MessageString(msg IMessage) string {
+	bytes, err := MessageBytes(msg)
 	if err != nil {
 		panic(err)
 	}
 	return string(bytes)
 }
 
-func GetMessageBytes(msg IMessage) ([]byte, error) {
-	return msg.GetJson().MarshalJSON()
+func MessageBytes(msg IMessage) ([]byte, error) {
+	return MessageJson(msg).MarshalJSON()
 }
 
 func (self *BaseMessage) SetTraceId(traceId string) {
@@ -339,12 +347,18 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 		method = ""
 	}
 
+	traceId, err := parsed.Get("traceid").String()
+	if err != nil {
+		traceId = ""
+	}
+
 	if id != nil {
 		if method != "" {
 			// request
 			params := parsed.Get("params").MustArray()
 			reqmsg := NewRequestMessage(id, method, params)
 			reqmsg.SetRaw(parsed)
+			reqmsg.SetTraceId(traceId)
 			return reqmsg, nil
 		}
 		if errIntf := parsed.Get("error"); errIntf != nil && errIntf.Interface() != nil {
@@ -354,16 +368,19 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 			}
 			errmsg := rawErrorMessage(id, errbody)
 			errmsg.SetRaw(parsed)
+			errmsg.SetTraceId(traceId)
 			return errmsg, nil
 		}
 		res := parsed.Get("result").Interface()
 		rmsg := rawResultMessage(id, res)
 		rmsg.SetRaw(parsed)
+		rmsg.SetTraceId(traceId)
 		return rmsg, nil
 	} else if method != "" {
 		params := parsed.Get("params").MustArray()
 		ntfmsg := NewNotifyMessage(method, params)
 		ntfmsg.SetRaw(parsed)
+		ntfmsg.SetTraceId(traceId)
 		return ntfmsg, nil
 	} else {
 		return nil, ErrParseMessage

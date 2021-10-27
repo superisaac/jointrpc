@@ -69,7 +69,11 @@ func (self RPCClient) String() string {
 }
 
 func (self RPCClient) WebsocketUrlString() string {
-	return self.serverEntry.ServerUrl
+	var scheme = "ws"
+	if self.serverUrl.Scheme == "https" {
+		scheme = "wss"
+	}
+	return fmt.Sprintf("%s://%s/ws", scheme, self.serverUrl.Host)
 }
 
 func (self RPCClient) ServerEntry() ServerEntry {
@@ -86,6 +90,10 @@ func (self RPCClient) IsHttp() bool {
 
 func (self RPCClient) IsH2() bool {
 	return self.serverUrl.Scheme == "h2" || self.serverUrl.Scheme == "h2c"
+}
+
+func (self RPCClient) IsSecure() bool {
+	return self.serverUrl.Scheme == "https" || self.serverUrl.Scheme == "h2"
 }
 
 func (self RPCClient) Connected() bool {

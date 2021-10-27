@@ -28,7 +28,7 @@ func CommandStartServer() {
 	pDatadir := serverFlags.String("d", "", "The datadir to store configs")
 	pCertFile := serverFlags.String("cert", "", "tls cert file")
 	pKeyFile := serverFlags.String("key", "", "tls key file")
-	pHttpBind := serverFlags.String("http_bind", "", "http address and port")
+	pHttpBind := serverFlags.String("httpbind", "", "http address and port")
 
 	serverFlags.Parse(os.Args[1:])
 	if *pDatadir != "" {

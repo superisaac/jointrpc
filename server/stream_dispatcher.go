@@ -172,7 +172,7 @@ func (self *StreamDispatcher) Init() {
 		}, dispatch.WithSchema(authorizeSchema))
 } // end of Init()
 
-func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan dispatch.ResultT, conn *rpcrouter.ConnT) jsonrpc.IMessage {
+func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan dispatch.ResultT, conn *rpcrouter.ConnT, allowRequest bool) jsonrpc.IMessage {
 	if !conn.Joined() {
 		instRes := self.authDisp.Expect(ctx, msgvec, dispatch.WithRequestData(conn))
 		return instRes
@@ -180,6 +180,12 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcroute
 		msg := msgvec.Msg
 		if msg.IsRequestOrNotify() && self.disp.HasMethod(msg.MustMethod()) {
 			self.disp.Feed(ctx, msgvec, chResult, dispatch.WithRequestData(conn))
+		} else if msg.IsRequest() && !allowRequest {
+			instRes := jsonrpc.ErrNotAllowed.ToMessage(msg)
+			return instRes
+		} else if msg.IsNotify() && !allowRequest {
+			msg.Log().Warnf("not allowed")
+			return nil
 		} else {
 			factory := rpcrouter.RouterFactoryFromContext(ctx)
 			router := factory.Get(conn.Namespace)

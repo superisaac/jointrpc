@@ -7,7 +7,7 @@ import (
 )
 
 func WSSend(ws *websocket.Conn, msg jsonrpc.IMessage) error {
-	msgBytes, err := jsonrpc.GetMessageBytes(msg)
+	msgBytes, err := jsonrpc.MessageBytes(msg)
 	if err != nil {
 		return err
 	}

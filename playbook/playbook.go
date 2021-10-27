@@ -87,7 +87,7 @@ func (self MethodT) Exec(req *dispatch.RPCRequest, methodName string) (interface
 	}
 	defer stdin.Close()
 
-	msgJson := jsonrpc.GetMessageString(msg)
+	msgJson := jsonrpc.MessageString(msg)
 	io.WriteString(stdin, msgJson)
 	stdin.Close()
 

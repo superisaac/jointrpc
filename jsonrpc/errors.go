@@ -10,7 +10,9 @@ var (
 	ErrEmptyMethod    = &RPCError{-32601, "empty method", nil}
 
 	ErrParseMessage = &RPCError{-32700, "parse error", nil}
-	ErrMessageType  = &RPCError{105, "wrong message type", nil}
+	ErrNotAllowed   = &RPCError{-32503, "type not allowed", nil}
+
+	ErrMessageType = &RPCError{105, "wrong message type", nil}
 
 	ErrTimeout     = &RPCError{200, "request timeout", nil}
 	ErrBadResource = &RPCError{201, "bad resource", nil}

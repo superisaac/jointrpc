@@ -1,6 +1,7 @@
 package server
 
 import (
+	//"fmt"
 	"bytes"
 	"context"
 	"errors"
@@ -140,13 +141,14 @@ func (self *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)
 
-	result, err := factory.Get(namespace).CallOrNotify(msg, namespace)
+	router := factory.Get(namespace)
+	result, err := router.CallOrNotify(msg, namespace)
 	if err != nil {
 		jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
 		return
 	}
 	if result != nil {
-		data, err1 := jsonrpc.GetMessageBytes(result)
+		data, err1 := jsonrpc.MessageBytes(result)
 		if err1 != nil {
 			jsonrpc.ErrorResponse(w, r, err1, 500, "Server error")
 			return
@@ -280,7 +282,7 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		streamDisp := GetStreamDispatcher()
-		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn)
+		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, false)
 
 		if instRes != nil {
 			err := msgutil.WSSend(ws, instRes)

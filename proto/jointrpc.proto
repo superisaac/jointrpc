@@ -26,7 +26,7 @@ message ClientAuth {
 
 message JSONRPCEnvolope {
   string body = 1;  // json encoded rpc message
-  string trace_id = 2;
+  //string trace_id = 2;
 }
 
 message ListMethodsRequest {

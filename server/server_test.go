@@ -39,14 +39,7 @@ func TestAdhocContext(t *testing.T) {
 const addSchema = `
 {
   "type": "method",
-  "params": [
-    {
-      "type": "number"
-    },
-    {
-      "type": "number"
-    }
-  ],
+  "params": ["number", "number"],
   "returns": "number"
 }
 `
@@ -240,14 +233,15 @@ func TestHTTPClient(t *testing.T) {
 
 	go StartGRPCServer(ctx, "127.0.0.1:10072")
 	time.Sleep(100 * time.Millisecond)
-
 	go StartHTTPServer(ctx, "127.0.0.1:10073")
+	time.Sleep(100 * time.Millisecond)
 
-	go StartTestServe(ctx, "h2c://127.0.0.1:10072", "testclent")
+	go StartTestServe(ctx, "http://127.0.0.1:10073", "testws")
 	time.Sleep(100 * time.Millisecond)
 
 	c := client.NewRPCClient(client.ServerEntry{"http://127.0.0.1:10073", ""})
 	assert.True(c.IsHttp())
+	assert.False(c.IsSecure())
 	err := c.Connect()
 	assert.Nil(err)
 

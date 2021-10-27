@@ -94,13 +94,13 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 		return nil, err
 	}
 	if recvmsg == nil {
-		misc.AssertEqual(recvmsg.TraceId(), reqmsg.TraceId(), "")
 		recvmsg = jsonrpc.NewResultMessage(reqmsg, nil)
 	}
 	if !recvmsg.IsResultOrError() {
 		log.Warnf("bad recvmsg is neither result nor error %+v", recvmsg)
 		return nil, errors.New("recv msg is neigher result or error")
 	}
+	misc.AssertEqual(recvmsg.TraceId(), reqmsg.TraceId(), "res.traceId != req.traceId")
 	res := &intf.JSONRPCCallResult{
 		Envolope: msgutil.MessageToEnvolope(recvmsg)}
 	return res, nil
@@ -338,7 +338,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 			FromConnId: conn.ConnId}
 
 		streamDisp := GetStreamDispatcher()
-		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn)
+		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, true)
 		if instRes != nil {
 			msgutil.GRPCServerSend(stream, instRes)
 			if instRes.IsError() {

@@ -22,6 +22,17 @@ func TestServerUrl(t *testing.T) {
 	assert.Equal("/tmp/p1.cert", v.Get("cert"))
 }
 
+func TestClientProps(t *testing.T) {
+	assert := assert.New(t)
+
+	c := NewRPCClient(ServerEntry{ServerUrl: "https://127.0.0.1:8899"})
+
+	assert.Equal("wss://127.0.0.1:8899/ws", c.WebsocketUrlString())
+
+	assert.True(c.IsSecure())
+	assert.True(c.IsHttp())
+}
+
 func TestMapstructure(t *testing.T) {
 	assert := assert.New(t)
 

@@ -79,7 +79,7 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 
 			misc.Assert(resMsgvec.Msg.IsResultOrError(), "recved neither result not error")
 			misc.AssertEqual(resMsgvec.Msg.TraceId(), reqmsg.TraceId(), "")
-			arr = append(arr, jsonrpc.GetMessageInterface(resMsgvec.Msg))
+			arr = append(arr, jsonrpc.MessageInterface(resMsgvec.Msg))
 		}
 		resmsg := jsonrpc.NewResultMessage(reqmsg, arr)
 		return resmsg, nil
