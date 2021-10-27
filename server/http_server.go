@@ -12,9 +12,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	//datadir "github.com/superisaac/jointrpc/datadir"
 	"github.com/superisaac/jointrpc/dispatch"
-	"github.com/superisaac/jointrpc/encoding"
 	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/msgutil"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )
 
@@ -212,13 +212,13 @@ func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcr
 				log.Debugf("conn handler channel closed")
 				return
 			}
-			encoding.WSSend(ws, rest.ResMsg)
+			msgutil.WSSend(ws, rest.ResMsg)
 		case msgvec, ok := <-conn.RecvChannel:
 			if !ok {
 				log.Debugf("recv channel closed")
 				return
 			}
-			encoding.WSSend(ws, msgvec.Msg)
+			msgutil.WSSend(ws, msgvec.Msg)
 		case state, ok := <-conn.StateChannel():
 			if !ok {
 				log.Debugf("state channel closed")
@@ -230,7 +230,7 @@ func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcr
 				panic(err)
 			}
 			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
-			encoding.WSSend(ws, ntf)
+			msgutil.WSSend(ws, ntf)
 		}
 	} // and for loop
 }
@@ -262,21 +262,10 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go relayDownWSMessages(ctx, ws, conn, chResult)
 
 	for {
-		msg, err := encoding.WSRecv(ws)
-		// messageType, msgBytes, err := ws.ReadMessage()
-		// if err != nil {
-		// 	log.Errorf("bad ws.ReadMessage err %s", err)
-		// 	break
-		// }
-
-		// if messageType != websocket.TextMessage {
-		// 	log.Debugf("message type %d is not text", messageType)
-		// 	continue
-		// }
-
-		// msg, err := jsonrpc.ParseBytes(msgBytes)
+		msg, err := msgutil.WSRecv(ws)
 		if err != nil {
 			//jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
+			log.Warnf("bad request %s", err)
 			return
 		}
 
@@ -294,7 +283,7 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn)
 
 		if instRes != nil {
-			err := encoding.WSSend(ws, instRes)
+			err := msgutil.WSSend(ws, instRes)
 			if err != nil {
 				break
 			}

@@ -9,10 +9,10 @@ import (
 	"net/http"
 	//simplejson "github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
-	encoding "github.com/superisaac/jointrpc/encoding"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	misc "github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/msgutil"
 )
 
 type CallOption struct {
@@ -117,7 +117,7 @@ func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonrpc.I
 		reqmsg.SetTraceId(misc.NewUuid())
 	}
 	reqmsg.Log().Debug("request message created")
-	envolope := encoding.MessageToEnvolope(reqmsg)
+	envolope := msgutil.MessageToEnvolope(reqmsg)
 	req := &intf.JSONRPCCallRequest{
 		Auth:      self.ClientAuth(),
 		Envolope:  envolope,

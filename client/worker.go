@@ -17,8 +17,8 @@ import (
 	//"net/url"
 	//"os"
 	"github.com/superisaac/jointrpc/dispatch"
-	encoding "github.com/superisaac/jointrpc/encoding"
 	"github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/msgutil"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -92,7 +92,7 @@ func (self *RPCClient) sendUpGRPC(ctx context.Context, stream intf.JointRPC_Work
 				log.Warnf("send up channel closed")
 				return
 			}
-			err := encoding.GRPCClientSend(stream, msg)
+			err := msgutil.GRPCClientSend(stream, msg)
 			if err != nil {
 				msg.Log().Warnf("send failed, %s", err)
 				panic(err)
@@ -103,7 +103,7 @@ func (self *RPCClient) sendUpGRPC(ctx context.Context, stream intf.JointRPC_Work
 				return
 			}
 			msg := result.ResMsg
-			err := encoding.GRPCClientSend(stream, msg)
+			err := msgutil.GRPCClientSend(stream, msg)
 			if err != nil {
 				msg.Log().Warnf("send failed, %s", err)
 				panic(err)
@@ -122,7 +122,7 @@ func (self *RPCClient) sendUpWS(ctx context.Context, ws *websocket.Conn, disp *d
 				log.Warnf("send up channel closed")
 				return
 			}
-			err := encoding.WSSend(ws, msg)
+			err := msgutil.WSSend(ws, msg)
 			if err != nil {
 				msg.Log().Warnf("send failed, %s", err)
 				panic(err)
@@ -133,7 +133,7 @@ func (self *RPCClient) sendUpWS(ctx context.Context, ws *websocket.Conn, disp *d
 				return
 			}
 			msg := result.ResMsg
-			err := encoding.WSSend(ws, msg)
+			err := msgutil.WSSend(ws, msg)
 			if err != nil {
 				msg.Log().Warnf("send failed, %s", err)
 				panic(err)
@@ -188,13 +188,13 @@ func (self *RPCClient) runHTTPWorker(rootCtx context.Context, disp *dispatch.Dis
 	}
 
 	authreq := self.NewAuthRequest()
-	err = encoding.WSSend(ws, authreq)
+	err = msgutil.WSSend(ws, authreq)
 	if err != nil {
 		return err
 	}
 
 	// wait for auth response
-	authRes, err := encoding.WSRecv(ws)
+	authRes, err := msgutil.WSRecv(ws)
 	if err == io.EOF {
 		log.Infof("websocket conn failed")
 		return nil
@@ -221,7 +221,7 @@ func (self *RPCClient) runHTTPWorker(rootCtx context.Context, disp *dispatch.Dis
 	go self.sendUpWS(sendCtx, ws, disp)
 	disp.TriggerChange()
 	for {
-		msg, err := encoding.WSRecv(ws)
+		msg, err := msgutil.WSRecv(ws)
 		if err == io.EOF {
 			log.Infof("websocket conn failed")
 			return nil
@@ -264,13 +264,13 @@ func (self *RPCClient) runGRPCWorker(rootCtx context.Context, disp *dispatch.Dis
 	}
 
 	authmsg := self.NewAuthRequest()
-	err = encoding.GRPCClientSend(stream, authmsg)
+	err = msgutil.GRPCClientSend(stream, authmsg)
 	if err != nil {
 		return err
 	}
 
 	// wait for auth response
-	authRes, err := encoding.GRPCClientRecv(stream)
+	authRes, err := msgutil.GRPCClientRecv(stream)
 	if err == io.EOF {
 		log.Infof("client stream closed")
 		return nil
@@ -301,7 +301,7 @@ func (self *RPCClient) runGRPCWorker(rootCtx context.Context, disp *dispatch.Dis
 	go self.sendUpGRPC(sendCtx, stream, disp)
 	disp.TriggerChange()
 	for {
-		msg, err := encoding.GRPCClientRecv(stream)
+		msg, err := msgutil.GRPCClientRecv(stream)
 		if err == io.EOF {
 			log.Infof("client stream closed")
 			return nil

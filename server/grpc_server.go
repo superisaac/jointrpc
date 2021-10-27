@@ -18,10 +18,10 @@ import (
 	codes "google.golang.org/grpc/codes"
 
 	log "github.com/sirupsen/logrus"
-	encoding "github.com/superisaac/jointrpc/encoding"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
+	msgutil "github.com/superisaac/jointrpc/msgutil"
 	//misc "github.com/superisaac/jointrpc/misc"
 	//datadir "github.com/superisaac/jointrpc/datadir"
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
@@ -67,7 +67,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 
 	factory := rpcrouter.RouterFactoryFromContext(context)
 
-	reqmsg, err := encoding.MessageFromEnvolope(req.Envolope)
+	reqmsg, err := msgutil.MessageFromEnvolope(req.Envolope)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 		return nil, errors.New("recv msg is neigher result or error")
 	}
 	res := &intf.JSONRPCCallResult{
-		Envolope: encoding.MessageToEnvolope(recvmsg)}
+		Envolope: msgutil.MessageToEnvolope(recvmsg)}
 	return res, nil
 }
 
@@ -120,7 +120,7 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 		return &intf.JSONRPCNotifyResponse{Status: status}, nil
 	}
 
-	notifymsg, err := encoding.MessageFromEnvolope(req.Envolope)
+	notifymsg, err := msgutil.MessageFromEnvolope(req.Envolope)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 func buildMethodInfos(minfos []rpcrouter.MethodInfo) []*intf.MethodInfo {
 	intfMInfos := make([]*intf.MethodInfo, 0)
 	for _, minfo := range minfos {
-		intfMInfos = append(intfMInfos, encoding.EncodeMethodInfo(minfo))
+		intfMInfos = append(intfMInfos, msgutil.EncodeMethodInfo(minfo))
 	}
 	return intfMInfos
 }
@@ -206,16 +206,6 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 }
 
 // Workers
-func sendDownMessage(stream intf.JointRPC_WorkerServer, msg jsonrpc.IMessage) {
-	//msg := msgvec.Msg
-	msg.Log().Debugf("message down to client, %+v", msg)
-	envo := encoding.MessageToEnvolope(msg)
-	err := stream.Send(envo)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter.ConnT, error) {
 
 	remotePeer, ok := peer.FromContext(stream.Context())
@@ -224,7 +214,7 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 	}
 
 	logger := log.WithFields(log.Fields{"ip": remotePeer.Addr})
-	envo, err := stream.Recv()
+	reqmsg, err := msgutil.GRPCServerRecv(stream) //.Recv()
 	if err != nil {
 		if err == io.EOF {
 			log.Debugf("eof met")
@@ -237,12 +227,6 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 		return nil, err
 	}
 
-	reqmsg, err := encoding.MessageFromEnvolope(envo)
-
-	if err != nil {
-		return nil, err
-	}
-
 	if !reqmsg.IsRequest() || reqmsg.MustMethod() != "_stream.authorize" {
 		return nil, errors.New("expect _stream.authorize()")
 	}
@@ -251,7 +235,7 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 	msgvec := rpcrouter.MsgVec{Msg: reqmsg, Namespace: "unknown"}
 
 	resmsg := connDisp.authDisp.Expect(stream.Context(), msgvec)
-	sendDownMessage(stream, resmsg)
+	msgutil.GRPCServerSend(stream, resmsg)
 
 	if resmsg.IsError() {
 		return nil, errors.New("bad auth")
@@ -279,13 +263,13 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 				log.Debugf("conn handler channel closed")
 				return
 			}
-			sendDownMessage(stream, rest.ResMsg)
+			msgutil.GRPCServerSend(stream, rest.ResMsg)
 		case msgvec, ok := <-conn.RecvChannel:
 			if !ok {
 				log.Debugf("recv channel closed")
 				return
 			}
-			sendDownMessage(stream, msgvec.Msg)
+			msgutil.GRPCServerSend(stream, msgvec.Msg)
 		case state, ok := <-conn.StateChannel():
 			if !ok {
 				log.Debugf("state channel closed")
@@ -297,7 +281,7 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 				panic(err)
 			}
 			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
-			sendDownMessage(stream, ntf)
+			msgutil.GRPCServerSend(stream, ntf)
 		}
 	} // and for loop
 }
@@ -329,7 +313,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 	go relayDownMessages(ctx, stream, conn, chResult)
 
 	for {
-		envo, err := stream.Recv()
+		msg, err := msgutil.GRPCServerRecv(stream)
 		if err != nil {
 			if err == io.EOF {
 				log.Debugf("eof met")
@@ -342,11 +326,11 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 			return err
 		}
 
-		msg, err := encoding.MessageFromEnvolope(envo)
-		if err != nil {
-			conn.Log().Warnf("error on recover message from envo %s", err.Error())
-			return err
-		}
+		// msg, err := msgutil.MessageFromEnvolope(envo)
+		// if err != nil {
+		// 	conn.Log().Warnf("error on recover message from envo %s", err.Error())
+		// 	return err
+		// }
 		// deliver to routers
 		msgvec := rpcrouter.MsgVec{
 			Msg:        msg,
@@ -356,7 +340,7 @@ func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
 		streamDisp := GetStreamDispatcher()
 		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn)
 		if instRes != nil {
-			sendDownMessage(stream, instRes)
+			msgutil.GRPCServerSend(stream, instRes)
 			if instRes.IsError() {
 				return nil
 			}

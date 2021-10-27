@@ -1,4 +1,4 @@
-package encoding
+package msgutil
 
 import (
 	//log "github.com/sirupsen/logrus"

@@ -61,7 +61,7 @@ gofmt:
 	go fmt playbook/*.go
 	go fmt jsonrpc/*.go
 	go fmt jsonrpc/schema/*.go
-	go fmt encoding/*.go
+	go fmt msgutil/*.go
 	go fmt playbook/*.go
 	go fmt cluster/bridge/*.go
 	go fmt service/*.go
