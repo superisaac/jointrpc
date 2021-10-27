@@ -41,12 +41,15 @@ type ConnectionLostCallback func()
 type ConnectedCallback func()
 
 type RPCClient struct {
-	workerStream intf.JointRPC_WorkerClient
-	serverEntry  ServerEntry
-	serverUrl    *url.URL
-	connected    bool
-	grpcClient   intf.JointRPCClient
-	chSendUp     chan jsonrpc.IMessage
+	serverEntry ServerEntry
+	serverUrl   *url.URL
+	connected   bool
+
+	// grpc transport
+	grpcClient intf.JointRPCClient
+	//grpcStream intf.JointRPC_WorkerClient
+
+	chSendUp chan jsonrpc.IMessage
 
 	WorkerRetryTimes int
 	onConnected      ConnectedCallback

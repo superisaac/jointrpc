@@ -5,10 +5,13 @@ import (
 	"errors"
 	//"flag"
 	//"fmt"
+	"github.com/gorilla/websocket"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/mitchellh/mapstructure"
+
 	log "github.com/sirupsen/logrus"
-	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
+	intf "github.com/superisaac/jointrpc/intf/jointrpc"
+
 	"github.com/superisaac/jointrpc/jsonrpc"
 	"io"
 	//"net/url"
@@ -24,7 +27,8 @@ import (
 
 // Override Handler.OnHandlerChanged
 func (self *RPCClient) OnHandlerChanged(disp *dispatch.Dispatcher) {
-	if self.grpcClient != nil && self.workerStream != nil {
+	//if self.grpcClient != nil && self.grpcStream != nil {
+	if self.connected {
 		self.declareMethods(context.Background(), disp)
 	}
 }
@@ -57,7 +61,14 @@ func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher
 
 	for i := 0; i < self.WorkerRetryTimes; i++ {
 		log.Debugf("Worker connect %d times", i)
-		err := self.runWorker(rootCtx, disp)
+		var err error
+		if self.IsHttp() {
+			err = self.runHTTPWorker(rootCtx, disp)
+		} else {
+			misc.Assert(self.IsH2(), "rpc client is not via grpc")
+			err = self.runGRPCWorker(rootCtx, disp)
+		}
+
 		self.connected = false
 		if err != nil {
 			return err
@@ -71,7 +82,7 @@ func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher
 	return nil
 }
 
-func (self *RPCClient) sendUpResult(ctx context.Context, disp *dispatch.Dispatcher) {
+func (self *RPCClient) sendUpGRPC(ctx context.Context, stream intf.JointRPC_WorkerClient, disp *dispatch.Dispatcher) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -81,16 +92,52 @@ func (self *RPCClient) sendUpResult(ctx context.Context, disp *dispatch.Dispatch
 				log.Warnf("send up channel closed")
 				return
 			}
-			envo := encoding.MessageToEnvolope(msg)
-			self.workerStream.Send(envo)
+			err := encoding.GRPCClientSend(stream, msg)
+			if err != nil {
+				msg.Log().Warnf("send failed, %s", err)
+				panic(err)
+			}
 		case result, ok := <-self.chResult:
 			if !ok {
 				log.Warnf("result msg closed")
 				return
 			}
+			msg := result.ResMsg
+			err := encoding.GRPCClientSend(stream, msg)
+			if err != nil {
+				msg.Log().Warnf("send failed, %s", err)
+				panic(err)
+			}
+		}
+	}
+}
 
-			envo := encoding.MessageToEnvolope(result.ResMsg)
-			self.workerStream.Send(envo)
+func (self *RPCClient) sendUpWS(ctx context.Context, ws *websocket.Conn, disp *dispatch.Dispatcher) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-self.chSendUp:
+			if !ok {
+				log.Warnf("send up channel closed")
+				return
+			}
+			err := encoding.WSSend(ws, msg)
+			if err != nil {
+				msg.Log().Warnf("send failed, %s", err)
+				panic(err)
+			}
+		case result, ok := <-self.chResult:
+			if !ok {
+				log.Warnf("result msg closed")
+				return
+			}
+			msg := result.ResMsg
+			err := encoding.WSSend(ws, msg)
+			if err != nil {
+				msg.Log().Warnf("send failed, %s", err)
+				panic(err)
+			}
 		}
 	}
 }
@@ -102,20 +149,100 @@ func (self *RPCClient) OnConnectionLost(cb ConnectionLostCallback) {
 	self.onConnectionLost = cb
 }
 
-func (self *RPCClient) requestAuth(rootCtx context.Context) error {
+func (self *RPCClient) NewAuthRequest() *jsonrpc.RequestMessage {
 	reqId := misc.NewUuid()
 	auth := self.ClientAuth()
 	params := [](interface{}){auth.Username, auth.Password}
-	authmsg := jsonrpc.NewRequestMessage(reqId, "_stream.authorize", params)
-	envo := encoding.MessageToEnvolope(authmsg)
-	return self.workerStream.Send(envo)
+	return jsonrpc.NewRequestMessage(reqId, "_stream.authorize", params)
 }
 
-func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher, namespace string) {
+	msgvec := rpcrouter.MsgVec{
+		Msg:        msg,
+		Namespace:  namespace,
+		FromConnId: 0}
+	disp.Feed(ctx, msgvec, self.chResult)
+}
+
+// transport specific workers
+func (self *RPCClient) runHTTPWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
-	if self.workerStream != nil {
+	if self.connected {
+		return errors.New("worker stream already connected")
+	}
+
+	ws, _, err := websocket.DefaultDialer.Dial(self.WebsocketUrlString(), nil)
+	if err != nil {
+		log.Warnf("error on dailing websocket %s", err)
+		return err
+	}
+
+	defer ws.Close()
+
+	self.connected = true
+
+	if self.onConnected != nil {
+		self.onConnected()
+	}
+
+	authreq := self.NewAuthRequest()
+	err = encoding.WSSend(ws, authreq)
+	if err != nil {
+		return err
+	}
+
+	// wait for auth response
+	authRes, err := encoding.WSRecv(ws)
+	if err == io.EOF {
+		log.Infof("websocket conn failed")
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	if authRes.IsError() {
+		rpcError := authRes.MustError()
+		return &RPCStatusError{
+			Method: "_stream.authorize",
+			Code:   rpcError.Code,
+			Reason: rpcError.Message,
+		}
+	}
+	misc.Assert(authRes.IsResult(), "authres is not request")
+
+	namespace, ok := authRes.MustResult().(string)
+	misc.Assert(ok, "authres.result is not string")
+
+	// startup sendup goroutine
+	sendCtx, sendCancel := context.WithCancel(ctx)
+	defer sendCancel()
+	go self.sendUpWS(sendCtx, ws, disp)
+	disp.TriggerChange()
+	for {
+		msg, err := encoding.WSRecv(ws)
+		if err == io.EOF {
+			log.Infof("websocket conn failed")
+			return nil
+		} else if err != nil {
+			return err
+		}
+
+		if msg.IsRequestOrNotify() {
+			self.handleDownRequest(ctx, msg, msg.TraceId(), disp, namespace)
+		} else {
+			self.handleWireResult(msg)
+		}
+	}
+	return nil
+}
+
+func (self *RPCClient) runGRPCWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+	ctx, cancel := context.WithCancel(rootCtx)
+	defer cancel()
+
+	if self.connected {
 		return errors.New("worker stream already exist")
 	}
 
@@ -131,24 +258,19 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		return err
 	}
 
-	self.workerStream = stream
-
-	defer func() {
-		self.workerStream = nil
-	}()
-
 	self.connected = true
 	if self.onConnected != nil {
 		self.onConnected()
 	}
 
-	err = self.requestAuth(rootCtx)
+	authmsg := self.NewAuthRequest()
+	err = encoding.GRPCClientSend(stream, authmsg)
 	if err != nil {
 		return err
 	}
 
 	// wait for auth response
-	authRespEnvo, err := self.workerStream.Recv()
+	authRes, err := encoding.GRPCClientRecv(stream)
 	if err == io.EOF {
 		log.Infof("client stream closed")
 		return nil
@@ -156,12 +278,7 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 		log.Debugf("connect closed retrying")
 		return nil
 	} else if err != nil {
-		log.Debugf("down pack error %+v %d", err, grpc.Code(err))
-		return err
-	}
-
-	authRes, err := encoding.MessageFromEnvolope(authRespEnvo)
-	if err != nil {
+		log.Debugf("down pack error code=%d, %+v", grpc.Code(err), err)
 		return err
 	}
 
@@ -181,10 +298,10 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 	// startup sendup goroutine
 	sendCtx, sendCancel := context.WithCancel(rootCtx)
 	defer sendCancel()
-	go self.sendUpResult(sendCtx, disp)
+	go self.sendUpGRPC(sendCtx, stream, disp)
 	disp.TriggerChange()
 	for {
-		envo, err := self.workerStream.Recv()
+		msg, err := encoding.GRPCClientRecv(stream)
 		if err == io.EOF {
 			log.Infof("client stream closed")
 			return nil
@@ -192,27 +309,15 @@ func (self *RPCClient) runWorker(rootCtx context.Context, disp *dispatch.Dispatc
 			log.Debugf("connect closed retrying")
 			return nil
 		} else if err != nil {
-			log.Debugf("down pack error %+v %d", err, grpc.Code(err))
+			log.Debugf("down pack error code=%d, %+v", grpc.Code(err), err)
 			return err
 		}
 
-		msg, err := encoding.MessageFromEnvolope(envo)
-		if err != nil {
-			return err
-		}
 		if msg.IsRequestOrNotify() {
-			self.handleDownRequest(rootCtx, msg, envo.TraceId, disp, namespace)
+			self.handleDownRequest(rootCtx, msg, msg.TraceId(), disp, namespace)
 		} else {
 			self.handleWireResult(msg)
 		}
 	}
 	return nil
-}
-
-func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher, namespace string) {
-	msgvec := rpcrouter.MsgVec{
-		Msg:        msg,
-		Namespace:  namespace,
-		FromConnId: 0}
-	disp.Feed(ctx, msgvec, self.chResult)
 }

@@ -267,7 +267,6 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 	defer func() {
 		if r := recover(); r != nil {
 			log.Warnf("recovered ERROR %+v", r)
-			//stream.Close()
 		}
 	}()
 	for {
@@ -281,12 +280,6 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 				return
 			}
 			sendDownMessage(stream, rest.ResMsg)
-			//if rest.ResMsg.IsError() {
-			if false {
-				rest.ResMsg.Log().Warnf("error, exit send routine")
-				// break on error message
-				return
-			}
 		case msgvec, ok := <-conn.RecvChannel:
 			if !ok {
 				log.Debugf("recv channel closed")

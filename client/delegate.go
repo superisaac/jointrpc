@@ -28,7 +28,7 @@ func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) 
 }
 
 func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []string) error {
-	if self.workerStream == nil {
+	if !self.connected {
 		return errors.New("worker stream not setup")
 	}
 

@@ -15,7 +15,8 @@ import (
 
 func (self *RPCClient) CallInStream(rootCtx context.Context, reqmsg jsonrpc.IMessage, callback WireCallback, opts ...CallOptionFunc) error {
 	//misc.Assert(self.workerStream != nil, "worker steam is empty")
-	if self.workerStream == nil {
+	//if self.workerStream == nil {
+	if !self.connected {
 		log.Warnf("worker stream is empty")
 		return errors.New("worker stream is empty")
 	}

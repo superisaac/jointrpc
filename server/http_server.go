@@ -4,14 +4,18 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/gorilla/websocket"
+	"github.com/mitchellh/mapstructure"
+	"net"
+	"net/http"
+
 	log "github.com/sirupsen/logrus"
 	//datadir "github.com/superisaac/jointrpc/datadir"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	misc "github.com/superisaac/jointrpc/misc"
-	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
-	"net"
-	//datadir "github.com/superisaac/jointrpc/datadir"
-	http "net/http"
+	"github.com/superisaac/jointrpc/dispatch"
+	"github.com/superisaac/jointrpc/encoding"
+	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/rpcrouter"
 )
 
 type HTTPOption struct {
@@ -37,7 +41,8 @@ func StartHTTPServer(rootCtx context.Context, bind string, opts ...HTTPOptionFun
 	log.Infof("start http proxy at %s", bind)
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", NewMetricsCollector(rootCtx))
-	mux.Handle("/", NewJSONRPCHTTPServer(rootCtx))
+	mux.Handle("/ws", NewWSServer(rootCtx))
+	mux.Handle("/", NewHTTPServer(rootCtx))
 
 	server := &http.Server{Addr: bind, Handler: mux}
 	listener, err := net.Listen("tcp", bind)
@@ -68,18 +73,17 @@ func StartHTTPServer(rootCtx context.Context, bind string, opts ...HTTPOptionFun
 	}
 }
 
-//type handlerFunc func(w http.ResponseWriter, r *http.Request)
-
-type JSONRPCHTTPServer struct {
+// JSONRPC HTTP Server
+type HTTPServer struct {
 	//router *rpcrouter.Router
 	rootCtx context.Context
 }
 
-func NewJSONRPCHTTPServer(rootCtx context.Context) *JSONRPCHTTPServer {
-	return &JSONRPCHTTPServer{rootCtx: rootCtx}
+func NewHTTPServer(rootCtx context.Context) *HTTPServer {
+	return &HTTPServer{rootCtx: rootCtx}
 }
 
-func (self *JSONRPCHTTPServer) Authorize(r *http.Request) (bool, string) {
+func (self *HTTPServer) Authorize(r *http.Request) (bool, string) {
 	// basic auth
 	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)
 	cfg := factory.Config
@@ -100,7 +104,7 @@ func (self *JSONRPCHTTPServer) Authorize(r *http.Request) (bool, string) {
 	return true, "default"
 }
 
-func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (self *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// only support POST
 	if r.Method != "POST" {
 		jsonrpc.ErrorResponse(w, r, errors.New("method not allowed"), 405, "Method not allowed")
@@ -153,4 +157,150 @@ func (self *JSONRPCHTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		data := []byte("{}")
 		w.Write(data)
 	}
+} // ServeHTTP
+
+// Websocket servo
+type WSServer struct {
+	//router *rpcrouter.Router
+	rootCtx context.Context
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  10240,
+	WriteBufferSize: 10240,
+}
+
+func NewWSServer(rootCtx context.Context) *WSServer {
+	return &WSServer{rootCtx: rootCtx}
+}
+
+func (self *WSServer) Authorize(r *http.Request) (bool, string) {
+	// basic auth
+	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)
+	cfg := factory.Config
+	if len(cfg.Authorizations) >= 1 {
+		if username, password, ok := r.BasicAuth(); ok {
+			for _, bauth := range cfg.Authorizations {
+				if bauth.Authorize(username, password, r.RemoteAddr) {
+					ns := bauth.Namespace
+					if ns == "" {
+						ns = "default"
+					}
+					return true, ns
+				}
+			}
+		}
+		return false, ""
+	}
+	return true, "default"
+}
+
+func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Warnf("recovered ERROR %+v", r)
+		}
+	}()
+
+	for {
+		select {
+		case <-context.Done():
+			log.Debugf("context done")
+			return
+		case rest, ok := <-chResult:
+			if !ok {
+				log.Debugf("conn handler channel closed")
+				return
+			}
+			encoding.WSSend(ws, rest.ResMsg)
+		case msgvec, ok := <-conn.RecvChannel:
+			if !ok {
+				log.Debugf("recv channel closed")
+				return
+			}
+			encoding.WSSend(ws, msgvec.Msg)
+		case state, ok := <-conn.StateChannel():
+			if !ok {
+				log.Debugf("state channel closed")
+				return
+			}
+			stateJson := make(map[string]interface{})
+			err := mapstructure.Decode(state, &stateJson)
+			if err != nil {
+				panic(err)
+			}
+			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
+			encoding.WSSend(ws, ntf)
+		}
+	} // and for loop
+}
+
+func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Warnf("ws upgrade failed %s", err)
+		jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
+		return
+	}
+
+	defer ws.Close()
+
+	conn := rpcrouter.NewConn()
+
+	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)
+	ctx, cancel := context.WithCancel(self.rootCtx)
+
+	defer func() {
+		cancel()
+		if conn.Joined() {
+			router := factory.Get(conn.Namespace)
+			router.Leave(conn)
+		}
+	}()
+
+	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
+	go relayDownWSMessages(ctx, ws, conn, chResult)
+
+	for {
+		msg, err := encoding.WSRecv(ws)
+		// messageType, msgBytes, err := ws.ReadMessage()
+		// if err != nil {
+		// 	log.Errorf("bad ws.ReadMessage err %s", err)
+		// 	break
+		// }
+
+		// if messageType != websocket.TextMessage {
+		// 	log.Debugf("message type %d is not text", messageType)
+		// 	continue
+		// }
+
+		// msg, err := jsonrpc.ParseBytes(msgBytes)
+		if err != nil {
+			//jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
+			return
+		}
+
+		if msg.TraceId() == "" {
+			msg.SetTraceId(misc.NewUuid())
+		}
+
+		msgvec := rpcrouter.MsgVec{
+			Msg:        msg,
+			Namespace:  conn.Namespace,
+			FromConnId: conn.ConnId,
+		}
+
+		streamDisp := GetStreamDispatcher()
+		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn)
+
+		if instRes != nil {
+			err := encoding.WSSend(ws, instRes)
+			if err != nil {
+				break
+			}
+			if instRes.IsError() {
+				break
+			}
+		}
+	} // end of for
 } // ServeHTTP

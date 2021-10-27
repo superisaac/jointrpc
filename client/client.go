@@ -68,6 +68,10 @@ func (self RPCClient) String() string {
 	return self.serverEntry.ServerUrl
 }
 
+func (self RPCClient) WebsocketUrlString() string {
+	return self.serverEntry.ServerUrl
+}
+
 func (self RPCClient) ServerEntry() ServerEntry {
 	return self.serverEntry
 }
