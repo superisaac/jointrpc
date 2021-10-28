@@ -395,9 +395,10 @@ func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
 	ct, ok := self.connMap[connId]
 	if ok {
 		ct.RecvChannel <- msgvec
+		msgvec.Msg.Log().Debugf("to conn %d", connId)
 		return ct
 	} else {
-		log.Warnf("conn for %d not found", connId)
+		msgvec.Msg.Log().Warnf("conn for %d not found", connId)
 	}
 	return nil
 }

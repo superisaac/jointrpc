@@ -7,6 +7,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log/syslog"
+	"time"
 	"net"
 	"os"
 	"path/filepath"
@@ -99,6 +100,11 @@ func (self *Config) validateValues() error {
 		}
 	}
 
+	// logging
+	if self.Logging.Output == "" {
+		self.Logging.Output = Datapath("server.log")
+	}
+	
 	// syslog
 	if self.Logging.Syslog.URL == "" {
 		self.Logging.Syslog.URL = "localhost:514"
@@ -115,7 +121,9 @@ func (self *Config) validateValues() error {
 }
 
 func (self *Config) SetupLogger() {
-	log.SetFormatter(&log.JSONFormatter{})
+	log.SetFormatter(&log.JSONFormatter{
+		TimestampFormat: time.RFC3339Nano,
+	})
 
 	logOutput := self.Logging.Output
 	if logOutput == "" || logOutput == "console" || logOutput == "stdout" {
@@ -200,5 +208,6 @@ func (self *BasicAuth) validateValues() error {
 	if self.Namespace == "" {
 		self.Namespace = "default"
 	}
+
 	return nil
 }

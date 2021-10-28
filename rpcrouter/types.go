@@ -119,7 +119,7 @@ type RouterFactory struct {
 	name string
 
 	// channels
-	chMsg       chan CmdMsg
+	ChMsg       chan CmdMsg
 	ChMethods   chan CmdMethods
 	ChDelegates chan CmdDelegates
 

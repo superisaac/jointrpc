@@ -28,9 +28,11 @@ func WithTimeout(timeout time.Duration) CallOptionFunc {
 
 func (self *Router) SingleCall(msg jsonrpc.IMessage, ns string, callOption *CallOption) (jsonrpc.IMessage, error) {
 	if msg.IsRequest() {
+		msg.Log().Debugf("join a conn")
 		conn := self.Join()
 		defer self.Leave(conn)
 
+		msg.Log().Debugf("joined a conn")
 		msgvec := MsgVec{
 			Msg:        msg,
 			Namespace:  ns,

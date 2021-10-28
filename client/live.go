@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"net"
 	"reflect"
-	//"fmt"
+	"fmt"
 	"github.com/gorilla/websocket"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/mitchellh/mapstructure"
@@ -231,7 +231,7 @@ func (self *RPCClient) runHTTPLiveStream(rootCtx context.Context, disp *dispatch
 			Reason: rpcError.Message,
 		}
 	}
-	misc.Assert(authRes.IsResult(), "authres is not request")
+	misc.Assert(authRes.IsResult(), fmt.Sprintf("authres is not request %+v", authRes))
 
 	namespace, ok := authRes.MustResult().(string)
 	misc.Assert(ok, "authres.result is not string")
@@ -304,7 +304,8 @@ func (self *RPCClient) runGRPCLiveStream(rootCtx context.Context, disp *dispatch
 			Reason: rpcError.Message,
 		}
 	}
-	misc.Assert(authRes.IsResult(), "authres is not request")
+	
+	misc.Assert(authRes.IsResult(), fmt.Sprintf("authres is not request %+v", authRes))
 
 	namespace, ok := authRes.MustResult().(string)
 	misc.Assert(ok, "authres.result is not string")

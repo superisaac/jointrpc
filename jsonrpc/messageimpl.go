@@ -123,32 +123,32 @@ func (self BaseMessage) TraceId() string {
 // Log
 func (self RequestMessage) Log() *log.Entry {
 	return log.WithFields(log.Fields{
-		"trace_id": self.traceId,
-		"msg_type": "request",
-		"msg_id":   self.Id,
+		"traceid": self.traceId,
+		"msgtype": "request",
+		"msgid":   self.Id,
 		"method":   self.Method,
 	})
 }
 func (self NotifyMessage) Log() *log.Entry {
 	return log.WithFields(log.Fields{
-		"trace_id": self.traceId,
-		"msg_type": "notify",
+		"traceid": self.traceId,
+		"msgtype": "notify",
 		"method":   self.Method,
 	})
 }
 func (self ResultMessage) Log() *log.Entry {
 	return log.WithFields(log.Fields{
-		"trace_id": self.traceId,
-		"msg_type": "result",
-		"msg_id":   self.Id,
+		"traceid": self.traceId,
+		"msgtype": "result",
+		"msgid":   self.Id,
 	})
 }
 
 func (self ErrorMessage) Log() *log.Entry {
 	return log.WithFields(log.Fields{
-		"trace_id": self.traceId,
-		"msg_type": "error",
-		"msg_id":   self.Id,
+		"traceid": self.traceId,
+		"msgtype": "error",
+		"msgid":   self.Id,
 	})
 }
 

@@ -75,7 +75,7 @@ func (self *RouterFactory) DefaultRouter() *Router {
 }
 
 func (self *RouterFactory) setupChannels() {
-	self.chMsg = make(chan CmdMsg, 10000)
+	self.ChMsg = make(chan CmdMsg, 10000)
 	self.ChMethods = make(chan CmdMethods, 10000)
 	self.ChDelegates = make(chan CmdDelegates, 10000)
 }
@@ -117,10 +117,10 @@ func (self *RouterFactory) Loop(ctx context.Context) {
 				router.OnCmdDelegates(cmdDelg)
 			}
 
-		case cmdMsg, ok := <-self.chMsg:
+		case cmdMsg, ok := <-self.ChMsg:
 			{
 				if !ok {
-					log.Warnf("chMsg channel not ok")
+					log.Warnf("ChMsg channel not ok")
 					return
 				}
 				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")

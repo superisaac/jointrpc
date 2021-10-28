@@ -189,7 +189,7 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 	var err error
 	if ok {
 		res, err := handler.function(req, reqmsg.Params)
-		log.Infof("handler function returns %+v, %+v", reqmsg, res)
+		//log.Debugf("handler function returns %+v, %+v", reqmsg, res)
 		resmsg, err = self.wrapHandlerResult(reqmsg, res, err)
 	} else if self.defaultHandler != nil {
 		res, err := self.defaultHandler(req, reqmsg.Method, reqmsg.Params)

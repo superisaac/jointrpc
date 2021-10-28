@@ -192,6 +192,7 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcroute
 			factory := rpcrouter.RouterFactoryFromContext(ctx)
 			router := factory.Get(conn.Namespace)
 			router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
+			//factory.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
 		}
 		return nil
 	}

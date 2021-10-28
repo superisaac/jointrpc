@@ -30,8 +30,8 @@ type SyslogConfig struct {
 }
 
 type LoggingConfig struct {
-	Output string       `yaml,"path,omitempty"`
-	Level  string       `yaml,"level,omitempty"`
+	Output string       `yaml:"output,omitempty"`
+	Level  string       `yaml:"level,omitempty"`
 	Syslog SyslogConfig `yaml:"syslog,omitempty"`
 }
 

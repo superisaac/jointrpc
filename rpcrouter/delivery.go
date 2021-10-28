@@ -11,7 +11,7 @@ import (
 func (self *Router) DeliverMessage(cmdMsg CmdMsg) *ConnT {
 	msgvec := cmdMsg.MsgVec
 	msg := cmdMsg.MsgVec.Msg
-	msg.Log().WithFields(log.Fields{"from": msgvec.FromConnId}).Debugf("Deliver message")
+	msg.Log().WithFields(log.Fields{"from": msgvec.FromConnId}).Debugf("deliver message")
 	if msg.IsRequest() {
 		return self.DeliverRequest(msgvec, cmdMsg.Timeout)
 	} else if msg.IsNotify() {
@@ -25,6 +25,7 @@ func (self *Router) DeliverMessage(cmdMsg CmdMsg) *ConnT {
 func (self *Router) DeliverNotify(msgvec MsgVec) *ConnT {
 	notifyMsg, ok := msgvec.Msg.(*jsonrpc.NotifyMessage)
 	misc.Assert(ok, "bad msg type other than notify")
+	notifyMsg.Log().Debugf("deliver notify")
 	toConn, found := self.SelectConn(notifyMsg.Method, msgvec.ToConnId)
 	if found {
 		if self.factory.Config.ValidateSchema() {
@@ -43,6 +44,8 @@ func (self *Router) DeliverNotify(msgvec MsgVec) *ConnT {
 func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT {
 	reqMsg, ok := msgvec.Msg.(*jsonrpc.RequestMessage)
 	misc.Assert(ok, "bad msg type other than request")
+
+	reqMsg.Log().Debugf("deliver request")
 	msgId := reqMsg.Id
 	fromConnId := msgvec.FromConnId
 	toConn, found := self.SelectConn(reqMsg.Method, msgvec.ToConnId)
@@ -93,6 +96,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
 	msg := msgvec.Msg
 	//if msgId, ok := msg.MustId().(string); ok {
+	msg.Log().Debugf("deliver result or error")
 	msgId := msg.MustId()
 	if reqt, ok := self.getAndDeletePendings(msgId); ok {
 		if msgvec.FromConnId != reqt.ToConnId {
