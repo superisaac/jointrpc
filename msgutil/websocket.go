@@ -2,6 +2,7 @@ package msgutil
 
 import (
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/jsonrpc"
 )
@@ -18,7 +19,7 @@ func WSRecv(ws *websocket.Conn) (jsonrpc.IMessage, error) {
 	for {
 		messageType, msgBytes, err := ws.ReadMessage()
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "ws.ReadMessage()")
 		}
 		if messageType != websocket.TextMessage {
 			log.Infof("message type %d is not text, wait for next", messageType)

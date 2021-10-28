@@ -2,8 +2,8 @@ package dispatch
 
 import (
 	"context"
-	"errors"
-	//"fmt"
+	"fmt"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
@@ -95,7 +95,8 @@ func (self *Dispatcher) UnHandle(method string) bool {
 
 func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{}, err error) (jsonrpc.IMessage, error) {
 	if err != nil {
-		if rpcErr, ok := err.(*jsonrpc.RPCError); ok {
+		var rpcErr *jsonrpc.RPCError
+		if errors.As(err, &rpcErr) {
 			return rpcErr.ToMessage(msg), nil
 		}
 		msg.Log().Warnf("error %s", err.Error())
@@ -159,29 +160,36 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 
 	handler, ok := self.methodHandlers[reqmsg.Method]
 
-	defer func() {
-		if r := recover(); r != nil {
-			if r == Deferred {
-				reqmsg.Log().Debugf("handler is deferred")
-				return
-			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
-				errmsg := rpcError.ToMessage(reqmsg)
-				self.ReturnResultMessage(errmsg, msgvec, chResult)
-				return
-			} else {
+	if false {
+		defer func() {
+
+			if r := recover(); r != nil {
+				fmt.Printf("recovered r %+v\n", r)
+
+				if err, ok := r.(error); ok {
+					var rpcError *jsonrpc.RPCError
+					if errors.Is(err, Deferred) {
+						reqmsg.Log().Debugf("handler is deferred")
+						return
+						//} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+					} else if errors.As(err, &rpcError) {
+						errmsg := rpcError.ToMessage(reqmsg)
+						self.ReturnResultMessage(errmsg, msgvec, chResult)
+						return
+					}
+				}
 				reqmsg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
-				errmsg := jsonrpc.ErrServerError.ToMessage(reqmsg)
-				self.ReturnResultMessage(errmsg, msgvec, chResult)
+				//errmsg := jsonrpc.ErrServerError.ToMessage(reqmsg)
+				//self.ReturnResultMessage(errmsg, msgvec, chResult)
 			}
-		}
-	}()
+		}()
+	}
 
 	var resmsg jsonrpc.IMessage
 	var err error
 	if ok {
-
 		res, err := handler.function(req, reqmsg.Params)
-		log.Debugf("handler function returns %+v, %+v", reqmsg, res)
+		log.Infof("handler function returns %+v, %+v", reqmsg, res)
 		resmsg, err = self.wrapHandlerResult(reqmsg, res, err)
 	} else if self.defaultHandler != nil {
 		res, err := self.defaultHandler(req, reqmsg.Method, reqmsg.Params)
@@ -191,7 +199,7 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 	}
 
 	//log.Debugf("handle request method %+v, resmsg %+v, error %+v", msg, resmsg, err)
-	if err == Deferred {
+	if errors.Is(err, Deferred) {
 		log.Infof("handler is deferred")
 		return
 	}
@@ -245,7 +253,7 @@ func (self *Dispatcher) feedNotify(req *RPCRequest, chResult chan ResultT) {
 	}
 
 	//log.Debugf("handle request method %+v, resmsg %+v, error %+v", msg, resmsg, err)
-	if err == Deferred {
+	if errors.Is(err, Deferred) {
 		log.Infof("handler is deferred")
 	} else if err != nil {
 		log.Warnf("bad up message %w", err)

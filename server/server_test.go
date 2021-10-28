@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"github.com/pkg/errors"
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -89,7 +90,7 @@ func TestClientAsServe(t *testing.T) {
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
 	// invalid schema tests
-	res1, err := c.CallRPC(ctx, "add2int", [](interface{}){5, "sss"}, client.WithTraceId("trace13"))
+	res1, err := c.CallRPC(ctx, "add2int", [](interface{}){5, "ss1"}, client.WithTraceId("trace13"))
 	assert.Nil(err)
 	assert.Equal("trace13", res1.TraceId())
 	assert.True(res1.IsError())
@@ -135,7 +136,8 @@ func TestClientAuth(t *testing.T) {
 
 	_, err = c.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace11"))
 	assert.NotNil(err)
-	statusErr, ok := err.(*client.RPCStatusError)
+	var statusErr *client.RPCStatusError
+	ok := errors.As(err, &statusErr)
 	assert.True(ok)
 	assert.Equal(401, statusErr.Code)
 	assert.Equal("auth failed", statusErr.Reason)
@@ -191,7 +193,8 @@ func TestClientAuthNamespace(t *testing.T) {
 
 	_, err = c.CallRPC(ctx, "add2int", [](interface{}){5, 6}, client.WithTraceId("trace11"))
 	assert.NotNil(err)
-	statusErr, ok := err.(*client.RPCStatusError)
+	var statusErr *client.RPCStatusError
+	ok := errors.As(err, &statusErr)
 	assert.True(ok)
 	assert.Equal(401, statusErr.Code)
 	assert.Equal("auth failed", statusErr.Reason)

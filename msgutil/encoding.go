@@ -2,6 +2,7 @@ package msgutil
 
 import (
 	//log "github.com/sirupsen/logrus"
+	//"github.com/pkg/errors"
 	//"fmt"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"

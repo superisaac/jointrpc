@@ -1,7 +1,7 @@
 package datadir
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	logsyslog "github.com/sirupsen/logrus/hooks/syslog"
 	yaml "gopkg.in/yaml.v2"

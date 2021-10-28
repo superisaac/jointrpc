@@ -1,9 +1,9 @@
 package schema
 
 import (
-	"errors"
 	"fmt"
 	simplejson "github.com/bitly/go-simplejson"
+	"github.com/pkg/errors"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"strings"
 )

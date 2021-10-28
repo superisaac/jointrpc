@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
+	"github.com/pkg/errors"
 	//"strings"
 
 	simplejson "github.com/bitly/go-simplejson"

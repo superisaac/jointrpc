@@ -16,7 +16,7 @@ var (
 
 	ErrTimeout     = &RPCError{200, "request timeout", nil}
 	ErrBadResource = &RPCError{201, "bad resource", nil}
-	ErrLiveExit  = &RPCError{202, "live exit", nil}
+	ErrLiveExit    = &RPCError{202, "live exit", nil}
 
 	ErrAuthFailed = &RPCError{401, "auth failed", nil}
 )

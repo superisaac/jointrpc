@@ -1,8 +1,7 @@
 package rpcrouter
 
 import (
-	//"github.com/gorilla/websocket"
-	"errors"
+	"github.com/pkg/errors"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	schema "github.com/superisaac/jointrpc/jsonrpc/schema"

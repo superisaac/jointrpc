@@ -1,7 +1,7 @@
 package client
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"time"
 	//"fmt"
 	"context"

@@ -3,6 +3,7 @@ package jsonrpc
 import (
 	"fmt"
 	"github.com/bitly/go-simplejson"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -35,12 +36,12 @@ func (self RPCError) CodeString() string {
 func parseRPCError(errIntf *simplejson.Json) (*RPCError, error) {
 	code, err := errIntf.Get("code").Int()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, ".Get(code).Int")
 	}
 
 	message, err := errIntf.Get("message").String()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, ".Get(code).String")
 	}
 
 	data := errIntf.Get("data").Interface()
@@ -82,7 +83,7 @@ func (self BaseMessage) IsResultOrError() bool {
 func EncodePretty(msg IMessage) (string, error) {
 	bytes, err := MessageJson(msg).EncodePretty()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "simplejson.Json.EncodePretty()")
 	}
 	return string(bytes), nil
 }
@@ -336,7 +337,7 @@ func RPCErrorMessage(reqmsg IMessage, code int, message string, data interface{}
 func ParseBytes(data []byte) (IMessage, error) {
 	parsed, err := simplejson.NewJson(data)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "simplejson.NewJson")
 	}
 	return Parse(parsed)
 }

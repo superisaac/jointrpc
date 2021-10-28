@@ -2,7 +2,8 @@ package dispatch
 
 import (
 	"context"
-	"errors"
+	//"errors"
+	"github.com/pkg/errors"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )

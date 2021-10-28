@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/jsonrpc"
@@ -89,7 +90,7 @@ func (self *StreamDispatcher) Init() {
 				var minfo rpcrouter.MethodInfo
 				err := mapstructure.Decode(infoDict, &minfo)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "mapstructure.Decode()")
 				}
 				if !jsonrpc.IsPublicMethod(minfo.Name) {
 					conn.Log().WithFields(log.Fields{
@@ -100,7 +101,8 @@ func (self *StreamDispatcher) Init() {
 				methodNames = append(methodNames, minfo.Name)
 				_, err = minfo.SchemaOrError()
 				if err != nil {
-					if buildError, ok := err.(*schema.SchemaBuildError); ok {
+					var buildError *schema.SchemaBuildError
+					if errors.As(err, &buildError) {
 						// parse schema error
 						conn.Log().WithFields(log.Fields{
 							"rpc": "DeclareMethods",

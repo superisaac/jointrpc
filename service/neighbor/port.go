@@ -2,7 +2,7 @@ package neighbor
 
 import (
 	"context"
-	"errors"
+	"github.com/pkg/errors"
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"

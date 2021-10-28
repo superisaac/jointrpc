@@ -2,9 +2,8 @@ package client
 
 import (
 	"context"
-	//"errors"
 	//"fmt"
-	"errors"
+	"github.com/pkg/errors"
 	//log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/jsonrpc"

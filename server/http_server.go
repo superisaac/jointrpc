@@ -4,9 +4,9 @@ import (
 	//"fmt"
 	"bytes"
 	"context"
-	"errors"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"net"
 	"net/http"
 

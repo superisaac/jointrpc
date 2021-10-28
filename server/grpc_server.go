@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"errors"
-	"io"
+	"github.com/pkg/errors"
+	//"io"
 	"net"
 	//"strings"
 	"time"
@@ -14,7 +14,7 @@ import (
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
 	"github.com/mitchellh/mapstructure"
-	grpc "google.golang.org/grpc"
+	//grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 
 	log "github.com/sirupsen/logrus"
@@ -206,47 +206,6 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 }
 
 // Lives
-func (self *JointRPC) requireAuth(stream intf.JointRPC_LiveServer) (*rpcrouter.ConnT, error) {
-
-	remotePeer, ok := peer.FromContext(stream.Context())
-	if !ok {
-		return nil, errors.New("cannot get peer info from stream")
-	}
-
-	logger := log.WithFields(log.Fields{"ip": remotePeer.Addr})
-	reqmsg, err := msgutil.GRPCServerRecv(stream) //.Recv()
-	if err != nil {
-		if err == io.EOF {
-			log.Debugf("eof met")
-			return nil, nil
-		} else if grpc.Code(err) == codes.Canceled {
-			log.Debugf("stream canceled")
-			return nil, nil
-		}
-		logger.Warnf("error on stream Recv() %s", err.Error())
-		return nil, err
-	}
-
-	if !reqmsg.IsRequest() || reqmsg.MustMethod() != "_stream.authorize" {
-		return nil, errors.New("expect _stream.authorize()")
-	}
-
-	connDisp := GetStreamDispatcher()
-	msgvec := rpcrouter.MsgVec{Msg: reqmsg, Namespace: "unknown"}
-
-	resmsg := connDisp.authDisp.Expect(stream.Context(), msgvec)
-	msgutil.GRPCServerSend(stream, resmsg)
-
-	if resmsg.IsError() {
-		return nil, errors.New("bad auth")
-	}
-	namespace := jsonrpc.ConvertString(resmsg.MustResult())
-	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
-	conn := factory.Get(namespace).Join()
-	conn.PeerAddr = remotePeer.Addr
-	return conn, nil
-}
-
 func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -288,13 +247,6 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer,
 
 func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 	conn := rpcrouter.NewConn()
-	// conn, err := self.requireAuth(stream)
-	// if err != nil {
-	// 	return err
-	// }
-	// if conn == nil {
-	// 	return nil
-	// }
 
 	factory := rpcrouter.RouterFactoryFromContext(stream.Context())
 	//router := factory.Get(conn.Namespace)
@@ -315,23 +267,18 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 	for {
 		msg, err := msgutil.GRPCServerRecv(stream)
 		if err != nil {
-			if err == io.EOF {
-				log.Debugf("eof met")
-				return nil
-			} else if grpc.Code(err) == codes.Canceled {
-				log.Debugf("stream canceled")
-				return nil
-			}
-			log.Warnf("error on stream Recv() %s", err.Error())
-			return err
+			return msgutil.GRPCHandleCodes(err, codes.Canceled)
+			// if errors.Is(err, io.EOF) {
+			// 	log.Debugf("eof met")
+			// 	return nil
+			// } else if grpc.Code(err) == codes.Canceled {
+			// 	log.Debugf("stream canceled")
+			// 	return nil
+			// }
+			// log.Warnf("error on stream Recv() %s", err.Error())
+			// return err
 		}
 
-		// msg, err := msgutil.MessageFromEnvolope(envo)
-		// if err != nil {
-		// 	conn.Log().Warnf("error on recover message from envo %s", err.Error())
-		// 	return err
-		// }
-		// deliver to routers
 		msgvec := rpcrouter.MsgVec{
 			Msg:        msg,
 			Namespace:  conn.Namespace,

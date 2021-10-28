@@ -2,10 +2,9 @@ package client
 
 import (
 	"context"
-	"errors"
+	"github.com/pkg/errors"
 	"net"
 	"reflect"
-	//"flag"
 	//"fmt"
 	"github.com/gorilla/websocket"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -14,15 +13,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 
-	"github.com/superisaac/jointrpc/jsonrpc"
-	"io"
-	//"net/url"
-	//"os"
 	"github.com/superisaac/jointrpc/dispatch"
+	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/msgutil"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	grpc "google.golang.org/grpc"
+	"io"
+	//grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	"time"
 )
@@ -61,8 +58,13 @@ func (self *RPCClient) Live(rootCtx context.Context, disp *dispatch.Dispatcher) 
 		self.OnHandlerChanged(disp)
 	})
 
-	for i := 0; i < self.LiveRetryTimes; i++ {
-		log.Debugf("Live connect %d times", i)
+	self.retry = 0
+	for {
+		if self.retry >= self.LiveRetryTimes {
+			break
+		}
+
+		log.Debugf("Live connect %d times", self.retry)
 		var err error
 		if self.IsHttp() {
 			err = self.runHTTPLiveStream(rootCtx, disp)
@@ -72,11 +74,15 @@ func (self *RPCClient) Live(rootCtx context.Context, disp *dispatch.Dispatcher) 
 		}
 
 		self.connected = false
-		if err != nil {
-			return err
-		}
+		self.retry++
+		log.Infof("live connect failed %d times, retry", self.retry)
+
 		if self.onConnectionLost != nil {
 			self.onConnectionLost()
+		}
+
+		if err != nil {
+			return err
 		}
 		// wait to retry
 		time.Sleep(1 * time.Second)
@@ -177,20 +183,21 @@ func (self *RPCClient) runHTTPLiveStream(rootCtx context.Context, disp *dispatch
 
 	ws, _, err := websocket.DefaultDialer.Dial(self.WebsocketUrlString(), nil)
 	if err != nil {
-		if opErr, isOpErr := err.(*net.OpError); isOpErr {
+		var opErr *net.OpError
+		if errors.As(err, &opErr) {
 			log.Infof("close failed %s", opErr)
 			return nil
 		}
 
 		log.Warnf("error on dailing websocket type %s, %s",
 			reflect.TypeOf(err), err)
-		return err
+		return errors.Wrap(err, "websocket error")
 	}
 
 	defer ws.Close()
 
 	self.connected = true
-
+	self.retry = 0
 	if self.onConnected != nil {
 		self.onConnected()
 	}
@@ -204,10 +211,11 @@ func (self *RPCClient) runHTTPLiveStream(rootCtx context.Context, disp *dispatch
 	// wait for auth response
 	authRes, err := msgutil.WSRecv(ws)
 	if err != nil {
-		if err == io.EOF {
+		var closeErr *websocket.CloseError
+		if errors.Is(err, io.EOF) {
 			log.Infof("websocket conn failed")
 			return nil
-		} else if closeErr, isCloseError := err.(*websocket.CloseError); isCloseError {
+		} else if errors.As(err, &closeErr) {
 			log.Infof("websocket close error %d %s", closeErr.Code, closeErr.Text)
 			return nil
 
@@ -236,10 +244,11 @@ func (self *RPCClient) runHTTPLiveStream(rootCtx context.Context, disp *dispatch
 	for {
 		msg, err := msgutil.WSRecv(ws)
 		if err != nil {
-			if err == io.EOF {
+			var closeErr *websocket.CloseError
+			if errors.Is(err, io.EOF) {
 				log.Infof("websocket conn failed")
 				return nil
-			} else if closeErr, isCloseError := err.(*websocket.CloseError); isCloseError {
+			} else if errors.As(err, &closeErr) {
 				log.Infof("websocket close error %d %s", closeErr.Code, closeErr.Text)
 				return nil
 
@@ -265,18 +274,12 @@ func (self *RPCClient) runGRPCLiveStream(rootCtx context.Context, disp *dispatch
 	}
 
 	stream, err := self.grpcClient.Live(ctx, grpc_retry.WithMax(500))
-	if err == io.EOF {
-		log.Infof("cannot connect stream")
-		return nil
-	} else if grpc.Code(err) == codes.Unavailable {
-		log.Debugf("connect closed retrying")
-		return nil
-	} else if err != nil {
-		log.Warnf("error on handle %v", err)
-		return err
+	if err != nil {
+		return msgutil.GRPCHandleCodes(err, codes.Unavailable)
 	}
 
 	self.connected = true
+	self.retry = 0
 	if self.onConnected != nil {
 		self.onConnected()
 	}
@@ -289,15 +292,8 @@ func (self *RPCClient) runGRPCLiveStream(rootCtx context.Context, disp *dispatch
 
 	// wait for auth response
 	authRes, err := msgutil.GRPCClientRecv(stream)
-	if err == io.EOF {
-		log.Infof("client stream closed")
-		return nil
-	} else if grpc.Code(err) == codes.Unavailable {
-		log.Debugf("connect closed retrying")
-		return nil
-	} else if err != nil {
-		log.Debugf("down pack error code=%d, %+v", grpc.Code(err), err)
-		return err
+	if err != nil {
+		return msgutil.GRPCHandleCodes(err, codes.Unavailable)
 	}
 
 	if authRes.IsError() {
@@ -320,15 +316,8 @@ func (self *RPCClient) runGRPCLiveStream(rootCtx context.Context, disp *dispatch
 	disp.TriggerChange()
 	for {
 		msg, err := msgutil.GRPCClientRecv(stream)
-		if err == io.EOF {
-			log.Infof("client stream closed")
-			return nil
-		} else if grpc.Code(err) == codes.Unavailable {
-			log.Debugf("connect closed retrying")
-			return nil
-		} else if err != nil {
-			log.Debugf("down pack error code=%d, %+v", grpc.Code(err), err)
-			return err
+		if err != nil {
+			return msgutil.GRPCHandleCodes(err, codes.Unavailable)
 		}
 
 		if msg.IsRequestOrNotify() {

@@ -3,8 +3,8 @@ package client
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	//simplejson "github.com/bitly/go-simplejson"

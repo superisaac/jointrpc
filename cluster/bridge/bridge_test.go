@@ -183,7 +183,7 @@ func TestServerBreak(t *testing.T) {
 	assert.Equal(json.Number("11"), res.MustResult())
 	// close server1
 	cancelServer1()
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 
 	delegates1, err := c2.ListDelegates(context.Background())
 	assert.Nil(err)

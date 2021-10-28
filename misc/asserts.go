@@ -1,8 +1,8 @@
 package misc
 
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 )
 
 func Assert(condition bool, hint string) {

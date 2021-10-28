@@ -5,9 +5,9 @@ package server
 import (
 	//"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/bitly/go-simplejson"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"

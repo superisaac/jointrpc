@@ -5,6 +5,7 @@ import (
 	"context"
 	//"errors"
 	"github.com/bitly/go-simplejson"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
@@ -129,7 +130,8 @@ func (self *Playbook) Run(serverEntry client.ServerEntry) error {
 			req.MsgVec.Msg.Log().Infof("begin exec %s", name)
 			v, err := method.Exec(req, name)
 			if err != nil {
-				if exitErr, ok := err.(*exec.ExitError); ok {
+				var exitErr *exec.ExitError
+				if errors.As(err, &exitErr) {
 					req.MsgVec.Msg.Log().Warnf(
 						"command exit, code: %d, stderr: %s",
 						exitErr.ExitCode(),

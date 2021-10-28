@@ -50,7 +50,8 @@ type RPCClient struct {
 
 	chSendUp chan jsonrpc.IMessage
 
-	LiveRetryTimes int
+	LiveRetryTimes   int
+	retry            int
 	onConnected      ConnectedCallback
 	onConnectionLost ConnectionLostCallback
 

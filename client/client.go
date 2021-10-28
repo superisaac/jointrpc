@@ -2,8 +2,8 @@ package client
 
 import (
 	//"context"
-	//"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	//grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
@@ -27,7 +27,7 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	chSendUp := make(chan jsonrpc.IMessage, misc.DefaultChanSize())
 	serverUrl, err := url.Parse(serverEntry.ServerUrl)
 	if err != nil {
-		log.Panicf("parse url error %s %s", serverEntry.ServerUrl, err.Error())
+		log.Panicf("parse url error %s %+v", serverEntry.ServerUrl, errors.Wrap(err, "url.Parse()"))
 	}
 
 	scm := serverUrl.Scheme
@@ -38,11 +38,11 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
 
 	c := &RPCClient{
-		serverEntry:      serverEntry,
-		serverUrl:        serverUrl,
-		chSendUp:         chSendUp,
+		serverEntry:    serverEntry,
+		serverUrl:      serverUrl,
+		chSendUp:       chSendUp,
 		LiveRetryTimes: 10,
-		chResult:         chResult,
+		chResult:       chResult,
 		//wirePendingRequests: make(map[interface{}]WireCallT),
 	}
 	return c
@@ -104,7 +104,7 @@ func (self RPCClient) certFileFromFragment(serverUrl *url.URL) string {
 	if serverUrl.Fragment != "" {
 		v, err := url.ParseQuery(serverUrl.Fragment)
 		if err != nil {
-			log.Warnf("server url fragment parse error %s %+v", serverUrl.Fragment, err)
+			log.Warnf("server url fragment parse error %s %+v", serverUrl.Fragment, errors.Wrap(err, "url.ParseQuery()"))
 		} else {
 			return v.Get("cert")
 		}
@@ -137,7 +137,7 @@ func (self *RPCClient) Connect() error {
 	}
 	conn, err := grpc.Dial(self.serverUrl.Host, opts...)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "grpc.Dial()")
 	}
 	self.grpcClient = intf.NewJointRPCClient(conn)
 	return nil
