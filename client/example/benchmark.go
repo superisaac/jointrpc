@@ -43,7 +43,7 @@ func runOneClient(wg *sync.WaitGroup, serverEntry client.ServerEntry, disp *disp
 	if err != nil {
 		panic(err)
 	}
-	err = rpcClient.Worker(context.Background(), disp)
+	err = rpcClient.Live(context.Background(), disp)
 	if err != nil {
 		panic(err)
 	}

@@ -22,7 +22,7 @@ type JointRPCClient interface {
 	ListMethods(ctx context.Context, in *ListMethodsRequest, opts ...grpc.CallOption) (*ListMethodsResponse, error)
 	ListDelegates(ctx context.Context, in *ListDelegatesRequest, opts ...grpc.CallOption) (*ListDelegatesResponse, error)
 	// request/response dual streams
-	Worker(ctx context.Context, opts ...grpc.CallOption) (JointRPC_WorkerClient, error)
+	Live(ctx context.Context, opts ...grpc.CallOption) (JointRPC_LiveClient, error)
 }
 
 type jointRPCClient struct {
@@ -69,30 +69,30 @@ func (c *jointRPCClient) ListDelegates(ctx context.Context, in *ListDelegatesReq
 	return out, nil
 }
 
-func (c *jointRPCClient) Worker(ctx context.Context, opts ...grpc.CallOption) (JointRPC_WorkerClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_JointRPC_serviceDesc.Streams[0], "/JointRPC/Worker", opts...)
+func (c *jointRPCClient) Live(ctx context.Context, opts ...grpc.CallOption) (JointRPC_LiveClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_JointRPC_serviceDesc.Streams[0], "/JointRPC/Live", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &jointRPCWorkerClient{stream}
+	x := &jointRPCLiveClient{stream}
 	return x, nil
 }
 
-type JointRPC_WorkerClient interface {
+type JointRPC_LiveClient interface {
 	Send(*JSONRPCEnvolope) error
 	Recv() (*JSONRPCEnvolope, error)
 	grpc.ClientStream
 }
 
-type jointRPCWorkerClient struct {
+type jointRPCLiveClient struct {
 	grpc.ClientStream
 }
 
-func (x *jointRPCWorkerClient) Send(m *JSONRPCEnvolope) error {
+func (x *jointRPCLiveClient) Send(m *JSONRPCEnvolope) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *jointRPCWorkerClient) Recv() (*JSONRPCEnvolope, error) {
+func (x *jointRPCLiveClient) Recv() (*JSONRPCEnvolope, error) {
 	m := new(JSONRPCEnvolope)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ type JointRPCServer interface {
 	ListMethods(context.Context, *ListMethodsRequest) (*ListMethodsResponse, error)
 	ListDelegates(context.Context, *ListDelegatesRequest) (*ListDelegatesResponse, error)
 	// request/response dual streams
-	Worker(JointRPC_WorkerServer) error
+	Live(JointRPC_LiveServer) error
 	mustEmbedUnimplementedJointRPCServer()
 }
 
@@ -129,8 +129,8 @@ func (UnimplementedJointRPCServer) ListMethods(context.Context, *ListMethodsRequ
 func (UnimplementedJointRPCServer) ListDelegates(context.Context, *ListDelegatesRequest) (*ListDelegatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDelegates not implemented")
 }
-func (UnimplementedJointRPCServer) Worker(JointRPC_WorkerServer) error {
-	return status.Errorf(codes.Unimplemented, "method Worker not implemented")
+func (UnimplementedJointRPCServer) Live(JointRPC_LiveServer) error {
+	return status.Errorf(codes.Unimplemented, "method Live not implemented")
 }
 func (UnimplementedJointRPCServer) mustEmbedUnimplementedJointRPCServer() {}
 
@@ -217,25 +217,25 @@ func _JointRPC_ListDelegates_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _JointRPC_Worker_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(JointRPCServer).Worker(&jointRPCWorkerServer{stream})
+func _JointRPC_Live_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(JointRPCServer).Live(&jointRPCLiveServer{stream})
 }
 
-type JointRPC_WorkerServer interface {
+type JointRPC_LiveServer interface {
 	Send(*JSONRPCEnvolope) error
 	Recv() (*JSONRPCEnvolope, error)
 	grpc.ServerStream
 }
 
-type jointRPCWorkerServer struct {
+type jointRPCLiveServer struct {
 	grpc.ServerStream
 }
 
-func (x *jointRPCWorkerServer) Send(m *JSONRPCEnvolope) error {
+func (x *jointRPCLiveServer) Send(m *JSONRPCEnvolope) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *jointRPCWorkerServer) Recv() (*JSONRPCEnvolope, error) {
+func (x *jointRPCLiveServer) Recv() (*JSONRPCEnvolope, error) {
 	m := new(JSONRPCEnvolope)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -266,8 +266,8 @@ var _JointRPC_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Worker",
-			Handler:       _JointRPC_Worker_Handler,
+			StreamName:    "Live",
+			Handler:       _JointRPC_Live_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

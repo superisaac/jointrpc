@@ -13,12 +13,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (self *RPCClient) CallInStream(rootCtx context.Context, reqmsg jsonrpc.IMessage, callback WireCallback, opts ...CallOptionFunc) error {
-	//misc.Assert(self.workerStream != nil, "worker steam is empty")
-	//if self.workerStream == nil {
+func (self *RPCClient) LiveCall(rootCtx context.Context, reqmsg jsonrpc.IMessage, callback WireCallback, opts ...CallOptionFunc) error {
 	if !self.connected {
-		log.Warnf("worker stream is empty")
-		return errors.New("worker stream is empty")
+		log.Warnf("live stream is not connected")
+		return errors.New("live stream is not connected")
 	}
 
 	opt := &CallOption{}

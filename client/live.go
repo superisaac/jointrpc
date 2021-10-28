@@ -51,24 +51,24 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	params = append(params, upMethods)
 	reqmsg := jsonrpc.NewRequestMessage(reqId, "_stream.declareMethods", params)
 
-	return self.CallInStream(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+	return self.LiveCall(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
 		log.Debugf("declared methods")
 	})
 }
 
-func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+func (self *RPCClient) Live(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	disp.OnChange(func() {
 		self.OnHandlerChanged(disp)
 	})
 
-	for i := 0; i < self.WorkerRetryTimes; i++ {
-		log.Debugf("Worker connect %d times", i)
+	for i := 0; i < self.LiveRetryTimes; i++ {
+		log.Debugf("Live connect %d times", i)
 		var err error
 		if self.IsHttp() {
-			err = self.runHTTPWorker(rootCtx, disp)
+			err = self.runHTTPLiveStream(rootCtx, disp)
 		} else {
 			misc.Assert(self.IsH2(), "rpc client is not via grpc")
-			err = self.runGRPCWorker(rootCtx, disp)
+			err = self.runGRPCLiveStream(rootCtx, disp)
 		}
 
 		self.connected = false
@@ -84,7 +84,7 @@ func (self *RPCClient) Worker(rootCtx context.Context, disp *dispatch.Dispatcher
 	return nil
 }
 
-func (self *RPCClient) sendUpGRPC(ctx context.Context, stream intf.JointRPC_WorkerClient, disp *dispatch.Dispatcher) {
+func (self *RPCClient) sendUpGRPC(ctx context.Context, stream intf.JointRPC_LiveClient, disp *dispatch.Dispatcher) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -166,13 +166,13 @@ func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessa
 	disp.Feed(ctx, msgvec, self.chResult)
 }
 
-// transport specific workers
-func (self *RPCClient) runHTTPWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+// transport specific lives
+func (self *RPCClient) runHTTPLiveStream(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
 	if self.connected {
-		return errors.New("worker stream already connected")
+		return errors.New("live stream already connected")
 	}
 
 	ws, _, err := websocket.DefaultDialer.Dial(self.WebsocketUrlString(), nil)
@@ -256,15 +256,15 @@ func (self *RPCClient) runHTTPWorker(rootCtx context.Context, disp *dispatch.Dis
 	return nil
 }
 
-func (self *RPCClient) runGRPCWorker(rootCtx context.Context, disp *dispatch.Dispatcher) error {
+func (self *RPCClient) runGRPCLiveStream(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
 	if self.connected {
-		return errors.New("worker stream already exist")
+		return errors.New("live stream already exist")
 	}
 
-	stream, err := self.grpcClient.Worker(ctx, grpc_retry.WithMax(500))
+	stream, err := self.grpcClient.Live(ctx, grpc_retry.WithMax(500))
 	if err == io.EOF {
 		log.Infof("cannot connect stream")
 		return nil

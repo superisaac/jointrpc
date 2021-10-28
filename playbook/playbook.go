@@ -134,7 +134,7 @@ func (self *Playbook) Run(serverEntry client.ServerEntry) error {
 						"command exit, code: %d, stderr: %s",
 						exitErr.ExitCode(),
 						string(exitErr.Stderr)[:100])
-					return nil, jsonrpc.ErrWorkerExit
+					return nil, jsonrpc.ErrLiveExit
 				}
 
 				req.MsgVec.Msg.Log().Warnf("error exec %s, %s", name, err.Error())
@@ -149,5 +149,5 @@ func (self *Playbook) Run(serverEntry client.ServerEntry) error {
 	if err != nil {
 		return err
 	}
-	return rpcClient.Worker(context.Background(), disp)
+	return rpcClient.Live(context.Background(), disp)
 }

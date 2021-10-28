@@ -23,7 +23,7 @@ func CommandExampleArray() {
 func CommandExampleBenchmark() {
 	examFlags := flag.NewFlagSet("example.benchmark", flag.ExitOnError)
 	serverFlag := client.NewServerFlag(examFlags)
-	pConcurrency := examFlags.Int("con", 1, "the number of concurreny workers")
+	pConcurrency := examFlags.Int("con", 1, "the number of concurreny livestreams")
 	examFlags.Parse(os.Args[2:])
 
 	err := example.ExampleBenchmark(serverFlag.Get(), *pConcurrency)

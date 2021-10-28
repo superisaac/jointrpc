@@ -183,7 +183,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	// TODO: concurrent
 	//go self.remoteClient.SubscribeState(rootCtx, stateListener)
 	client.OnStateChanged(disp, stateListener)
-	return self.remoteClient.Worker(rootCtx, disp)
+	return self.remoteClient.Live(rootCtx, disp)
 }
 
 func (self *Edge) DeclareDelegateMethods(methods []string) {

@@ -34,8 +34,8 @@ class JointRPCStub(object):
                 request_serializer=jointrpc__pb2.ListDelegatesRequest.SerializeToString,
                 response_deserializer=jointrpc__pb2.ListDelegatesResponse.FromString,
                 )
-        self.Worker = channel.stream_stream(
-                '/JointRPC/Worker',
+        self.Live = channel.stream_stream(
+                '/JointRPC/Live',
                 request_serializer=jointrpc__pb2.JSONRPCEnvolope.SerializeToString,
                 response_deserializer=jointrpc__pb2.JSONRPCEnvolope.FromString,
                 )
@@ -68,7 +68,7 @@ class JointRPCServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Worker(self, request_iterator, context):
+    def Live(self, request_iterator, context):
         """request/response dual streams
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -98,8 +98,8 @@ def add_JointRPCServicer_to_server(servicer, server):
                     request_deserializer=jointrpc__pb2.ListDelegatesRequest.FromString,
                     response_serializer=jointrpc__pb2.ListDelegatesResponse.SerializeToString,
             ),
-            'Worker': grpc.stream_stream_rpc_method_handler(
-                    servicer.Worker,
+            'Live': grpc.stream_stream_rpc_method_handler(
+                    servicer.Live,
                     request_deserializer=jointrpc__pb2.JSONRPCEnvolope.FromString,
                     response_serializer=jointrpc__pb2.JSONRPCEnvolope.SerializeToString,
             ),
@@ -182,7 +182,7 @@ class JointRPC(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def Worker(request_iterator,
+    def Live(request_iterator,
             target,
             options=(),
             channel_credentials=None,
@@ -192,7 +192,7 @@ class JointRPC(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/JointRPC/Worker',
+        return grpc.experimental.stream_stream(request_iterator, target, '/JointRPC/Live',
             jointrpc__pb2.JSONRPCEnvolope.SerializeToString,
             jointrpc__pb2.JSONRPCEnvolope.FromString,
             options, channel_credentials,

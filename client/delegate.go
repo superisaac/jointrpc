@@ -29,7 +29,7 @@ func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) 
 
 func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []string) error {
 	if !self.connected {
-		return errors.New("worker stream not setup")
+		return errors.New("live stream not setup")
 	}
 
 	reqId := misc.NewUuid()
@@ -40,7 +40,7 @@ func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []strin
 
 	reqmsg := jsonrpc.NewRequestMessage(reqId, "_stream.declareDelegates", params)
 
-	return self.CallInStream(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+	return self.LiveCall(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
 		res.Log().Debugf("declared delegates")
 	})
 }

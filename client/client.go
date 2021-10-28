@@ -41,7 +41,7 @@ func NewRPCClient(serverEntry ServerEntry) *RPCClient {
 		serverEntry:      serverEntry,
 		serverUrl:        serverUrl,
 		chSendUp:         chSendUp,
-		WorkerRetryTimes: 10,
+		LiveRetryTimes: 10,
 		chResult:         chResult,
 		//wirePendingRequests: make(map[interface{}]WireCallT),
 	}

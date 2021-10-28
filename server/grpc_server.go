@@ -205,8 +205,8 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 	return resp, nil
 }
 
-// Workers
-func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter.ConnT, error) {
+// Lives
+func (self *JointRPC) requireAuth(stream intf.JointRPC_LiveServer) (*rpcrouter.ConnT, error) {
 
 	remotePeer, ok := peer.FromContext(stream.Context())
 	if !ok {
@@ -247,7 +247,7 @@ func (self *JointRPC) requireAuth(stream intf.JointRPC_WorkerServer) (*rpcrouter
 	return conn, nil
 }
 
-func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServer, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
+func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Warnf("recovered ERROR %+v", r)
@@ -286,7 +286,7 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_WorkerServe
 	} // and for loop
 }
 
-func (self *JointRPC) Worker(stream intf.JointRPC_WorkerServer) error {
+func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 	conn := rpcrouter.NewConn()
 	// conn, err := self.requireAuth(stream)
 	// if err != nil {

@@ -10,7 +10,7 @@ service JointRPC {
   rpc ListDelegates(ListDelegatesRequest) returns (ListDelegatesResponse);
 
   // request/response dual streams
-  rpc Worker(stream JSONRPCEnvolope) returns (stream JSONRPCEnvolope);
+  rpc Live(stream JSONRPCEnvolope) returns (stream JSONRPCEnvolope);
 }
 
 message Empty {}

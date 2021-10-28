@@ -76,7 +76,7 @@ func (self *NeighborPort) connectRemote(rootCtx context.Context, entry client.Se
 
 	disp := dispatch.NewDispatcher()
 	client.OnStateChanged(disp, stateListener)
-	c.Worker(rootCtx, disp)
+	c.Live(rootCtx, disp)
 
 	return nil
 }

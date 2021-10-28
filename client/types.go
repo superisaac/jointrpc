@@ -47,11 +47,10 @@ type RPCClient struct {
 
 	// grpc transport
 	grpcClient intf.JointRPCClient
-	//grpcStream intf.JointRPC_WorkerClient
 
 	chSendUp chan jsonrpc.IMessage
 
-	WorkerRetryTimes int
+	LiveRetryTimes int
 	onConnected      ConnectedCallback
 	onConnectionLost ConnectionLostCallback
 
