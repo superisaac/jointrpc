@@ -53,6 +53,16 @@ func (self Dispatcher) GetMethodInfos() []rpcrouter.MethodInfo {
 	return minfos
 }
 
+func (self Dispatcher) GetPublicMethodInfos() []rpcrouter.MethodInfo {
+	minfos := make([]rpcrouter.MethodInfo, 0)
+	for _, minfo := range self.GetMethodInfos() {
+		if jsonrpc.IsPublicMethod(minfo.Name) {
+			minfos = append(minfos, minfo)
+		}
+	}
+	return minfos
+}
+
 func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
 	if !jsonrpc.IsMethod(method) {
 		panic(errors.New("invalid method name"))

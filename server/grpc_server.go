@@ -264,20 +264,12 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
 	go relayDownMessages(ctx, stream, conn, chResult)
+	streamDisp := NewStreamDispatcher()
 
 	for {
 		msg, err := msgutil.GRPCServerRecv(stream)
 		if err != nil {
 			return msgutil.GRPCHandleCodes(err, codes.Canceled)
-			// if errors.Is(err, io.EOF) {
-			// 	log.Debugf("eof met")
-			// 	return nil
-			// } else if grpc.Code(err) == codes.Canceled {
-			// 	log.Debugf("stream canceled")
-			// 	return nil
-			// }
-			// log.Warnf("error on stream Recv() %s", err.Error())
-			// return err
 		}
 		msg.Log().Debugf("received from grpc stream")
 		msgvec := rpcrouter.MsgVec{
@@ -285,7 +277,6 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 			Namespace:  conn.Namespace,
 			FromConnId: conn.ConnId}
 
-		streamDisp := GetStreamDispatcher()
 		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, true)
 		if instRes != nil {
 			msgutil.GRPCServerSend(stream, instRes)

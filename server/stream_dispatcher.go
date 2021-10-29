@@ -33,12 +33,12 @@ func NewStreamDispatcher() *StreamDispatcher {
 	return h
 }
 
-func GetStreamDispatcher() *StreamDispatcher {
-	once.Do(func() {
-		streamDisp = NewStreamDispatcher()
-	})
-	return streamDisp
-}
+// func GetStreamDispatcher() *StreamDispatcher {
+// 	once.Do(func() {
+// 		streamDisp = NewStreamDispatcher()
+// 	})
+// 	return streamDisp
+// }
 
 const (
 	declareMethodsSchema = `{
@@ -64,6 +64,12 @@ const (
 "returns": "string"
 }`
 
+	watchStateSchema = `{
+"type": "method",
+"params": [],
+"returns": "string"
+}`
+
 	authorizeSchema = `{
 "type": "method",
 "params": ["string", "string"],
@@ -82,6 +88,7 @@ func (self *StreamDispatcher) Init() {
 			if !found {
 				return nil, jsonrpc.ParamsError("conn not found")
 			}
+			conn.Log().Infof("call _stream.declareMethods")
 			arr, ok := params[0].([]interface{})
 			misc.Assert(ok, "params[0] is not an array")
 
@@ -133,7 +140,7 @@ func (self *StreamDispatcher) Init() {
 			}
 
 			methodNames := jsonrpc.ConvertStringList(params[0])
-			conn.Log().Infof("declared delegates %+v", methodNames)
+			conn.Log().Infof("call _stream.declareDelegates %+v", methodNames)
 			cmdDelegates := rpcrouter.CmdDelegates{
 				Namespace:   conn.Namespace,
 				ConnId:      conn.ConnId,
@@ -142,9 +149,26 @@ func (self *StreamDispatcher) Init() {
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
 			router := factory.Get(conn.Namespace)
 			router.ChDelegates <- cmdDelegates
+
 			misc.Assert(router.Started(), "router is not started")
 			return "ok", nil
 		}, dispatch.WithSchema(declareDelegatesSchema))
+
+	self.disp.On("_stream.watchState",
+		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+			conn, found := req.Data.(*rpcrouter.ConnT)
+			if !found {
+				return nil, jsonrpc.ParamsError("conn not found")
+			}
+			conn.SetWatchState(true)
+			factory := rpcrouter.RouterFactoryFromContext(req.Context)
+			router := factory.Get(conn.Namespace)
+			go func() {
+				state := router.GetState()
+				conn.StateChannel() <- state
+			}()
+			return "ok", nil
+		}, dispatch.WithSchema(watchStateSchema))
 
 	self.authDisp.On("_stream.authorize",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
@@ -169,13 +193,12 @@ func (self *StreamDispatcher) Init() {
 			namespace := cfg.Authorize(username, password, remoteAddress)
 			if namespace != "" {
 				router := factory.Get(namespace)
-				//router.JoinConn(conn)
+
 				chRet := make(chan rpcrouter.CmdRet, 1)
 				router.ChJoin <- rpcrouter.CmdJoin{Conn: conn, ChRet: chRet}
 
-				//time.Sleep(100 * time.Millisecond)
 				<-chRet
-				conn.SetWatchState(true)
+				conn.Log().Infof("joined to router %s", namespace)
 				return namespace, nil
 			}
 			return nil, jsonrpc.ErrAuthFailed

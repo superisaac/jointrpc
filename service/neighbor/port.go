@@ -73,6 +73,13 @@ func (self *NeighborPort) connectRemote(rootCtx context.Context, entry client.Se
 		}
 	})
 	//c.SubscribeState(rootCtx, stateListener)
+	edge.remoteClient.OnAuthorized(func() {
+		req := edge.remoteClient.NewWatchStateRequest()
+		edge.remoteClient.LiveCall(rootCtx, req,
+			func(res jsonrpc.IMessage) {
+				log.Infof("watch state")
+			})
+	})
 
 	disp := dispatch.NewDispatcher()
 	client.OnStateChanged(disp, stateListener)

@@ -39,6 +39,7 @@ type WireCallT struct {
 
 type ConnectionLostCallback func()
 type ConnectedCallback func()
+type AuthorizedCallback func()
 
 type RPCClient struct {
 	serverEntry ServerEntry
@@ -50,10 +51,12 @@ type RPCClient struct {
 
 	chSendUp chan jsonrpc.IMessage
 
-	LiveRetryTimes   int
-	retry            int
+	LiveRetryTimes int
+	retry          int
+
 	onConnected      ConnectedCallback
 	onConnectionLost ConnectionLostCallback
+	onAuthorized     AuthorizedCallback
 
 	//wirePendingRequests map[interface{}]WireCallT
 	wirePendingRequests sync.Map

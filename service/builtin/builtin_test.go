@@ -33,7 +33,7 @@ func TestBuiltinMethods(t *testing.T) {
 
 	service.TryStartService(ctx, srv)
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 
 	c := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10001", ""})
 	err := c.Connect()
@@ -42,6 +42,7 @@ func TestBuiltinMethods(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal("trace1", res.TraceId())
 
+	//fmt.Printf("sssres %+v\n", res)
 	assert.True(res.IsResult())
 	m, ok := res.MustResult().(map[string]interface{})
 	assert.True(ok)

@@ -1,7 +1,7 @@
 package bridge
 
 import (
-	//"fmt"
+	"fmt"
 	"context"
 	//"errors"
 	log "github.com/sirupsen/logrus"
@@ -83,6 +83,7 @@ func (self *Bridge) requestReceived(msgvec rpcrouter.MsgVec, fromAddress string)
 }
 
 func (self *Bridge) handleStateChange(stateChange CmdStateChange) {
+	fmt.Printf("handle state change\n")
 	if fromEdge, ok := self.edges[stateChange.serverUrl]; ok {
 		self.exchangeDelegateMethods(fromEdge)
 	} else {
@@ -104,6 +105,7 @@ func (self *Bridge) exchangeDelegateMethodsForEdge(aEdge *Edge) {
 }
 
 func (self *Bridge) exchangeDelegateMethods(fromEdge *Edge) {
+	log.Infof("exchange delegate methods from edge %s", fromEdge.remoteClient)
 	for _, edge := range self.edges {
 		if edge == fromEdge {
 			continue
@@ -165,6 +167,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	})
 
 	stateListener.OnStateChange(func(state *rpcrouter.ServerState) {
+		fmt.Printf("on state change %+v\n", state)
 		self.onStateChange(state)
 		bridge.ChState <- CmdStateChange{
 			serverUrl: entry.ServerUrl,
@@ -175,6 +178,15 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	disp.OnDefault(func(req *dispatch.RPCRequest, method string, params []interface{}) (interface{}, error) {
 		return bridge.requestReceived(req.MsgVec, entry.ServerUrl)
 	})
+	client.OnStateChanged(disp, stateListener)
+
+	self.remoteClient.OnAuthorized(func() {
+		req := self.remoteClient.NewWatchStateRequest()
+		self.remoteClient.LiveCall(rootCtx, req,
+			func(res jsonrpc.IMessage) {
+				log.Infof("authorized, watch state")
+			})
+	})
 
 	err := self.remoteClient.Connect()
 	if err != nil {
@@ -182,12 +194,12 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	}
 	// TODO: concurrent
 	//go self.remoteClient.SubscribeState(rootCtx, stateListener)
-	client.OnStateChanged(disp, stateListener)
+
 	return self.remoteClient.Live(rootCtx, disp)
 }
 
 func (self *Edge) DeclareDelegateMethods(methods []string) {
-	//log.Infof("delegate %v", methods)
+	log.Infof("delegates %v", methods)
 	self.delegateMethods = methods
 	if self.remoteClient.Connected() {
 		//log.Infof("client %s update methods %+v", self.remoteClient.ServerEntry().ServerUrl, self.delegateMethods)

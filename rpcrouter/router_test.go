@@ -4,11 +4,19 @@ import (
 	//"fmt"
 	"context"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 )
+
+func TestMain(m *testing.M) {
+	log.SetOutput(ioutil.Discard)
+	os.Exit(m.Run())
+}
 
 func TestJoinConn(t *testing.T) {
 	assert := assert.New(t)
@@ -54,16 +62,15 @@ func TestRouteMessage(t *testing.T) {
 	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.MustId())
-	router.DeliverMessage(
-		CmdMsg{
-			MsgVec: MsgVec{
-				Msg:        msg,
-				Namespace:  router.Name(),
-				FromConnId: conn.ConnId},
-		})
+	assert.False(router.Started())
 
+	router.deliverMessage(CmdMsg{
+		MsgVec: MsgVec{
+			Msg:        msg,
+			Namespace:  router.Name(),
+			FromConnId: conn.ConnId},
+		ChRes: conn.RecvChannel})
 	rcvmsg := <-conn.RecvChannel
-	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
 	assert.Equal("abc", rcvmsg.Msg.MustMethod())
 }
@@ -98,12 +105,12 @@ func TestRouteRoutine(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.MustId())
 
-	router.DeliverRequest(MsgVec{
+	router.deliverRequest(MsgVec{
 		Msg:        msg,
 		Namespace:  router.Name(),
 		FromConnId: cid1,
 		ToConnId:   cid,
-	}, 0, nil)
+	}, 0, ch)
 	rcvmsg := <-ch
 	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
@@ -120,11 +127,11 @@ func TestRouteRoutine(t *testing.T) {
 	msg2, err := jsonrpc.ParseBytes([]byte(j2))
 	assert.Nil(err)
 	assert.Equal(json.Number("100003"), msg2.MustId())
-	router.DeliverRequest(MsgVec{
+	router.deliverRequest(MsgVec{
 		Msg:        msg2,
 		FromConnId: cid2,
 		ToConnId:   CID(int(cid) + 100),
-	}, 0, nil)
+	}, 0, conn2.RecvChannel)
 
 	rcvmsg2 := <-conn2.RecvChannel
 	assert.Equal(msg2.MustId(), rcvmsg2.Msg.MustId())

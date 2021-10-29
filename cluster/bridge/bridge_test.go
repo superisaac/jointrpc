@@ -54,7 +54,10 @@ func TestBridgeRun(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	serverEntries := []client.ServerEntry{{"h2c://localhost:10020", ""}, {"h2c://localhost:10021", ""}, {"h2c://localhost:10022", ""}}
+	serverEntries := []client.ServerEntry{
+		{"h2c://localhost:10020", ""},
+		{"h2c://localhost:10021", ""},
+		{"h2c://localhost:10022", ""}}
 
 	go StartNewBridge(rootCtx, serverEntries)
 

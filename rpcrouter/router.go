@@ -398,22 +398,22 @@ func (self *Router) GetConn(connId CID) (*ConnT, bool) {
 	return conn, found
 }
 
-func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
+func (self *Router) SendTo(connId CID, msgvec MsgVec) {
 	self.rlock("SendTo")
 	defer self.runlock("SendTo")
+
+	msgvec.Msg.Log().Infof("send to %d", connId)
 
 	ct, ok := self.connMap[connId]
 	if ok {
 		ct.RecvChannel <- msgvec
 		msgvec.Msg.Log().Debugf("to conn %d", connId)
-		return ct
 	} else {
 		msgvec.Msg.Log().Warnf("conn for %d not found", connId)
 	}
-	return nil
 }
 
-func (self *Router) join() *ConnT {
+func (self *Router) Join() *ConnT {
 	conn := NewConn()
 	self.joinConn(conn)
 	return conn
@@ -521,18 +521,21 @@ func (self *Router) loop() {
 					return
 				}
 				misc.Assert(cmdDelg.Namespace != "", "bad cmdDelg namespace")
+				log.Infof("cmd delegate %+v", cmdDelg)
 				self.OnCmdDelegates(cmdDelg)
 			}
-
 		case cmdJoin, ok := <-self.ChJoin:
 			{
 				if !ok {
 					log.Warnf("ChJoin channel not ok")
 					return
 				}
+				log.Infof("join command from conn %d", cmdJoin.Conn.ConnId)
 				self.joinConn(cmdJoin.Conn)
 				if cmdJoin.ChRet != nil {
 					cmdJoin.ChRet <- CmdRet{Ok: true}
+				} else {
+					log.Infof("conn %d does not take chRet to join", cmdJoin.Conn.ConnId)
 				}
 			}
 		case cmdLeave, ok := <-self.ChLeave:
@@ -541,9 +544,12 @@ func (self *Router) loop() {
 					log.Warnf("ChLeave channel not ok")
 					return
 				}
+				log.Infof("leave command from conn %d", cmdLeave.Conn.ConnId)
 				self.leave(cmdLeave.Conn)
 				if cmdLeave.ChRet != nil {
 					cmdLeave.ChRet <- CmdRet{Ok: true}
+				} else {
+					log.Infof("conn %d does not take chRet to leave", cmdLeave.Conn.ConnId)
 				}
 			}
 		case cmdMsg, ok := <-self.ChMsg:

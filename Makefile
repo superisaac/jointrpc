@@ -45,8 +45,9 @@ test:
 	go test -v github.com/superisaac/jointrpc/server
 	go test -v github.com/superisaac/jointrpc/service/builtin
 	go test -v github.com/superisaac/jointrpc/service/neighbor
-	go test -v github.com/superisaac/jointrpc/cluster/bridge
 	go test -v github.com/superisaac/jointrpc/playbook
+	# go test -v github.com/superisaac/jointrpc/cluster/bridge
+
 
 clean:
 	rm -rf bin/jointrpc bin/jointrpc-server build dist
@@ -64,7 +65,7 @@ gofmt:
 	go fmt jsonrpc/schema/*.go
 	go fmt msgutil/*.go
 	go fmt playbook/*.go
-	go fmt cluster/bridge/*.go
+	#	go fmt cluster/bridge/*.go
 	go fmt service/*.go
 	go fmt service/builtin/*.go
 	go fmt service/neighbor/*.go

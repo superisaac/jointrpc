@@ -1,6 +1,7 @@
 package rpcrouter
 
 import (
+	//"fmt"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"

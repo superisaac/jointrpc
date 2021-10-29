@@ -33,9 +33,8 @@ func (self *RPCClient) OnHandlerChanged(disp *dispatch.Dispatcher) {
 }
 
 func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Dispatcher) error {
-
 	upMethods := make([](map[string](interface{})), 0)
-	for _, minfo := range disp.GetMethodInfos() {
+	for _, minfo := range disp.GetPublicMethodInfos() {
 		infoDict := make(map[string](interface{}))
 		err := mapstructure.Decode(minfo, &infoDict)
 		if err != nil {
@@ -49,7 +48,7 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	reqmsg := jsonrpc.NewRequestMessage(reqId, "_stream.declareMethods", params)
 
 	return self.LiveCall(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
-		log.Debugf("declared methods")
+		log.Infof("declared methods %+v", upMethods)
 	})
 }
 
@@ -153,8 +152,13 @@ func (self *RPCClient) sendUpWS(ctx context.Context, ws *websocket.Conn, disp *d
 func (self *RPCClient) OnConnected(cb ConnectedCallback) {
 	self.onConnected = cb
 }
+
 func (self *RPCClient) OnConnectionLost(cb ConnectionLostCallback) {
 	self.onConnectionLost = cb
+}
+
+func (self *RPCClient) OnAuthorized(cb AuthorizedCallback) {
+	self.onAuthorized = cb
 }
 
 func (self *RPCClient) NewAuthRequest() *jsonrpc.RequestMessage {
@@ -162,6 +166,12 @@ func (self *RPCClient) NewAuthRequest() *jsonrpc.RequestMessage {
 	auth := self.ClientAuth()
 	params := [](interface{}){auth.Username, auth.Password}
 	return jsonrpc.NewRequestMessage(reqId, "_stream.authorize", params)
+}
+
+func (self *RPCClient) NewWatchStateRequest() *jsonrpc.RequestMessage {
+	reqId := misc.NewUuid()
+	params := [](interface{}){}
+	return jsonrpc.NewRequestMessage(reqId, "_stream.watchState", params)
 }
 
 func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher, namespace string) {
@@ -309,6 +319,10 @@ func (self *RPCClient) runGRPCLiveStream(rootCtx context.Context, disp *dispatch
 
 	namespace, ok := authRes.MustResult().(string)
 	misc.Assert(ok, "authres.result is not string")
+
+	if self.onAuthorized != nil {
+		self.onAuthorized()
+	}
 
 	// startup sendup goroutine
 	sendCtx, sendCancel := context.WithCancel(rootCtx)

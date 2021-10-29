@@ -228,6 +228,15 @@ func CommandWatchState() {
 		stateListener.OnStateChange(printMethodNames)
 	}
 
+	rpcClient.OnAuthorized(func() {
+		req := rpcClient.NewWatchStateRequest()
+		rpcClient.LiveCall(context.Background(), req,
+			func(res jsonrpc.IMessage) {
+				log.Infof("watch state")
+			})
+
+	})
+
 	err := rpcClient.Connect()
 	if err != nil {
 		panic(err)
@@ -239,7 +248,7 @@ func CommandWatchState() {
 }
 
 func printMethodInfos(state *rpcrouter.ServerState) {
-	var arr [](map[string](interface{}))
+	arr := make([](map[string](interface{})), 0)
 	for _, info := range state.Methods {
 		mapInfo := map[string](interface{}){
 			"name": info.Name,
@@ -255,7 +264,7 @@ func printMethodInfos(state *rpcrouter.ServerState) {
 		arr = append(arr, mapInfo)
 	}
 	jarr := simplejson.New()
-	jarr.SetPath(nil, arr)
+	jarr.Set("methods", arr)
 	repr, err := jarr.MarshalJSON()
 	if err != nil {
 		panic(err)
@@ -264,12 +273,13 @@ func printMethodInfos(state *rpcrouter.ServerState) {
 }
 
 func printMethodNames(state *rpcrouter.ServerState) {
-	var arr []string
+	arr := make([]string, 0)
 	for _, info := range state.Methods {
 		arr = append(arr, info.Name)
 	}
 	jarr := simplejson.New()
-	jarr.SetPath(nil, arr)
+	//jarr.SetPath(nil, arr)
+	jarr.Set("methods", arr)
 	repr, err := jarr.MarshalJSON()
 	if err != nil {
 		panic(err)

@@ -92,7 +92,7 @@ func TestNeighborRun(t *testing.T) {
 	assert.Nil(err)
 
 	// call rpc from server2 which delegates server1
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 	ctx1, cancel1 := context.WithCancel(context.Background())
 	defer cancel1()
 	delegates, err := c2.ListDelegates(ctx1)

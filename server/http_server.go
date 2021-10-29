@@ -263,7 +263,7 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
 	go relayDownWSMessages(ctx, ws, conn, chResult)
-
+	streamDisp := NewStreamDispatcher()
 	for {
 		msg, err := msgutil.WSRecv(ws)
 		if err != nil {
@@ -282,7 +282,6 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			FromConnId: conn.ConnId,
 		}
 
-		streamDisp := GetStreamDispatcher()
 		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, false)
 
 		if instRes != nil {
