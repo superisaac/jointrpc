@@ -8,7 +8,7 @@ import (
 	"github.com/superisaac/jointrpc/datadir"
 	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
-	"time"
+	//"time"
 )
 
 func NewRouterFactory(name string) *RouterFactory {
@@ -16,7 +16,7 @@ func NewRouterFactory(name string) *RouterFactory {
 	factory := &RouterFactory{name: name}
 	factory.Config = datadir.NewConfig()
 	//factory.routerMap = make(map[string](*Router))
-	factory.setupChannels()
+	//factory.setupChannels()
 	return factory
 }
 
@@ -37,8 +37,12 @@ func (self *RouterFactory) Get(namespace string) *Router {
 		return router
 	} else {
 		router := NewRouter(self, namespace)
+		log.Debugf("router for namespace %s created", namespace)
 		//self.routerMap[namespace] = t
 		self.routerMap.Store(namespace, router)
+		if self.Started() {
+			router.EnsureStart(self.startCtx)
+		}
 		return router
 	}
 }
@@ -74,68 +78,30 @@ func (self *RouterFactory) DefaultRouter() *Router {
 	return self.Get("default")
 }
 
-func (self *RouterFactory) setupChannels() {
-	self.ChMsg = make(chan CmdMsg, 10000)
-	self.ChMethods = make(chan CmdMethods, 10000)
-	self.ChDelegates = make(chan CmdDelegates, 10000)
-}
-
 func (self RouterFactory) Name() string {
 	return self.name
 }
 
-func (self *RouterFactory) Start(ctx context.Context) {
-	self.Loop(ctx)
+func (self RouterFactory) Started() bool {
+	return self.startCtx != nil
 }
 
-func (self *RouterFactory) Loop(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			log.Debugf("RouterFactory goroutine done")
-			return
-		case cmdMethods, ok := <-self.ChMethods:
-			{
-				if !ok {
-					log.Warnf("ChMethods channel not ok")
-					return
-				}
+func (self *RouterFactory) EnsureStart(rootCtx context.Context) {
+	if self.startCtx == nil {
+		self.startCtx, self.cancelFunc = context.WithCancel(rootCtx)
+		//go self.loop(self.startCtx)
+		self.routerMap.Range(func(k, v interface{}) bool {
+			router, _ := v.(*Router)
+			router.EnsureStart(self.startCtx)
+			return true
+		})
+	}
+}
 
-				misc.Assert(cmdMethods.Namespace != "", "bad cmdMethods")
-				router := self.Get(cmdMethods.Namespace)
-				router.OnCmdMethods(cmdMethods)
-			}
-
-		case cmdDelg, ok := <-self.ChDelegates:
-			{
-				if !ok {
-					log.Warnf("ChServe channel not ok")
-					return
-				}
-				misc.Assert(cmdDelg.Namespace != "", "bad cmdDelg namespace")
-				router := self.Get(cmdDelg.Namespace)
-				router.OnCmdDelegates(cmdDelg)
-			}
-
-		case cmdMsg, ok := <-self.ChMsg:
-			{
-				if !ok {
-					log.Warnf("ChMsg channel not ok")
-					return
-				}
-				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
-				router := self.Get(cmdMsg.MsgVec.Namespace)
-				router.DeliverMessage(cmdMsg)
-			}
-		case <-time.After(10 * time.Second):
-			//for _, router := range self.routerMap {
-			//	router.collectPendings()
-			//}
-			self.routerMap.Range(func(key, value interface{}) bool {
-				router, _ := value.(*Router)
-				router.collectPendings()
-				return true
-			})
-		}
+func (self *RouterFactory) Stop() {
+	if self.Started() {
+		self.cancelFunc()
+		self.startCtx = nil
+		self.cancelFunc = nil
 	}
 }

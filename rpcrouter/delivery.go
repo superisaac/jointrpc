@@ -8,26 +8,27 @@ import (
 	"time"
 )
 
-func (self *Router) DeliverMessage(cmdMsg CmdMsg) *ConnT {
+func (self *Router) deliverMessage(cmdMsg CmdMsg) *ConnT {
 	msgvec := cmdMsg.MsgVec
 	msg := cmdMsg.MsgVec.Msg
 	msg.Log().WithFields(log.Fields{"from": msgvec.FromConnId}).Debugf("deliver message")
 	if msg.IsRequest() {
-		return self.DeliverRequest(msgvec, cmdMsg.Timeout)
+		return self.deliverRequest(msgvec, cmdMsg.Timeout, cmdMsg.ChRes)
 	} else if msg.IsNotify() {
-		return self.DeliverNotify(msgvec)
+		return self.deliverNotify(msgvec)
 	} else if msg.IsResultOrError() {
-		return self.DeliverResultOrError(msgvec)
+		return self.deliverResultOrError(msgvec)
 	}
 	return nil
 }
 
-func (self *Router) DeliverNotify(msgvec MsgVec) *ConnT {
+func (self *Router) deliverNotify(msgvec MsgVec) *ConnT {
 	notifyMsg, ok := msgvec.Msg.(*jsonrpc.NotifyMessage)
 	misc.Assert(ok, "bad msg type other than notify")
 	notifyMsg.Log().Debugf("deliver notify")
 	toConn, found := self.SelectConn(notifyMsg.Method, msgvec.ToConnId)
 	if found {
+		notifyMsg.Log().Debugf("selected conn %d", toConn.ConnId)
 		if self.factory.Config.ValidateSchema() {
 			if v, err := toConn.ValidateNotifyMsg(notifyMsg); !v && err != nil {
 				notifyMsg.Log().Errorf("notify not validated, %s", err.Error())
@@ -41,7 +42,7 @@ func (self *Router) DeliverNotify(msgvec MsgVec) *ConnT {
 	return nil
 }
 
-func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT {
+func (self *Router) deliverRequest(msgvec MsgVec, timeout time.Duration, chRes MsgChannel) *ConnT {
 	reqMsg, ok := msgvec.Msg.(*jsonrpc.RequestMessage)
 	misc.Assert(ok, "bad msg type other than request")
 
@@ -50,6 +51,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 	fromConnId := msgvec.FromConnId
 	toConn, found := self.SelectConn(reqMsg.Method, msgvec.ToConnId)
 	if found {
+		reqMsg.Log().Debugf("selected conn %d", toConn.ConnId)
 		if self.factory.Config.ValidateSchema() {
 			if v, errmsg := toConn.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
 
@@ -74,6 +76,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 			FromConnId: msgvec.FromConnId,
 			ToConnId:   toConn.ConnId,
 			Expire:     expireTime,
+			ChRes:      chRes,
 		})
 
 		// go func() {
@@ -93,7 +96,7 @@ func (self *Router) DeliverRequest(msgvec MsgVec, timeout time.Duration) *ConnT 
 	}
 }
 
-func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
+func (self *Router) deliverResultOrError(msgvec MsgVec) *ConnT {
 	msg := msgvec.Msg
 	//if msgId, ok := msg.MustId().(string); ok {
 	msg.Log().Debugf("deliver result or error")
@@ -123,12 +126,22 @@ func (self *Router) DeliverResultOrError(msgvec MsgVec) *ConnT {
 			newRes := jsonrpc.NewResultMessage(origReq, resMsg.Result)
 			newVec := msgvec
 			newVec.Msg = newRes
-			return self.SendTo(reqt.FromConnId, newVec)
+			if reqt.ChRes != nil {
+				reqt.ChRes <- newVec
+				return nil
+			} else {
+				return self.SendTo(reqt.FromConnId, newVec)
+			}
 		} else if errMsg, ok := msg.(*jsonrpc.ErrorMessage); ok {
 			newErr := jsonrpc.NewErrorMessage(origReq, errMsg.Error)
 			newVec := msgvec
 			newVec.Msg = newErr
-			return self.SendTo(reqt.FromConnId, newVec)
+			if reqt.ChRes != nil {
+				reqt.ChRes <- newVec
+				return nil
+			} else {
+				return self.SendTo(reqt.FromConnId, newVec)
+			}
 		} else {
 			msg.Log().Fatalf("msg is neither result nor error")
 		}

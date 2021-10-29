@@ -86,11 +86,15 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 
 	self.disp = dispatch.NewDispatcher()
 	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
-	self.conn = commonRouter.Join()
+	//self.conn = commonRouter.Join()
+	self.conn = rpcrouter.NewConn()
+	commonRouter.ChJoin <- rpcrouter.CmdJoin{Conn: self.conn}
+
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer func() {
 		cancel()
-		commonRouter.Leave(self.conn)
+		commonRouter.ChLeave <- rpcrouter.CmdLeave{Conn: self.conn}
+		//commonRouter.Leave(self.conn)
 		self.conn = nil
 	}()
 
@@ -154,12 +158,20 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				log.Infof("result channel closed, return")
 				return nil
 			}
-			commonRouter.DeliverResultOrError(
-				rpcrouter.MsgVec{
+			commonRouter.ChMsg <- rpcrouter.CmdMsg{
+				MsgVec: rpcrouter.MsgVec{
 					Msg:        result.ResMsg,
 					Namespace:  commonRouter.Name(),
 					FromConnId: self.conn.ConnId,
-				})
+				},
+			}
+
+			// commonRouter.DeliverResultOrError(
+			// 	rpcrouter.MsgVec{
+			// 		Msg:        result.ResMsg,
+			// 		Namespace:  commonRouter.Name(),
+			// 		FromConnId: self.conn.ConnId,
+			// 	})
 		}
 	}
 	return nil
@@ -173,7 +185,7 @@ func (self *VarsService) declareMethods(factory *rpcrouter.RouterFactory) {
 			ConnId:    self.conn.ConnId,
 			Methods:   minfos,
 		}
-		factory.ChMethods <- cmdMethods
+		factory.Get(cmdMethods.Namespace).ChMethods <- cmdMethods
 	}
 }
 

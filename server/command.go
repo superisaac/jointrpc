@@ -39,7 +39,8 @@ func StartGRPCServer(rootCtx context.Context, bind string, opts ...grpc.ServerOp
 	}
 
 	factory := rpcrouter.RouterFactoryFromContext(rootCtx)
-	go factory.Start(rootCtx)
+	//go factory.Start(rootCtx)
+	factory.EnsureStart(rootCtx)
 
 	cfg := factory.Config
 

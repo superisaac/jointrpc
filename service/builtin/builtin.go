@@ -41,11 +41,13 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 		log.Debug("buildin dispatcher context canceled")
 	}()
 
-	self.conn = commonRouter.Join()
+	self.conn = rpcrouter.NewConn()
+	commonRouter.ChJoin <- rpcrouter.CmdJoin{Conn: self.conn}
 
 	defer func() {
 		log.Debugf("conn %d leave router", self.conn.ConnId)
-		commonRouter.Leave(self.conn)
+		//commonRouter.Leave(self.conn)
+		commonRouter.ChLeave <- rpcrouter.CmdLeave{Conn: self.conn}
 		self.conn = nil
 	}()
 
@@ -68,12 +70,15 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 				log.Infof("result channel closed, return")
 				return nil
 			}
-			commonRouter.DeliverResultOrError(
-				rpcrouter.MsgVec{
+
+			//commonRouter.DeliverResultOrError(
+			commonRouter.ChMsg <- rpcrouter.CmdMsg{
+				MsgVec: rpcrouter.MsgVec{
 					Msg:        result.ResMsg,
 					Namespace:  commonRouter.Name(),
 					FromConnId: self.conn.ConnId,
-				})
+				},
+			}
 		}
 	}
 	return nil
@@ -133,12 +138,13 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 func (self *BuiltinService) declareMethods(factory *rpcrouter.RouterFactory) {
 	if self.conn != nil {
 		minfos := self.disp.GetMethodInfos()
+		ns := factory.CommonRouter().Name()
 		cmdMethods := rpcrouter.CmdMethods{
-			Namespace: factory.CommonRouter().Name(),
+			Namespace: ns,
 			ConnId:    self.conn.ConnId,
 			Methods:   minfos,
 		}
-		factory.ChMethods <- cmdMethods
+		factory.Get(cmdMethods.Namespace).ChMethods <- cmdMethods
 	}
 }
 

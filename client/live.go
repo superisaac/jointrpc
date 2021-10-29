@@ -2,13 +2,13 @@ package client
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"net"
-	"reflect"
 	"fmt"
 	"github.com/gorilla/websocket"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
+	"net"
+	"reflect"
 
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
@@ -304,7 +304,7 @@ func (self *RPCClient) runGRPCLiveStream(rootCtx context.Context, disp *dispatch
 			Reason: rpcError.Message,
 		}
 	}
-	
+
 	misc.Assert(authRes.IsResult(), fmt.Sprintf("authres is not request %+v", authRes))
 
 	namespace, ok := authRes.MustResult().(string)

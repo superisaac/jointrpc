@@ -2,7 +2,7 @@ package rpcrouter
 
 import (
 	//"fmt"
-	//"context"
+	"context"
 	log "github.com/sirupsen/logrus"
 	//"github.com/superisaac/jointrpc/datadir"
 	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	//"time"
+	"time"
 )
 
 func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
@@ -44,7 +44,17 @@ func NewRouter(factory *RouterFactory, name string) *Router {
 	r.connMap = make(map[CID](*ConnT))
 	r.pendingRequests = make(map[interface{}]PendingT)
 	r.methodsSig = ""
+
+	r.setupChannels()
 	return r
+}
+
+func (self *Router) setupChannels() {
+	self.ChMsg = make(chan CmdMsg, 10000)
+	self.ChJoin = make(chan CmdJoin, 10000)
+	self.ChLeave = make(chan CmdLeave, 10000)
+	self.ChMethods = make(chan CmdMethods, 10000)
+	self.ChDelegates = make(chan CmdDelegates, 10000)
 }
 
 func (self Router) Name() string {
@@ -79,8 +89,8 @@ func (self Router) HasMethod(method string) bool {
 }
 
 func (self Router) GetDelegates() []string {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
+	self.rlock("GetDelegates")
+	defer self.runlock("GetDelegates")
 
 	var arr []string
 	for name, _ := range self.delegateConnMap {
@@ -89,14 +99,14 @@ func (self Router) GetDelegates() []string {
 	return arr
 }
 func (self Router) GetMethods() []MethodInfo {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
+	self.rlock("GetMethods")
+	defer self.runlock("GetMethods")
 	return self.getMethods()
 }
 
 func (self Router) GetMethodNames() []string {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
+	self.rlock("GetMethodNames")
+	defer self.runlock("GetMethods")
 
 	methods := []string{}
 	for method, _ := range self.methodConnMap {
@@ -318,8 +328,8 @@ func (self *Router) leaveConn(conn *ConnT) {
 }
 
 func (self *Router) ListConns(method string, limit int) []CID {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
+	self.rlock("ListConns")
+	defer self.runlock("ListConns")
 
 	var arr []CID
 	if descs, ok := self.methodConnMap[method]; ok && len(descs) > 0 {
@@ -344,8 +354,8 @@ func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 }
 
 func (self *Router) selectConnection(method string, targetConnId CID) (*ConnT, bool) {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
+	self.rlock("selectConnection")
+	defer self.runlock("selectConnection")
 
 	if targetConnId != ZeroCID {
 		conn, found := self.connMap[targetConnId]
@@ -382,15 +392,15 @@ func (self *Router) selectConnection(method string, targetConnId CID) (*ConnT, b
 }
 
 func (self *Router) GetConn(connId CID) (*ConnT, bool) {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
+	self.rlock("GetConn")
+	defer self.runlock("GetConn")
 	conn, found := self.connMap[connId]
 	return conn, found
 }
 
 func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
+	self.rlock("SendTo")
+	defer self.runlock("SendTo")
 
 	ct, ok := self.connMap[connId]
 	if ok {
@@ -403,13 +413,13 @@ func (self *Router) SendTo(connId CID, msgvec MsgVec) *ConnT {
 	return nil
 }
 
-func (self *Router) Join() *ConnT {
+func (self *Router) join() *ConnT {
 	conn := NewConn()
-	self.JoinConn(conn)
+	self.joinConn(conn)
 	return conn
 }
 
-func (self *Router) JoinConn(conn *ConnT) {
+func (self *Router) joinConn(conn *ConnT) {
 	misc.Assert(!conn.Joined(), "conn already joined")
 	self.lock("JoinConn")
 	defer self.unlock("JoinConn")
@@ -419,29 +429,135 @@ func (self *Router) JoinConn(conn *ConnT) {
 
 func (self *Router) lock(wrapper string) {
 	//log.Printf("router want lock %s", wrapper)
-	self.routerLock.Lock()
+	//self.routerLock.Lock()
 	//log.Printf("router locked %s", wrapper)
 }
 func (self *Router) unlock(wrapper string) {
 	//log.Printf("router want unlock %s", wrapper)
-	self.routerLock.Unlock()
+	//self.routerLock.Unlock()
+	//log.Printf("router want unlocked %s", wrapper)
+}
+
+func (self *Router) rlock(wrapper string) {
+	//log.Printf("router want lock %s", wrapper)
+	//self.routerLock.RLock()
+	//log.Printf("router locked %s", wrapper)
+}
+func (self *Router) runlock(wrapper string) {
+	//log.Printf("router want unlock %s", wrapper)
+	//self.routerLock.RUnlock()
 	//log.Printf("router want unlocked %s", wrapper)
 }
 
 func (self *Router) lockPending(wrapper string) {
 	//log.Printf("router pending want lock %s", wrapper)
-	self.pendingLock.Lock()
+	//self.pendingLock.Lock()
 	//log.Printf("router pending locked %s", wrapper)
 }
 func (self *Router) unlockPending(wrapper string) {
 	//log.Printf("router pending want unlock %s", wrapper)
-	self.pendingLock.Unlock()
+	//self.pendingLock.Unlock()
 	//log.Printf("router pending want unlocked %s", wrapper)
 }
 
-func (self *Router) Leave(conn *ConnT) {
+func (self *Router) rlockPending(wrapper string) {
+	//log.Printf("router pending want lock %s", wrapper)
+	//self.pendingLock.RLock()
+	//log.Printf("router pending locked %s", wrapper)
+}
+func (self *Router) runlockPending(wrapper string) {
+	//log.Printf("router pending want unlock %s", wrapper)
+	//self.pendingLock.RUnlock()
+	//log.Printf("router pending want unlocked %s", wrapper)
+}
+
+func (self *Router) leave(conn *ConnT) {
 	self.lock("Leave")
 	defer self.unlock("Leave")
 
 	self.leaveConn(conn)
+}
+
+func (self Router) Started() bool {
+	return self.startCtx != nil
+}
+
+func (self *Router) EnsureStart(rootCtx context.Context) {
+	if self.startCtx == nil {
+		self.startCtx, self.cancelFunc = context.WithCancel(rootCtx)
+		go self.loop()
+	}
+}
+
+func (self *Router) Stop() {
+	if self.Started() {
+		self.cancelFunc()
+		self.startCtx = nil
+		self.cancelFunc = nil
+	}
+}
+
+func (self *Router) loop() {
+	for {
+		select {
+		case <-self.startCtx.Done():
+			log.Debugf("router goroutine done")
+			return
+		case cmdMethods, ok := <-self.ChMethods:
+			{
+				if !ok {
+					log.Warnf("ChMethods channel not ok")
+					return
+				}
+
+				misc.Assert(cmdMethods.Namespace != "", "bad cmdMethods")
+				self.OnCmdMethods(cmdMethods)
+			}
+
+		case cmdDelg, ok := <-self.ChDelegates:
+			{
+				if !ok {
+					log.Warnf("ChServe channel not ok")
+					return
+				}
+				misc.Assert(cmdDelg.Namespace != "", "bad cmdDelg namespace")
+				self.OnCmdDelegates(cmdDelg)
+			}
+
+		case cmdJoin, ok := <-self.ChJoin:
+			{
+				if !ok {
+					log.Warnf("ChJoin channel not ok")
+					return
+				}
+				self.joinConn(cmdJoin.Conn)
+				if cmdJoin.ChRet != nil {
+					cmdJoin.ChRet <- CmdRet{Ok: true}
+				}
+			}
+		case cmdLeave, ok := <-self.ChLeave:
+			{
+				if !ok {
+					log.Warnf("ChLeave channel not ok")
+					return
+				}
+				self.leave(cmdLeave.Conn)
+				if cmdLeave.ChRet != nil {
+					cmdLeave.ChRet <- CmdRet{Ok: true}
+				}
+			}
+		case cmdMsg, ok := <-self.ChMsg:
+			{
+				if !ok {
+					log.Warnf("ChMsg channel not ok")
+					return
+				}
+				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
+				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChMsg is %d", len(self.ChMsg))
+				self.deliverMessage(cmdMsg)
+			}
+		case <-time.After(10 * time.Second):
+			self.collectPendings()
+		}
+	}
 }

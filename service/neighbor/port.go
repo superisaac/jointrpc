@@ -89,9 +89,13 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 	}
 
 	// join connection
-	self.conn = router.Join()
+	//self.conn = router.Join()
+	self.conn = rpcrouter.NewConn()
+	router.ChJoin <- rpcrouter.CmdJoin{Conn: self.conn}
+
 	defer func() {
-		router.Leave(self.conn)
+		//router.Leave(self.conn)
+		router.ChLeave <- rpcrouter.CmdLeave{Conn: self.conn}
 		self.conn = nil
 	}()
 
@@ -122,12 +126,14 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 				// TODO: log
 				return
 			}
-			router.DeliverResultOrError(
-				rpcrouter.MsgVec{
+			//router.DeliverResultOrError(
+			router.ChMsg <- rpcrouter.CmdMsg{
+				MsgVec: rpcrouter.MsgVec{
 					Namespace:  router.Name(),
 					Msg:        result.ResMsg,
 					FromConnId: self.conn.ConnId,
-				})
+				},
+			}
 		}
 	}
 	return
@@ -202,6 +208,6 @@ func (self *NeighborPort) tryUpdateMethods(factory *rpcrouter.RouterFactory) {
 			ConnId:      self.conn.ConnId,
 			MethodNames: methodNames,
 		}
-		factory.ChDelegates <- cmdDelegates
+		factory.Get(self.namespace).ChDelegates <- cmdDelegates
 	}
 }

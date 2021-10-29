@@ -34,8 +34,8 @@ func (self *MethodInfo) Schema() *schema.MethodSchema {
 }
 
 func (self *Router) NotifyStateChange() {
-	self.routerLock.RLock()
-	defer self.routerLock.RUnlock()
+	self.rlock("notifystatechange")
+	defer self.runlock("notifystatechange")
 
 	self.notifyStateChange()
 }

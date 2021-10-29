@@ -7,38 +7,6 @@ import (
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 )
 
-// func (self *Router) TryClearPendingRequest(msgId interface{}) {
-// 	self.pendingLock.RLock()
-// 	defer self.pendingLock.RUnlock()
-// 	log.Debugf("try to clear pending request %#v", msgId)
-
-// 	if _, found := self.pendingRequests[msgId]; found {
-// 		log.Infof("found pending req %#v", msgId)
-// 		go func() {
-// 			// sleep for another 1 second
-// 			time.Sleep(1 * time.Second)
-// 			self.ClearPendingRequest(msgId)
-// 		}()
-// 	}
-// }
-
-// func (self *Router) ClearPendingRequest(msgId interface{}) {
-// 	self.lockPending("ClearPendingRequest")
-// 	defer self.unlockPending("ClearPendingRequest")
-
-// 	if reqt, found := self.pendingRequests[msgId]; found {
-// 		now := time.Now()
-// 		if !now.After(reqt.Expire) {
-// 			reqt.ReqMsg.Log().Errorf("Expire is not reached even during collecting routine")
-// 		}
-//		errMsg := jsonrpc.ErrTimeout.ToMessage(reqt.ReqMsg)
-// 		msgvec := MsgVec{Msg: errMsg, ToConnId: reqt.FromConnId}
-// 		//_ = self.SendTo(reqt.FromConnId, msgvec)
-// 		go self.DeliverResultOrError(msgvec)
-
-// 	}
-// }
-
 func (self *Router) DeletePending(msgId interface{}) {
 	self.lockPending("DeletePending")
 	defer self.unlockPending("DeletePending")
@@ -63,21 +31,9 @@ func (self *Router) addPending(msgId interface{}, pending PendingT) {
 	self.pendingRequests[msgId] = pending
 }
 
-// func (self *Router) StartCollectPendings(rootCtx context.Context) {
-// 	ctx, cancel := context.WithCancel(rootCtx)
-// 	defer cancel()
-
-// 	select {
-// 	case <- ctx.Done():
-// 		return
-// 	case <- time.After(1 * time.Second):
-// 		self.collectPendings()
-// 	}
-// }
-
 func (self *Router) collectPendings() {
-	self.pendingLock.RLock()
-	defer self.pendingLock.RUnlock()
+	self.rlockPending("collectPendings")
+	defer self.runlockPending("collectPendings")
 
 	now := time.Now()
 	expired := make([]interface{}, 0)
@@ -103,7 +59,8 @@ func (self *Router) removeExpiredPendings(expiredMsgIds []interface{}) {
 				delete(self.pendingRequests, msgId)
 				errMsg := jsonrpc.ErrTimeout.ToMessage(reqt.ReqMsg)
 				msgvec := MsgVec{Msg: errMsg, ToConnId: reqt.FromConnId}
-				go self.DeliverResultOrError(msgvec)
+				//go self.DeliverResultOrError(msgvec)
+				self.ChMsg <- CmdMsg{MsgVec: msgvec}
 			} else {
 
 			}

@@ -1,6 +1,7 @@
 package rpcrouter
 
 import (
+	"context"
 	"github.com/pkg/errors"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
@@ -42,6 +43,8 @@ type PendingT struct {
 	FromConnId CID
 	ToConnId   CID
 	Expire     time.Time
+
+	ChRes MsgChannel
 }
 
 type MethodInfo struct {
@@ -85,9 +88,24 @@ type MethodDelegation struct {
 type MethodInfoMap map[string](interface{})
 
 // Channel commands
+type CmdRet struct {
+	Ok bool
+}
+
+type CmdJoin struct {
+	Conn  *ConnT
+	ChRet chan CmdRet
+}
+
+type CmdLeave struct {
+	Conn  *ConnT
+	ChRet chan CmdRet
+}
+
 type CmdMsg struct {
 	MsgVec  MsgVec
 	Timeout time.Duration
+	ChRes   MsgChannel
 }
 
 type CmdMethods struct {
@@ -112,19 +130,27 @@ type Router struct {
 	connMap         map[CID](*ConnT)
 	delegateConnMap map[string]([]MethodDelegation)
 	pendingRequests map[interface{}]PendingT
+	//started         bool
+	startCtx   context.Context
+	cancelFunc func()
+
+	// channels
+	ChJoin      chan CmdJoin
+	ChLeave     chan CmdLeave
+	ChMsg       chan CmdMsg
+	ChMethods   chan CmdMethods
+	ChDelegates chan CmdDelegates
 }
 
 type RouterFactory struct {
 	// channels
 	name string
 
-	// channels
-	ChMsg       chan CmdMsg
-	ChMethods   chan CmdMethods
-	ChDelegates chan CmdDelegates
-
 	routerMap sync.Map
 
 	// flags
 	Config *datadir.Config
+	//started        bool
+	startCtx   context.Context
+	cancelFunc func()
 }

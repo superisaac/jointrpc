@@ -72,16 +72,15 @@ func TestRouteRoutine(t *testing.T) {
 	assert := assert.New(t)
 	factory := NewRouterFactory("test_route_routine")
 	router := factory.DefaultRouter()
-	ctx, cancel := context.WithCancel(context.Background())
-	go factory.Start(ctx)
-	defer cancel()
+	factory.EnsureStart(context.Background())
+	defer factory.Stop()
 
 	time.Sleep(100 * time.Millisecond)
 
 	conn := router.Join()
 	cid := conn.ConnId
 	ch := conn.RecvChannel
-	factory.ChMethods <- CmdMethods{
+	router.ChMethods <- CmdMethods{
 		Namespace: router.Name(),
 		ConnId:    cid,
 		Methods:   []MethodInfo{{"abc", "method abc", "", nil}},
@@ -104,7 +103,7 @@ func TestRouteRoutine(t *testing.T) {
 		Namespace:  router.Name(),
 		FromConnId: cid1,
 		ToConnId:   cid,
-	}, 0)
+	}, 0, nil)
 	rcvmsg := <-ch
 	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
@@ -125,7 +124,7 @@ func TestRouteRoutine(t *testing.T) {
 		Msg:        msg2,
 		FromConnId: cid2,
 		ToConnId:   CID(int(cid) + 100),
-	}, 0)
+	}, 0, nil)
 
 	rcvmsg2 := <-conn2.RecvChannel
 	assert.Equal(msg2.MustId(), rcvmsg2.Msg.MustId())

@@ -256,7 +256,8 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cancel()
 		if conn.Joined() {
 			router := factory.Get(conn.Namespace)
-			router.Leave(conn)
+			//router.Leave(conn)
+			router.ChLeave <- rpcrouter.CmdLeave{Conn: conn}
 		}
 	}()
 

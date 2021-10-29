@@ -7,10 +7,10 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log/syslog"
-	"time"
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func NewConfig() *Config {
@@ -104,7 +104,7 @@ func (self *Config) validateValues() error {
 	if self.Logging.Output == "" {
 		self.Logging.Output = Datapath("server.log")
 	}
-	
+
 	// syslog
 	if self.Logging.Syslog.URL == "" {
 		self.Logging.Syslog.URL = "localhost:514"

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	//"time"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -120,7 +121,7 @@ func (self *StreamDispatcher) Init() {
 			}
 
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
-			factory.ChMethods <- cmdMethods
+			factory.Get(conn.Namespace).ChMethods <- cmdMethods
 			return "ok", nil
 		}, dispatch.WithSchema(declareMethodsSchema))
 
@@ -139,7 +140,9 @@ func (self *StreamDispatcher) Init() {
 				MethodNames: methodNames,
 			}
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
-			factory.ChDelegates <- cmdDelegates
+			router := factory.Get(conn.Namespace)
+			router.ChDelegates <- cmdDelegates
+			misc.Assert(router.Started(), "router is not started")
 			return "ok", nil
 		}, dispatch.WithSchema(declareDelegatesSchema))
 
@@ -166,7 +169,12 @@ func (self *StreamDispatcher) Init() {
 			namespace := cfg.Authorize(username, password, remoteAddress)
 			if namespace != "" {
 				router := factory.Get(namespace)
-				router.JoinConn(conn)
+				//router.JoinConn(conn)
+				chRet := make(chan rpcrouter.CmdRet, 1)
+				router.ChJoin <- rpcrouter.CmdJoin{Conn: conn, ChRet: chRet}
+
+				//time.Sleep(100 * time.Millisecond)
+				<-chRet
 				conn.SetWatchState(true)
 				return namespace, nil
 			}
@@ -191,7 +199,13 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcroute
 		} else {
 			factory := rpcrouter.RouterFactoryFromContext(ctx)
 			router := factory.Get(conn.Namespace)
-			router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
+			router.ChMsg <- rpcrouter.CmdMsg{
+				MsgVec: msgvec,
+				//Timeout:
+				ChRes: conn.RecvChannel,
+			}
+
+			//router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
 			//factory.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
 		}
 		return nil

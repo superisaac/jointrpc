@@ -4,9 +4,9 @@ import (
 	//"fmt"
 	"context"
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
+	//log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
+	//"io/ioutil"
 	"os"
 
 	client "github.com/superisaac/jointrpc/client"
@@ -35,7 +35,7 @@ const addSchema = `
 `
 
 func TestMain(m *testing.M) {
-	log.SetOutput(ioutil.Discard)
+	//log.SetOutput(ioutil.Discard)
 	os.Exit(m.Run())
 }
 

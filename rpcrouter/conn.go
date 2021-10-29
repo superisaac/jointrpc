@@ -10,7 +10,7 @@ import (
 
 func NewConn() *ConnT {
 	connId := NextCID()
-	ch := make(MsgChannel, 100)
+	ch := make(MsgChannel, 10000)
 	methods := make(map[string]MethodInfo)
 	conn := &ConnT{ConnId: connId,
 		RecvChannel:  ch,

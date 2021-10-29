@@ -257,7 +257,8 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 		cancel()
 		if conn.Joined() {
 			router := factory.Get(conn.Namespace)
-			router.Leave(conn)
+			//router.Leave(conn)
+			router.ChLeave <- rpcrouter.CmdLeave{Conn: conn}
 		}
 	}()
 

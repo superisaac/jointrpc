@@ -126,14 +126,14 @@ func (self RequestMessage) Log() *log.Entry {
 		"traceid": self.traceId,
 		"msgtype": "request",
 		"msgid":   self.Id,
-		"method":   self.Method,
+		"method":  self.Method,
 	})
 }
 func (self NotifyMessage) Log() *log.Entry {
 	return log.WithFields(log.Fields{
 		"traceid": self.traceId,
 		"msgtype": "notify",
-		"method":   self.Method,
+		"method":  self.Method,
 	})
 }
 func (self ResultMessage) Log() *log.Entry {
