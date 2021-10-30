@@ -286,8 +286,8 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		msgvec := rpcrouter.MsgVec{
-			Msg:        msg,
-			Namespace:  conn.Namespace}
+			Msg:       msg,
+			Namespace: conn.Namespace}
 		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, false)
 
 		if instRes != nil {

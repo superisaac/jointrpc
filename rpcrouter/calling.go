@@ -32,8 +32,8 @@ func (self *Router) SingleCall(msg jsonrpc.IMessage, ns string, callOption *Call
 		chRes := make(MsgChannel, 10)
 
 		msgvec := MsgVec{
-			Msg:        msg,
-			Namespace:  ns,
+			Msg:       msg,
+			Namespace: ns,
 		}
 		self.PostMessage(CmdMsg{
 			MsgVec:  msgvec,
@@ -69,14 +69,14 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 			newId := misc.NewUuid()
 			newmsg := reqmsg.Clone(newId)
 			msgvec := MsgVec{
-				Msg:        newmsg,
-				Namespace:  ns,
+				Msg:       newmsg,
+				Namespace: ns,
 			}
 			self.PostMessage(CmdMsg{
 				MsgVec:  msgvec,
 				Timeout: callOption.timeout,
 				ChRes:   chRes, //conn.RecvChannel,
-				ConnId:   servoId,
+				ConnId:  servoId,
 			})
 		}
 		log.Infof("send request %s to %d handlers", reqmsg.Method, len(servoIds))
@@ -96,8 +96,8 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 
 		for _, servoId := range servoIds {
 			msgvec := MsgVec{
-				Msg:        notifymsg,
-				Namespace:  ns}
+				Msg:       notifymsg,
+				Namespace: ns}
 			//self.DeliverNotify(msgvec)
 			self.PostMessage(CmdMsg{
 				MsgVec: msgvec,

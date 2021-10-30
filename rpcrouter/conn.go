@@ -112,9 +112,9 @@ func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
 	reqMsg, _ := cmdMsg.MsgVec.Msg.(*jsonrpc.RequestMessage)
 	if self.router.factory.Config.ValidateSchema() {
 		if v, errmsg := self.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
-			errVec := MsgVec{
-				Msg:        errmsg,
-			}
+
+			errVec := cmdMsg.MsgVec
+			errVec.Msg = errmsg
 			cmdMsg.ChRes <- errVec
 			return nil
 		}
@@ -131,7 +131,9 @@ func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
 		cmdMsg: cmdMsg,
 		Expire: expireTime,
 	}
-	self.RecvChannel <- MsgVec{Msg: reqMsg}
+	reqVec := cmdMsg.MsgVec
+	reqVec.Msg = reqMsg
+	self.RecvChannel <- reqVec
 	return nil
 }
 
@@ -143,7 +145,7 @@ func (self *ConnT) handleNotify(ctx context.Context, cmdMsg CmdMsg) error {
 			return nil
 		}
 	}
-	self.RecvChannel <- MsgVec{Msg: notifyMsg}
+	self.RecvChannel <- MsgVec{Msg: notifyMsg, Namespace: cmdMsg.MsgVec.Namespace}
 	return nil
 }
 
@@ -168,9 +170,8 @@ func (self *ConnT) handleResultOrError(ctx context.Context, cmdMsg CmdMsg) error
 		if resMsg, ok := msg.(*jsonrpc.ResultMessage); ok {
 			if self.router.factory.Config.ValidateSchema() {
 				if v, errmsg := self.ValidateResultMsg(resMsg, origReq); !v && errmsg != nil {
-					errVec := MsgVec{
-						Msg:        errmsg,
-					}
+					errVec := cmdMsg.MsgVec
+					errVec.Msg = errmsg
 					pending.cmdMsg.ChRes <- errVec
 					return nil
 				}

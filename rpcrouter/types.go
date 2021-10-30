@@ -27,8 +27,8 @@ const ZeroCID = CID(0)
 
 // Commands
 type MsgVec struct {
-	Msg        jsonrpc.IMessage
-	Namespace  string
+	Msg       jsonrpc.IMessage
+	Namespace string
 	//FromConnId CID
 	//ToConnId   CID
 }

@@ -42,7 +42,6 @@ func TestBuiltinMethods(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal("trace1", res.TraceId())
 
-	//fmt.Printf("sssres %+v\n", res)
 	assert.True(res.IsResult())
 	m, ok := res.MustResult().(map[string]interface{})
 	assert.True(ok)

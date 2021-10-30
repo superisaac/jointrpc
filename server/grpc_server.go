@@ -10,7 +10,7 @@ import (
 	//"time"
 	//json "encoding/json"
 	//"errors"
-	"fmt"
+	//"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
 	"github.com/mitchellh/mapstructure"
@@ -175,10 +175,8 @@ func (self *JointRPC) ListMethods(context context.Context, req *intf.ListMethods
 	router := factory.Get(namespace)
 
 	minfos := router.GetMethods()
-	fmt.Printf("router methods %s %+v\n", namespace, minfos)
 
 	commonInfos := factory.CommonRouter().GetMethods()
-	fmt.Printf("common router methods %+v\n", commonInfos)
 	minfos = append(minfos, commonInfos...)
 	intfMInfos := buildMethodInfos(minfos)
 	resp := &intf.ListMethodsResponse{Methods: intfMInfos}
@@ -285,8 +283,8 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 		}
 		msg.Log().Debugf("received from grpc stream")
 		msgvec := rpcrouter.MsgVec{
-			Msg:        msg,
-			Namespace:  conn.Namespace}
+			Msg:       msg,
+			Namespace: conn.Namespace}
 
 		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, true)
 		if instRes != nil {

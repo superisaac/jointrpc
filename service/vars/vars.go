@@ -169,8 +169,8 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 			}
 			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
-					Msg:        result.ResMsg,
-					Namespace:  commonRouter.Name(),
+					Msg:       result.ResMsg,
+					Namespace: commonRouter.Name(),
 				},
 			}
 

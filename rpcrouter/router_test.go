@@ -72,8 +72,8 @@ func TestRouteMessage(t *testing.T) {
 	//router.ChRouteMsg <- CmdMsg{
 	router.relayMessage(CmdMsg{
 		MsgVec: MsgVec{
-			Msg:        msg,
-			Namespace:  router.Name()},
+			Msg:       msg,
+			Namespace: router.Name()},
 		ChRes: chRes})
 	cmdMsg := <-conn.ChRouteMsg
 	assert.True(cmdMsg.MsgVec.Msg.IsRequest())
@@ -111,8 +111,8 @@ func TestRouteRoutine(t *testing.T) {
 
 	conn.handleRequest(factory.startCtx, CmdMsg{
 		MsgVec: MsgVec{
-			Msg:        msg,
-			Namespace:  router.Name(),
+			Msg:       msg,
+			Namespace: router.Name(),
 		},
 		Timeout: 0,
 		ChRes:   chRes,
@@ -136,7 +136,7 @@ func TestRouteRoutine(t *testing.T) {
 	chRes2 := make(MsgChannel, 100)
 	router.relayMessage(CmdMsg{
 		MsgVec: MsgVec{
-			Msg:        msg2,
+			Msg: msg2,
 			//ToConnId:   CID(int(cid) + 100),
 		},
 		Timeout: 0,

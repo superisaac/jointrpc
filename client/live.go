@@ -174,10 +174,10 @@ func (self *RPCClient) NewWatchStateRequest() *jsonrpc.RequestMessage {
 	return jsonrpc.NewRequestMessage(reqId, "_stream.watchState", params)
 }
 
-func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher, namespace string) {
+func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, disp *dispatch.Dispatcher, namespace string) {
 	msgvec := rpcrouter.MsgVec{
-		Msg:        msg,
-		Namespace:  namespace}
+		Msg:       msg,
+		Namespace: namespace}
 	disp.Feed(ctx, msgvec, self.chResult)
 }
 
@@ -266,7 +266,7 @@ func (self *RPCClient) runHTTPLiveStream(rootCtx context.Context, disp *dispatch
 		}
 
 		if msg.IsRequestOrNotify() {
-			self.handleDownRequest(ctx, msg, msg.TraceId(), disp, namespace)
+			self.handleDownRequest(ctx, msg, disp, namespace)
 		} else {
 			self.handleWireResult(msg)
 		}
@@ -335,7 +335,7 @@ func (self *RPCClient) runGRPCLiveStream(rootCtx context.Context, disp *dispatch
 		}
 
 		if msg.IsRequestOrNotify() {
-			self.handleDownRequest(rootCtx, msg, msg.TraceId(), disp, namespace)
+			self.handleDownRequest(rootCtx, msg, disp, namespace)
 		} else {
 			self.handleWireResult(msg)
 		}
