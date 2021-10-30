@@ -15,7 +15,7 @@ func (self *Router) PostMessage(cmdMsg CmdMsg) {
 func (self *Router) relayMessage(cmdMsg CmdMsg) {
 	msg := cmdMsg.MsgVec.Msg
 	misc.Assert(msg.IsRequestOrNotify(), "router only support request and notify")
-	toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.ToConnId)
+	toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.ConnId)
 	if found {
 		toConn.ChRouteMsg <- cmdMsg
 	} else if msg.IsRequest() {

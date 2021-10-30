@@ -114,7 +114,6 @@ func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
 		if v, errmsg := self.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
 			errVec := MsgVec{
 				Msg:        errmsg,
-				FromConnId: self.ConnId,
 			}
 			cmdMsg.ChRes <- errVec
 			return nil
@@ -171,7 +170,6 @@ func (self *ConnT) handleResultOrError(ctx context.Context, cmdMsg CmdMsg) error
 				if v, errmsg := self.ValidateResultMsg(resMsg, origReq); !v && errmsg != nil {
 					errVec := MsgVec{
 						Msg:        errmsg,
-						FromConnId: self.ConnId,
 					}
 					pending.cmdMsg.ChRes <- errVec
 					return nil

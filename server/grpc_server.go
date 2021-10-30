@@ -286,8 +286,7 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 		msg.Log().Debugf("received from grpc stream")
 		msgvec := rpcrouter.MsgVec{
 			Msg:        msg,
-			Namespace:  conn.Namespace,
-			FromConnId: conn.ConnId}
+			Namespace:  conn.Namespace}
 
 		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, true)
 		if instRes != nil {

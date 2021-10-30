@@ -148,7 +148,6 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 				MsgVec: rpcrouter.MsgVec{
 					Namespace:  router.Name(),
 					Msg:        result.ResMsg,
-					FromConnId: self.conn.ConnId,
 				},
 			}
 		}

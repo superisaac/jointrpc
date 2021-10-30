@@ -29,8 +29,8 @@ const ZeroCID = CID(0)
 type MsgVec struct {
 	Msg        jsonrpc.IMessage
 	Namespace  string
-	FromConnId CID
-	ToConnId   CID
+	//FromConnId CID
+	//ToConnId   CID
 }
 
 type MsgChannel chan MsgVec
@@ -103,6 +103,7 @@ type CmdMsg struct {
 	MsgVec  MsgVec
 	Timeout time.Duration
 	ChRes   MsgChannel
+	ConnId  CID
 }
 
 type CmdMethods struct {

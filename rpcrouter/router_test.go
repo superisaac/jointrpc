@@ -73,8 +73,7 @@ func TestRouteMessage(t *testing.T) {
 	router.relayMessage(CmdMsg{
 		MsgVec: MsgVec{
 			Msg:        msg,
-			Namespace:  router.Name(),
-			FromConnId: 0},
+			Namespace:  router.Name()},
 		ChRes: chRes})
 	cmdMsg := <-conn.ChRouteMsg
 	assert.True(cmdMsg.MsgVec.Msg.IsRequest())
@@ -99,8 +98,7 @@ func TestRouteRoutine(t *testing.T) {
 		Methods:   []MethodInfo{{"abc", "method abc", "", nil}},
 	}
 
-	conn1 := router.Join()
-	cid1 := conn1.ConnId
+	_ = router.Join()
 	j1 := `{
 "id": 100002,
 "method": "abc",
@@ -115,19 +113,18 @@ func TestRouteRoutine(t *testing.T) {
 		MsgVec: MsgVec{
 			Msg:        msg,
 			Namespace:  router.Name(),
-			FromConnId: cid1,
-			ToConnId:   cid,
 		},
 		Timeout: 0,
-		ChRes:   chRes})
+		ChRes:   chRes,
+		ConnId:  cid,
+	})
 	rcvmsg := <-conn.RecvChannel
 	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
 	assert.Equal("abc", rcvmsg.Msg.MustMethod())
 
 	// wrong target id
-	conn2 := router.Join()
-	cid2 := conn2.ConnId
+	_ = router.Join()
 	j2 := `{
 "id": 100003,
 "method": "abc",
@@ -140,11 +137,12 @@ func TestRouteRoutine(t *testing.T) {
 	router.relayMessage(CmdMsg{
 		MsgVec: MsgVec{
 			Msg:        msg2,
-			FromConnId: cid2,
-			ToConnId:   CID(int(cid) + 100),
+			//ToConnId:   CID(int(cid) + 100),
 		},
 		Timeout: 0,
-		ChRes:   chRes2})
+		ChRes:   chRes2,
+		ConnId:  CID(int(cid) + 100),
+	})
 	rcvmsg2 := <-chRes2
 	assert.Equal(msg2.MustId(), rcvmsg2.Msg.MustId())
 	assert.True(rcvmsg2.Msg.IsError())

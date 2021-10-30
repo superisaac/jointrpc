@@ -171,7 +171,6 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				MsgVec: rpcrouter.MsgVec{
 					Msg:        result.ResMsg,
 					Namespace:  commonRouter.Name(),
-					FromConnId: self.conn.ConnId,
 				},
 			}
 

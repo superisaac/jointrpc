@@ -34,7 +34,6 @@ func (self *Router) SingleCall(msg jsonrpc.IMessage, ns string, callOption *Call
 		msgvec := MsgVec{
 			Msg:        msg,
 			Namespace:  ns,
-			FromConnId: 0, //conn.ConnId,
 		}
 		self.PostMessage(CmdMsg{
 			MsgVec:  msgvec,
@@ -72,13 +71,12 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 			msgvec := MsgVec{
 				Msg:        newmsg,
 				Namespace:  ns,
-				FromConnId: 0, //conn.ConnId,
-				ToConnId:   servoId}
-
+			}
 			self.PostMessage(CmdMsg{
 				MsgVec:  msgvec,
 				Timeout: callOption.timeout,
 				ChRes:   chRes, //conn.RecvChannel,
+				ConnId:   servoId,
 			})
 		}
 		log.Infof("send request %s to %d handlers", reqmsg.Method, len(servoIds))
@@ -99,11 +97,12 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 		for _, servoId := range servoIds {
 			msgvec := MsgVec{
 				Msg:        notifymsg,
-				Namespace:  ns,
-				FromConnId: 0, //conn.ConnId,
-				ToConnId:   servoId}
+				Namespace:  ns}
 			//self.DeliverNotify(msgvec)
-			self.PostMessage(CmdMsg{MsgVec: msgvec})
+			self.PostMessage(CmdMsg{
+				MsgVec: msgvec,
+				ConnId: servoId,
+			})
 		}
 		log.Infof("send notify %s to %d handlers", notifymsg.Method, len(servoIds))
 		return nil, nil

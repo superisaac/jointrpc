@@ -177,8 +177,7 @@ func (self *RPCClient) NewWatchStateRequest() *jsonrpc.RequestMessage {
 func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, traceId string, disp *dispatch.Dispatcher, namespace string) {
 	msgvec := rpcrouter.MsgVec{
 		Msg:        msg,
-		Namespace:  namespace,
-		FromConnId: 0}
+		Namespace:  namespace}
 	disp.Feed(ctx, msgvec, self.chResult)
 }
 

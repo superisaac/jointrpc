@@ -81,13 +81,10 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 				return nil
 			}
 
-			//commonRouter.DeliverResultOrError(
-			//commonRouter.ChMsg <- rpcrouter.CmdMsg{
 			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
 					Msg:        result.ResMsg,
 					Namespace:  commonRouter.Name(),
-					FromConnId: self.conn.ConnId,
 				},
 			}
 		}
