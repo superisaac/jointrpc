@@ -8,6 +8,10 @@ import (
 	//"time"
 )
 
+func (self *Router) PostMessage(cmdMsg CmdMsg) {
+	self.chRouteMsg <- cmdMsg
+}
+
 func (self *Router) relayMessage(cmdMsg CmdMsg) {
 	msg := cmdMsg.MsgVec.Msg
 	misc.Assert(msg.IsRequestOrNotify(), "router only support request and notify")

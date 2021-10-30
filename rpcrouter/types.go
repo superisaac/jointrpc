@@ -135,7 +135,7 @@ type Router struct {
 	ChJoin  chan CmdJoin
 	ChLeave chan CmdLeave
 	//ChMsg       chan CmdMsg
-	ChRouteMsg  chan CmdMsg
+	chRouteMsg  chan CmdMsg
 	ChMethods   chan CmdMethods
 	ChDelegates chan CmdDelegates
 }

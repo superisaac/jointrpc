@@ -227,11 +227,11 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcroute
 			if msg.IsNotify() {
 				chRes = nil
 			}
-			router.ChRouteMsg <- rpcrouter.CmdMsg{
+			router.PostMessage(rpcrouter.CmdMsg{
 				MsgVec: msgvec,
 				//Timeout:
 				ChRes: chRes,
-			}
+			})
 
 			//router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
 			//factory.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}

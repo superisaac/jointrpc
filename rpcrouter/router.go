@@ -49,7 +49,7 @@ func NewRouter(factory *RouterFactory, name string) *Router {
 }
 
 func (self *Router) setupChannels() {
-	self.ChRouteMsg = make(chan CmdMsg, 10000)
+	self.chRouteMsg = make(chan CmdMsg, 10000)
 	self.ChJoin = make(chan CmdJoin, 10000)
 	self.ChLeave = make(chan CmdLeave, 10000)
 	self.ChMethods = make(chan CmdMethods, 10000)
@@ -553,14 +553,14 @@ func (self *Router) loop() {
 					log.Infof("conn %d does not take chRet to leave", cmdLeave.Conn.ConnId)
 				}
 			}
-		case cmdMsg, ok := <-self.ChRouteMsg:
+		case cmdMsg, ok := <-self.chRouteMsg:
 			{
 				if !ok {
 					log.Warnf("ChMsg channel not ok")
 					return
 				}
 				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
-				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChRouteMsg is %d", len(self.ChRouteMsg))
+				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChRouteMsg is %d", len(self.chRouteMsg))
 				self.relayMessage(cmdMsg)
 			}
 		}
