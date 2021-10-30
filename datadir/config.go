@@ -92,6 +92,11 @@ func (self *Config) validateValues() error {
 		self.Server.TLS.KeyFile = keyFile
 	}
 
+	// logs
+	if self.Logging.Output != "" {
+		self.Logging.Output = Datapath(self.Logging.Output)
+	}
+
 	// authorizations
 	for _, bauth := range self.Authorizations {
 		err := bauth.validateValues()

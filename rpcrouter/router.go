@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
+	//"time"
 )
 
 func RemoveConn(slice []MethodDesc, conn *ConnT) []MethodDesc {
@@ -42,7 +42,6 @@ func NewRouter(factory *RouterFactory, name string) *Router {
 	r.methodConnMap = make(map[string]([]MethodDesc))
 	r.delegateConnMap = make(map[string][]MethodDelegation)
 	r.connMap = make(map[CID](*ConnT))
-	r.pendingRequests = make(map[interface{}]PendingT)
 	r.methodsSig = ""
 
 	r.setupChannels()
@@ -50,7 +49,6 @@ func NewRouter(factory *RouterFactory, name string) *Router {
 }
 
 func (self *Router) setupChannels() {
-	self.ChMsg = make(chan CmdMsg, 10000)
 	self.ChRouteMsg = make(chan CmdMsg, 10000)
 	self.ChJoin = make(chan CmdJoin, 10000)
 	self.ChLeave = make(chan CmdLeave, 10000)
@@ -555,16 +553,6 @@ func (self *Router) loop() {
 					log.Infof("conn %d does not take chRet to leave", cmdLeave.Conn.ConnId)
 				}
 			}
-		case cmdMsg, ok := <-self.ChMsg:
-			{
-				if !ok {
-					log.Warnf("ChMsg channel not ok")
-					return
-				}
-				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
-				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChMsg is %d", len(self.ChMsg))
-				self.deliverMessage(cmdMsg)
-			}
 		case cmdMsg, ok := <-self.ChRouteMsg:
 			{
 				if !ok {
@@ -572,11 +560,9 @@ func (self *Router) loop() {
 					return
 				}
 				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
-				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChMsg is %d", len(self.ChMsg))
+				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChRouteMsg is %d", len(self.ChRouteMsg))
 				self.relayMessage(cmdMsg)
 			}
-		case <-time.After(10 * time.Second):
-			self.collectPendings()
 		}
 	}
 }

@@ -40,6 +40,8 @@ func TestRouteMessage(t *testing.T) {
 	//ch := make(MsgChannel, 100)
 	conn := router.Join()
 
+	assert.Equal(router, conn.router)
+
 	assert.Equal(1, len(router.connMap))
 	router.UpdateServeMethods(conn, []MethodInfo{{"abc", "", "", nil}, {"def", "", "", nil}})
 
@@ -61,18 +63,22 @@ func TestRouteMessage(t *testing.T) {
 
 	msg, err := jsonrpc.ParseBytes([]byte(j1))
 	assert.Nil(err)
+	assert.True(msg.IsRequest())
 	assert.Equal(json.Number("100002"), msg.MustId())
 	assert.False(router.Started())
 
-	router.deliverMessage(CmdMsg{
+	//router.deliverMessage(CmdMsg{
+	chRes := make(MsgChannel, 1)
+	//router.ChRouteMsg <- CmdMsg{
+	router.relayMessage(CmdMsg{
 		MsgVec: MsgVec{
 			Msg:        msg,
 			Namespace:  router.Name(),
-			FromConnId: conn.ConnId},
-		ChRes: conn.RecvChannel})
-	rcvmsg := <-conn.RecvChannel
-	assert.True(rcvmsg.Msg.IsRequest())
-	assert.Equal("abc", rcvmsg.Msg.MustMethod())
+			FromConnId: 0},
+		ChRes: chRes})
+	cmdMsg := <-conn.ChRouteMsg
+	assert.True(cmdMsg.MsgVec.Msg.IsRequest())
+	assert.Equal("abc", cmdMsg.MsgVec.Msg.MustMethod())
 }
 
 func TestRouteRoutine(t *testing.T) {

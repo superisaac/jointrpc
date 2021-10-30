@@ -1,8 +1,8 @@
 package bridge
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	//"errors"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"

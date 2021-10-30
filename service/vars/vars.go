@@ -167,7 +167,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				log.Infof("result channel closed, return")
 				return nil
 			}
-			commonRouter.ChMsg <- rpcrouter.CmdMsg{
+			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
 					Msg:        result.ResMsg,
 					Namespace:  commonRouter.Name(),

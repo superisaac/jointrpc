@@ -35,18 +35,6 @@ type MsgVec struct {
 
 type MsgChannel chan MsgVec
 
-// Pending Struct
-type PendingT struct {
-	//OrigMsgVec MsgVec
-	ReqMsg     *jsonrpc.RequestMessage
-	OrigMsgId  interface{}
-	FromConnId CID
-	ToConnId   CID
-	Expire     time.Time
-
-	ChRes MsgChannel
-}
-
 type MethodInfo struct {
 	Name       string `mapstructure:"name"`
 	Help       string `mapstructure:"help"`
@@ -138,15 +126,15 @@ type Router struct {
 	methodsSig      string
 	connMap         map[CID](*ConnT)
 	delegateConnMap map[string]([]MethodDelegation)
-	pendingRequests map[interface{}]PendingT
+	//pendingRequests map[interface{}]PendingT
 	//started         bool
 	startCtx   context.Context
 	cancelFunc func()
 
 	// channels
-	ChJoin      chan CmdJoin
-	ChLeave     chan CmdLeave
-	ChMsg       chan CmdMsg
+	ChJoin  chan CmdJoin
+	ChLeave chan CmdLeave
+	//ChMsg       chan CmdMsg
 	ChRouteMsg  chan CmdMsg
 	ChMethods   chan CmdMethods
 	ChDelegates chan CmdDelegates
