@@ -219,17 +219,27 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcroute
 		} else if msg.IsNotify() && !allowRequest {
 			msg.Log().Warnf("not allowed")
 			return nil
-		} else {
+		} else if msg.IsRequestOrNotify() {
 			factory := rpcrouter.RouterFactoryFromContext(ctx)
 			router := factory.Get(conn.Namespace)
-			router.ChMsg <- rpcrouter.CmdMsg{
+
+			chRes := conn.RecvChannel
+			if msg.IsNotify() {
+				chRes = nil
+			}
+			router.ChRouteMsg <- rpcrouter.CmdMsg{
 				MsgVec: msgvec,
 				//Timeout:
-				ChRes: conn.RecvChannel,
+				ChRes: chRes,
 			}
 
 			//router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
 			//factory.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
+		} else if msg.IsResultOrError() {
+			// result and error don't need ChRes
+			conn.ChRouteMsg <- rpcrouter.CmdMsg{
+				MsgVec: msgvec,
+			}
 		}
 		return nil
 	}

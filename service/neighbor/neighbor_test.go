@@ -90,9 +90,8 @@ func TestNeighborRun(t *testing.T) {
 	c2 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10011", ""})
 	err = c2.Connect()
 	assert.Nil(err)
-
 	// call rpc from server2 which delegates server1
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	ctx1, cancel1 := context.WithCancel(context.Background())
 	defer cancel1()
 	delegates, err := c2.ListDelegates(ctx1)
@@ -103,7 +102,6 @@ func TestNeighborRun(t *testing.T) {
 	assert.Equal("trace1", res.TraceId())
 	assert.True(res.IsResult())
 	assert.Equal(json.Number("11"), res.MustResult())
-
 	// start client3
 	c3 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10012", ""})
 	err = c3.Connect()
@@ -131,7 +129,9 @@ func TestNeighborRun(t *testing.T) {
 	// call rpc from server2 which doesnot delegates server1
 	ctx4, cancel4 := context.WithCancel(context.Background())
 	defer cancel4()
-	res4, err := c2.CallRPC(ctx4, "add2int", [](interface{}){15, 16}, client.WithTraceId("trace13"))
+	res4, err := c2.CallRPC(ctx4,
+		"add2int",
+		[](interface{}){15, 16}, client.WithTraceId("trace13"))
 	assert.Nil(err)
 	assert.Equal("trace13", res4.TraceId())
 	assert.True(res4.IsError())

@@ -101,9 +101,9 @@ func (self *Config) validateValues() error {
 	}
 
 	// logging
-	if self.Logging.Output == "" {
-		self.Logging.Output = Datapath("server.log")
-	}
+	// if self.Logging.Output == "" {
+	// 	self.Logging.Output = ""
+	// }
 
 	// syslog
 	if self.Logging.Syslog.URL == "" {

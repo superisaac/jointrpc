@@ -60,6 +60,11 @@ type ServerState struct {
 }
 
 // Connect Struct
+type ConnPending struct {
+	cmdMsg CmdMsg
+	Expire time.Time
+}
+
 type ConnT struct {
 	ConnId      CID
 	Namespace   string
@@ -72,6 +77,10 @@ type ConnT struct {
 	watchState bool
 
 	stateChannel chan *ServerState
+
+	router     *Router
+	ChRouteMsg chan CmdMsg
+	pendings   map[interface{}]ConnPending
 }
 
 type MethodDesc struct {
@@ -138,6 +147,7 @@ type Router struct {
 	ChJoin      chan CmdJoin
 	ChLeave     chan CmdLeave
 	ChMsg       chan CmdMsg
+	ChRouteMsg  chan CmdMsg
 	ChMethods   chan CmdMethods
 	ChDelegates chan CmdDelegates
 }

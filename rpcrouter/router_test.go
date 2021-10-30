@@ -86,7 +86,7 @@ func TestRouteRoutine(t *testing.T) {
 
 	conn := router.Join()
 	cid := conn.ConnId
-	ch := conn.RecvChannel
+	chRes := make(MsgChannel, 100)
 	router.ChMethods <- CmdMethods{
 		Namespace: router.Name(),
 		ConnId:    cid,
@@ -105,13 +105,16 @@ func TestRouteRoutine(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(json.Number("100002"), msg.MustId())
 
-	router.deliverRequest(MsgVec{
-		Msg:        msg,
-		Namespace:  router.Name(),
-		FromConnId: cid1,
-		ToConnId:   cid,
-	}, 0, ch)
-	rcvmsg := <-ch
+	conn.handleRequest(factory.startCtx, CmdMsg{
+		MsgVec: MsgVec{
+			Msg:        msg,
+			Namespace:  router.Name(),
+			FromConnId: cid1,
+			ToConnId:   cid,
+		},
+		Timeout: 0,
+		ChRes:   chRes})
+	rcvmsg := <-conn.RecvChannel
 	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
 	assert.Equal("abc", rcvmsg.Msg.MustMethod())
@@ -127,13 +130,16 @@ func TestRouteRoutine(t *testing.T) {
 	msg2, err := jsonrpc.ParseBytes([]byte(j2))
 	assert.Nil(err)
 	assert.Equal(json.Number("100003"), msg2.MustId())
-	router.deliverRequest(MsgVec{
-		Msg:        msg2,
-		FromConnId: cid2,
-		ToConnId:   CID(int(cid) + 100),
-	}, 0, conn2.RecvChannel)
-
-	rcvmsg2 := <-conn2.RecvChannel
+	chRes2 := make(MsgChannel, 100)
+	router.relayMessage(CmdMsg{
+		MsgVec: MsgVec{
+			Msg:        msg2,
+			FromConnId: cid2,
+			ToConnId:   CID(int(cid) + 100),
+		},
+		Timeout: 0,
+		ChRes:   chRes2})
+	rcvmsg2 := <-chRes2
 	assert.Equal(msg2.MustId(), rcvmsg2.Msg.MustId())
 	assert.True(rcvmsg2.Msg.IsError())
 

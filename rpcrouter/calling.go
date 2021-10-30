@@ -40,7 +40,7 @@ func (self *Router) SingleCall(msg jsonrpc.IMessage, ns string, callOption *Call
 			Namespace:  ns,
 			FromConnId: conn.ConnId,
 		}
-		self.ChMsg <- CmdMsg{
+		self.ChRouteMsg <- CmdMsg{
 			MsgVec:  msgvec,
 			Timeout: callOption.timeout,
 			ChRes:   conn.RecvChannel,
@@ -50,7 +50,7 @@ func (self *Router) SingleCall(msg jsonrpc.IMessage, ns string, callOption *Call
 		misc.AssertEqual(resvec.Msg.TraceId(), msg.TraceId(), "")
 		return resvec.Msg, nil
 	} else if msg.IsNotify() {
-		self.ChMsg <- CmdMsg{
+		self.ChRouteMsg <- CmdMsg{
 			MsgVec: MsgVec{
 				Msg:       msg,
 				Namespace: self.Name()},
@@ -85,7 +85,7 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 				FromConnId: conn.ConnId,
 				ToConnId:   servoId}
 
-			self.ChMsg <- CmdMsg{
+			self.ChRouteMsg <- CmdMsg{
 				MsgVec:  msgvec,
 				Timeout: callOption.timeout,
 				ChRes:   conn.RecvChannel,
@@ -118,7 +118,7 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 				FromConnId: conn.ConnId,
 				ToConnId:   servoId}
 			//self.DeliverNotify(msgvec)
-			self.ChMsg <- CmdMsg{MsgVec: msgvec}
+			self.ChRouteMsg <- CmdMsg{MsgVec: msgvec}
 		}
 		log.Infof("send notify %s to %d handlers", notifymsg.Method, len(servoIds))
 		return nil, nil

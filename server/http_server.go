@@ -221,6 +221,15 @@ func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcr
 				return
 			}
 			msgutil.WSSend(ws, msgvec.Msg)
+		case cmdMsg, ok := <-conn.ChRouteMsg:
+			if !ok {
+				log.Debugf("ChRouteMsg closed")
+				return
+			}
+			err := conn.HandleRouteMessage(context, cmdMsg)
+			if err != nil {
+				panic(err)
+			}
 		case state, ok := <-conn.StateChannel():
 			if !ok {
 				log.Debugf("state channel closed")

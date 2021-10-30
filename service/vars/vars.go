@@ -153,6 +153,15 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(ctx, msgvec)
+		case cmdMsg, ok := <-self.conn.ChRouteMsg:
+			if !ok {
+				log.Debugf("ChRouteMsg closed")
+				return nil
+			}
+			err := self.conn.HandleRouteMessage(ctx, cmdMsg)
+			if err != nil {
+				panic(err)
+			}
 		case result, ok := <-self.chResult:
 			if !ok {
 				log.Infof("result channel closed, return")

@@ -51,6 +51,7 @@ func NewRouter(factory *RouterFactory, name string) *Router {
 
 func (self *Router) setupChannels() {
 	self.ChMsg = make(chan CmdMsg, 10000)
+	self.ChRouteMsg = make(chan CmdMsg, 10000)
 	self.ChJoin = make(chan CmdJoin, 10000)
 	self.ChLeave = make(chan CmdLeave, 10000)
 	self.ChMethods = make(chan CmdMethods, 10000)
@@ -321,6 +322,7 @@ func (self *Router) leaveConn(conn *ConnT) {
 	if ok {
 		delete(self.connMap, conn.ConnId)
 		conn.Namespace = ""
+		conn.router = nil
 		close(ct.RecvChannel)
 	}
 
@@ -424,6 +426,7 @@ func (self *Router) joinConn(conn *ConnT) {
 	self.lock("JoinConn")
 	defer self.unlock("JoinConn")
 	conn.Namespace = self.name
+	conn.router = self
 	self.connMap[conn.ConnId] = conn
 }
 
@@ -561,6 +564,16 @@ func (self *Router) loop() {
 				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
 				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChMsg is %d", len(self.ChMsg))
 				self.deliverMessage(cmdMsg)
+			}
+		case cmdMsg, ok := <-self.ChRouteMsg:
+			{
+				if !ok {
+					log.Warnf("ChMsg channel not ok")
+					return
+				}
+				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
+				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChMsg is %d", len(self.ChMsg))
+				self.relayMessage(cmdMsg)
 			}
 		case <-time.After(10 * time.Second):
 			self.collectPendings()

@@ -97,8 +97,8 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 
 	// join connection
 	//self.conn = router.Join()
-	self.conn = rpcrouter.NewConn()
-	router.ChJoin <- rpcrouter.CmdJoin{Conn: self.conn}
+	self.conn = router.Join() //rpcrouter.NewConn()
+	//router.ChJoin <- rpcrouter.CmdJoin{Conn: self.conn}
 
 	defer func() {
 		//router.Leave(self.conn)
@@ -128,13 +128,23 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 			if err != nil {
 				panic(err)
 			}
+		case cmdMsg, ok := <-self.conn.ChRouteMsg:
+			if !ok {
+				log.Debugf("ChRouteMsg closed")
+				return
+			}
+			err := self.conn.HandleRouteMessage(rootCtx, cmdMsg)
+			if err != nil {
+				panic(err)
+			}
 		case result, ok := <-self.chResult:
 			if !ok {
 				// TODO: log
 				return
 			}
 			//router.DeliverResultOrError(
-			router.ChMsg <- rpcrouter.CmdMsg{
+			//router.ChMsg <- rpcrouter.CmdMsg{
+			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
 					Namespace:  router.Name(),
 					Msg:        result.ResMsg,

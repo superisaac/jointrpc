@@ -207,11 +207,13 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 
 // Lives
 func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Warnf("recovered ERROR %+v", r)
-		}
-	}()
+	if false {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Warnf("recovered ERROR %+v", r)
+			}
+		}()
+	}
 	for {
 		select {
 		case <-context.Done():
@@ -229,6 +231,16 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer,
 				return
 			}
 			msgutil.GRPCServerSend(stream, msgvec.Msg)
+
+		case cmdMsg, ok := <-conn.ChRouteMsg:
+			if !ok {
+				log.Debugf("ChRouteMsg closed")
+				return
+			}
+			err := conn.HandleRouteMessage(context, cmdMsg)
+			if err != nil {
+				panic(err)
+			}
 		case state, ok := <-conn.StateChannel():
 			if !ok {
 				log.Debugf("state channel closed")

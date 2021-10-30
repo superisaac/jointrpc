@@ -41,8 +41,9 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 		log.Debug("buildin dispatcher context canceled")
 	}()
 
-	self.conn = rpcrouter.NewConn()
-	commonRouter.ChJoin <- rpcrouter.CmdJoin{Conn: self.conn}
+	self.conn = commonRouter.Join()
+	// self.conn = rpcrouter.NewConn()
+	// commonRouter.ChJoin <- rpcrouter.CmdJoin{Conn: self.conn}
 
 	defer func() {
 		log.Debugf("conn %d leave router", self.conn.ConnId)
@@ -65,6 +66,15 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(ctx, msgvec)
+		case cmdMsg, ok := <-self.conn.ChRouteMsg:
+			if !ok {
+				log.Debugf("ChRouteMsg closed")
+				return nil
+			}
+			err := self.conn.HandleRouteMessage(ctx, cmdMsg)
+			if err != nil {
+				panic(err)
+			}
 		case result, ok := <-self.chResult:
 			if !ok {
 				log.Infof("result channel closed, return")
@@ -72,7 +82,8 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 			}
 
 			//commonRouter.DeliverResultOrError(
-			commonRouter.ChMsg <- rpcrouter.CmdMsg{
+			//commonRouter.ChMsg <- rpcrouter.CmdMsg{
+			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
 					Msg:        result.ResMsg,
 					Namespace:  commonRouter.Name(),

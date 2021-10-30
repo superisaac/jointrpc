@@ -8,20 +8,36 @@ import (
 	"time"
 )
 
+func (self *Router) relayMessage(cmdMsg CmdMsg) {
+	msg := cmdMsg.MsgVec.Msg
+	misc.Assert(msg.IsRequestOrNotify(), "router only support request and notify")
+	toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.MsgVec.ToConnId)
+	if found {
+		toConn.ChRouteMsg <- cmdMsg
+	} else if msg.IsRequest() {
+		reqMsg, _ := msg.(*jsonrpc.RequestMessage)
+		errMsg := jsonrpc.ErrMethodNotFound.WithData(fmt.Sprintf("request method %s", reqMsg.Method)).ToMessage(reqMsg)
+		errMsg.SetTraceId(reqMsg.TraceId())
+		errMsgVec := MsgVec{Msg: errMsg}
+		cmdMsg.ChRes <- errMsgVec
+	}
+}
+
 func (self *Router) deliverMessage(cmdMsg CmdMsg) {
 	msgvec := cmdMsg.MsgVec
 	msg := cmdMsg.MsgVec.Msg
 	msg.Log().WithFields(log.Fields{"from": msgvec.FromConnId}).Debugf("deliver message")
 	if msg.IsRequest() {
-		self.deliverRequest(msgvec, cmdMsg.Timeout, cmdMsg.ChRes)
+		self.deliverRequest(cmdMsg) //msgvec, cmdMsg.Timeout, cmdMsg.ChRes)
 	} else if msg.IsNotify() {
-		self.deliverNotify(msgvec)
+		self.deliverNotify(cmdMsg)
 	} else if msg.IsResultOrError() {
-		self.deliverResultOrError(msgvec)
+		self.deliverResultOrError(cmdMsg)
 	}
 }
 
-func (self *Router) deliverNotify(msgvec MsgVec) {
+func (self *Router) deliverNotify(cmdMsg CmdMsg) {
+	msgvec := cmdMsg.MsgVec
 	notifyMsg, ok := msgvec.Msg.(*jsonrpc.NotifyMessage)
 	misc.Assert(ok, "bad msg type other than notify")
 	notifyMsg.Log().Debugf("deliver notify")
@@ -38,7 +54,10 @@ func (self *Router) deliverNotify(msgvec MsgVec) {
 	}
 }
 
-func (self *Router) deliverRequest(msgvec MsgVec, timeout time.Duration, chRes MsgChannel) {
+func (self *Router) deliverRequest(cmdMsg CmdMsg) {
+	msgvec := cmdMsg.MsgVec
+	timeout := cmdMsg.Timeout
+	chRes := cmdMsg.ChRes
 	reqMsg, ok := msgvec.Msg.(*jsonrpc.RequestMessage)
 	misc.Assert(ok, "bad msg type other than request")
 
@@ -46,13 +65,11 @@ func (self *Router) deliverRequest(msgvec MsgVec, timeout time.Duration, chRes M
 
 	reqMsg.Log().Debugf("deliver request")
 	msgId := reqMsg.Id
-	//fromConnId := msgvec.FromConnId
 	toConn, found := self.SelectConn(reqMsg.Method, msgvec.ToConnId)
 	if found {
 		reqMsg.Log().Debugf("selected conn %d", toConn.ConnId)
 		if self.factory.Config.ValidateSchema() {
 			if v, errmsg := toConn.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
-
 				errVec := MsgVec{
 					Msg:        errmsg,
 					FromConnId: toConn.ConnId,
@@ -90,7 +107,8 @@ func (self *Router) deliverRequest(msgvec MsgVec, timeout time.Duration, chRes M
 	}
 }
 
-func (self *Router) deliverResultOrError(msgvec MsgVec) {
+func (self *Router) deliverResultOrError(cmdMsg CmdMsg) {
+	msgvec := cmdMsg.MsgVec
 	msg := msgvec.Msg
 	//if msgId, ok := msg.MustId().(string); ok {
 	msg.Log().Infof("deliver result or error")
@@ -114,12 +132,6 @@ func (self *Router) deliverResultOrError(msgvec MsgVec) {
 						}
 						reqt.ChRes <- errVec
 						return
-						// if reqt.ChRes != nil {
-
-						// 	return nil
-						// } else {
-						// 	return self.SendTo(reqt.FromConnId, errVec)
-						// }
 					}
 				}
 			}
