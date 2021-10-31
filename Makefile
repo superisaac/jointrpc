@@ -46,7 +46,7 @@ test:
 	go test -v github.com/superisaac/jointrpc/service/builtin
 	go test -v github.com/superisaac/jointrpc/service/neighbor
 	go test -v github.com/superisaac/jointrpc/playbook
-	#go test -v github.com/superisaac/jointrpc/cluster/bridge
+	go test -v github.com/superisaac/jointrpc/cluster/bridge
 
 
 clean:

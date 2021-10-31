@@ -4,9 +4,9 @@ import (
 	//"fmt"
 	"context"
 	"encoding/json"
-	//log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	//"io/ioutil"
+	"io/ioutil"
 	"os"
 
 	client "github.com/superisaac/jointrpc/client"
@@ -16,6 +16,11 @@ import (
 	"testing"
 	"time"
 )
+
+func TestMain(m *testing.M) {
+	log.SetOutput(ioutil.Discard)
+	os.Exit(m.Run())
+}
 
 const addSchema = `
 {
@@ -34,11 +39,6 @@ const addSchema = `
 }
 `
 
-func TestMain(m *testing.M) {
-	//log.SetOutput(ioutil.Discard)
-	os.Exit(m.Run())
-}
-
 func TestBridgeRun(t *testing.T) {
 	assert := assert.New(t)
 
@@ -46,23 +46,21 @@ func TestBridgeRun(t *testing.T) {
 	defer cancel()
 
 	// start server1
-	go server.StartGRPCServer(rootCtx, "localhost:10020")
+	go server.StartGRPCServer(rootCtx, "127.0.0.1:10020")
 	// start server2
-	go server.StartGRPCServer(rootCtx, "localhost:10021")
+	go server.StartGRPCServer(rootCtx, "127.0.0.1:10021")
 	// start server3
-	go server.StartGRPCServer(rootCtx, "localhost:10022")
+	go server.StartGRPCServer(rootCtx, "127.0.0.1:10022")
 
 	time.Sleep(200 * time.Millisecond)
 
 	serverEntries := []client.ServerEntry{
-		{"h2c://localhost:10020", ""},
-		{"h2c://localhost:10021", ""},
-		{"h2c://localhost:10022", ""}}
-
-	go StartNewBridge(rootCtx, serverEntries)
+		{"h2c://127.0.0.1:10020", ""},
+		{"h2c://127.0.0.1:10021", ""},
+		{"h2c://127.0.0.1:10022", ""}}
 
 	// start client1, the serve of add2int()
-	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10020", ""})
+	c1 := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10020", ""})
 	disp1 := dispatch.NewDispatcher()
 	disp1.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
@@ -71,13 +69,20 @@ func TestBridgeRun(t *testing.T) {
 	}, dispatch.WithSchema(addSchema))
 	err := c1.Connect()
 	assert.Nil(err)
+
 	cCtx, cancelServo := context.WithCancel(context.Background())
 	//defer cancelServo()
 	go c1.Live(cCtx, disp1)
 
 	// start c2, the add2int() caller to server2
 	time.Sleep(200 * time.Millisecond)
-	c2 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10021", ""})
+
+	go StartNewBridge(rootCtx, serverEntries)
+
+	//methods, err := c1.ListMethods(context.Background())
+	//fmt.Printf("methods %+v\n", methods)
+
+	c2 := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10021", ""})
 	err = c2.Connect()
 	assert.Nil(err)
 
@@ -96,7 +101,7 @@ func TestBridgeRun(t *testing.T) {
 	assert.Equal(json.Number("11"), res.MustResult())
 
 	// start client3
-	c3 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10022", ""})
+	c3 := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10022", ""})
 	err = c3.Connect()
 	assert.Nil(err)
 	// call rpc from server3 which doesnot delegates server1
@@ -131,7 +136,7 @@ func TestBridgeRun(t *testing.T) {
 	assert.Equal("method not found", errBody4.Message)
 }
 
-func sTestServerBreak(t *testing.T) {
+func TestServerBreak(t *testing.T) {
 	assert := assert.New(t)
 
 	rootCtx, cancel := context.WithCancel(context.Background())
@@ -139,20 +144,18 @@ func sTestServerBreak(t *testing.T) {
 
 	// start server1
 	ctx1, cancelServer1 := context.WithCancel(rootCtx)
-	go server.StartGRPCServer(ctx1, "localhost:10030")
+	go server.StartGRPCServer(ctx1, "127.0.0.1:10030")
 	// start server2
-	go server.StartGRPCServer(rootCtx, "localhost:10031")
+	go server.StartGRPCServer(rootCtx, "127.0.0.1:10031")
 	// start server3
-	go server.StartGRPCServer(rootCtx, "localhost:10032")
+	go server.StartGRPCServer(rootCtx, "127.0.0.1:10032")
 
 	time.Sleep(100 * time.Millisecond)
 
-	serverEntries := []client.ServerEntry{{"h2c://localhost:10030", ""}, {"h2c://localhost:10031", ""}, {"h2c://localhost:10032", ""}}
-
-	go StartNewBridge(rootCtx, serverEntries)
+	serverEntries := []client.ServerEntry{{"h2c://127.0.0.1:10030", ""}, {"h2c://127.0.0.1:10031", ""}, {"h2c://127.0.0.1:10032", ""}}
 
 	// start client1, the serve of add2int()
-	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10030", ""})
+	c1 := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10030", ""})
 	disp1 := dispatch.NewDispatcher()
 	disp1.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		a := jsonrpc.MustInt(params[0], "params[0]")
@@ -167,7 +170,11 @@ func sTestServerBreak(t *testing.T) {
 
 	// start c2, the add2int() caller to server2
 	time.Sleep(100 * time.Millisecond)
-	c2 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10031", ""})
+
+	go StartNewBridge(rootCtx, serverEntries)
+	time.Sleep(100 * time.Millisecond)
+
+	c2 := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10031", ""})
 	err = c2.Connect()
 	assert.Nil(err)
 
@@ -202,7 +209,7 @@ func sTestServerBreak(t *testing.T) {
 	assert.True(resf.IsError())
 
 	// start client3
-	c3 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10032", ""})
+	c3 := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10032", ""})
 	err = c3.Connect()
 	assert.Nil(err)
 	// call rpc from server3 which doesnot delegates server1

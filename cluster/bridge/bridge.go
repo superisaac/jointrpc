@@ -2,7 +2,7 @@ package bridge
 
 import (
 	"context"
-	"fmt"
+	//"fmt"
 	//"errors"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
@@ -83,7 +83,7 @@ func (self *Bridge) requestReceived(msgvec rpcrouter.MsgVec, fromAddress string)
 }
 
 func (self *Bridge) handleStateChange(stateChange CmdStateChange) {
-	fmt.Printf("handle state change\n")
+	//fmt.Printf("handle state change\n")
 	if fromEdge, ok := self.edges[stateChange.serverUrl]; ok {
 		self.exchangeDelegateMethods(fromEdge)
 	} else {
@@ -167,7 +167,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	})
 
 	stateListener.OnStateChange(func(state *rpcrouter.ServerState) {
-		fmt.Printf("on state change %+v\n", state)
+		//fmt.Printf("on state change %+v\n", state)
 		self.onStateChange(state)
 		bridge.ChState <- CmdStateChange{
 			serverUrl: entry.ServerUrl,
