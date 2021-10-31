@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"net"
 	"net/http"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	//datadir "github.com/superisaac/jointrpc/datadir"
@@ -209,6 +210,8 @@ func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcr
 		case <-context.Done():
 			log.Debugf("context done")
 			return
+		case <-time.After(3 * time.Second):
+			conn.ClearPendings()
 		case rest, ok := <-chResult:
 			if !ok {
 				log.Debugf("conn handler channel closed")

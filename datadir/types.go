@@ -51,7 +51,7 @@ type NeighborConfig struct {
 // The root config item
 type Config struct {
 	Version         string                    `yaml:"version"`
-	Logging         LoggingConfig             `yaml:"log,omitempty"`
+	Logging         LoggingConfig             `yaml:"logging,omitempty"`
 	Server          ServerConfig              `yaml:"server"`
 	Authorizations  []BasicAuth               `yaml:"auth,omitempty"`
 	Metrics         MetricsConfig             `yaml:"metrics,omitempty"`

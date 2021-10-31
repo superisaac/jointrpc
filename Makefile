@@ -68,7 +68,7 @@ gofmt:
 	go fmt cluster/bridge/*.go
 	go fmt service/*.go
 	go fmt service/builtin/*.go
-	#go fmt service/neighbor/*.go
+	go fmt service/neighbor/*.go
 	go fmt service/vars/*.go
 	go fmt cmd/*.go
 	go fmt *.go

@@ -12,6 +12,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 type VarsService struct {
@@ -125,6 +126,8 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		case <-ctx.Done():
 			log.Debugf("vars handlers, context done")
 			return nil
+		case <-time.After(3 * time.Second):
+			self.conn.ClearPendings()
 		case event, ok := <-watcher.Events:
 			if !ok {
 				return nil

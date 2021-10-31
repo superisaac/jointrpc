@@ -193,3 +193,20 @@ func (self *ConnT) handleResultOrError(ctx context.Context, cmdMsg CmdMsg) error
 	}
 	return nil
 }
+
+func (self *ConnT) ClearPendings() {
+	now := time.Now()
+	newPendings := make(map[interface{}]ConnPending)
+
+	for reqMsgId, pending := range self.pendings {
+		if now.After(pending.Expire) {
+			errMsg := jsonrpc.ErrTimeout.ToMessage(pending.cmdMsg.MsgVec.Msg)
+			errVec := pending.cmdMsg.MsgVec
+			errVec.Msg = errMsg
+			pending.cmdMsg.ChRes <- errVec
+		} else {
+			newPendings[reqMsgId] = pending
+		}
+	}
+	self.pendings = newPendings
+}

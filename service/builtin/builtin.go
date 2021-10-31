@@ -3,10 +3,10 @@ package builtin
 import (
 	"context"
 	//"fmt"
-	//"time"
 	log "github.com/sirupsen/logrus"
 	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
+	"time"
 
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/dispatch"
@@ -59,6 +59,8 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 		case <-ctx.Done():
 			log.Debugf("builtin handlers, context done")
 			return nil
+		case <-time.After(3 * time.Second):
+			self.conn.ClearPendings()
 		case msgvec, ok := <-self.conn.RecvChannel:
 			if !ok {
 				log.Debugf("recv channel colosed, leave")

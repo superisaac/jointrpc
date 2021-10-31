@@ -18,7 +18,7 @@ func Datadir() string {
 		if err != nil {
 			panic(err)
 		}
-		datadirPath = filepath.Join(cwd, ".rpctube")
+		datadirPath = filepath.Join(cwd, ".jointrpc")
 	}
 	return datadirPath
 }

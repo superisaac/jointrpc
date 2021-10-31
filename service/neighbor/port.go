@@ -3,6 +3,7 @@ package neighbor
 import (
 	"context"
 	"github.com/pkg/errors"
+	"time"
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
@@ -113,6 +114,8 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 		case <-mainCtx.Done():
 			// TODO: log
 			return
+		case <-time.After(3 * time.Second):
+			self.conn.ClearPendings()
 		case stateChange, ok := <-self.ChState:
 			if !ok {
 				// TODO: log
@@ -146,8 +149,8 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 			//router.ChMsg <- rpcrouter.CmdMsg{
 			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
-					Namespace:  router.Name(),
-					Msg:        result.ResMsg,
+					Namespace: router.Name(),
+					Msg:       result.ResMsg,
 				},
 			}
 		}

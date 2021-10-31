@@ -251,6 +251,8 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer,
 			}
 			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
 			msgutil.GRPCServerSend(stream, ntf)
+		case <-time.After(3 * time.Second):
+			conn.ClearPendings()
 		}
 	} // and for loop
 }
