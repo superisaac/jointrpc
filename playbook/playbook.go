@@ -65,9 +65,7 @@ func (self MethodT) CanExec() bool {
 }
 
 func (self MethodT) Exec(req *dispatch.RPCRequest, methodName string) (interface{}, error) {
-	msg := req.MsgVec.Msg
-	// if !msg.IsRequestOrNotify() {
-	// }
+	msg := req.CmdMsg.Msg
 	var ctx context.Context
 	var cancel func()
 	if self.Shell.Timeout != nil {
@@ -127,21 +125,21 @@ func (self *Playbook) Run(serverEntry client.ServerEntry) error {
 		}
 
 		disp.On(name, func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-			req.MsgVec.Msg.Log().Infof("begin exec %s", name)
+			req.CmdMsg.Msg.Log().Infof("begin exec %s", name)
 			v, err := method.Exec(req, name)
 			if err != nil {
 				var exitErr *exec.ExitError
 				if errors.As(err, &exitErr) {
-					req.MsgVec.Msg.Log().Warnf(
+					req.CmdMsg.Msg.Log().Warnf(
 						"command exit, code: %d, stderr: %s",
 						exitErr.ExitCode(),
 						string(exitErr.Stderr)[:100])
 					return nil, jsonrpc.ErrLiveExit
 				}
 
-				req.MsgVec.Msg.Log().Warnf("error exec %s, %s", name, err.Error())
+				req.CmdMsg.Msg.Log().Warnf("error exec %s, %s", name, err.Error())
 			} else {
-				req.MsgVec.Msg.Log().Infof("end exec %s", name)
+				req.CmdMsg.Msg.Log().Infof("end exec %s", name)
 			}
 			return v, err
 		}, opts...)

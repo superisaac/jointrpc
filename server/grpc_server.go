@@ -223,12 +223,12 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer,
 				return
 			}
 			msgutil.GRPCServerSend(stream, rest.ResMsg)
-		case msgvec, ok := <-conn.MsgOutput():
+		case cmdMsg, ok := <-conn.MsgOutput():
 			if !ok {
 				log.Debugf("recv channel closed")
 				return
 			}
-			msgutil.GRPCServerSend(stream, msgvec.Msg)
+			msgutil.GRPCServerSend(stream, cmdMsg.Msg)
 
 		case cmdMsg, ok := <-conn.MsgInput():
 			if !ok {
@@ -284,25 +284,17 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 			return msgutil.GRPCHandleCodes(err, codes.Canceled)
 		}
 		msg.Log().Debugf("received from grpc stream")
-		msgvec := rpcrouter.MsgVec{
-			Msg:       msg,
-			Namespace: conn.Namespace}
-
-		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, true)
+		instRes := streamDisp.HandleMessage(ctx,
+			msg,
+			conn.Namespace,
+			chResult,
+			conn, true)
 		if instRes != nil {
 			msgutil.GRPCServerSend(stream, instRes)
 			if instRes.IsError() {
 				return nil
 			}
 		}
-		// if handled {
-		// 	continue
-		// }
-		// if conn.Joined() {
-		// 	router := factory.Get(conn.Namespace)
-		// 	router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
-		// }
-		//continue
 	}
 }
 

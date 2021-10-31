@@ -100,8 +100,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 	}()
 
 	self.disp.On("_vars.list", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		//router := factory.GetOrNil(req.MsgVec.Namespace)
-		if vars, ok := self.namedVars[req.MsgVec.Namespace]; ok {
+		if vars, ok := self.namedVars[req.CmdMsg.Namespace]; ok {
 			return vars, nil
 		} else {
 			return make(map[string]interface{}), nil
@@ -149,13 +148,13 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				return nil
 			}
 			log.Warnf("vars watcher error: %+v", err)
-		case msgvec, ok := <-self.conn.MsgOutput():
+		case cmdMsg, ok := <-self.conn.MsgOutput():
 			if !ok {
 				log.Debugf("recv channel colosed, leave")
 				return nil
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
-			self.requestReceived(ctx, msgvec)
+			self.requestReceived(ctx, cmdMsg)
 		case cmdMsg, ok := <-self.conn.MsgInput():
 			if !ok {
 				log.Debugf("MsgInput() closed")
@@ -171,18 +170,9 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				return nil
 			}
 			self.conn.MsgInput() <- rpcrouter.CmdMsg{
-				MsgVec: rpcrouter.MsgVec{
-					Msg:       result.ResMsg,
-					Namespace: commonRouter.Name(),
-				},
+				Msg:       result.ResMsg,
+				Namespace: commonRouter.Name(),
 			}
-
-			// commonRouter.DeliverResultOrError(
-			// 	rpcrouter.MsgVec{
-			// 		Msg:        result.ResMsg,
-			// 		Namespace:  commonRouter.Name(),
-			// 		FromConnId: self.conn.ConnId,
-			// 	})
 		}
 	}
 	return nil
@@ -200,10 +190,10 @@ func (self *VarsService) declareMethods(factory *rpcrouter.RouterFactory) {
 	}
 }
 
-func (self *VarsService) requestReceived(ctx context.Context, msgvec rpcrouter.MsgVec) {
-	msg := msgvec.Msg
-	if msg.IsRequest() || msg.IsNotify() {
-		self.disp.Feed(ctx, msgvec, self.chResult)
+func (self *VarsService) requestReceived(ctx context.Context, cmdMsg rpcrouter.CmdMsg) {
+	msg := cmdMsg.Msg
+	if msg.IsRequestOrNotify() {
+		self.disp.Feed(ctx, cmdMsg, self.chResult)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}

@@ -16,8 +16,8 @@ func NewConn() *ConnT {
 	pendings := make(map[interface{}]ConnPending)
 	conn := &ConnT{ConnId: connId,
 		ServeMethods: methods,
-		msgOutput:  make(MsgChannel, 5000),
-		msgInput:   make(chan CmdMsg, 5000),
+		msgOutput:    make(MsgChannel, 5000),
+		msgInput:     make(MsgChannel, 5000),
 		pendings:     pendings,
 	}
 	return conn
@@ -27,7 +27,7 @@ func (self ConnT) MsgOutput() MsgChannel {
 	return self.msgOutput
 }
 
-func (self ConnT) MsgInput() chan CmdMsg {
+func (self ConnT) MsgInput() MsgChannel {
 	return self.msgInput
 }
 
@@ -101,7 +101,7 @@ func (self ConnT) Log() *log.Entry {
 }
 
 func (self *ConnT) HandleRouteMessage(ctx context.Context, cmdMsg CmdMsg) error {
-	msg := cmdMsg.MsgVec.Msg
+	msg := cmdMsg.Msg
 	if msg.IsRequest() {
 		// Down message
 		return self.handleRequest(ctx, cmdMsg)
@@ -116,13 +116,10 @@ func (self *ConnT) HandleRouteMessage(ctx context.Context, cmdMsg CmdMsg) error 
 }
 
 func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
-	reqMsg, _ := cmdMsg.MsgVec.Msg.(*jsonrpc.RequestMessage)
+	reqMsg, _ := cmdMsg.Msg.(*jsonrpc.RequestMessage)
 	if self.router.factory.Config.ValidateSchema() {
 		if v, errmsg := self.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
-
-			errVec := cmdMsg.MsgVec
-			errVec.Msg = errmsg
-			cmdMsg.ChRes <- errVec
+			cmdMsg.ChRes <- cmdMsg.Res(errmsg)
 			return nil
 		}
 	}
@@ -133,34 +130,35 @@ func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
 
 	expireTime := time.Now().Add(cmdMsg.Timeout)
 	newMsgId := misc.NewUuid()
-	reqMsg = reqMsg.Clone(newMsgId)
+	newReqMsg := reqMsg.Clone(newMsgId)
 	self.pendings[newMsgId] = ConnPending{
 		cmdMsg: cmdMsg,
 		Expire: expireTime,
 	}
-	reqVec := cmdMsg.MsgVec
-	reqVec.Msg = reqMsg
-	self.msgOutput <- reqVec
+
+	newCmdMsg := CmdMsg{Msg: newReqMsg, Namespace: cmdMsg.Namespace}
+	self.MsgOutput() <- newCmdMsg
 	return nil
 }
 
 func (self *ConnT) handleNotify(ctx context.Context, cmdMsg CmdMsg) error {
-	notifyMsg, _ := cmdMsg.MsgVec.Msg.(*jsonrpc.NotifyMessage)
+	notifyMsg, _ := cmdMsg.Msg.(*jsonrpc.NotifyMessage)
 	if self.router.factory.Config.ValidateSchema() {
 		if v, err := self.ValidateNotifyMsg(notifyMsg); !v && err != nil {
 			notifyMsg.Log().Errorf("notify not valid, %s", err.Error())
 			return nil
 		}
 	}
-	self.msgOutput <- MsgVec{Msg: notifyMsg, Namespace: cmdMsg.MsgVec.Namespace}
+
+	self.MsgOutput() <- cmdMsg
 	return nil
 }
 
 func (self *ConnT) handleResultOrError(ctx context.Context, cmdMsg CmdMsg) error {
-	msg := cmdMsg.MsgVec.Msg
+	msg := cmdMsg.Msg
 	msgId := msg.MustId()
 	if pending, ok := self.pendings[msgId]; ok {
-		origReq, ok := pending.cmdMsg.MsgVec.Msg.(*jsonrpc.RequestMessage)
+		origReq, ok := pending.cmdMsg.Msg.(*jsonrpc.RequestMessage)
 		misc.Assert(ok, "original is not request")
 		// delete pendings
 		delete(self.pendings, msgId)
@@ -177,26 +175,20 @@ func (self *ConnT) handleResultOrError(ctx context.Context, cmdMsg CmdMsg) error
 		if resMsg, ok := msg.(*jsonrpc.ResultMessage); ok {
 			if self.router.factory.Config.ValidateSchema() {
 				if v, errmsg := self.ValidateResultMsg(resMsg, origReq); !v && errmsg != nil {
-					errVec := cmdMsg.MsgVec
-					errVec.Msg = errmsg
-					pending.cmdMsg.ChRes <- errVec
+					pending.cmdMsg.ChRes <- cmdMsg.Res(errmsg)
 					return nil
 				}
 			}
 			newRes := jsonrpc.NewResultMessage(origReq, resMsg.Result)
-			newVec := cmdMsg.MsgVec
-			newVec.Msg = newRes
-			pending.cmdMsg.ChRes <- newVec
+			pending.cmdMsg.ChRes <- cmdMsg.Res(newRes)
 			return nil
 		} else if errMsg, ok := msg.(*jsonrpc.ErrorMessage); ok {
 			newErr := jsonrpc.NewErrorMessage(origReq, errMsg.Error)
-			newVec := cmdMsg.MsgVec
-			newVec.Msg = newErr
-			pending.cmdMsg.ChRes <- newVec
+			pending.cmdMsg.ChRes <- cmdMsg.Res(newErr)
 			return nil
 		}
 	} else {
-		cmdMsg.MsgVec.Msg.Log().Warnf("cannot find pending request")
+		cmdMsg.Msg.Log().Warnf("cannot find pending request")
 	}
 	return nil
 }
@@ -207,10 +199,10 @@ func (self *ConnT) ClearPendings() {
 
 	for reqMsgId, pending := range self.pendings {
 		if now.After(pending.Expire) {
-			errMsg := jsonrpc.ErrTimeout.ToMessage(pending.cmdMsg.MsgVec.Msg)
-			errVec := pending.cmdMsg.MsgVec
-			errVec.Msg = errMsg
-			pending.cmdMsg.ChRes <- errVec
+			errMsg := jsonrpc.ErrTimeout.ToMessage(pending.cmdMsg.Msg)
+			errCmdMsg := pending.cmdMsg
+			errCmdMsg.Msg = errMsg
+			pending.cmdMsg.ChRes <- errCmdMsg
 		} else {
 			newPendings[reqMsgId] = pending
 		}

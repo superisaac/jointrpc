@@ -218,12 +218,12 @@ func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcr
 				return
 			}
 			msgutil.WSSend(ws, rest.ResMsg)
-		case msgvec, ok := <-conn.MsgOutput():
+		case cmdMsg, ok := <-conn.MsgOutput():
 			if !ok {
 				log.Debugf("recv channel closed")
 				return
 			}
-			msgutil.WSSend(ws, msgvec.Msg)
+			msgutil.WSSend(ws, cmdMsg.Msg)
 		case cmdMsg, ok := <-conn.MsgInput():
 			if !ok {
 				log.Debugf("MsgInput() closed")
@@ -288,10 +288,11 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			msg.SetTraceId(misc.NewUuid())
 		}
 
-		msgvec := rpcrouter.MsgVec{
-			Msg:       msg,
-			Namespace: conn.Namespace}
-		instRes := streamDisp.HandleMessage(ctx, msgvec, chResult, conn, false)
+		instRes := streamDisp.HandleMessage(
+			ctx, msg,
+			conn.Namespace,
+			chResult,
+			conn, false)
 
 		if instRes != nil {
 			err := msgutil.WSSend(ws, instRes)

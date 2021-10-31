@@ -26,14 +26,10 @@ type CID uint64
 const ZeroCID = CID(0)
 
 // Commands
-type MsgVec struct {
-	Msg       jsonrpc.IMessage
-	Namespace string
-	//FromConnId CID
-	//ToConnId   CID
-}
-
-type MsgChannel chan MsgVec
+// type MsgVec struct {
+// 	Msg       jsonrpc.IMessage
+// 	Namespace string
+// }
 
 type MethodInfo struct {
 	Name       string `mapstructure:"name"`
@@ -54,10 +50,9 @@ type ConnPending struct {
 }
 
 type ConnT struct {
-	ConnId      CID
-	Namespace   string
-	PeerAddr    net.Addr
-
+	ConnId    CID
+	Namespace string
+	PeerAddr  net.Addr
 
 	ServeMethods    map[string]MethodInfo
 	DelegateMethods map[string]bool
@@ -66,11 +61,11 @@ type ConnT struct {
 
 	stateChannel chan *ServerState
 
-	router     *Router
+	router *Router
 
-	msgOutput MsgChannel	
-	msgInput   chan CmdMsg
-	pendings   map[interface{}]ConnPending
+	msgOutput MsgChannel
+	msgInput  MsgChannel //chan CmdMsg
+	pendings  map[interface{}]ConnPending
 }
 
 type MethodDesc struct {
@@ -114,11 +109,13 @@ type CmdSelectConn struct {
 }
 
 type CmdMsg struct {
-	MsgVec  MsgVec
-	ConnId  CID
-	Timeout time.Duration
-	ChRes   MsgChannel
+	Msg       jsonrpc.IMessage
+	Namespace string
+	ConnId    CID
+	Timeout   time.Duration
+	ChRes     MsgChannel
 }
+type MsgChannel chan CmdMsg
 
 type CmdMethods struct {
 	Namespace string
@@ -147,10 +144,9 @@ type Router struct {
 	cancelFunc func()
 
 	// channels
-	ChJoin  chan CmdJoin
-	ChLeave chan CmdLeave
-	//ChMsg       chan CmdMsg
-	chRouteMsg   chan CmdMsg
+	ChJoin       chan CmdJoin
+	ChLeave      chan CmdLeave
+	chRouteMsg   MsgChannel
 	chSelectConn chan CmdSelectConn
 	ChMethods    chan CmdMethods
 	ChDelegates  chan CmdDelegates

@@ -8,6 +8,10 @@ import (
 	//"time"
 )
 
+func (self CmdMsg) Res(res jsonrpc.IMessage) CmdMsg {
+	return CmdMsg{Msg: res, Namespace: self.Namespace}
+}
+
 func (self *Router) PostMessage(cmdMsg CmdMsg) {
 	// there are two paradigms two post methods
 	// 1. send to router and let router relay the message to correspondend connections
@@ -18,7 +22,7 @@ func (self *Router) PostMessage(cmdMsg CmdMsg) {
 }
 
 func (self *Router) relayMessage(cmdMsg CmdMsg) {
-	msg := cmdMsg.MsgVec.Msg
+	msg := cmdMsg.Msg
 	misc.Assert(msg.IsRequestOrNotify(), "router only support request and notify")
 	toConn, found := self.SelectConn(msg.MustMethod(), cmdMsg.ConnId)
 	if found {
@@ -27,13 +31,12 @@ func (self *Router) relayMessage(cmdMsg CmdMsg) {
 		reqMsg, _ := msg.(*jsonrpc.RequestMessage)
 		errMsg := jsonrpc.ErrMethodNotFound.WithData(fmt.Sprintf("request method %s", reqMsg.Method)).ToMessage(reqMsg)
 		errMsg.SetTraceId(reqMsg.TraceId())
-		errMsgVec := MsgVec{Msg: errMsg}
-		cmdMsg.ChRes <- errMsgVec
+		cmdMsg.ChRes <- cmdMsg.Res(errMsg)
 	}
 }
 
 func (self *Router) redirectMessage(cmdMsg CmdMsg) {
-	msg := cmdMsg.MsgVec.Msg
+	msg := cmdMsg.Msg
 	misc.Assert(msg.IsRequestOrNotify(), "router only support request and notify")
 
 	chRet := make(chan RetSelectConn, 1)
@@ -50,8 +53,7 @@ func (self *Router) redirectMessage(cmdMsg CmdMsg) {
 		reqMsg, _ := msg.(*jsonrpc.RequestMessage)
 		errMsg := jsonrpc.ErrMethodNotFound.WithData(fmt.Sprintf("request method %s", reqMsg.Method)).ToMessage(reqMsg)
 		errMsg.SetTraceId(reqMsg.TraceId())
-		errMsgVec := MsgVec{Msg: errMsg, Namespace: cmdMsg.MsgVec.Namespace}
-		cmdMsg.ChRes <- errMsgVec
+		cmdMsg.ChRes <- cmdMsg.Res(errMsg)
 	} else {
 		msg.Log().Warnf("fail to select connect")
 	}

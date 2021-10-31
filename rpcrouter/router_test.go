@@ -71,13 +71,12 @@ func TestRouteMessage(t *testing.T) {
 	chRes := make(MsgChannel, 1)
 	//router.MsgInput() <- CmdMsg{
 	router.relayMessage(CmdMsg{
-		MsgVec: MsgVec{
-			Msg:       msg,
-			Namespace: router.Name()},
-		ChRes: chRes})
+		Msg:       msg,
+		Namespace: router.Name(),
+		ChRes:     chRes})
 	cmdMsg := <-conn.MsgInput()
-	assert.True(cmdMsg.MsgVec.Msg.IsRequest())
-	assert.Equal("abc", cmdMsg.MsgVec.Msg.MustMethod())
+	assert.True(cmdMsg.Msg.IsRequest())
+	assert.Equal("abc", cmdMsg.Msg.MustMethod())
 }
 
 func TestRouteRoutine(t *testing.T) {
@@ -110,13 +109,11 @@ func TestRouteRoutine(t *testing.T) {
 	assert.Equal(json.Number("100002"), msg.MustId())
 
 	conn.handleRequest(factory.startCtx, CmdMsg{
-		MsgVec: MsgVec{
-			Msg:       msg,
-			Namespace: router.Name(),
-		},
-		Timeout: 0,
-		ChRes:   chRes,
-		ConnId:  cid,
+		Msg:       msg,
+		Namespace: router.Name(),
+		Timeout:   0,
+		ChRes:     chRes,
+		ConnId:    cid,
 	})
 	rcvmsg := <-conn.MsgOutput()
 	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
@@ -135,10 +132,7 @@ func TestRouteRoutine(t *testing.T) {
 	assert.Equal(json.Number("100003"), msg2.MustId())
 	chRes2 := make(MsgChannel, 100)
 	router.relayMessage(CmdMsg{
-		MsgVec: MsgVec{
-			Msg: msg2,
-			//ToConnId:   CID(int(cid) + 100),
-		},
+		Msg:     msg2,
 		Timeout: 0,
 		ChRes:   chRes2,
 		ConnId:  CID(int(cid) + 100),

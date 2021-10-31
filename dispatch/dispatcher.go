@@ -12,8 +12,8 @@ import (
 )
 
 // methods of RPCRequest
-func NewRPCRequest(ctx context.Context, msgvec rpcrouter.MsgVec) *RPCRequest {
-	return &RPCRequest{Context: ctx, MsgVec: msgvec}
+func NewRPCRequest(ctx context.Context, cmdMsg rpcrouter.CmdMsg) *RPCRequest {
+	return &RPCRequest{Context: ctx, CmdMsg: cmdMsg}
 }
 
 func (self *RPCRequest) WithData(data interface{}) *RPCRequest {
@@ -124,22 +124,22 @@ func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{},
 	}
 }
 
-func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrouter.MsgVec, chResult chan ResultT) {
+func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrouter.CmdMsg, chResult chan ResultT) {
 	chResult <- ResultT{
 		ResMsg:    resmsg,
-		ReqMsgVec: req,
+		ReqCmdMsg: req,
 	}
 }
 
-func (self *Dispatcher) Expect(ctx context.Context, msgvec rpcrouter.MsgVec, opts ...func(*RPCRequest)) jsonrpc.IMessage {
+func (self *Dispatcher) Expect(ctx context.Context, cmdMsg rpcrouter.CmdMsg, opts ...func(*RPCRequest)) jsonrpc.IMessage {
 	chResult := make(chan ResultT, 2)
-	self.Feed(ctx, msgvec, chResult, opts...)
+	self.Feed(ctx, cmdMsg, chResult, opts...)
 	res := <-chResult
 	return res.ResMsg
 }
 
-func (self *Dispatcher) Feed(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan ResultT, opts ...func(*RPCRequest)) {
-	req := NewRPCRequest(ctx, msgvec)
+func (self *Dispatcher) Feed(ctx context.Context, cmdMsg rpcrouter.CmdMsg, chResult chan ResultT, opts ...func(*RPCRequest)) {
+	req := NewRPCRequest(ctx, cmdMsg)
 	for _, opt := range opts {
 		opt(req)
 	}
@@ -151,22 +151,18 @@ func (self *Dispatcher) Feed(ctx context.Context, msgvec rpcrouter.MsgVec, chRes
 }
 
 func (self *Dispatcher) feed(req *RPCRequest, chResult chan ResultT) {
-	if req.MsgVec.Msg.IsRequest() {
+	if req.CmdMsg.Msg.IsRequest() {
 		self.feedRequest(req, chResult)
 	} else {
-		misc.Assert(req.MsgVec.Msg.IsNotify(), "invalid msg type")
+		misc.Assert(req.CmdMsg.Msg.IsNotify(), "invalid msg type")
 		self.feedNotify(req, chResult)
 	}
 }
 
 func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
-	msgvec := req.MsgVec
-	reqmsg, ok := msgvec.Msg.(*jsonrpc.RequestMessage)
+	reqmsg, ok := req.CmdMsg.Msg.(*jsonrpc.RequestMessage)
 
 	misc.Assert(ok, "msg is not request")
-
-	//namespace := msgvec.Namespace
-	//misc.Assert(namespace != "", "empty namespace")
 
 	handler, ok := self.methodHandlers[reqmsg.Method]
 
@@ -184,13 +180,11 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 						//} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
 					} else if errors.As(err, &rpcError) {
 						errmsg := rpcError.ToMessage(reqmsg)
-						self.ReturnResultMessage(errmsg, msgvec, chResult)
+						self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
 						return
 					}
 				}
 				reqmsg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
-				//errmsg := jsonrpc.ErrServerError.ToMessage(reqmsg)
-				//self.ReturnResultMessage(errmsg, msgvec, chResult)
 			}
 		}()
 	}
@@ -216,21 +210,17 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 	if err != nil {
 		log.Warnf("bad up message %w", err)
 		errmsg := jsonrpc.ErrBadResource.ToMessage(reqmsg)
-		self.ReturnResultMessage(errmsg, msgvec, chResult)
+		self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
 		return
 	}
 	if resmsg != nil {
-		self.ReturnResultMessage(resmsg, msgvec, chResult)
+		self.ReturnResultMessage(resmsg, req.CmdMsg, chResult)
 	}
 }
 
 func (self *Dispatcher) feedNotify(req *RPCRequest, chResult chan ResultT) {
-	msgvec := req.MsgVec
-	ntfmsg, ok := msgvec.Msg.(*jsonrpc.NotifyMessage)
+	ntfmsg, ok := req.CmdMsg.Msg.(*jsonrpc.NotifyMessage)
 	misc.Assert(ok, "message is not ok")
-	//namespace := msgvec.Namespace
-	//misc.Assert(namespace != "", "empty namespace")
-
 	handler, ok := self.methodHandlers[ntfmsg.Method]
 
 	defer func() {

@@ -61,13 +61,13 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 			return nil
 		case <-time.After(3 * time.Second):
 			self.conn.ClearPendings()
-		case msgvec, ok := <-self.conn.MsgOutput():
+		case cmdMsg, ok := <-self.conn.MsgOutput():
 			if !ok {
 				log.Debugf("recv channel colosed, leave")
 				return nil
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
-			self.requestReceived(ctx, msgvec)
+			self.requestReceived(ctx, cmdMsg)
 		case cmdMsg, ok := <-self.conn.MsgInput():
 			if !ok {
 				log.Debugf("MsgInput() closed")
@@ -84,20 +84,18 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 			}
 
 			self.conn.MsgInput() <- rpcrouter.CmdMsg{
-				MsgVec: rpcrouter.MsgVec{
-					Msg:       result.ResMsg,
-					Namespace: commonRouter.Name(),
-				},
+				Msg:       result.ResMsg,
+				Namespace: commonRouter.Name(),
 			}
 		}
 	}
 	return nil
 }
 
-func (self *BuiltinService) requestReceived(ctx context.Context, msgvec rpcrouter.MsgVec) {
-	msg := msgvec.Msg
-	if msg.IsRequest() || msg.IsNotify() {
-		self.disp.Feed(ctx, msgvec, self.chResult)
+func (self *BuiltinService) requestReceived(ctx context.Context, cmdMsg rpcrouter.CmdMsg) {
+	msg := cmdMsg.Msg
+	if msg.IsRequestOrNotify() {
+		self.disp.Feed(ctx, cmdMsg, self.chResult)
 	} else {
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}
@@ -117,7 +115,7 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
 
 	self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		router := factory.Get(req.MsgVec.Namespace)
+		router := factory.Get(req.CmdMsg.Namespace)
 		minfos := router.GetMethods()
 
 		minfos = append(minfos, factory.CommonRouter().GetMethods()...)

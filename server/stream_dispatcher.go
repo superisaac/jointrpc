@@ -205,14 +205,14 @@ func (self *StreamDispatcher) Init() {
 		}, dispatch.WithSchema(authorizeSchema))
 } // end of Init()
 
-func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcrouter.MsgVec, chResult chan dispatch.ResultT, conn *rpcrouter.ConnT, allowRequest bool) jsonrpc.IMessage {
+func (self *StreamDispatcher) HandleMessage(ctx context.Context, msg jsonrpc.IMessage, ns string, chResult chan dispatch.ResultT, conn *rpcrouter.ConnT, allowRequest bool) jsonrpc.IMessage {
+	cmdMsg := rpcrouter.CmdMsg{Msg: msg, Namespace: ns}
 	if !conn.Joined() {
-		instRes := self.authDisp.Expect(ctx, msgvec, dispatch.WithRequestData(conn))
+		instRes := self.authDisp.Expect(ctx, cmdMsg, dispatch.WithRequestData(conn))
 		return instRes
 	} else {
-		msg := msgvec.Msg
 		if msg.IsRequestOrNotify() && self.disp.HasMethod(msg.MustMethod()) {
-			self.disp.Feed(ctx, msgvec, chResult, dispatch.WithRequestData(conn))
+			self.disp.Feed(ctx, cmdMsg, chResult, dispatch.WithRequestData(conn))
 		} else if msg.IsRequest() && !allowRequest {
 			instRes := jsonrpc.ErrNotAllowed.ToMessage(msg)
 			return instRes
@@ -227,19 +227,11 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcroute
 			if msg.IsNotify() {
 				chRes = nil
 			}
-			router.PostMessage(rpcrouter.CmdMsg{
-				MsgVec: msgvec,
-				//Timeout:
-				ChRes: chRes,
-			})
-
-			//router.DeliverMessage(rpcrouter.CmdMsg{MsgVec: msgvec})
-			//factory.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
+			cmdMsg.ChRes = chRes
+			router.PostMessage(cmdMsg)
 		} else if msg.IsResultOrError() {
 			// result and error don't need ChRes
-			conn.MsgInput() <- rpcrouter.CmdMsg{
-				MsgVec: msgvec,
-			}
+			conn.MsgInput() <- cmdMsg
 		}
 		return nil
 	}

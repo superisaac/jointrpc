@@ -192,7 +192,7 @@ func CommandWatch() {
 
 	for _, notifyName := range notifyNames {
 		disp.On(notifyName, func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-			msg := req.MsgVec.Msg
+			msg := req.CmdMsg.Msg
 			repr, err := jsonrpc.EncodePretty(msg)
 			if err != nil {
 				panic(err)

@@ -122,12 +122,12 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 				return
 			}
 			self.handleStateChange(factory, stateChange)
-		case msgvec, ok := <-self.conn.MsgOutput():
+		case cmdMsg, ok := <-self.conn.MsgOutput():
 			if !ok {
 				// TODO: log
 				return
 			}
-			err := self.requestReceived(msgvec)
+			err := self.requestReceived(cmdMsg)
 			if err != nil {
 				panic(err)
 			}
@@ -148,18 +148,16 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 			//router.DeliverResultOrError(
 			//router.ChMsg <- rpcrouter.CmdMsg{
 			self.conn.MsgInput() <- rpcrouter.CmdMsg{
-				MsgVec: rpcrouter.MsgVec{
-					Namespace: router.Name(),
-					Msg:       result.ResMsg,
-				},
+				Msg:       result.ResMsg,
+				Namespace: router.Name(),
 			}
 		}
 	}
 	return
 }
 
-func (self *NeighborPort) requestReceived(msgvec rpcrouter.MsgVec) error {
-	msg := msgvec.Msg
+func (self *NeighborPort) requestReceived(cmdMsg rpcrouter.CmdMsg) error {
+	msg := cmdMsg.Msg
 	// stupid methods
 	if msg.IsRequest() {
 		for _, edge := range self.edges {
@@ -170,13 +168,13 @@ func (self *NeighborPort) requestReceived(msgvec rpcrouter.MsgVec) error {
 				if err != nil {
 					return err
 				}
-				misc.AssertEqual(resmsg.TraceId(), msgvec.Msg.TraceId(), "")
+				misc.AssertEqual(resmsg.TraceId(), cmdMsg.Msg.TraceId(), "")
 
 				if resmsg.MustId() != msg.MustId() {
 					log.Fatal("result has not the same id with origial request msg")
 				}
 
-				self.dispatcher.ReturnResultMessage(resmsg, msgvec, self.chResult)
+				self.dispatcher.ReturnResultMessage(resmsg, cmdMsg, self.chResult)
 				return nil
 			}
 		}

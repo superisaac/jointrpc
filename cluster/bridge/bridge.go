@@ -55,9 +55,8 @@ func (self *Bridge) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (self *Bridge) requestReceived(msgvec rpcrouter.MsgVec, fromAddress string) (interface{}, error) {
-	// stupid methods
-	msg := msgvec.Msg
+func (self *Bridge) requestReceived(cmdMsg rpcrouter.CmdMsg, fromAddress string) (interface{}, error) {
+	msg := cmdMsg.Msg
 	if msg.IsRequest() {
 		for sn, edge := range self.edges {
 			if sn == fromAddress {
@@ -176,7 +175,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	})
 
 	disp.OnDefault(func(req *dispatch.RPCRequest, method string, params []interface{}) (interface{}, error) {
-		return bridge.requestReceived(req.MsgVec, entry.ServerUrl)
+		return bridge.requestReceived(req.CmdMsg, entry.ServerUrl)
 	})
 	client.OnStateChanged(disp, stateListener)
 

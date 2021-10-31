@@ -49,7 +49,7 @@ func NewRouter(factory *RouterFactory, name string) *Router {
 }
 
 func (self *Router) setupChannels() {
-	self.chRouteMsg = make(chan CmdMsg, 10000)
+	self.chRouteMsg = make(MsgChannel, 10000)
 	self.chSelectConn = make(chan CmdSelectConn, 10000)
 	self.ChJoin = make(chan CmdJoin, 10000)
 	self.ChLeave = make(chan CmdLeave, 10000)
@@ -399,21 +399,6 @@ func (self *Router) GetConn(connId CID) (*ConnT, bool) {
 	return conn, found
 }
 
-func (self *Router) SendTo(connId CID, msgvec MsgVec) {
-	self.rlock("SendTo")
-	defer self.runlock("SendTo")
-
-	msgvec.Msg.Log().Infof("send to %d", connId)
-
-	ct, ok := self.connMap[connId]
-	if ok {
-		ct.MsgOutput() <- msgvec
-		msgvec.Msg.Log().Debugf("to conn %d", connId)
-	} else {
-		msgvec.Msg.Log().Warnf("conn for %d not found", connId)
-	}
-}
-
 func (self *Router) Join() *ConnT {
 	conn := NewConn()
 	self.joinConn(conn)
@@ -583,8 +568,8 @@ func (self *Router) loop() {
 					log.Warnf("ChMsg channel not ok")
 					return
 				}
-				misc.Assert(cmdMsg.MsgVec.Namespace != "", "bad msgvec namespace")
-				cmdMsg.MsgVec.Msg.Log().Debugf("size of ChRouteMsg is %d", len(self.chRouteMsg))
+				misc.Assert(cmdMsg.Namespace != "", "bad msg namespace")
+				cmdMsg.Msg.Log().Debugf("size of ChRouteMsg is %d", len(self.chRouteMsg))
 				self.relayMessage(cmdMsg)
 			}
 		}

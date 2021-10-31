@@ -175,10 +175,10 @@ func (self *RPCClient) NewWatchStateRequest() *jsonrpc.RequestMessage {
 }
 
 func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, disp *dispatch.Dispatcher, namespace string) {
-	msgvec := rpcrouter.MsgVec{
+	cmdMsg := rpcrouter.CmdMsg{
 		Msg:       msg,
 		Namespace: namespace}
-	disp.Feed(ctx, msgvec, self.chResult)
+	disp.Feed(ctx, cmdMsg, self.chResult)
 }
 
 // transport specific lives

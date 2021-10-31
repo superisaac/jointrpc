@@ -10,7 +10,7 @@ import (
 
 type RPCRequest struct {
 	Context context.Context
-	MsgVec  rpcrouter.MsgVec
+	CmdMsg  rpcrouter.CmdMsg
 	Data    interface{} // user defined data
 }
 
@@ -34,7 +34,7 @@ type HandlerOption func(*MethodHandler)
 
 type ResultT struct {
 	ResMsg    jsonrpc.IMessage
-	ReqMsgVec rpcrouter.MsgVec
+	ReqCmdMsg rpcrouter.CmdMsg
 }
 
 type Dispatcher struct {
