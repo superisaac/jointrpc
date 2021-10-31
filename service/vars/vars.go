@@ -149,16 +149,16 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				return nil
 			}
 			log.Warnf("vars watcher error: %+v", err)
-		case msgvec, ok := <-self.conn.RecvChannel:
+		case msgvec, ok := <-self.conn.MsgOutput():
 			if !ok {
 				log.Debugf("recv channel colosed, leave")
 				return nil
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(ctx, msgvec)
-		case cmdMsg, ok := <-self.conn.ChRouteMsg:
+		case cmdMsg, ok := <-self.conn.MsgInput():
 			if !ok {
-				log.Debugf("ChRouteMsg closed")
+				log.Debugf("MsgInput() closed")
 				return nil
 			}
 			err := self.conn.HandleRouteMessage(ctx, cmdMsg)
@@ -170,7 +170,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				log.Infof("result channel closed, return")
 				return nil
 			}
-			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
+			self.conn.MsgInput() <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
 					Msg:       result.ResMsg,
 					Namespace: commonRouter.Name(),

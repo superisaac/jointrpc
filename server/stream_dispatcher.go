@@ -223,7 +223,7 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcroute
 			factory := rpcrouter.RouterFactoryFromContext(ctx)
 			router := factory.Get(conn.Namespace)
 
-			chRes := conn.RecvChannel
+			chRes := conn.MsgOutput()
 			if msg.IsNotify() {
 				chRes = nil
 			}
@@ -237,7 +237,7 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msgvec rpcroute
 			//factory.ChMsg <- rpcrouter.CmdMsg{MsgVec: msgvec}
 		} else if msg.IsResultOrError() {
 			// result and error don't need ChRes
-			conn.ChRouteMsg <- rpcrouter.CmdMsg{
+			conn.MsgInput() <- rpcrouter.CmdMsg{
 				MsgVec: msgvec,
 			}
 		}

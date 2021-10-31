@@ -122,7 +122,7 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 				return
 			}
 			self.handleStateChange(factory, stateChange)
-		case msgvec, ok := <-self.conn.RecvChannel:
+		case msgvec, ok := <-self.conn.MsgOutput():
 			if !ok {
 				// TODO: log
 				return
@@ -131,9 +131,9 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 			if err != nil {
 				panic(err)
 			}
-		case cmdMsg, ok := <-self.conn.ChRouteMsg:
+		case cmdMsg, ok := <-self.conn.MsgInput():
 			if !ok {
-				log.Debugf("ChRouteMsg closed")
+				log.Debugf("MsgInput() closed")
 				return
 			}
 			err := self.conn.HandleRouteMessage(rootCtx, cmdMsg)
@@ -147,7 +147,7 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 			}
 			//router.DeliverResultOrError(
 			//router.ChMsg <- rpcrouter.CmdMsg{
-			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
+			self.conn.MsgInput() <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
 					Namespace: router.Name(),
 					Msg:       result.ResMsg,

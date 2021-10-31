@@ -69,13 +69,13 @@ func TestRouteMessage(t *testing.T) {
 
 	//router.deliverMessage(CmdMsg{
 	chRes := make(MsgChannel, 1)
-	//router.ChRouteMsg <- CmdMsg{
+	//router.MsgInput() <- CmdMsg{
 	router.relayMessage(CmdMsg{
 		MsgVec: MsgVec{
 			Msg:       msg,
 			Namespace: router.Name()},
 		ChRes: chRes})
-	cmdMsg := <-conn.ChRouteMsg
+	cmdMsg := <-conn.MsgInput()
 	assert.True(cmdMsg.MsgVec.Msg.IsRequest())
 	assert.Equal("abc", cmdMsg.MsgVec.Msg.MustMethod())
 }
@@ -118,7 +118,7 @@ func TestRouteRoutine(t *testing.T) {
 		ChRes:   chRes,
 		ConnId:  cid,
 	})
-	rcvmsg := <-conn.RecvChannel
+	rcvmsg := <-conn.MsgOutput()
 	//assert.Equal(msg.MustId(), rcvmsg.Msg.MustId())
 	assert.True(rcvmsg.Msg.IsRequest())
 	assert.Equal("abc", rcvmsg.Msg.MustMethod())

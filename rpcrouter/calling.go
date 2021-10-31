@@ -38,7 +38,7 @@ func (self *Router) SingleCall(msg jsonrpc.IMessage, ns string, callOption *Call
 		self.PostMessage(CmdMsg{
 			MsgVec:  msgvec,
 			Timeout: callOption.timeout,
-			ChRes:   chRes, //conn.RecvChannel,
+			ChRes:   chRes, //conn.MsgOutput(),
 		})
 		resvec := <-chRes
 		misc.AssertEqual(resvec.Msg.TraceId(), msg.TraceId(), "")
@@ -75,14 +75,14 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 			self.PostMessage(CmdMsg{
 				MsgVec:  msgvec,
 				Timeout: callOption.timeout,
-				ChRes:   chRes, //conn.RecvChannel,
+				ChRes:   chRes,
 				ConnId:  servoId,
 			})
 		}
 		log.Infof("send request %s to %d handlers", reqmsg.Method, len(servoIds))
 		// wait for results
 		for i := 0; i < len(servoIds); i++ {
-			resMsgvec := <-chRes //conn.RecvChannel
+			resMsgvec := <-chRes
 
 			misc.Assert(resMsgvec.Msg.IsResultOrError(), "recved neither result not error")
 			misc.AssertEqual(resMsgvec.Msg.TraceId(), reqmsg.TraceId(), "")

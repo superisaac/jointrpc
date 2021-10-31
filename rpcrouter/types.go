@@ -57,7 +57,7 @@ type ConnT struct {
 	ConnId      CID
 	Namespace   string
 	PeerAddr    net.Addr
-	RecvChannel MsgChannel
+
 
 	ServeMethods    map[string]MethodInfo
 	DelegateMethods map[string]bool
@@ -67,7 +67,9 @@ type ConnT struct {
 	stateChannel chan *ServerState
 
 	router     *Router
-	ChRouteMsg chan CmdMsg
+
+	msgOutput MsgChannel	
+	msgInput   chan CmdMsg
 	pendings   map[interface{}]ConnPending
 }
 
@@ -99,11 +101,23 @@ type CmdLeave struct {
 	ChRet chan CmdRet
 }
 
+type RetSelectConn struct {
+	Method string
+	ConnId CID
+	Conn   *ConnT
+	Found  bool
+}
+type CmdSelectConn struct {
+	Method string
+	ConnId CID
+	ChRet  chan RetSelectConn
+}
+
 type CmdMsg struct {
 	MsgVec  MsgVec
+	ConnId  CID
 	Timeout time.Duration
 	ChRes   MsgChannel
-	ConnId  CID
 }
 
 type CmdMethods struct {
@@ -119,10 +133,10 @@ type CmdDelegates struct {
 }
 
 type Router struct {
-	name            string
-	factory         *RouterFactory
-	routerLock      *sync.RWMutex
-	pendingLock     *sync.RWMutex
+	name    string
+	factory *RouterFactory
+	//routerLock      *sync.RWMutex
+	//pendingLock     *sync.RWMutex
 	methodConnMap   map[string]([]MethodDesc)
 	methodsSig      string
 	connMap         map[CID](*ConnT)
@@ -136,9 +150,10 @@ type Router struct {
 	ChJoin  chan CmdJoin
 	ChLeave chan CmdLeave
 	//ChMsg       chan CmdMsg
-	chRouteMsg  chan CmdMsg
-	ChMethods   chan CmdMethods
-	ChDelegates chan CmdDelegates
+	chRouteMsg   chan CmdMsg
+	chSelectConn chan CmdSelectConn
+	ChMethods    chan CmdMethods
+	ChDelegates  chan CmdDelegates
 }
 
 type RouterFactory struct {

@@ -11,7 +11,7 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
-	"sync"
+	//"sync"
 	//"time"
 )
 
@@ -37,8 +37,8 @@ func DelegateRemoveConn(slice []MethodDelegation, conn *ConnT) []MethodDelegatio
 
 func NewRouter(factory *RouterFactory, name string) *Router {
 	r := &Router{factory: factory, name: name}
-	r.routerLock = new(sync.RWMutex)
-	r.pendingLock = new(sync.RWMutex)
+	//r.routerLock = new(sync.RWMutex)
+	//r.pendingLock = new(sync.RWMutex)
 	r.methodConnMap = make(map[string]([]MethodDesc))
 	r.delegateConnMap = make(map[string][]MethodDelegation)
 	r.connMap = make(map[CID](*ConnT))
@@ -50,6 +50,7 @@ func NewRouter(factory *RouterFactory, name string) *Router {
 
 func (self *Router) setupChannels() {
 	self.chRouteMsg = make(chan CmdMsg, 10000)
+	self.chSelectConn = make(chan CmdSelectConn, 10000)
 	self.ChJoin = make(chan CmdJoin, 10000)
 	self.ChLeave = make(chan CmdLeave, 10000)
 	self.ChMethods = make(chan CmdMethods, 10000)
@@ -321,7 +322,7 @@ func (self *Router) leaveConn(conn *ConnT) {
 		delete(self.connMap, conn.ConnId)
 		conn.Namespace = ""
 		conn.router = nil
-		close(ct.RecvChannel)
+		close(ct.MsgOutput())
 	}
 
 	self.probeMethodChange()
@@ -368,7 +369,7 @@ func (self *Router) selectConnection(method string, targetConnId CID) (*ConnT, b
 		for i := 0; i < 5; i++ {
 			index := rand.Intn(len(descs))
 			conn := descs[index].Conn
-			if len(conn.RecvChannel) <= 2 { // skip the choice if there are too many elements in channel buffer
+			if len(conn.MsgOutput()) <= 2 { // skip the choice if there are too many elements in channel buffer
 				return conn, true
 			}
 		}
@@ -406,7 +407,7 @@ func (self *Router) SendTo(connId CID, msgvec MsgVec) {
 
 	ct, ok := self.connMap[connId]
 	if ok {
-		ct.RecvChannel <- msgvec
+		ct.MsgOutput() <- msgvec
 		msgvec.Msg.Log().Debugf("to conn %d", connId)
 	} else {
 		msgvec.Msg.Log().Warnf("conn for %d not found", connId)
@@ -551,6 +552,29 @@ func (self *Router) loop() {
 					cmdLeave.ChRet <- CmdRet{Ok: true}
 				} else {
 					log.Infof("conn %d does not take chRet to leave", cmdLeave.Conn.ConnId)
+				}
+			}
+		case cmdSelConn, ok := <-self.chSelectConn:
+			{
+				if !ok {
+					log.Warnf("ChSelectConn channel closed")
+					return
+				}
+				toConn, found := self.selectConnection(cmdSelConn.Method, cmdSelConn.ConnId)
+				if found {
+					cmdSelConn.ChRet <- RetSelectConn{
+						Method: cmdSelConn.Method,
+						ConnId: cmdSelConn.ConnId,
+						Conn:   toConn,
+						Found:  true,
+					}
+				} else {
+					cmdSelConn.ChRet <- RetSelectConn{
+						Method: cmdSelConn.Method,
+						ConnId: cmdSelConn.ConnId,
+						Conn:   nil,
+						Found:  false,
+					}
 				}
 			}
 		case cmdMsg, ok := <-self.chRouteMsg:

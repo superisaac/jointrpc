@@ -223,16 +223,16 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer,
 				return
 			}
 			msgutil.GRPCServerSend(stream, rest.ResMsg)
-		case msgvec, ok := <-conn.RecvChannel:
+		case msgvec, ok := <-conn.MsgOutput():
 			if !ok {
 				log.Debugf("recv channel closed")
 				return
 			}
 			msgutil.GRPCServerSend(stream, msgvec.Msg)
 
-		case cmdMsg, ok := <-conn.ChRouteMsg:
+		case cmdMsg, ok := <-conn.MsgInput():
 			if !ok {
-				log.Debugf("ChRouteMsg closed")
+				log.Debugf("MsgInput() closed")
 				return
 			}
 			err := conn.HandleRouteMessage(context, cmdMsg)

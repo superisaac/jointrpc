@@ -12,16 +12,23 @@ import (
 
 func NewConn() *ConnT {
 	connId := NextCID()
-	ch := make(MsgChannel, 10000)
 	methods := make(map[string]MethodInfo)
 	pendings := make(map[interface{}]ConnPending)
 	conn := &ConnT{ConnId: connId,
-		RecvChannel:  ch,
 		ServeMethods: methods,
-		ChRouteMsg:   make(chan CmdMsg, 10000),
+		msgOutput:  make(MsgChannel, 5000),
+		msgInput:   make(chan CmdMsg, 5000),
 		pendings:     pendings,
 	}
 	return conn
+}
+
+func (self ConnT) MsgOutput() MsgChannel {
+	return self.msgOutput
+}
+
+func (self ConnT) MsgInput() chan CmdMsg {
+	return self.msgInput
 }
 
 func (self ConnT) Joined() bool {
@@ -133,7 +140,7 @@ func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
 	}
 	reqVec := cmdMsg.MsgVec
 	reqVec.Msg = reqMsg
-	self.RecvChannel <- reqVec
+	self.msgOutput <- reqVec
 	return nil
 }
 
@@ -145,7 +152,7 @@ func (self *ConnT) handleNotify(ctx context.Context, cmdMsg CmdMsg) error {
 			return nil
 		}
 	}
-	self.RecvChannel <- MsgVec{Msg: notifyMsg, Namespace: cmdMsg.MsgVec.Namespace}
+	self.msgOutput <- MsgVec{Msg: notifyMsg, Namespace: cmdMsg.MsgVec.Namespace}
 	return nil
 }
 

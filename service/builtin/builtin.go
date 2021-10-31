@@ -61,16 +61,16 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 			return nil
 		case <-time.After(3 * time.Second):
 			self.conn.ClearPendings()
-		case msgvec, ok := <-self.conn.RecvChannel:
+		case msgvec, ok := <-self.conn.MsgOutput():
 			if !ok {
 				log.Debugf("recv channel colosed, leave")
 				return nil
 			}
 			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
 			self.requestReceived(ctx, msgvec)
-		case cmdMsg, ok := <-self.conn.ChRouteMsg:
+		case cmdMsg, ok := <-self.conn.MsgInput():
 			if !ok {
-				log.Debugf("ChRouteMsg closed")
+				log.Debugf("MsgInput() closed")
 				return nil
 			}
 			err := self.conn.HandleRouteMessage(ctx, cmdMsg)
@@ -83,7 +83,7 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 				return nil
 			}
 
-			self.conn.ChRouteMsg <- rpcrouter.CmdMsg{
+			self.conn.MsgInput() <- rpcrouter.CmdMsg{
 				MsgVec: rpcrouter.MsgVec{
 					Msg:       result.ResMsg,
 					Namespace: commonRouter.Name(),
