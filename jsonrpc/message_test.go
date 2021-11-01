@@ -4,15 +4,39 @@ import (
 	//"fmt"
 	json "encoding/json"
 	"github.com/bitly/go-simplejson"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"os"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	log.SetOutput(ioutil.Discard)
+	os.Exit(m.Run())
+}
 
 func TestValidators(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.True(IsMethod(".abc+def"))
 	assert.False(IsPublicMethod(".abc+def"))
+}
+
+func TestParseParams(t *testing.T) {
+	assert := assert.New(t)
+	j1 := `{
+"id": 99,
+"method": "abc::def",
+"params": "hello"
+}`
+	js, _ := simplejson.NewJson([]byte(j1))
+	msg, err := Parse(js)
+	assert.Nil(err)
+
+	params := msg.MustParams()
+	assert.Equal(1, len(params))
+	assert.Equal("hello", params[0])
 }
 
 func TestRequestMsg(t *testing.T) {

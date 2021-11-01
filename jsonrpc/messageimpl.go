@@ -341,6 +341,18 @@ func ParseBytes(data []byte) (IMessage, error) {
 	}
 	return Parse(parsed)
 }
+
+func parseParams(parsed *simplejson.Json) []interface{} {
+	arr, err := parsed.Array()
+	if err != nil {
+		log.Debugf("params is not array %+v", parsed)
+		p := parsed.Interface()
+		return [](interface{}){p}
+	} else {
+		return arr
+	}
+}
+
 func Parse(parsed *simplejson.Json) (IMessage, error) {
 	id := parsed.Get("id").Interface()
 	method, err := parsed.Get("method").String()
@@ -356,7 +368,7 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 	if id != nil {
 		if method != "" {
 			// request
-			params := parsed.Get("params").MustArray()
+			params := parseParams(parsed.Get("params"))
 			reqmsg := NewRequestMessage(id, method, params)
 			reqmsg.SetRaw(parsed)
 			reqmsg.SetTraceId(traceId)
@@ -378,7 +390,7 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 		rmsg.SetTraceId(traceId)
 		return rmsg, nil
 	} else if method != "" {
-		params := parsed.Get("params").MustArray()
+		params := parseParams(parsed.Get("params"))
 		ntfmsg := NewNotifyMessage(method, params)
 		ntfmsg.SetRaw(parsed)
 		ntfmsg.SetTraceId(traceId)
