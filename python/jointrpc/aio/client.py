@@ -134,18 +134,6 @@ class Client:
             schema=h.schema_json)
                 for m, h in self.handlers.items()]
 
-    async def declare_methods(self, stream):
-        methods = [pb2.MethodInfo(
-            name=m,
-            help=h.help_text,
-            schema_json=h.schema_json) for m, h in self.handlers.items()]
-
-        req = pb2.DeclareMethodsRequest(
-            request_id=uuid.uuid4().hex,
-            methods=methods)
-        uppac = pb2.JointRPCUpPacket(methods_request=req)
-        await stream.send_message(uppac)
-
     def live_stream(self) -> 'LiveStream':
         return LiveStream(self)
 
@@ -172,20 +160,22 @@ class LiveStream:
     async def authorize(self):
         username, password = self.client.auth
         await self.live_call('_stream.authorize',
-                             username, password, self.declare_methods)
+                             self.declare_methods,
+                             username, password)
 
     async def ready(self):
         if self._ready_cb:
             await self._ready_cb()
 
-    async def declare_methodfs(self):
+    async def declare_methods(self):
         methods = self.client.methods()
         await self.live_call('_stream.declareMethods',
-                             methods, self.ready)
+                             self.ready,
+                             methods)
 
     async def live_call(self, method: str,
-                  *params: Any,
                   cb: Callable,
+                  *params: Any,
                   traceid: str='',
                   timeout: int=10) -> None:
 

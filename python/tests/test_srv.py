@@ -24,7 +24,7 @@ async def test_call_fn():
 
     c.on('add2num', add2num)
 
-    handler = c.handler_stream()
+    handler = c.live_stream()
     asyncio.ensure_future(cancel_handler(handler, 5))
     asyncio.ensure_future(run_call_client())
     #asyncio.ensure_future(handler.handle())

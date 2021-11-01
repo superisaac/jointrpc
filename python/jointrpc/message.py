@@ -54,10 +54,15 @@ class Notify(Message):
 class Result(Message):
     id: IdType
     body: Any
+
     def __init__(self, id: Any, body: Any, traceid:str=''):
         self.id = id
         self.body = body
         self.traceid = traceid
+
+    @property
+    def result(self) -> Any:
+        return self.body
 
     def encode(self) -> Dict[str, Any]:
         data = {
@@ -71,7 +76,9 @@ class Result(Message):
 
 class Error(Message):
     id: IdType
-
+    code: int
+    message: str
+    data: Any
 
     def __init__(self, id: Any, code: int, message: str, data: Any=None, traceid:str=''):
         assert id
@@ -81,12 +88,19 @@ class Error(Message):
         self.data = data
         self.traceid = traceid
 
+    @property
+    def error(self) -> Any:
+        return {
+            'code': self.code,
+            'message': self.message,
+            'data': self.data,
+        }
 
     def encode(self) -> Dict[str, Any]:
         data = {
             'version': '2.0',
             'id': self.id,
-            'error': self.body
+            'error': self.error
         }
         if self.traceid:
             data['traceid'] = self.traceid
@@ -132,8 +146,11 @@ def parse(payload: Dict[str, Any]) -> 'Message':
                           payload['result'],
                           traceid=traceid)
         elif 'error' in payload:
+            body = payload['error']
             return Error(payload['id'],
-                         payload['error'],
+                         body['code'],
+                         body['message'],
+                         data=body.get('data'),
                          traceid=traceid)
         else:
             pass

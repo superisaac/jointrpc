@@ -13,4 +13,4 @@ async def test_call_echo():
     res = await c.call('_echo', 2, 3)
     assert isinstance(res, Error)
     assert res.error['code'] == 10901
-    assert res.error['reason'] == 'Validation Error: .params length of params mismatch'
+    assert res.error['message'] == 'Validation Error: .params length of params mismatch'
