@@ -2,7 +2,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(name='jointrpc',
-      version='0.0.6',
+      version='0.0.7',
       description='jointrpc python client',
       author='Zeng Ke',
       author_email='superisaac@gmail.com',
@@ -18,8 +18,8 @@ setup(name='jointrpc',
           'Topic :: Micro-Services',
       ],
       install_requires=[
-          'protobuf>=3.13.0',
-          'grpclib>=0.4.0',
+          'protobuf>=3.19.1',
+          'grpclib>=0.4.2',
       ],
       python_requires='>=3.7',
 )

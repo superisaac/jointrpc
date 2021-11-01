@@ -37,6 +37,17 @@ func TestParseParams(t *testing.T) {
 	params := msg.MustParams()
 	assert.Equal(1, len(params))
 	assert.Equal("hello", params[0])
+
+	j2 := `{
+"id": 99,
+"method": "abc::def"
+}`
+	js2, _ := simplejson.NewJson([]byte(j2))
+	msg2, err := Parse(js2)
+	assert.Nil(err)
+
+	params2 := msg2.MustParams()
+	assert.Equal(0, len(params2))
 }
 
 func TestRequestMsg(t *testing.T) {

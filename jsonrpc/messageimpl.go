@@ -347,7 +347,11 @@ func parseParams(parsed *simplejson.Json) []interface{} {
 	if err != nil {
 		log.Debugf("params is not array %+v", parsed)
 		p := parsed.Interface()
-		return [](interface{}){p}
+		if p == nil {
+			return [](interface{}){}
+		} else {
+			return [](interface{}){p}
+		}
 	} else {
 		return arr
 	}

@@ -40,8 +40,11 @@ async def main():
     c = Client(sys.argv[1])
     c.on('calc_add2num', add2num).help('nice').schema(add2num_schema)
 
-    handler = c.handler_stream()
-    await handler.handle()
+    livestream = c.live_stream()
+    async def live_ready():
+        print("live stream is ready")
+    livestream.set_ready_cb(live_ready)
+    await livestream.handle()
     print('stop')
 
 if __name__ == '__main__':
