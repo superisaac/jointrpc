@@ -1,4 +1,5 @@
 from typing import Any, List, Dict, Union
+import json
 import abc
 
 IdType = Union[str, int]
@@ -9,6 +10,9 @@ class Message:
     @abc.abstractmethod
     def encode(self) -> Dict[str, Any]:
         raise NotImplementedError
+
+    def __str__(self) -> str:
+        return json.dumps(self.encode())
 
 class Request(Message):
     id: IdType

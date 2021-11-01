@@ -32,6 +32,7 @@ add2num_schema = '''
 }
 '''
 async def add2num(msg, a, b):
+    print('add2num called', a, b)
     return a + b
 
 async def main():

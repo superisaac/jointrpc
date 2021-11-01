@@ -163,11 +163,13 @@ class LiveStream:
                              self.declare_methods,
                              username, password)
 
-    async def ready(self):
+    async def ready(self, res):
+        logger.debug('ready, %s', res)
         if self._ready_cb:
             await self._ready_cb()
 
-    async def declare_methods(self):
+    async def declare_methods(self, res):
+        logger.debug('authorized, %s', res)
         methods = self.client.methods()
         await self.live_call('_stream.declareMethods',
                              self.ready,
@@ -198,22 +200,23 @@ class LiveStream:
     async def handle(self) -> None:
         async with self.client.stub.Live.open() as stream:
             self.stream = stream
-
+            await stream.send_request()
             asyncio.ensure_future(self.authorize())
 
-            while self.stream:
-                try:
-                    envo = await asyncio.wait_for(
-                        self.stream.recv_message(),
-                        timeout=1)
-                except asyncio.TimeoutError:
-                    continue
-                except StreamTerminatedError:
-                    logger.info('stream terminated')
-                    break
-                except RuntimeError as e:
-                    logger.warning("wait for recv messages", exc_info=True)
-                    return
+            #while self.stream:
+            async for envo in self.stream:
+                # try:
+                #     envo = await asyncio.wait_for(
+                #         self.stream.recv_message(),
+                #         timeout=100)
+                # except asyncio.TimeoutError:
+                #     continue
+                # except StreamTerminatedError:
+                #     logger.info('stream terminated')
+                #     break
+                # except RuntimeError as e:
+                #     logger.warning("wait for recv messages", exc_info=True)
+                #     return
 
                 await self._handle_message(envo)
 
@@ -228,10 +231,10 @@ class LiveStream:
         msg = parse(json.loads(envolope.body))
 
         if isinstance(msg, (Request, Notify)):
-            self._handle_request(msg)
+            await self._handle_request(msg)
         else:
             assert isinstance(msg, (Result, Error))
-            self._handle_result(msg)
+            await self._handle_result(msg)
 
     async def _handle_request(self, reqmsg: Union[Request, Notify]):
         if reqmsg.method in self.client.handlers:
