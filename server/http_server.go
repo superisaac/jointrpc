@@ -210,7 +210,7 @@ func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcr
 		case <-context.Done():
 			log.Debugf("context done")
 			return
-		case <-time.After(3 * time.Second):
+		case <-time.After(10 * time.Second):
 			conn.ClearPendings()
 		case rest, ok := <-chResult:
 			if !ok {

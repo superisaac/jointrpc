@@ -54,6 +54,8 @@ type ConnT struct {
 	Namespace string
 	PeerAddr  net.Addr
 
+	router *Router
+
 	ServeMethods    map[string]MethodInfo
 	DelegateMethods map[string]bool
 
@@ -61,7 +63,7 @@ type ConnT struct {
 
 	stateChannel chan *ServerState
 
-	router *Router
+	lastPing time.Time
 
 	msgOutput MsgChannel
 	msgInput  MsgChannel //chan CmdMsg

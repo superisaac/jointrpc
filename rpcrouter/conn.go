@@ -81,6 +81,9 @@ func (self ConnT) ValidateResultMsg(resMsg *jsonrpc.ResultMessage, reqMsg *jsonr
 	return true, nil
 }
 
+func (self *ConnT) Touch() {
+	self.lastPing = time.Now()
+}
 func (self *ConnT) SetWatchState(w bool) {
 	self.watchState = w
 }

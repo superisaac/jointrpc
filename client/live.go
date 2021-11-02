@@ -52,6 +52,14 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	})
 }
 
+func (self *RPCClient) sendPing(ctx context.Context) {
+	reqId := misc.NewUuid()
+	ping := jsonrpc.NewRequestMessage(reqId, "_stream.ping", nil)
+	self.LiveCall(ctx, ping, func(res jsonrpc.IMessage) {
+		log.Debugf("pong received, %s", res.MustResult())
+	})
+}
+
 func (self *RPCClient) Live(rootCtx context.Context, disp *dispatch.Dispatcher) error {
 	disp.OnChange(func() {
 		self.OnHandlerChanged(disp)
@@ -94,6 +102,8 @@ func (self *RPCClient) sendUpGRPC(ctx context.Context, stream intf.JointRPC_Live
 		select {
 		case <-ctx.Done():
 			return
+		case <-time.After(15 * time.Second):
+			self.sendPing(ctx)
 		case msg, ok := <-self.chSendUp:
 			if !ok {
 				log.Warnf("send up channel closed")
@@ -124,6 +134,8 @@ func (self *RPCClient) sendUpWS(ctx context.Context, ws *websocket.Conn, disp *d
 		select {
 		case <-ctx.Done():
 			return
+		case <-time.After(15 * time.Second):
+			self.sendPing(ctx)
 		case msg, ok := <-self.chSendUp:
 			if !ok {
 				log.Warnf("send up channel closed")
@@ -250,6 +262,7 @@ func (self *RPCClient) runHTTPLiveStream(rootCtx context.Context, disp *dispatch
 	defer sendCancel()
 	go self.sendUpWS(sendCtx, ws, disp)
 	disp.TriggerChange()
+
 	for {
 		msg, err := msgutil.WSRecv(ws)
 		if err != nil {

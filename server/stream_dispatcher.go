@@ -33,12 +33,12 @@ func NewStreamDispatcher() *StreamDispatcher {
 	return h
 }
 
-// func GetStreamDispatcher() *StreamDispatcher {
-// 	once.Do(func() {
-// 		streamDisp = NewStreamDispatcher()
-// 	})
-// 	return streamDisp
-// }
+func GetStreamDispatcher() *StreamDispatcher {
+	once.Do(func() {
+		streamDisp = NewStreamDispatcher()
+	})
+	return streamDisp
+}
 
 const (
 	declareMethodsSchema = `{
@@ -80,6 +80,15 @@ const (
 func (self *StreamDispatcher) Init() {
 	self.disp = dispatch.NewDispatcher()
 	self.authDisp = dispatch.NewDispatcher()
+
+	self.disp.On("_stream.ping",
+		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+			req.CmdMsg.Msg.Log().Debugf("ping received")
+			if conn, ok := req.Data.(*rpcrouter.ConnT); ok {
+				conn.Touch()
+			}
+			return "pong", nil
+		})
 
 	self.disp.On("_stream.declareMethods",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {

@@ -251,7 +251,7 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer,
 			}
 			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
 			msgutil.GRPCServerSend(stream, ntf)
-		case <-time.After(3 * time.Second):
+		case <-time.After(10 * time.Second):
 			conn.ClearPendings()
 		}
 	} // and for loop
@@ -276,7 +276,7 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
 	go relayDownMessages(ctx, stream, conn, chResult)
-	streamDisp := NewStreamDispatcher()
+	streamDisp := GetStreamDispatcher()
 
 	for {
 		msg, err := msgutil.GRPCServerRecv(stream)

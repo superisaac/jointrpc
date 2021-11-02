@@ -275,6 +275,10 @@ func NewRequestMessage(id interface{}, method string, params []interface{}) *Req
 		panic(ErrEmptyMethod)
 	}
 
+	if params == nil {
+		params = [](interface{}){}
+	}
+
 	msg := &RequestMessage{}
 	msg.messageType = MTRequest
 	msg.Id = id
@@ -292,6 +296,10 @@ func (self RequestMessage) Clone(newId interface{}) *RequestMessage {
 func NewNotifyMessage(method string, params []interface{}) *NotifyMessage {
 	if method == "" {
 		panic(ErrEmptyMethod)
+	}
+
+	if params == nil {
+		params = [](interface{}){}
 	}
 
 	msg := &NotifyMessage{}
