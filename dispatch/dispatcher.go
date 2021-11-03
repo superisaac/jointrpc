@@ -166,28 +166,26 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 
 	handler, ok := self.methodHandlers[reqmsg.Method]
 
-	if false {
-		defer func() {
+	defer func() {
 
-			if r := recover(); r != nil {
-				fmt.Printf("recovered r %+v\n", r)
+		if r := recover(); r != nil {
+			fmt.Printf("recovered r %+v\n", r)
 
-				if err, ok := r.(error); ok {
-					var rpcError *jsonrpc.RPCError
-					if errors.Is(err, Deferred) {
-						reqmsg.Log().Debugf("handler is deferred")
-						return
-						//} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
-					} else if errors.As(err, &rpcError) {
-						errmsg := rpcError.ToMessage(reqmsg)
-						self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
-						return
-					}
+			if err, ok := r.(error); ok {
+				var rpcError *jsonrpc.RPCError
+				if errors.Is(err, Deferred) {
+					reqmsg.Log().Debugf("handler is deferred")
+					return
+					//} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+				} else if errors.As(err, &rpcError) {
+					errmsg := rpcError.ToMessage(reqmsg)
+					self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
+					return
 				}
-				reqmsg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
 			}
-		}()
-	}
+			reqmsg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
+		}
+	}()
 
 	var resmsg jsonrpc.IMessage
 	var err error

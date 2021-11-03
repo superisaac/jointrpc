@@ -23,6 +23,18 @@ func NewConn() *ConnT {
 	return conn
 }
 
+func (self *ConnT) Destruct() {
+	self.Log().Debugf("conn destruct")
+	self.Namespace = ""
+	self.router = nil
+	self.msgInput = nil
+	self.msgOutput = nil
+	for _, pending := range self.pendings {
+		self.returnTimeout(pending)
+	}
+	self.pendings = nil
+}
+
 func (self ConnT) MsgOutput() MsgChannel {
 	return self.msgOutput
 }
@@ -196,16 +208,29 @@ func (self *ConnT) handleResultOrError(ctx context.Context, cmdMsg CmdMsg) error
 	return nil
 }
 
+func (self *ConnT) returnTimeout(pending ConnPending) {
+	defer func() {
+		if r := recover(); r != nil {
+			pending.cmdMsg.Msg.Log().Warnf("recovered send on timeout %+v", r)
+			if err, ok := r.(error); ok && err.Error() == "send on closed channel" {
+				pending.cmdMsg.Msg.Log().Warnf("channel already closed %+v", pending.cmdMsg)
+			}
+		}
+	}()
+
+	errMsg := jsonrpc.ErrTimeout.ToMessage(pending.cmdMsg.Msg)
+	errCmdMsg := pending.cmdMsg
+	errCmdMsg.Msg = errMsg
+	pending.cmdMsg.ChRes <- errCmdMsg
+}
+
 func (self *ConnT) ClearPendings() {
 	now := time.Now()
 	newPendings := make(map[interface{}]ConnPending)
 
 	for reqMsgId, pending := range self.pendings {
 		if now.After(pending.Expire) {
-			errMsg := jsonrpc.ErrTimeout.ToMessage(pending.cmdMsg.Msg)
-			errCmdMsg := pending.cmdMsg
-			errCmdMsg.Msg = errMsg
-			pending.cmdMsg.ChRes <- errCmdMsg
+			self.returnTimeout(pending)
 		} else {
 			newPendings[reqMsgId] = pending
 		}

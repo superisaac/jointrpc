@@ -39,8 +39,8 @@ func (self *Router) redirectMessage(cmdMsg CmdMsg) {
 	msg := cmdMsg.Msg
 	misc.Assert(msg.IsRequestOrNotify(), "router only support request and notify")
 
+	// query a connection by method name
 	chRet := make(chan RetSelectConn, 1)
-
 	self.chSelectConn <- CmdSelectConn{
 		Method: msg.MustMethod(),
 		ConnId: cmdMsg.ConnId,

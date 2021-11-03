@@ -89,8 +89,8 @@ func (self Router) HasMethod(method string) bool {
 }
 
 func (self Router) GetDelegates() []string {
-	self.rlock("GetDelegates")
-	defer self.runlock("GetDelegates")
+	//self.rlock("GetDelegates")
+	//defer self.runlock("GetDelegates")
 
 	var arr []string
 	for name, _ := range self.delegateConnMap {
@@ -99,14 +99,14 @@ func (self Router) GetDelegates() []string {
 	return arr
 }
 func (self Router) GetMethods() []MethodInfo {
-	self.rlock("GetMethods")
-	defer self.runlock("GetMethods")
+	//self.rlock("GetMethods")
+	//defer self.runlock("GetMethods")
 	return self.getMethods()
 }
 
 func (self Router) GetMethodNames() []string {
-	self.rlock("GetMethodNames")
-	defer self.runlock("GetMethods")
+	//self.rlock("GetMethodNames")
+	//defer self.runlock("GetMethods")
 
 	methods := []string{}
 	for method, _ := range self.methodConnMap {
@@ -143,8 +143,8 @@ func (self Router) getMethodsSig() string {
 }
 
 func (self *Router) OnCmdMethods(cmdMethods CmdMethods) {
-	self.lock("OnCmdMethods")
-	defer self.unlock("OnCmdMethods")
+	//self.lock("OnCmdMethods")
+	//defer self.unlock("OnCmdMethods")
 	conn, found := self.connMap[cmdMethods.ConnId]
 	if found {
 		self.updateServeMethods(conn, cmdMethods.Methods)
@@ -154,8 +154,8 @@ func (self *Router) OnCmdMethods(cmdMethods CmdMethods) {
 }
 
 func (self *Router) OnCmdDelegates(cmdDelg CmdDelegates) {
-	self.lock("OnCmdDelegates")
-	defer self.unlock("OnCmdDelegates")
+	//self.lock("OnCmdDelegates")
+	//defer self.unlock("OnCmdDelegates")
 	conn, found := self.connMap[cmdDelg.ConnId]
 	if found {
 		self.updateDelegateMethods(conn, cmdDelg.MethodNames)
@@ -165,8 +165,8 @@ func (self *Router) OnCmdDelegates(cmdDelg CmdDelegates) {
 }
 
 func (self *Router) UpdateServeMethods(conn *ConnT, methods []MethodInfo) bool {
-	self.lock("CanServeMethods")
-	defer self.unlock("CanServeMethods")
+	//self.lock("CanServeMethods")
+	//defer self.unlock("CanServeMethods")
 	return self.updateServeMethods(conn, methods)
 }
 
@@ -231,8 +231,8 @@ func (self *Router) updateServeMethods(conn *ConnT, methods []MethodInfo) bool {
 }
 
 func (self *Router) UpdateDelegateMethods(conn *ConnT, methodNames []string) bool {
-	self.lock("CanDelegateMethods")
-	defer self.unlock("CanDelegateMethods")
+	//self.lock("CanDelegateMethods")
+	//defer self.unlock("CanDelegateMethods")
 	return self.updateDelegateMethods(conn, methodNames)
 }
 
@@ -317,20 +317,17 @@ func (self *Router) leaveConn(conn *ConnT) {
 	}
 	conn.ServeMethods = make(map[string]MethodInfo)
 
-	ct, ok := self.connMap[conn.ConnId]
-	if ok {
+	if ct, ok := self.connMap[conn.ConnId]; ok {
 		delete(self.connMap, conn.ConnId)
-		conn.Namespace = ""
-		conn.router = nil
-		close(ct.MsgOutput())
+		ct.Destruct()
 	}
 
 	self.probeMethodChange()
 }
 
 func (self *Router) ListConns(method string, limit int) []CID {
-	self.rlock("ListConns")
-	defer self.runlock("ListConns")
+	//self.rlock("ListConns")
+	//defer self.runlock("ListConns")
 
 	var arr []CID
 	if descs, ok := self.methodConnMap[method]; ok && len(descs) > 0 {
@@ -355,8 +352,8 @@ func (self *Router) SelectConn(method string, targetConnId CID) (*ConnT, bool) {
 }
 
 func (self *Router) selectConnection(method string, targetConnId CID) (*ConnT, bool) {
-	self.rlock("selectConnection")
-	defer self.runlock("selectConnection")
+	//self.rlock("selectConnection")
+	//defer self.runlock("selectConnection")
 
 	if targetConnId != ZeroCID {
 		conn, found := self.connMap[targetConnId]
@@ -393,8 +390,8 @@ func (self *Router) selectConnection(method string, targetConnId CID) (*ConnT, b
 }
 
 func (self *Router) GetConn(connId CID) (*ConnT, bool) {
-	self.rlock("GetConn")
-	defer self.runlock("GetConn")
+	//self.rlock("GetConn")
+	//defer self.runlock("GetConn")
 	conn, found := self.connMap[connId]
 	return conn, found
 }
@@ -407,60 +404,60 @@ func (self *Router) Join() *ConnT {
 
 func (self *Router) joinConn(conn *ConnT) {
 	misc.Assert(!conn.Joined(), "conn already joined")
-	self.lock("JoinConn")
-	defer self.unlock("JoinConn")
+	//self.lock("JoinConn")
+	//defer self.unlock("JoinConn")
 	conn.Namespace = self.name
 	conn.router = self
 	self.connMap[conn.ConnId] = conn
 }
 
-func (self *Router) lock(wrapper string) {
-	//log.Printf("router want lock %s", wrapper)
-	//self.routerLock.Lock()
-	//log.Printf("router locked %s", wrapper)
-}
-func (self *Router) unlock(wrapper string) {
-	//log.Printf("router want unlock %s", wrapper)
-	//self.routerLock.Unlock()
-	//log.Printf("router want unlocked %s", wrapper)
-}
+// func (self *Router) lock(wrapper string) {
+// 	//log.Printf("router want lock %s", wrapper)
+// 	//self.routerLock.Lock()
+// 	//log.Printf("router locked %s", wrapper)
+// }
+// func (self *Router) unlock(wrapper string) {
+// 	//log.Printf("router want unlock %s", wrapper)
+// 	//self.routerLock.Unlock()
+// 	//log.Printf("router want unlocked %s", wrapper)
+// }
 
-func (self *Router) rlock(wrapper string) {
-	//log.Printf("router want lock %s", wrapper)
-	//self.routerLock.RLock()
-	//log.Printf("router locked %s", wrapper)
-}
-func (self *Router) runlock(wrapper string) {
-	//log.Printf("router want unlock %s", wrapper)
-	//self.routerLock.RUnlock()
-	//log.Printf("router want unlocked %s", wrapper)
-}
+// func (self *Router) rlock(wrapper string) {
+// 	//log.Printf("router want lock %s", wrapper)
+// 	//self.routerLock.RLock()
+// 	//log.Printf("router locked %s", wrapper)
+// }
+// func (self *Router) runlock(wrapper string) {
+// 	//log.Printf("router want unlock %s", wrapper)
+// 	//self.routerLock.RUnlock()
+// 	//log.Printf("router want unlocked %s", wrapper)
+// }
 
-func (self *Router) lockPending(wrapper string) {
-	//log.Printf("router pending want lock %s", wrapper)
-	//self.pendingLock.Lock()
-	//log.Printf("router pending locked %s", wrapper)
-}
-func (self *Router) unlockPending(wrapper string) {
-	//log.Printf("router pending want unlock %s", wrapper)
-	//self.pendingLock.Unlock()
-	//log.Printf("router pending want unlocked %s", wrapper)
-}
+// func (self *Router) lockPending(wrapper string) {
+// 	//log.Printf("router pending want lock %s", wrapper)
+// 	//self.pendingLock.Lock()
+// 	//log.Printf("router pending locked %s", wrapper)
+// }
+// func (self *Router) unlockPending(wrapper string) {
+// 	//log.Printf("router pending want unlock %s", wrapper)
+// 	//self.pendingLock.Unlock()
+// 	//log.Printf("router pending want unlocked %s", wrapper)
+// }
 
-func (self *Router) rlockPending(wrapper string) {
-	//log.Printf("router pending want lock %s", wrapper)
-	//self.pendingLock.RLock()
-	//log.Printf("router pending locked %s", wrapper)
-}
-func (self *Router) runlockPending(wrapper string) {
-	//log.Printf("router pending want unlock %s", wrapper)
-	//self.pendingLock.RUnlock()
-	//log.Printf("router pending want unlocked %s", wrapper)
-}
+// func (self *Router) rlockPending(wrapper string) {
+// 	//log.Printf("router pending want lock %s", wrapper)
+// 	//self.pendingLock.RLock()
+// 	//log.Printf("router pending locked %s", wrapper)
+// }
+// func (self *Router) runlockPending(wrapper string) {
+// 	//log.Printf("router pending want unlock %s", wrapper)
+// 	//self.pendingLock.RUnlock()
+// 	//log.Printf("router pending want unlocked %s", wrapper)
+// }
 
 func (self *Router) leave(conn *ConnT) {
-	self.lock("Leave")
-	defer self.unlock("Leave")
+	//self.lock("Leave")
+	//defer self.unlock("Leave")
 
 	self.leaveConn(conn)
 }
