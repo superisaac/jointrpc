@@ -232,7 +232,11 @@ func (self *RequestMessage) GetJson() *simplejson.Json {
 		self.raw.Set("version", "2.0")
 		self.raw.Set("id", self.Id)
 		self.raw.Set("method", self.Method)
-		self.raw.Set("params", self.Params)
+		if self.listParams || len(self.Params) == 0 {
+			self.raw.Set("params", self.Params)
+		} else {
+			self.raw.Set("params", self.Params[0])
+		}
 	}
 	return self.raw
 }
@@ -242,7 +246,11 @@ func (self *NotifyMessage) GetJson() *simplejson.Json {
 		self.raw = simplejson.New()
 		self.raw.Set("version", "2.0")
 		self.raw.Set("method", self.Method)
-		self.raw.Set("params", self.Params)
+		if self.listParams || len(self.Params) == 0 {
+			self.raw.Set("params", self.Params)
+		} else {
+			self.raw.Set("params", self.Params[0])
+		}
 	}
 	return self.raw
 }
@@ -284,6 +292,7 @@ func NewRequestMessage(id interface{}, method string, params []interface{}) *Req
 	msg.Id = id
 	msg.Method = method
 	msg.Params = params
+	msg.listParams = true
 	return msg
 }
 
@@ -306,6 +315,7 @@ func NewNotifyMessage(method string, params []interface{}) *NotifyMessage {
 	msg.messageType = MTNotify
 	msg.Method = method
 	msg.Params = params
+	msg.listParams = true
 	return msg
 }
 
@@ -350,18 +360,18 @@ func ParseBytes(data []byte) (IMessage, error) {
 	return Parse(parsed)
 }
 
-func parseParams(parsed *simplejson.Json) []interface{} {
+func parseParams(parsed *simplejson.Json) ([]interface{}, bool) {
 	arr, err := parsed.Array()
 	if err != nil {
 		log.Debugf("params is not array %+v", parsed)
 		p := parsed.Interface()
 		if p == nil {
-			return [](interface{}){}
+			return [](interface{}){}, false
 		} else {
-			return [](interface{}){p}
+			return [](interface{}){p}, false
 		}
 	} else {
-		return arr
+		return arr, true
 	}
 }
 
@@ -380,8 +390,9 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 	if id != nil {
 		if method != "" {
 			// request
-			params := parseParams(parsed.Get("params"))
+			params, listParams := parseParams(parsed.Get("params"))
 			reqmsg := NewRequestMessage(id, method, params)
+			reqmsg.listParams = listParams
 			reqmsg.SetRaw(parsed)
 			reqmsg.SetTraceId(traceId)
 			return reqmsg, nil
@@ -402,8 +413,9 @@ func Parse(parsed *simplejson.Json) (IMessage, error) {
 		rmsg.SetTraceId(traceId)
 		return rmsg, nil
 	} else if method != "" {
-		params := parseParams(parsed.Get("params"))
+		params, listParams := parseParams(parsed.Get("params"))
 		ntfmsg := NewNotifyMessage(method, params)
+		ntfmsg.listParams = listParams
 		ntfmsg.SetRaw(parsed)
 		ntfmsg.SetTraceId(traceId)
 		return ntfmsg, nil

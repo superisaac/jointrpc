@@ -54,15 +54,17 @@ type BaseMessage struct {
 
 type RequestMessage struct {
 	BaseMessage
-	Id     interface{}
-	Method string
-	Params []interface{}
+	Id         interface{}
+	Method     string
+	Params     []interface{}
+	listParams bool
 }
 
 type NotifyMessage struct {
 	BaseMessage
-	Method string
-	Params []interface{}
+	Method     string
+	Params     []interface{}
+	listParams bool
 }
 
 type ResultMessage struct {

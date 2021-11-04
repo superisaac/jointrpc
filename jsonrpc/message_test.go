@@ -37,6 +37,9 @@ func TestParseParams(t *testing.T) {
 	params := msg.MustParams()
 	assert.Equal(1, len(params))
 	assert.Equal("hello", params[0])
+	assert.True(msg.IsRequest())
+	reqmsg, _ := msg.(*RequestMessage)
+	assert.False(reqmsg.listParams)
 
 	j2 := `{
 "id": 99,
@@ -48,6 +51,11 @@ func TestParseParams(t *testing.T) {
 
 	params2 := msg2.MustParams()
 	assert.Equal(0, len(params2))
+
+	assert.True(msg2.IsRequest())
+	reqmsg2, _ := msg.(*RequestMessage)
+	assert.False(reqmsg2.listParams)
+
 }
 
 func TestRequestMsg(t *testing.T) {
