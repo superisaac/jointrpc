@@ -54,17 +54,17 @@ type BaseMessage struct {
 
 type RequestMessage struct {
 	BaseMessage
-	Id         interface{}
-	Method     string
-	Params     []interface{}
-	listParams bool
+	Id            interface{}
+	Method        string
+	Params        []interface{}
+	paramsAreList bool
 }
 
 type NotifyMessage struct {
 	BaseMessage
-	Method     string
-	Params     []interface{}
-	listParams bool
+	Method        string
+	Params        []interface{}
+	paramsAreList bool
 }
 
 type ResultMessage struct {
@@ -75,7 +75,6 @@ type ResultMessage struct {
 
 type ErrorMessage struct {
 	BaseMessage
-	Id interface{}
-	//Error interface{}
+	Id    interface{}
 	Error *RPCError
 }

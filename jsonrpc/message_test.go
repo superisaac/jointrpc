@@ -28,7 +28,7 @@ func TestParseParams(t *testing.T) {
 	j1 := `{
 "id": 99,
 "method": "abc::def",
-"params": "hello"
+"params": {"what": "hello"}
 }`
 	js, _ := simplejson.NewJson([]byte(j1))
 	msg, err := Parse(js)
@@ -36,26 +36,20 @@ func TestParseParams(t *testing.T) {
 
 	params := msg.MustParams()
 	assert.Equal(1, len(params))
-	assert.Equal("hello", params[0])
+	mapp, _ := params[0].(map[string]interface{})
+	assert.Equal("hello", mapp["what"])
 	assert.True(msg.IsRequest())
 	reqmsg, _ := msg.(*RequestMessage)
-	assert.False(reqmsg.listParams)
+	assert.False(reqmsg.paramsAreList)
 
 	j2 := `{
 "id": 99,
 "method": "abc::def"
 }`
 	js2, _ := simplejson.NewJson([]byte(j2))
-	msg2, err := Parse(js2)
-	assert.Nil(err)
-
-	params2 := msg2.MustParams()
-	assert.Equal(0, len(params2))
-
-	assert.True(msg2.IsRequest())
-	reqmsg2, _ := msg.(*RequestMessage)
-	assert.False(reqmsg2.listParams)
-
+	_, err = Parse(js2)
+	assert.NotNil(err)
+	assert.Equal("params is neither array nor map", err.Error())
 }
 
 func TestRequestMsg(t *testing.T) {
