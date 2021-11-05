@@ -30,11 +30,12 @@ type RPCStatusError struct {
 	Reason string
 }
 
-type WireCallback func(jsonrpc.IMessage)
+type LiveCallback func(jsonrpc.IMessage)
 
-type WireCallT struct {
+type LivecallT struct {
 	Expire   time.Time
-	Callback WireCallback
+	Request  jsonrpc.IMessage
+	Callback LiveCallback
 }
 
 type ConnectionLostCallback func()
@@ -58,8 +59,8 @@ type RPCClient struct {
 	onConnectionLost ConnectionLostCallback
 	onAuthorized     AuthorizedCallback
 
-	//wirePendingRequests map[interface{}]WireCallT
-	wirePendingRequests sync.Map
+	//pendingLivecalls map[interface{}]LivecallT
+	pendingLivecalls sync.Map
 
 	chResult chan dispatch.ResultT
 }
