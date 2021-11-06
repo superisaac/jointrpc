@@ -4,7 +4,7 @@ import (
 	"context"
 	//"errors"
 	"github.com/pkg/errors"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )
 
