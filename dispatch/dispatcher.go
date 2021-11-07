@@ -11,6 +11,10 @@ import (
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 
+const (
+	recoverPanic = false
+)
+
 // methods of RPCRequest
 func NewRPCRequest(ctx context.Context, cmdMsg rpcrouter.CmdMsg) *RPCRequest {
 	return &RPCRequest{Context: ctx, CmdMsg: cmdMsg}
@@ -78,6 +82,14 @@ func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*Met
 	if !found && len(self.changeHandlers) == 0 {
 		self.TriggerChange()
 	}
+}
+
+func (self *Dispatcher) OnTyped(method string, typedHandler interface{}, opts ...func(*MethodHandler)) {
+	handler, err := WrapTyped(typedHandler)
+	if err != nil {
+		panic(err)
+	}
+	self.On(method, handler, opts...)
 }
 
 func (self *Dispatcher) SetSpawnExec(v bool) {
@@ -166,26 +178,27 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 
 	handler, ok := self.methodHandlers[reqmsg.Method]
 
-	defer func() {
+	if recoverPanic {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("recovered r %+v\n", r)
 
-		if r := recover(); r != nil {
-			fmt.Printf("recovered r %+v\n", r)
-
-			if err, ok := r.(error); ok {
-				var rpcError *jsonrpc.RPCError
-				if errors.Is(err, Deferred) {
-					reqmsg.Log().Debugf("handler is deferred")
-					return
-					//} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
-				} else if errors.As(err, &rpcError) {
-					errmsg := rpcError.ToMessage(reqmsg)
-					self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
-					return
+				if err, ok := r.(error); ok {
+					var rpcError *jsonrpc.RPCError
+					if errors.Is(err, Deferred) {
+						reqmsg.Log().Debugf("handler is deferred")
+						return
+						//} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+					} else if errors.As(err, &rpcError) {
+						errmsg := rpcError.ToMessage(reqmsg)
+						self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
+						return
+					}
 				}
+				reqmsg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
 			}
-			reqmsg.Log().Errorf("Recovered ERROR on handling request msg %+v", r)
-		}
-	}()
+		}()
+	}
 
 	var resmsg jsonrpc.IMessage
 	var err error
@@ -206,7 +219,7 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 		return
 	}
 	if err != nil {
-		log.Warnf("bad up message %w", err)
+		log.Warnf("bad up message %s", err)
 		errmsg := jsonrpc.ErrBadResource.ToMessage(reqmsg)
 		self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
 		return
@@ -221,19 +234,21 @@ func (self *Dispatcher) feedNotify(req *RPCRequest, chResult chan ResultT) {
 	misc.Assert(ok, "message is not ok")
 	handler, ok := self.methodHandlers[ntfmsg.Method]
 
-	defer func() {
-		if r := recover(); r != nil {
-			if r == Deferred {
-				ntfmsg.Log().Debugf("handler is deferred")
-				return
-			} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
-				ntfmsg.Log().Warnf("RPCError code=%d, message=%s", rpcError.Code, rpcError.Message)
-				return
-			} else {
-				ntfmsg.Log().Errorf("Recovered ERROR on handling notify msg %+v", r)
+	if recoverPanic {
+		defer func() {
+			if r := recover(); r != nil {
+				if r == Deferred {
+					ntfmsg.Log().Debugf("handler is deferred")
+					return
+				} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+					ntfmsg.Log().Warnf("RPCError code=%d, message=%s", rpcError.Code, rpcError.Message)
+					return
+				} else {
+					ntfmsg.Log().Errorf("Recovered ERROR on handling notify msg %+v", r)
+				}
 			}
-		}
-	}()
+		}()
+	}
 
 	var res interface{}
 	var err error
@@ -254,7 +269,7 @@ func (self *Dispatcher) feedNotify(req *RPCRequest, chResult chan ResultT) {
 	if errors.Is(err, Deferred) {
 		log.Infof("handler is deferred")
 	} else if err != nil {
-		log.Warnf("bad up message %w", err)
+		log.Warnf("bad up message %s", err)
 	}
 }
 

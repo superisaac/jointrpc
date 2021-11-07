@@ -23,22 +23,12 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 		return "ok", nil
 	})
 
-	disp.On("array.at", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		if len(params) != 1 {
-			return nil, &jsonrpc.RPCError{400, "params count not eq 1", false}
-		}
-
-		n, err := jsonrpc.ValidateInt(params[0], "parameter 1")
-		if err != nil {
-			//return nil, err
-			panic(err)
-		}
-
-		if n < 0 || n >= int64(len(items)) {
+	disp.OnTyped("array.at", func(req *dispatch.RPCRequest, n int) (interface{}, error) {
+		if n < 0 || n >= len(items) {
 			return nil, &jsonrpc.RPCError{10423, "parameter 1 index out of range", false}
 		}
 		return items[n], nil
-	}, dispatch.WithSchema(`{"type": "method", "params": [{"type": "number"}]}`))
+	}, dispatch.WithSchema(`{"type": "method", "params": [{"type": "number"}]}`), dispatch.WithHelp("return the element at index"))
 
 	disp.On("array.size", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 		return len(items), nil

@@ -4,7 +4,7 @@ import (
 	"context"
 	//"fmt"
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	"time"
 
@@ -104,7 +104,8 @@ func (self *BuiltinService) requestReceived(ctx context.Context, cmdMsg rpcroute
 const (
 	echoSchema = `{
 "type": "method",
- "params": [{"type": "string"}]
+ "params": ["string"],
+ "returns": "string"
 }`
 )
 
@@ -114,27 +115,26 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 	self.disp = dispatch.NewDispatcher()
 	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
 
-	self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	// self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	// 	router := factory.Get(req.CmdMsg.Namespace)
+	// 	minfos := router.GetMethods()
+
+	// 	minfos = append(minfos, factory.CommonRouter().GetMethods()...)
+	// 	arr := make([](rpcrouter.MethodInfoMap), 0)
+	// 	for _, minfo := range minfos {
+	// 		arr = append(arr, minfo.ToMap())
+	// 	}
+	// 	return arr, nil
+	// })
+
+	self.disp.OnTyped("_listMethods", func(req *dispatch.RPCRequest) ([]rpcrouter.MethodInfo, error) {
 		router := factory.Get(req.CmdMsg.Namespace)
 		minfos := router.GetMethods()
-
-		minfos = append(minfos, factory.CommonRouter().GetMethods()...)
-		arr := make([](rpcrouter.MethodInfoMap), 0)
-		for _, minfo := range minfos {
-			arr = append(arr, minfo.ToMap())
-		}
-		return arr, nil
+		return minfos, nil
 	})
-
-	self.disp.On("_echo", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		if len(params) < 1 {
-			return nil, &jsonrpc.RPCError{Code: 400, Message: "len params should be at least 1"}
-		}
-		msg, ok := params[0].(string)
-		if !ok {
-			return nil, &jsonrpc.RPCError{Code: 400, Message: "string params required"}
-		}
-		return map[string]string{"echo": msg}, nil
+	
+	self.disp.OnTyped("_echo", func(req *dispatch.RPCRequest, text string) (string, error) {
+		return text, nil
 	}, dispatch.WithSchema(echoSchema))
 
 	self.disp.OnChange(func() {

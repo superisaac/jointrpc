@@ -42,6 +42,7 @@ test:
 	go test -v github.com/superisaac/jointrpc/rpcrouter
 	go test -v github.com/superisaac/jointrpc/msgutil
 	go test -v github.com/superisaac/jointrpc/client
+	go test -v github.com/superisaac/jointrpc/dispatch
 	go test -v github.com/superisaac/jointrpc/server
 	go test -v github.com/superisaac/jointrpc/service/builtin
 	go test -v github.com/superisaac/jointrpc/service/neighbor
