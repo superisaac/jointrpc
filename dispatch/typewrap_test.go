@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func TestMain(m *testing.M) {
@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 
 type TTT struct {
 	A string `json:"a"`
-	B int `json:"b"`
+	B int    `json:"b"`
 }
 
 func TestInterfaceAndValue(t *testing.T) {
@@ -25,8 +25,8 @@ func TestInterfaceAndValue(t *testing.T) {
 	tp := reflect.TypeOf(TTT{})
 
 	m := map[string](interface{}){
-		"a" : "hello",
-		"b" : 5,
+		"a": "hello",
+		"b": 5,
 	}
 	val, err := InterfaceToValue(tp, m)
 	assert.Nil(err)
@@ -48,8 +48,8 @@ func TestPtrInterfaceAndValue(t *testing.T) {
 	tp := reflect.TypeOf(&TTT{})
 
 	m := map[string](interface{}){
-		"a" : "hello",
-		"b" : 5,
+		"a": "hello",
+		"b": 5,
 	}
 	val, err := InterfaceToValue(tp, m)
 	assert.Nil(err)
@@ -61,7 +61,7 @@ func TestPtrInterfaceAndValue(t *testing.T) {
 	v1, err := ValueToInterface(tp, val)
 	assert.Nil(err)
 	m1, ok := v1.(map[string]interface{})
-	assert.True(ok)	
+	assert.True(ok)
 	assert.Equal("hello", m1["a"])
 	assert.Equal(5, m1["b"])
 }

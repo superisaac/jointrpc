@@ -3,68 +3,56 @@ package dispatch
 import (
 	"fmt"
 	"reflect"
-	"github.com/pkg/errors"	
+	//"encoding/json"
+	"github.com/pkg/errors"
 	//"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/mitchellh/mapstructure"
-	//"github.com/superisaac/jointrpc/misc"	
+	//"github.com/superisaac/jointrpc/misc"
 )
 
 func typeIsStruct(tp reflect.Type) bool {
 	return (tp.Kind() == reflect.Struct ||
-		(tp.Kind() == reflect.Ptr &&  typeIsStruct(tp.Elem())))
+		(tp.Kind() == reflect.Ptr && typeIsStruct(tp.Elem())))
 }
 
 func InterfaceToValue(tp reflect.Type, a interface{}) (reflect.Value, error) {
-	if typeIsStruct(tp) {
-		m, ok := a.(map[string]interface{})
-		if !ok {
-			return reflect.Value{}, errors.New("map is not for struct")
-		}
-		output := reflect.Zero(tp).Interface()
-		config := &mapstructure.DecoderConfig{
-			Metadata: nil,
-			TagName: "json",
-			Result:   &output,
-		}
-		decoder, err := mapstructure.NewDecoder(config)
-		if err != nil {
-			return reflect.Value{}, err
-		}
-		err = decoder.Decode(m)
-		if err != nil {
-			return reflect.Value{}, err
-		}
-		return reflect.ValueOf(output), nil
-	} else {
-		return reflect.ValueOf(a), nil
+	output := reflect.Zero(tp).Interface()
+	config := &mapstructure.DecoderConfig{
+		Metadata: nil,
+		TagName:  "json",
+		Result:   &output,
 	}
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	err = decoder.Decode(a)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	return reflect.ValueOf(output), nil
 }
 
 func ValueToInterface(tp reflect.Type, val reflect.Value) (interface{}, error) {
-	if typeIsStruct(tp) {
-		output := make(map[string]interface{})
-		config := &mapstructure.DecoderConfig{
-			Metadata: nil,
-			TagName: "json",
-			Result:   &output,
-		}
-		decoder, err := mapstructure.NewDecoder(config)
-		if err != nil {
-			return nil, err
-		}
-		err = decoder.Decode(val.Interface())
-		if err != nil {
-			return nil, err
-		}
-		return output, nil
-	} else {
-		return val.Interface(), nil
+	output := reflect.Zero(tp).Interface()
+	config := &mapstructure.DecoderConfig{
+		Metadata: nil,
+		TagName:  "json",
+		Result:   &output,
 	}
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return nil, err
+	}
+	err = decoder.Decode(val.Interface())
+	if err != nil {
+		return nil, err
+	}
+	return output, nil
 }
 
 func WrapTyped(tfunc interface{}) (HandlerFunc, error) {
 	funcType := reflect.TypeOf(tfunc)
-	fmt.Printf("func type %s\n", funcType.Kind())
 	if funcType.Kind() != reflect.Func {
 		return nil, errors.New("tfunc is not func type")
 	}
@@ -93,14 +81,14 @@ func WrapTyped(tfunc interface{}) (HandlerFunc, error) {
 
 	handler := func(req *RPCRequest, params []interface{}) (interface{}, error) {
 		// check inputs
-		if funcType.NumIn() != len(params) + 1 {
+		if funcType.NumIn() != len(params)+1 {
 			return nil, errors.New("different params size")
 		}
 
 		// params -> []reflect.Value
 		fnArgs := []reflect.Value{reflect.ValueOf(req)}
 		for i, param := range params {
-			argType := funcType.In(i+1)
+			argType := funcType.In(i + 1)
 			argValue, err := InterfaceToValue(argType, param)
 			if err != nil {
 				return nil, err
@@ -127,4 +115,3 @@ func WrapTyped(tfunc interface{}) (HandlerFunc, error) {
 
 	return handler, nil
 }
-

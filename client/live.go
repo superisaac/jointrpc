@@ -134,11 +134,11 @@ func (self *RPCClient) sendUpGRPC(ctx context.Context, stream intf.JointRPC_Live
 func (self *RPCClient) sendUpWS(ctx context.Context, ws *websocket.Conn, disp *dispatch.Dispatcher) {
 	for {
 		select {
-		case <- ctx.Done():
+		case <-ctx.Done():
 			return
-		case <- time.After(15 * time.Second):
+		case <-time.After(15 * time.Second):
 			self.sendPing(ctx)
-		case <- time.After(5 * time.Second):
+		case <-time.After(5 * time.Second):
 			self.cleanTimeoutLivecalls()
 		case msg, ok := <-self.chSendUp:
 			if !ok {

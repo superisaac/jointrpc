@@ -132,7 +132,7 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 		minfos := router.GetMethods()
 		return minfos, nil
 	})
-	
+
 	self.disp.OnTyped("_echo", func(req *dispatch.RPCRequest, text string) (string, error) {
 		return text, nil
 	}, dispatch.WithSchema(echoSchema))

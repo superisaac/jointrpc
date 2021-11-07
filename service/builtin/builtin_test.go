@@ -43,9 +43,9 @@ func TestBuiltinMethods(t *testing.T) {
 	assert.Equal("trace1", res.TraceId())
 
 	assert.True(res.IsResult())
-	m, ok := res.MustResult().(map[string]interface{})
+	m, ok := res.MustResult().(string)
 	assert.True(ok)
-	assert.Equal("nice", m["echo"])
+	assert.Equal("nice", m)
 
 	res1, err := c.CallRPC(ctx, "_echo", [](interface{}){1}, client.WithTraceId("trace2"))
 	assert.Nil(err)
