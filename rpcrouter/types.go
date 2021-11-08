@@ -32,15 +32,15 @@ const ZeroCID = CID(0)
 // }
 
 type MethodInfo struct {
-	Name       string `mapstructure:"name" json:"name"`
-	Help       string `mapstructure:"help" json:"help"`
-	SchemaJson string `mapstructure:"schema" json:"schema"`
+	Name       string `json:"name"`
+	Help       string `json:"help"`
+	SchemaJson string `json:"schema"`
 	schemaObj  *schema.MethodSchema
 }
 
 // tube state
 type ServerState struct {
-	Methods []MethodInfo `mapstructure:"methods"`
+	Methods []MethodInfo `json:"methods"`
 }
 
 // Connect Struct

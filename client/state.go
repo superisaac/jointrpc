@@ -7,9 +7,9 @@ import (
 	//"fmt"
 	//log "github.com/sirupsen/logrus"
 	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	"github.com/mitchellh/mapstructure"
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jointrpc/misc"	
 )
 
 const (
@@ -34,7 +34,7 @@ func OnStateChanged(disp *dispatch.Dispatcher, stateListener *dispatch.StateList
 	disp.On("_state.changed",
 		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			var serverState rpcrouter.ServerState
-			err := mapstructure.Decode(params[0], &serverState)
+			err := misc.DecodeStruct(params[0], &serverState)
 			if err != nil {
 				return nil, err
 			}

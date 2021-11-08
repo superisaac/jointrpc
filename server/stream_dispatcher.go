@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	//"time"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/dispatch"
@@ -81,8 +80,8 @@ func (self *StreamDispatcher) Init() {
 	self.disp = dispatch.NewDispatcher()
 	self.authDisp = dispatch.NewDispatcher()
 
-	self.disp.On("_stream.ping",
-		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.disp.OnTyped("_stream.ping",
+		func(req *dispatch.RPCRequest) (string, error) {
 			req.CmdMsg.Msg.Log().Debugf("ping received")
 			if conn, ok := req.Data.(*rpcrouter.ConnT); ok {
 				conn.Touch()
@@ -105,9 +104,9 @@ func (self *StreamDispatcher) Init() {
 			var methodNames []string
 			for _, infoDict := range arr {
 				var minfo rpcrouter.MethodInfo
-				err := mapstructure.Decode(infoDict, &minfo)
+				err := misc.DecodeStruct(infoDict, &minfo)
 				if err != nil {
-					return nil, errors.Wrap(err, "mapstructure.Decode()")
+					return nil, errors.Wrap(err, "misc.DecodeStruct()")
 				}
 				if !jsonrpc.IsPublicMethod(minfo.Name) {
 					conn.Log().WithFields(log.Fields{

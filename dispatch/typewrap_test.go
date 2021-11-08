@@ -39,6 +39,7 @@ func TestInterfaceAndValue(t *testing.T) {
 	v1, err := ValueToInterface(tp, val)
 	assert.Nil(err)
 	m1, ok := v1.(map[string]interface{})
+	assert.True(ok)
 	assert.Equal("hello", m1["a"])
 	assert.Equal(5, m1["b"])
 }

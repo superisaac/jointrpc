@@ -13,7 +13,6 @@ import (
 	//"fmt"
 	//"log"
 	//simplejson "github.com/bitly/go-simplejson"
-	"github.com/mitchellh/mapstructure"
 	//grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 
@@ -245,7 +244,7 @@ func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer,
 				return
 			}
 			stateJson := make(map[string]interface{})
-			err := mapstructure.Decode(state, &stateJson)
+			err := misc.DecodeStruct(state, &stateJson)
 			if err != nil {
 				panic(err)
 			}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"net"
 	"reflect"
@@ -36,7 +35,7 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	upMethods := make([](map[string](interface{})), 0)
 	for _, minfo := range disp.GetPublicMethodInfos() {
 		infoDict := make(map[string](interface{}))
-		err := mapstructure.Decode(minfo, &infoDict)
+		err := misc.DecodeStruct(minfo, &infoDict)
 		if err != nil {
 			return err
 		}

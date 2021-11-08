@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"github.com/gorilla/websocket"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"net"
 	"net/http"
@@ -239,7 +238,7 @@ func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcr
 				return
 			}
 			stateJson := make(map[string]interface{})
-			err := mapstructure.Decode(state, &stateJson)
+			err := misc.DecodeStruct(state, &stateJson)
 			if err != nil {
 				panic(err)
 			}

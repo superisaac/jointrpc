@@ -34,7 +34,12 @@ func InterfaceToValue(tp reflect.Type, a interface{}) (reflect.Value, error) {
 }
 
 func ValueToInterface(tp reflect.Type, val reflect.Value) (interface{}, error) {
-	output := reflect.Zero(tp).Interface()
+	var output interface{}
+	if typeIsStruct(tp) {
+		output = make(map[string]interface{})
+	} else {
+		output = reflect.Zero(tp).Interface()
+	}
 	config := &mapstructure.DecoderConfig{
 		Metadata: nil,
 		TagName:  "json",

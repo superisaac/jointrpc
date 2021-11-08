@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
 	"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jointrpc/misc"
 	"net/url"
 	"testing"
 )
@@ -41,14 +41,14 @@ func TestMapstructure(t *testing.T) {
 		SchemaJson: "{}"}
 
 	infoDict := make(map[string]interface{})
-	err := mapstructure.Decode(minfo, &infoDict)
+	err := misc.DecodeStruct(minfo, &infoDict)
 	assert.Nil(err)
 	assert.Equal(minfo.Name, infoDict["name"])
 	assert.Equal(minfo.Help, infoDict["help"])
 	assert.Equal(minfo.SchemaJson, infoDict["schema"])
 
 	var newminfo rpcrouter.MethodInfo
-	err = mapstructure.Decode(infoDict, &newminfo)
+	err = misc.DecodeStruct(infoDict, &newminfo)
 	assert.Nil(err)
 	assert.Equal(newminfo.Name, infoDict["name"])
 	assert.Equal(newminfo.Help, infoDict["help"])
