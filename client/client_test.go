@@ -2,8 +2,8 @@ package client
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/superisaac/jointrpc/rpcrouter"
 	"github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jointrpc/rpcrouter"
 	"net/url"
 	"testing"
 )

@@ -89,33 +89,24 @@ func (self *StreamDispatcher) Init() {
 			return "pong", nil
 		})
 
-	self.disp.On("_stream.declareMethods",
-		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.disp.OnTyped("_stream.declareMethods",
+		func(req *dispatch.RPCRequest, methodInfos []rpcrouter.MethodInfo) (string, error) {
 
 			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
-				return nil, jsonrpc.ParamsError("conn not found")
+				return "", jsonrpc.ParamsError("conn not found")
 			}
-			conn.Log().Infof("call _stream.declareMethods")
-			arr, ok := params[0].([]interface{})
-			misc.Assert(ok, "params[0] is not an array")
-
 			upMethods := make([]rpcrouter.MethodInfo, 0)
 			var methodNames []string
-			for _, infoDict := range arr {
-				var minfo rpcrouter.MethodInfo
-				err := misc.DecodeStruct(infoDict, &minfo)
-				if err != nil {
-					return nil, errors.Wrap(err, "misc.DecodeStruct()")
-				}
+			for _, minfo := range methodInfos {
 				if !jsonrpc.IsPublicMethod(minfo.Name) {
 					conn.Log().WithFields(log.Fields{
 						"rpc": "DeclareMethods",
 					}).Warnf("%s is not valid public method name", minfo.Name)
-					return nil, jsonrpc.ParamsError(fmt.Sprintf("method %s cannot prefix with .", minfo.Name))
+					return "", jsonrpc.ParamsError(fmt.Sprintf("method %s cannot prefix with .", minfo.Name))
 				}
 				methodNames = append(methodNames, minfo.Name)
-				_, err = minfo.SchemaOrError()
+				_, err := minfo.SchemaOrError()
 				if err != nil {
 					var buildError *schema.SchemaBuildError
 					if errors.As(err, &buildError) {
@@ -123,9 +114,9 @@ func (self *StreamDispatcher) Init() {
 						conn.Log().WithFields(log.Fields{
 							"rpc": "DeclareMethods",
 						}).Warnf("error build schema %s, %+v", buildError.Error(), minfo)
-						return nil, jsonrpc.ParamsError(fmt.Sprintf("build schema error %s", buildError.Error()))
+						return "", jsonrpc.ParamsError(fmt.Sprintf("build schema error %s", buildError.Error()))
 					}
-					return nil, err
+					return "", err
 				}
 				upMethods = append(upMethods, minfo)
 			}
@@ -140,14 +131,13 @@ func (self *StreamDispatcher) Init() {
 			return "ok", nil
 		}, dispatch.WithSchema(declareMethodsSchema))
 
-	self.disp.On("_stream.declareDelegates",
-		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.disp.OnTyped("_stream.declareDelegates",
+		func(req *dispatch.RPCRequest, methodNames []string) (string, error) {
 			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
-				return nil, jsonrpc.ParamsError("conn not found")
+				return "", jsonrpc.ParamsError("conn not found")
 			}
 
-			methodNames := jsonrpc.ConvertStringList(params[0])
 			conn.Log().Infof("call _stream.declareDelegates %+v", methodNames)
 			cmdDelegates := rpcrouter.CmdDelegates{
 				Namespace:   conn.Namespace,
@@ -162,11 +152,11 @@ func (self *StreamDispatcher) Init() {
 			return "ok", nil
 		}, dispatch.WithSchema(declareDelegatesSchema))
 
-	self.disp.On("_stream.watchState",
-		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.disp.OnTyped("_stream.watchState",
+		func(req *dispatch.RPCRequest) (string, error) {
 			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
-				return nil, jsonrpc.ParamsError("conn not found")
+				return "", jsonrpc.ParamsError("conn not found")
 			}
 			conn.SetWatchState(true)
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
@@ -178,11 +168,11 @@ func (self *StreamDispatcher) Init() {
 			return "ok", nil
 		}, dispatch.WithSchema(watchStateSchema))
 
-	self.authDisp.On("_stream.authorize",
-		func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.authDisp.OnTyped("_stream.authorize",
+		func(req *dispatch.RPCRequest, username string, password string) (string, error) {
 			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
-				return nil, jsonrpc.ParamsError("conn not found")
+				return "", jsonrpc.ParamsError("conn not found")
 			}
 
 			v := req.Context.Value("remoteAddress")
@@ -192,9 +182,6 @@ func (self *StreamDispatcher) Init() {
 				misc.Assert(isAddr, "context value remoteAddress is not net.Addr")
 				remoteAddress = remoteAddr.String()
 			}
-
-			username := jsonrpc.ConvertString(params[0])
-			password := jsonrpc.ConvertString(params[1])
 
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
 			cfg := factory.Config
@@ -209,7 +196,7 @@ func (self *StreamDispatcher) Init() {
 				conn.Log().Infof("joined to router %s", namespace)
 				return namespace, nil
 			}
-			return nil, jsonrpc.ErrAuthFailed
+			return "", jsonrpc.ErrAuthFailed
 		}, dispatch.WithSchema(authorizeSchema))
 } // end of Init()
 

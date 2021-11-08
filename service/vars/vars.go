@@ -19,7 +19,7 @@ type VarsService struct {
 	disp     *dispatch.Dispatcher
 	chResult chan dispatch.ResultT
 	//vars   map[string](map[string](interface{}))
-	namedVars map[string]interface{}
+	namedVars map[string](map[string]interface{})
 	//router *rpcrouter.Router
 	conn *rpcrouter.ConnT
 }
@@ -66,7 +66,7 @@ func (self *VarsService) ReadVars(varsPath string) error {
 	if err != nil {
 		return err
 	}
-	namedVars := make(map[string]interface{})
+	namedVars := make(map[string](map[string]interface{}))
 	err = yaml.Unmarshal(data, namedVars)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 		self.conn = nil
 	}()
 
-	self.disp.On("_vars.list", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
+	self.disp.OnTyped("_vars.list", func(req *dispatch.RPCRequest) (map[string]interface{}, error) {
 		if vars, ok := self.namedVars[req.CmdMsg.Namespace]; ok {
 			return vars, nil
 		} else {

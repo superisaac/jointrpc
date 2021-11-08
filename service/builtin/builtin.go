@@ -115,18 +115,6 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 	self.disp = dispatch.NewDispatcher()
 	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
 
-	// self.disp.On("_listMethods", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-	// 	router := factory.Get(req.CmdMsg.Namespace)
-	// 	minfos := router.GetMethods()
-
-	// 	minfos = append(minfos, factory.CommonRouter().GetMethods()...)
-	// 	arr := make([](rpcrouter.MethodInfoMap), 0)
-	// 	for _, minfo := range minfos {
-	// 		arr = append(arr, minfo.ToMap())
-	// 	}
-	// 	return arr, nil
-	// })
-
 	self.disp.OnTyped("_listMethods", func(req *dispatch.RPCRequest) ([]rpcrouter.MethodInfo, error) {
 		router := factory.Get(req.CmdMsg.Namespace)
 		minfos := router.GetMethods()
