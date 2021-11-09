@@ -39,13 +39,17 @@ func CommandSendNotify() {
 
 	params, err := jsonrpc.GuessJsonArray(clParams)
 	if err != nil {
-		panic(err)
+		//panic(err)
+		log.Errorf("params error %s", err)
+		os.Exit(1)
 	}
 
 	err = RunSendNotify(serverFlag.Get(), method, params,
 		client.WithBroadcast(*pBroadcast), client.WithTraceId(*pTraceId))
 	if err != nil {
-		panic(err)
+		//panic(err)
+		log.Errorf("%s", err)
+		os.Exit(1)
 	}
 }
 
@@ -83,13 +87,17 @@ func CommandCallRPC(subcmd string) {
 
 	params, err := jsonrpc.GuessJsonArray(clParams)
 	if err != nil {
-		panic(err)
+		//panic(err)
+		log.Errorf("fail to parse json %s", err)
+		os.Exit(1)
 	}
 
 	err = RunCallRPC(serverFlag.Get(), method, params,
 		client.WithBroadcast(*pBroadcast), client.WithTraceId(*pTraceId))
 	if err != nil {
-		panic(err)
+		//panic(err)
+		log.Errorf("fail to call rpc %s", err)
+		os.Exit(1)
 	}
 }
 
