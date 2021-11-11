@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"net"
 	"net/http"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	//datadir "github.com/superisaac/jointrpc/datadir"
@@ -196,57 +195,23 @@ func (self *WSServer) Authorize(r *http.Request) (bool, string) {
 	}
 	return true, "default"
 }
-
-func relayDownWSMessages(context context.Context, ws *websocket.Conn, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Warnf("recovered ERROR %+v", r)
-		}
-	}()
-
-	for {
-		select {
-		case <-context.Done():
-			log.Debugf("context done")
-			return
-		case <-time.After(10 * time.Second):
-			conn.ClearPendings()
-		case rest, ok := <-chResult:
-			if !ok {
-				log.Debugf("conn handler channel closed")
-				return
-			}
-			msgutil.WSSend(ws, rest.ResMsg)
-		case cmdMsg, ok := <-conn.MsgOutput():
-			if !ok {
-				log.Debugf("recv channel closed")
-				return
-			}
-			msgutil.WSSend(ws, cmdMsg.Msg)
-		case cmdMsg, ok := <-conn.MsgInput():
-			if !ok {
-				log.Debugf("MsgInput() closed")
-				return
-			}
-			err := conn.HandleRouteMessage(context, cmdMsg)
-			if err != nil {
-				panic(err)
-			}
-		case state, ok := <-conn.StateChannel():
-			if !ok {
-				log.Debugf("state channel closed")
-				return
-			}
-			stateJson := make(map[string]interface{})
-			err := misc.DecodeStruct(state, &stateJson)
-			if err != nil {
-				panic(err)
-			}
-			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
-			msgutil.WSSend(ws, ntf)
-		}
-	} // and for loop
+// lives
+type WSSender struct {
+	dispatch.ISender
+	ws *websocket.Conn
 }
+
+func NewWSSender(ws *websocket.Conn) *WSSender {
+	sender := &WSSender{
+		ws: ws,
+	}
+	return sender
+}
+
+func (self WSSender) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
+	return msgutil.WSSend(self.ws, msg)
+}
+
 
 func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -273,7 +238,9 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
-	go relayDownWSMessages(ctx, ws, conn, chResult)
+	sender := NewWSSender(ws)
+	go dispatch.SenderLoop(ctx, sender, conn, chResult)
+	//go relayDownWSMessages(ctx, ws, conn, chResult)
 	streamDisp := NewStreamDispatcher()
 	for {
 		msg, err := msgutil.WSRecv(ws)

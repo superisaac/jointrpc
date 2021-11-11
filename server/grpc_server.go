@@ -203,57 +203,20 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 }
 
 // Lives
-func relayDownMessages(context context.Context, stream intf.JointRPC_LiveServer, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
-	if false {
-		defer func() {
-			if r := recover(); r != nil {
-				log.Warnf("recovered ERROR %+v", r)
-			}
-		}()
-	}
-	for {
-		select {
-		case <-context.Done():
-			log.Debugf("context done")
-			return
-		case rest, ok := <-chResult:
-			if !ok {
-				log.Debugf("conn handler channel closed")
-				return
-			}
-			msgutil.GRPCServerSend(stream, rest.ResMsg)
-		case cmdMsg, ok := <-conn.MsgOutput():
-			if !ok {
-				log.Debugf("recv channel closed")
-				return
-			}
-			msgutil.GRPCServerSend(stream, cmdMsg.Msg)
+type GRPCSender struct {
+	dispatch.ISender
+	stream intf.JointRPC_LiveServer
+}
 
-		case cmdMsg, ok := <-conn.MsgInput():
-			if !ok {
-				log.Debugf("MsgInput() closed")
-				return
-			}
-			err := conn.HandleRouteMessage(context, cmdMsg)
-			if err != nil {
-				panic(err)
-			}
-		case state, ok := <-conn.StateChannel():
-			if !ok {
-				log.Debugf("state channel closed")
-				return
-			}
-			stateJson := make(map[string]interface{})
-			err := misc.DecodeStruct(state, &stateJson)
-			if err != nil {
-				panic(err)
-			}
-			ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
-			msgutil.GRPCServerSend(stream, ntf)
-		case <-time.After(10 * time.Second):
-			conn.ClearPendings()
-		}
-	} // and for loop
+func NewGRPCSender(stream intf.JointRPC_LiveServer) *GRPCSender {
+	sender := &GRPCSender{
+		stream: stream,
+	}
+	return sender
+}
+
+func (self GRPCSender) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
+	return msgutil.GRPCServerSend(self.stream, msg)
 }
 
 func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
@@ -274,7 +237,9 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 	}()
 
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
-	go relayDownMessages(ctx, stream, conn, chResult)
+	//go relayDownMessages(ctx, stream, conn, chResult)
+	sender := NewGRPCSender(stream)
+	go dispatch.SenderLoop(ctx, sender, conn, chResult)
 	streamDisp := GetStreamDispatcher()
 
 	for {

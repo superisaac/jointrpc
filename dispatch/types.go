@@ -50,3 +50,7 @@ type StateHandlerFunc func(newState *rpcrouter.ServerState)
 type StateListener struct {
 	stateHandlers []StateHandlerFunc
 }
+
+type ISender interface {
+	SendMessage(ctx context.Context, msg jsonrpc.IMessage) error
+}
