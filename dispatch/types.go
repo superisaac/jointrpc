@@ -53,4 +53,5 @@ type StateListener struct {
 
 type ISender interface {
 	SendMessage(ctx context.Context, msg jsonrpc.IMessage) error
+	SendCmdMsg(ctx context.Context, cmdMsg rpcrouter.CmdMsg) error
 }

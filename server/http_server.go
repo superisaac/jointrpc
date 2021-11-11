@@ -195,9 +195,9 @@ func (self *WSServer) Authorize(r *http.Request) (bool, string) {
 	}
 	return true, "default"
 }
+
 // lives
 type WSSender struct {
-	dispatch.ISender
 	ws *websocket.Conn
 }
 
@@ -212,6 +212,9 @@ func (self WSSender) SendMessage(context context.Context, msg jsonrpc.IMessage) 
 	return msgutil.WSSend(self.ws, msg)
 }
 
+func (self WSSender) SendCmdMsg(context context.Context, cmdMsg rpcrouter.CmdMsg) error {
+	return msgutil.WSSend(self.ws, cmdMsg.Msg)
+}
 
 func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)

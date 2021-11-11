@@ -203,8 +203,8 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 }
 
 // Lives
+// GRPCServer implements dispatch.ISender
 type GRPCSender struct {
-	dispatch.ISender
 	stream intf.JointRPC_LiveServer
 }
 
@@ -217,6 +217,10 @@ func NewGRPCSender(stream intf.JointRPC_LiveServer) *GRPCSender {
 
 func (self GRPCSender) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
 	return msgutil.GRPCServerSend(self.stream, msg)
+}
+
+func (self GRPCSender) SendCmdMsg(context context.Context, cmdMsg rpcrouter.CmdMsg) error {
+	return msgutil.GRPCServerSend(self.stream, cmdMsg.Msg)
 }
 
 func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {

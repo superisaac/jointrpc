@@ -3,7 +3,7 @@ package neighbor
 import (
 	"context"
 	"github.com/pkg/errors"
-	"time"
+	//"time"
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
@@ -107,81 +107,27 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 		self.conn = nil
 	}()
 
+	senderCtx, cancelSender := context.WithCancel(rootCtx)
+	defer cancelSender()
+	go dispatch.SenderLoop(senderCtx, self, self.conn, self.chResult)
+
 	mainCtx, mainCancel := context.WithCancel(rootCtx)
 	defer mainCancel()
+
 	for {
 		select {
 		case <-mainCtx.Done():
 			// TODO: log
 			return
-		case <-time.After(3 * time.Second):
-			self.conn.ClearPendings()
 		case stateChange, ok := <-self.ChState:
 			if !ok {
 				// TODO: log
 				return
 			}
 			self.handleStateChange(factory, stateChange)
-		case cmdMsg, ok := <-self.conn.MsgOutput():
-			if !ok {
-				// TODO: log
-				return
-			}
-			err := self.requestReceived(cmdMsg)
-			if err != nil {
-				panic(err)
-			}
-		case cmdMsg, ok := <-self.conn.MsgInput():
-			if !ok {
-				log.Debugf("MsgInput() closed")
-				return
-			}
-			err := self.conn.HandleRouteMessage(rootCtx, cmdMsg)
-			if err != nil {
-				panic(err)
-			}
-		case result, ok := <-self.chResult:
-			if !ok {
-				// TODO: log
-				return
-			}
-			//router.DeliverResultOrError(
-			//router.ChMsg <- rpcrouter.CmdMsg{
-			self.conn.MsgInput() <- rpcrouter.CmdMsg{
-				Msg:       result.ResMsg,
-				Namespace: router.Name(),
-			}
 		}
 	}
 	return
-}
-
-func (self *NeighborPort) requestReceived(cmdMsg rpcrouter.CmdMsg) error {
-	msg := cmdMsg.Msg
-	// stupid methods
-	if msg.IsRequest() {
-		for _, edge := range self.edges {
-			if edge.hasMethod(msg.MustMethod()) {
-				resmsg, err := edge.remoteClient.CallMessage(
-					context.Background(),
-					msg)
-				if err != nil {
-					return err
-				}
-				misc.AssertEqual(resmsg.TraceId(), cmdMsg.Msg.TraceId(), "")
-
-				if resmsg.MustId() != msg.MustId() {
-					log.Fatal("result has not the same id with origial request msg")
-				}
-
-				self.dispatcher.ReturnResultMessage(resmsg, cmdMsg, self.chResult)
-				return nil
-			}
-		}
-	} else {
-		log.Warnf("unexpected msg received %+v", msg)
-	}
-	return nil
 }
 
 func (self *NeighborPort) handleStateChange(factory *rpcrouter.RouterFactory, stateChange CmdStateChange) {
@@ -227,4 +173,42 @@ func (self *NeighborPort) tryUpdateMethods(factory *rpcrouter.RouterFactory) {
 		}
 		factory.Get(self.namespace).ChDelegates <- cmdDelegates
 	}
+}
+
+func (self NeighborPort) SendMessage(ctx context.Context, msg jsonrpc.IMessage) error {
+	factory := rpcrouter.RouterFactoryFromContext(ctx)
+	router := factory.Get(self.namespace)
+	self.conn.MsgInput() <- rpcrouter.CmdMsg{
+		Msg:       msg,
+		Namespace: router.Name(),
+	}
+	return nil
+}
+
+func (self NeighborPort) SendCmdMsg(ctx context.Context, cmdMsg rpcrouter.CmdMsg) error {
+	msg := cmdMsg.Msg
+	// stupid methods
+	if msg.IsRequest() {
+		for _, edge := range self.edges {
+			if edge.hasMethod(msg.MustMethod()) {
+				resmsg, err := edge.remoteClient.CallMessage(
+					context.Background(),
+					msg)
+				if err != nil {
+					return err
+				}
+				misc.AssertEqual(resmsg.TraceId(), cmdMsg.Msg.TraceId(), "")
+
+				if resmsg.MustId() != msg.MustId() {
+					log.Fatal("result has not the same id with origial request msg")
+				}
+
+				self.dispatcher.ReturnResultMessage(resmsg, cmdMsg, self.chResult)
+				return nil
+			}
+		}
+	} else {
+		log.Warnf("unexpected msg received %+v", msg)
+	}
+	return nil
 }

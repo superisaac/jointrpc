@@ -4,9 +4,9 @@ import (
 	"context"
 	//"fmt"
 	log "github.com/sirupsen/logrus"
-	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	misc "github.com/superisaac/jointrpc/misc"
-	"time"
+	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jointrpc/misc"
+	//"time"
 
 	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/dispatch"
@@ -54,41 +54,9 @@ func (self *BuiltinService) Start(rootCtx context.Context) error {
 
 	self.declareMethods(factory)
 
-	for {
-		select {
-		case <-ctx.Done():
-			log.Debugf("builtin handlers, context done")
-			return nil
-		case <-time.After(3 * time.Second):
-			self.conn.ClearPendings()
-		case cmdMsg, ok := <-self.conn.MsgOutput():
-			if !ok {
-				log.Debugf("recv channel colosed, leave")
-				return nil
-			}
-			//timeoutCtx, _ := context.WithTimeout(rootCtx, 10 * time.Second)
-			self.requestReceived(ctx, cmdMsg)
-		case cmdMsg, ok := <-self.conn.MsgInput():
-			if !ok {
-				log.Debugf("MsgInput() closed")
-				return nil
-			}
-			err := self.conn.HandleRouteMessage(ctx, cmdMsg)
-			if err != nil {
-				panic(err)
-			}
-		case result, ok := <-self.chResult:
-			if !ok {
-				log.Infof("result channel closed, return")
-				return nil
-			}
-
-			self.conn.MsgInput() <- rpcrouter.CmdMsg{
-				Msg:       result.ResMsg,
-				Namespace: commonRouter.Name(),
-			}
-		}
-	}
+	senderCtx, cancelSender := context.WithCancel(ctx)
+	defer cancelSender()
+	dispatch.SenderLoop(senderCtx, self, self.conn, self.chResult)
 	return nil
 }
 
@@ -146,4 +114,24 @@ func (self *BuiltinService) declareMethods(factory *rpcrouter.RouterFactory) {
 
 func NewBuiltinService() *BuiltinService {
 	return new(BuiltinService)
+}
+
+func (self BuiltinService) SendMessage(ctx context.Context, msg jsonrpc.IMessage) error {
+	factory := rpcrouter.RouterFactoryFromContext(ctx)
+	commonRouter := factory.CommonRouter()
+	self.conn.MsgInput() <- rpcrouter.CmdMsg{
+		Msg:       msg,
+		Namespace: commonRouter.Name(),
+	}
+	return nil
+}
+
+func (self BuiltinService) SendCmdMsg(ctx context.Context, cmdMsg rpcrouter.CmdMsg) error {
+	msg := cmdMsg.Msg
+	if msg.IsRequestOrNotify() {
+		self.disp.Feed(ctx, cmdMsg, self.chResult)
+	} else {
+		log.Warnf("builtin handler, receved none request msg %+v", msg)
+	}
+	return nil
 }

@@ -33,7 +33,7 @@ func TestBuiltinMethods(t *testing.T) {
 
 	service.TryStartService(ctx, srv)
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	c := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10001", ""})
 	err := c.Connect()
