@@ -9,7 +9,7 @@ protopyfiles := python/jointrpc/pb/jointrpc_pb2.py \
 	python/jointrpc/pb/jointrpc_pb2_grpc.py \
 	python/jointrpc/pb/jointrpc_grpc.py
 
-# goflag := -gcflags=-G=3
+goflag := -gcflags=-G=3
 
 build: compile_proto bin/jointrpc bin/jointrpc-server
 
