@@ -31,7 +31,7 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 			}
 			return items[n], nil
 		},
-		dispatch.WithSchema(`{"type": "method", "params": [{"type": "number"}]}`),
+		dispatch.WithSchema(`{"type": "method", "params": [{"type": "integer"}]}`),
 		dispatch.WithHelp("return the element at index"))
 
 	disp.OnTyped("array.size",

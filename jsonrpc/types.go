@@ -58,6 +58,9 @@ type RequestMessage struct {
 	Method        string
 	Params        []interface{}
 	paramsAreList bool
+
+	// request specific fields
+
 }
 
 type NotifyMessage struct {

@@ -7,7 +7,7 @@ import (
 
 // util functions
 func convertTypeMap(maybeType interface{}) (map[string]interface{}, bool) {
-	if typeStr, ok := maybeType.(string); ok && misc.StringInList(typeStr, "string", "number", "bool", "null") {
+	if typeStr, ok := maybeType.(string); ok && misc.StringInList(typeStr, "string", "number", "integer", "bool", "null") {
 		// type is single string, build a simle map
 		typeMap := map[string](interface{}){"type": typeStr}
 		return typeMap, true

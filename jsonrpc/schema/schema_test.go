@@ -17,6 +17,12 @@ func TestBuildBasicSchema(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal("number", s.Type())
 
+	s1 = []byte(`{"type": "integer"}`)
+	builder = NewSchemaBuilder()
+	s, err = builder.BuildBytes(s1)
+	assert.Nil(err)
+	assert.Equal("integer", s.Type())
+
 	s1 = []byte(`"string"`)
 	builder = NewSchemaBuilder()
 	s, err = builder.BuildBytes(s1)
@@ -153,6 +159,7 @@ func TestBuildObjectSchema(t *testing.T) {
 func TestBasicValidator(t *testing.T) {
 	assert := assert.New(t)
 
+	// number schema
 	s1 := []byte(`{"type": "number"}`)
 	builder := NewSchemaBuilder()
 	schema, err := builder.BuildBytes(s1)
@@ -161,7 +168,7 @@ func TestBasicValidator(t *testing.T) {
 	assert.True(ok)
 
 	validator := NewSchemaValidator()
-	errPos := validator.ValidateBytes(numberSchema, []byte(`6`))
+	errPos := validator.ValidateBytes(numberSchema, []byte(`6.3`))
 	assert.Nil(errPos)
 
 	validator = NewSchemaValidator()
@@ -169,6 +176,28 @@ func TestBasicValidator(t *testing.T) {
 	assert.NotNil(errPos)
 	assert.Equal("data is not number", errPos.hint)
 	assert.Equal("", errPos.Path())
+
+	// integer schema
+	s1 = []byte(`{"type": "integer"}`)
+	builder = NewSchemaBuilder()
+	schema, err = builder.BuildBytes(s1)
+	assert.Nil(err)
+	intSchema, ok := schema.(*IntegerSchema)
+	assert.True(ok)
+
+	errPos = validator.ValidateBytes(intSchema, []byte(`899`))
+	assert.Nil(errPos)
+
+	errPos = validator.ValidateBytes(intSchema, []byte(`6.3`))
+	assert.NotNil(errPos)
+	assert.Equal("data is not integer", errPos.hint)
+
+	validator = NewSchemaValidator()
+	errPos = validator.ValidateBytes(intSchema, []byte(`"a string"`))
+	assert.NotNil(errPos)
+	assert.Equal("data is not integer", errPos.hint)
+	assert.Equal("", errPos.Path())
+
 }
 
 func TestUnionValidator(t *testing.T) {

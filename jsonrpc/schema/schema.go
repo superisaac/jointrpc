@@ -80,7 +80,6 @@ func (self *BoolSchema) Scan(validator *SchemaValidator, data interface{}) *Erro
 }
 
 // type = "number"
-
 func NewNumberSchema() *NumberSchema {
 	return &NumberSchema{}
 }
@@ -103,6 +102,30 @@ func (self *NumberSchema) Scan(validator *SchemaValidator, data interface{}) *Er
 		return nil
 	}
 	return validator.NewErrorPos("data is not number")
+}
+
+// type = "integer"
+func NewIntegerSchema() *IntegerSchema {
+	return &IntegerSchema{}
+}
+func (self IntegerSchema) Type() string {
+	return "integer"
+}
+func (self IntegerSchema) RebuildType() map[string]interface{} {
+	return self.rebuildType(self.Type())
+}
+
+func (self *IntegerSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
+	if n, ok := data.(json.Number); ok {
+		if _, err := n.Int64(); err == nil {
+			return nil
+		}
+	}
+	if _, ok := data.(int); ok {
+		return nil
+	}
+
+	return validator.NewErrorPos("data is not integer")
 }
 
 // type = "string"

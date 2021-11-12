@@ -57,6 +57,11 @@ type BoolSchema struct {
 type NumberSchema struct {
 	SchemaMixin
 }
+
+type IntegerSchema struct {
+	SchemaMixin
+}
+
 type StringSchema struct {
 	SchemaMixin
 }

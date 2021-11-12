@@ -117,6 +117,8 @@ func (self *SchemaBuilder) buildNodeMap(node map[string](interface{}), paths ...
 	switch nodeType {
 	case "number":
 		schema = NewNumberSchema()
+	case "integer":
+		schema = NewIntegerSchema()
 	case "any":
 		schema = &AnySchema{}
 	case "null":
