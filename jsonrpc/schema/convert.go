@@ -2,6 +2,8 @@ package schema
 
 import (
 	//"fmt"
+	"encoding/json"
+	//"reflect"
 	"github.com/superisaac/jointrpc/misc"
 )
 
@@ -42,13 +44,34 @@ func convertAttrMap(node map[string]interface{}, attrName string, optional bool)
 
 func convertAttrList(node map[string]interface{}, attrName string, optional bool) ([]interface{}, bool) {
 	if v, ok := node[attrName]; ok {
+		// has attribute
 		if aList, ok := v.([]interface{}); ok {
+			// attribute is an array
+
 			return aList, ok
 		}
 	} else if optional {
 		return [](interface{}){}, true
 	}
 	return nil, false
+}
+
+func convertAttrInt(node map[string]interface{}, attrName string, optional bool) (int, bool) {
+	if v, ok := node[attrName]; ok {
+		if intv, ok := v.(int); ok {
+			return intv, ok
+		} else if n, ok := v.(json.Number); ok {
+			intv, err := n.Int64()
+			if err != nil {
+				return 0, false
+			} else {
+				return int(intv), ok
+			}
+		}
+	} else if optional {
+		return 0, true
+	}
+	return 0, false
 }
 
 func convertAttrMapOfMap(node map[string](interface{}), attrName string, optional bool) (map[string](map[string]interface{}), bool) {

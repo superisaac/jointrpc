@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"math"
 	//"reflect"
 	json "encoding/json"
 	simplejson "github.com/bitly/go-simplejson"
@@ -129,6 +130,11 @@ func (self *IntegerSchema) Scan(validator *SchemaValidator, data interface{}) *E
 }
 
 // type = "string"
+func NewStringSchema() *StringSchema {
+	return &StringSchema{
+		MaxLength: math.MaxInt,
+	}
+}
 func (self StringSchema) Type() string {
 	return "string"
 }
@@ -137,7 +143,10 @@ func (self StringSchema) RebuildType() map[string]interface{} {
 }
 
 func (self *StringSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
-	if _, ok := data.(string); ok {
+	if str, ok := data.(string); ok {
+		if len(str) > self.MaxLength {
+			return validator.NewErrorPos("string length exceeds max length")
+		}
 		return nil
 	}
 	return validator.NewErrorPos("data is not string")

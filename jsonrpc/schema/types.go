@@ -64,6 +64,7 @@ type IntegerSchema struct {
 
 type StringSchema struct {
 	SchemaMixin
+	MaxLength int
 }
 
 type UnionSchema struct {

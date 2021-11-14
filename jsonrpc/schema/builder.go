@@ -124,7 +124,7 @@ func (self *SchemaBuilder) buildNodeMap(node map[string](interface{}), paths ...
 	case "null":
 		schema = &NullSchema{}
 	case "string":
-		schema = &StringSchema{}
+		schema, err = self.buildStringSchema(node, paths...)
 	case "bool":
 		schema = &BoolSchema{}
 	case "union":
@@ -259,6 +259,14 @@ func (self *SchemaBuilder) buildMethodSchema(node map[string](interface{}), path
 			return nil, err
 		}
 		schema.Returns = c
+	}
+	return schema, nil
+}
+
+func (self *SchemaBuilder) buildStringSchema(node map[string](interface{}), paths ...string) (*StringSchema, error) {
+	schema := NewStringSchema()
+	if maxLength, ok := convertAttrInt(node, "maxLength", false); ok && maxLength >= 0 {
+		schema.MaxLength = maxLength
 	}
 	return schema, nil
 }
