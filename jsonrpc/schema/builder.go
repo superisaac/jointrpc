@@ -116,17 +116,17 @@ func (self *SchemaBuilder) buildNodeMap(node map[string](interface{}), paths ...
 
 	switch nodeType {
 	case "number":
-		schema = NewNumberSchema()
+		schema, err = self.buildNumberSchema(node, paths...)
 	case "integer":
-		schema = NewIntegerSchema()
+		schema, err = self.buildIntegerSchema(node, paths...)
+	case "bool":
+		schema = &BoolSchema{}
 	case "any":
 		schema = &AnySchema{}
 	case "null":
 		schema = &NullSchema{}
 	case "string":
 		schema, err = self.buildStringSchema(node, paths...)
-	case "bool":
-		schema = &BoolSchema{}
 	case "union":
 		schema, err = self.buildUnionSchema(node, paths...)
 	case "list":
@@ -259,6 +259,30 @@ func (self *SchemaBuilder) buildMethodSchema(node map[string](interface{}), path
 			return nil, err
 		}
 		schema.Returns = c
+	}
+	return schema, nil
+}
+
+func (self *SchemaBuilder) buildNumberSchema(node map[string](interface{}), paths ...string) (*NumberSchema, error) {
+	schema := NewNumberSchema()
+	if maximum, ok := convertAttrFloat(node, "maximum", false); ok {
+		schema.Maximum = &maximum
+	}
+	if minimum, ok := convertAttrFloat(node, "minimum", false); ok {
+		schema.Minimum = &minimum
+	}
+	return schema, nil
+}
+
+func (self *SchemaBuilder) buildIntegerSchema(node map[string](interface{}), paths ...string) (*IntegerSchema, error) {
+	schema := NewIntegerSchema()
+	if maximum, ok := convertAttrInt(node, "maximum", false); ok {
+		n := int64(maximum)
+		schema.Maximum = &n
+	}
+	if minimum, ok := convertAttrInt(node, "minimum", false); ok {
+		n := int64(minimum)
+		schema.Minimum = &n
 	}
 	return schema, nil
 }

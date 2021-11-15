@@ -74,6 +74,26 @@ func convertAttrInt(node map[string]interface{}, attrName string, optional bool)
 	return 0, false
 }
 
+func convertAttrFloat(node map[string]interface{}, attrName string, optional bool) (float64, bool) {
+	if v, ok := node[attrName]; ok {
+		if n, ok := v.(int); ok {
+			return float64(n), true
+		} else if n, ok := v.(float64); ok {
+			return n, true
+		} else if n, ok := v.(json.Number); ok {
+			fv, err := n.Float64()
+			if err != nil {
+				return 0, false
+			} else {
+				return fv, true
+			}
+		}
+	} else if optional {
+		return 0, true
+	}
+	return 0, false
+}
+
 func convertAttrMapOfMap(node map[string](interface{}), attrName string, optional bool) (map[string](map[string]interface{}), bool) {
 	if mm, ok := convertAttrMap(node, attrName, optional); ok {
 		resMap := make(map[string](map[string]interface{}))

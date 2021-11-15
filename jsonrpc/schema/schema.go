@@ -84,6 +84,7 @@ func (self *BoolSchema) Scan(validator *SchemaValidator, data interface{}) *Erro
 func NewNumberSchema() *NumberSchema {
 	return &NumberSchema{}
 }
+
 func (self NumberSchema) Type() string {
 	return "number"
 }
@@ -92,17 +93,29 @@ func (self NumberSchema) RebuildType() map[string]interface{} {
 }
 
 func (self *NumberSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
-	if _, ok := data.(json.Number); ok {
-		return nil
+	if n, ok := data.(json.Number); ok {
+		f, _ := n.Float64()
+		return self.checkRange(validator, f)
 	}
-	if _, ok := data.(int); ok {
-		return nil
+	if n, ok := data.(int); ok {
+		return self.checkRange(validator, float64(n))
 	}
 
-	if _, ok := data.(float64); ok {
-		return nil
+	if n, ok := data.(float64); ok {
+		return self.checkRange(validator, n)
 	}
 	return validator.NewErrorPos("data is not number")
+}
+
+func (self NumberSchema) checkRange(validator *SchemaValidator, v float64) *ErrorPos {
+	if self.Maximum != nil && *self.Maximum < v {
+		return validator.NewErrorPos("value > maximum")
+	}
+
+	if self.Minimum != nil && *self.Minimum > v {
+		return validator.NewErrorPos("value < minimum")
+	}
+	return nil
 }
 
 // type = "integer"
@@ -118,15 +131,26 @@ func (self IntegerSchema) RebuildType() map[string]interface{} {
 
 func (self *IntegerSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	if n, ok := data.(json.Number); ok {
-		if _, err := n.Int64(); err == nil {
-			return nil
+		if in, err := n.Int64(); err == nil {
+			return self.checkRange(validator, in)
 		}
 	}
-	if _, ok := data.(int); ok {
-		return nil
+	if n, ok := data.(int); ok {
+		return self.checkRange(validator, int64(n))
 	}
 
 	return validator.NewErrorPos("data is not integer")
+}
+
+func (self IntegerSchema) checkRange(validator *SchemaValidator, v int64) *ErrorPos {
+	if self.Maximum != nil && *self.Maximum < v {
+		return validator.NewErrorPos("value > maximum")
+	}
+
+	if self.Minimum != nil && *self.Minimum > v {
+		return validator.NewErrorPos("value < minimum")
+	}
+	return nil
 }
 
 // type = "string"

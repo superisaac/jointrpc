@@ -160,7 +160,11 @@ func TestBasicValidator(t *testing.T) {
 	assert := assert.New(t)
 
 	// number schema
-	s1 := []byte(`{"type": "number"}`)
+	s1 := []byte(`{
+"type": "number",
+"maximum": 6000,
+"minimum": -1980}`)
+
 	builder := NewSchemaBuilder()
 	schema, err := builder.BuildBytes(s1)
 	assert.Nil(err)
@@ -171,7 +175,15 @@ func TestBasicValidator(t *testing.T) {
 	errPos := validator.ValidateBytes(numberSchema, []byte(`6.3`))
 	assert.Nil(errPos)
 
-	validator = NewSchemaValidator()
+	errPos = validator.ValidateBytes(numberSchema, []byte(`13001.27`))
+	assert.NotNil(errPos)
+	assert.Equal("value > maximum", errPos.hint)
+
+	errPos = validator.ValidateBytes(numberSchema, []byte(`-8888.99`))
+	assert.NotNil(errPos)
+	assert.Equal("value < minimum", errPos.hint)
+
+	//validator = NewSchemaValidator()
 	errPos = validator.ValidateBytes(numberSchema, []byte(`"a string"`))
 	assert.NotNil(errPos)
 	assert.Equal("data is not number", errPos.hint)
