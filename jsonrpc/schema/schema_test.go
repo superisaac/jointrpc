@@ -282,9 +282,50 @@ func TestAnyOfValidator(t *testing.T) {
 
 }
 
+func TestAllOfValidator(t *testing.T) {
+	assert := assert.New(t)
+	s1 := []byte(`{"type": "allOf"}`)
+	builder := NewSchemaBuilder()
+	_, err := builder.BuildBytes(s1)
+	assert.NotNil(err)
+	assert.Equal("SchemaBuildError no valid allOf attribute, paths: ", err.Error())
+
+	s1 = []byte(`{
+"allOf": [
+  {"type": "number", "maximum": 6000},
+  {"type": "number", "minimum": -200}
+]
+}`)
+	builder = NewSchemaBuilder()
+	s, err := builder.BuildBytes(s1)
+	assert.Nil(err)
+
+	uschema, ok := s.(*AllOfSchema)
+	assert.True(ok)
+
+	validator := NewSchemaValidator()
+	data := []byte(`9000`)
+	errPos := validator.ValidateBytes(uschema, data)
+	assert.NotNil(errPos)
+	assert.Equal("", errPos.Path())
+	assert.Equal("value > maximum", errPos.hint)
+
+	validator = NewSchemaValidator()
+	data = []byte(`-7890`)
+	errPos = validator.ValidateBytes(uschema, data)
+	assert.NotNil(errPos)
+	assert.Equal("", errPos.Path())
+	assert.Equal("value < minimum", errPos.hint)
+
+	validator = NewSchemaValidator()
+	data = []byte(`3799`)
+	errPos = validator.ValidateBytes(uschema, data)
+	assert.Nil(errPos)
+}
+
 func TestNotValidator(t *testing.T) {
 	assert := assert.New(t)
-	
+
 	s1 := []byte(`{"type": "not"}`)
 	builder := NewSchemaBuilder()
 	_, err := builder.BuildBytes(s1)
@@ -306,7 +347,6 @@ func TestNotValidator(t *testing.T) {
 	errPos := validator.ValidateBytes(uschema, data)
 	assert.Nil(errPos)
 
-
 	validator = NewSchemaValidator()
 	data = []byte(`{}`)
 	errPos = validator.ValidateBytes(uschema, data)
@@ -316,7 +356,7 @@ func TestNotValidator(t *testing.T) {
 	data = []byte(`-3.88`)
 	errPos = validator.ValidateBytes(uschema, data)
 	assert.NotNil(errPos)
-	assert.Equal("not validator failed", errPos.hint)	
+	assert.Equal("not validator failed", errPos.hint)
 }
 
 func TestComplexValidator(t *testing.T) {

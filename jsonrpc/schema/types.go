@@ -77,9 +77,14 @@ type AnyOfSchema struct {
 	Choices []Schema
 }
 
+type AllOfSchema struct {
+	SchemaMixin
+	Choices []Schema
+}
+
 type NotSchema struct {
 	SchemaMixin
-	Child           Schema
+	Child Schema
 }
 
 type ListSchema struct {

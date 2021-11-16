@@ -203,6 +203,33 @@ func (self *AnyOfSchema) Scan(validator *SchemaValidator, data interface{}) *Err
 	return validator.NewErrorPos("data is not any of the types")
 }
 
+// type = "allOf"
+func NewAllOfSchema() *AllOfSchema {
+	return &AllOfSchema{Choices: make([]Schema, 0)}
+}
+
+func (self AllOfSchema) RebuildType() map[string]interface{} {
+	tp := self.rebuildType(self.Type())
+	arr := make([](map[string]interface{}), 0)
+	for _, choice := range self.Choices {
+		arr = append(arr, choice.RebuildType())
+	}
+	tp["allOf"] = arr
+	return tp
+}
+
+func (self AllOfSchema) Type() string {
+	return "allOf"
+}
+func (self *AllOfSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
+	for _, schema := range self.Choices {
+		if errPos := validator.Scan(schema, "", data); errPos != nil {
+			return errPos
+		}
+	}
+	return nil
+}
+
 // type = "not"
 func NewNotSchema() *NotSchema {
 	return &NotSchema{}

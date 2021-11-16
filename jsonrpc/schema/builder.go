@@ -129,6 +129,8 @@ func (self *SchemaBuilder) buildNodeMap(node map[string](interface{}), paths ...
 		schema, err = self.buildStringSchema(node, paths...)
 	case "anyOf":
 		schema, err = self.buildAnyOfSchema(node, paths...)
+	case "allOf":
+		schema, err = self.buildAllOfSchema(node, paths...)
 	case "not":
 		schema, err = self.buildNotSchema(node, paths...)
 	case "list":
@@ -232,6 +234,23 @@ func (self *SchemaBuilder) buildAnyOfSchema(node map[string](interface{}), paths
 		}
 	} else {
 		return nil, NewBuildError("no valid anyOf attribute", paths)
+	}
+	return schema, nil
+}
+
+func (self *SchemaBuilder) buildAllOfSchema(node map[string](interface{}), paths ...string) (*AllOfSchema, error) {
+	schema := NewAllOfSchema()
+	if choices, ok := convertAttrListOfMap(node, "allOf", false); ok {
+		for i, choiceNode := range choices {
+			newPaths := append(paths, ".allOf", fmt.Sprintf("[%d]", i))
+			c, err := self.buildNodeMap(choiceNode, newPaths...)
+			if err != nil {
+				return nil, err
+			}
+			schema.Choices = append(schema.Choices, c)
+		}
+	} else {
+		return nil, NewBuildError("no valid allOf attribute", paths)
 	}
 	return schema, nil
 }
