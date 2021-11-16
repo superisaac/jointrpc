@@ -203,6 +203,29 @@ func (self *AnyOfSchema) Scan(validator *SchemaValidator, data interface{}) *Err
 	return validator.NewErrorPos("data is not any of the types")
 }
 
+// type = "not"
+func NewNotSchema() *NotSchema {
+	return &NotSchema{}
+}
+
+func (self NotSchema) RebuildType() map[string]interface{} {
+	tp := self.rebuildType(self.Type())
+	tp["not"] = self.Child.RebuildType()
+	return tp
+}
+
+func (self NotSchema) Type() string {
+	return "not"
+}
+func (self *NotSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
+
+	errPos := self.Child.Scan(validator, data)
+	if errPos == nil {
+		return validator.NewErrorPos("not validator failed")
+	}
+	return nil
+}
+
 // type = "array", items is object
 
 func NewListSchema() *ListSchema {

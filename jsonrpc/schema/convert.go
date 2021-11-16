@@ -26,8 +26,9 @@ func convertTypeMap(maybeType interface{}) (map[string]interface{}, bool) {
 				typeMap["type"] = "object"
 			} else if _, ok := typeMap["anyOf"]; ok {
 				typeMap["type"] = "anyOf"
+			} else if _, ok := typeMap["not"]; ok {
+				typeMap["type"] = "not"
 			}
-
 		}
 		return typeMap, ok
 	} else {

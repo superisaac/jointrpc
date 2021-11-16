@@ -129,6 +129,8 @@ func (self *SchemaBuilder) buildNodeMap(node map[string](interface{}), paths ...
 		schema, err = self.buildStringSchema(node, paths...)
 	case "anyOf":
 		schema, err = self.buildAnyOfSchema(node, paths...)
+	case "not":
+		schema, err = self.buildNotSchema(node, paths...)
 	case "list":
 		schema, err = self.buildListSchema(node, paths...)
 	case "object":
@@ -230,6 +232,21 @@ func (self *SchemaBuilder) buildAnyOfSchema(node map[string](interface{}), paths
 		}
 	} else {
 		return nil, NewBuildError("no valid anyOf attribute", paths)
+	}
+	return schema, nil
+}
+
+func (self *SchemaBuilder) buildNotSchema(node map[string](interface{}), paths ...string) (*NotSchema, error) {
+	schema := NewNotSchema()
+	if childMap, ok := convertAttrMap(node, "not", false); ok {
+		newPaths := append(paths, ".not")
+		c, err := self.buildNodeMap(childMap, newPaths...)
+		if err != nil {
+			return nil, err
+		}
+		schema.Child = c
+	} else {
+		return nil, NewBuildError("no valid not attribute", paths)
 	}
 	return schema, nil
 }

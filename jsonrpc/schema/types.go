@@ -71,10 +71,17 @@ type StringSchema struct {
 	MaxLength int
 }
 
+// composits
 type AnyOfSchema struct {
 	SchemaMixin
 	Choices []Schema
 }
+
+type NotSchema struct {
+	SchemaMixin
+	Child           Schema
+}
+
 type ListSchema struct {
 	SchemaMixin
 	Item Schema
