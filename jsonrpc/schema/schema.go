@@ -177,11 +177,11 @@ func (self *StringSchema) Scan(validator *SchemaValidator, data interface{}) *Er
 }
 
 // type = "anyOf"
-func NewUnionSchema() *UnionSchema {
-	return &UnionSchema{Choices: make([]Schema, 0)}
+func NewAnyOfSchema() *AnyOfSchema {
+	return &AnyOfSchema{Choices: make([]Schema, 0)}
 }
 
-func (self UnionSchema) RebuildType() map[string]interface{} {
+func (self AnyOfSchema) RebuildType() map[string]interface{} {
 	tp := self.rebuildType(self.Type())
 	arr := make([](map[string]interface{}), 0)
 	for _, choice := range self.Choices {
@@ -191,10 +191,10 @@ func (self UnionSchema) RebuildType() map[string]interface{} {
 	return tp
 }
 
-func (self UnionSchema) Type() string {
+func (self AnyOfSchema) Type() string {
 	return "anyOf"
 }
-func (self *UnionSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
+func (self *AnyOfSchema) Scan(validator *SchemaValidator, data interface{}) *ErrorPos {
 	for _, schema := range self.Choices {
 		if errPos := validator.Scan(schema, "", data); errPos == nil {
 			return nil

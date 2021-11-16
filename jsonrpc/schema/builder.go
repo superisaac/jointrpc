@@ -127,8 +127,8 @@ func (self *SchemaBuilder) buildNodeMap(node map[string](interface{}), paths ...
 		schema = &NullSchema{}
 	case "string":
 		schema, err = self.buildStringSchema(node, paths...)
-	case "union":
-		schema, err = self.buildUnionSchema(node, paths...)
+	case "anyOf":
+		schema, err = self.buildAnyOfSchema(node, paths...)
 	case "list":
 		schema, err = self.buildListSchema(node, paths...)
 	case "object":
@@ -217,8 +217,8 @@ func (self *SchemaBuilder) buildListSchema(node map[string](interface{}), paths 
 	return nil, NewBuildError("fail to build list schema", paths)
 }
 
-func (self *SchemaBuilder) buildUnionSchema(node map[string](interface{}), paths ...string) (*UnionSchema, error) {
-	schema := NewUnionSchema()
+func (self *SchemaBuilder) buildAnyOfSchema(node map[string](interface{}), paths ...string) (*AnyOfSchema, error) {
+	schema := NewAnyOfSchema()
 	if choices, ok := convertAttrListOfMap(node, "anyOf", false); ok {
 		for i, choiceNode := range choices {
 			newPaths := append(paths, ".anyOf", fmt.Sprintf("[%d]", i))

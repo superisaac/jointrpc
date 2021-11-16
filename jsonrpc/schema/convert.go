@@ -24,6 +24,8 @@ func convertTypeMap(maybeType interface{}) (map[string]interface{}, bool) {
 			} else if _, ok := typeMap["properties"]; ok {
 				// has field `properties`, so this is a method schema
 				typeMap["type"] = "object"
+			} else if _, ok := typeMap["anyOf"]; ok {
+				typeMap["type"] = "anyOf"
 			}
 
 		}

@@ -71,7 +71,7 @@ type StringSchema struct {
 	MaxLength int
 }
 
-type UnionSchema struct {
+type AnyOfSchema struct {
 	SchemaMixin
 	Choices []Schema
 }

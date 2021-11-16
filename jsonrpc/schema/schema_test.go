@@ -235,16 +235,15 @@ func TestStringValidator(t *testing.T) {
 	assert.Equal("", errPos.Path())
 }
 
-func TestUnionValidator(t *testing.T) {
+func TestAnyOfValidator(t *testing.T) {
 	assert := assert.New(t)
-	s1 := []byte(`{"type": "union"}`)
+	s1 := []byte(`{"type": "anyOf"}`)
 	builder := NewSchemaBuilder()
 	_, err := builder.BuildBytes(s1)
 	assert.NotNil(err)
 	assert.Equal("SchemaBuildError no valid anyOf attribute, paths: ", err.Error())
 
 	s1 = []byte(`{
-"type": "union",
 "anyOf": [
   {"type": "number"},
   {"type": "string"}
@@ -254,7 +253,7 @@ func TestUnionValidator(t *testing.T) {
 	s, err := builder.BuildBytes(s1)
 	assert.Nil(err)
 
-	uschema, ok := s.(*UnionSchema)
+	uschema, ok := s.(*AnyOfSchema)
 	assert.True(ok)
 
 	validator := NewSchemaValidator()
