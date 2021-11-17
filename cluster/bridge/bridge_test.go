@@ -11,8 +11,8 @@ import (
 
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	server "github.com/superisaac/jointrpc/server"
+	jsonrpc "github.com/superisaac/jsonrpc"
 	"testing"
 	"time"
 )

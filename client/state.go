@@ -6,7 +6,6 @@ import (
 	//"flag"
 	//"fmt"
 	//log "github.com/sirupsen/logrus"
-	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"

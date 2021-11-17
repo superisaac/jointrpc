@@ -9,9 +9,9 @@ import (
 	client "github.com/superisaac/jointrpc/client"
 	datadir "github.com/superisaac/jointrpc/datadir"
 	"github.com/superisaac/jointrpc/dispatch"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
+	jsonrpc "github.com/superisaac/jsonrpc"
 	"strings"
 )
 

@@ -3,9 +3,9 @@ package dispatch
 import (
 	"context"
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
+	jsonrpc "github.com/superisaac/jsonrpc"
 	"time"
 )
 

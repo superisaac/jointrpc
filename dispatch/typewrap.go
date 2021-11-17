@@ -5,7 +5,7 @@ import (
 	"reflect"
 	//"encoding/json"
 	"github.com/pkg/errors"
-	//"github.com/superisaac/jointrpc/jsonrpc"
+	//"github.com/superisaac/jsonrpc"
 	"github.com/mitchellh/mapstructure"
 	//"github.com/superisaac/jointrpc/misc"
 )

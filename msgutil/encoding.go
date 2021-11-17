@@ -5,8 +5,8 @@ import (
 	//"github.com/pkg/errors"
 	//"fmt"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
+	jsonrpc "github.com/superisaac/jsonrpc"
+	//schema "github.com/superisaac/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )
 

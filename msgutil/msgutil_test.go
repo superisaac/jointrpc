@@ -6,7 +6,7 @@ import (
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jsonrpc"
 	"testing"
 )
 

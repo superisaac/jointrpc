@@ -4,14 +4,10 @@ import (
 	"context"
 	//"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/superisaac/jointrpc/jsonrpc"
-	"github.com/superisaac/jointrpc/misc"
-	//"time"
-
-	//schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/dispatch"
-	//service "github.com/superisaac/jointrpc/service"
+	"github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jsonrpc"
 )
 
 type BuiltinService struct {

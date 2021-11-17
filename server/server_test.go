@@ -10,8 +10,8 @@ import (
 	"github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/datadir"
 	"github.com/superisaac/jointrpc/dispatch"
-	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jsonrpc"
 	"io/ioutil"
 
 	"os"

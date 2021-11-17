@@ -4,9 +4,9 @@ import (
 	//"fmt"
 	"context"
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/misc"
+	jsonrpc "github.com/superisaac/jsonrpc"
+	schema "github.com/superisaac/jsonrpc/schema"
 	"time"
 )
 

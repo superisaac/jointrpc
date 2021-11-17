@@ -11,7 +11,7 @@ import (
 
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	client "github.com/superisaac/jointrpc/client"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jsonrpc"
 	//example "github.com/superisaac/jointrpc/client/example"
 	//grpc "google.golang.org/grpc"
 )

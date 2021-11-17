@@ -6,8 +6,8 @@ import (
 	"github.com/pkg/errors"
 	//log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/misc"
+	"github.com/superisaac/jsonrpc"
 )
 
 func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) {

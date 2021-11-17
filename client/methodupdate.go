@@ -2,16 +2,7 @@ package client
 
 import (
 	"context"
-	//"errors"
-	//"fmt"
-	//"io"
-	//simplejson "github.com/bitly/go-simplejson"
-	//log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	//grpc "google.golang.org/grpc"
-	//codes "google.golang.org/grpc/codes"
-	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	//server "github.com/superisaac/jointrpc/server"
 )
 
 func (self *RPCClient) ListMethods(rootCtx context.Context) ([]*intf.MethodInfo, error) {

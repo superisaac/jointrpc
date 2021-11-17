@@ -37,8 +37,6 @@ bin/jointrpc-server: ${gofiles}
 
 test:
 	go test -v github.com/superisaac/jointrpc/datadir
-	go test -v github.com/superisaac/jointrpc/jsonrpc
-	go test -v github.com/superisaac/jointrpc/jsonrpc/schema
 	go test -v github.com/superisaac/jointrpc/rpcrouter
 	go test -v github.com/superisaac/jointrpc/msgutil
 	go test -v github.com/superisaac/jointrpc/client
@@ -62,8 +60,6 @@ gofmt:
 	go fmt rpcrouter/*.go
 	go fmt dispatch/*.go
 	go fmt playbook/*.go
-	go fmt jsonrpc/*.go
-	go fmt jsonrpc/schema/*.go
 	go fmt msgutil/*.go
 	go fmt playbook/*.go
 	go fmt cluster/bridge/*.go

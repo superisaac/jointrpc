@@ -1,7 +1,7 @@
 package playbook
 
 import (
-	"github.com/superisaac/jointrpc/jsonrpc/schema"
+	"github.com/superisaac/jsonrpc/schema"
 )
 
 type ShellT struct {

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	jsonrpc "github.com/superisaac/jsonrpc"
 	"io/ioutil"
 	"os"
 	"testing"

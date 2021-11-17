@@ -5,7 +5,7 @@ import (
 	//"fmt"
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	jsonrpc "github.com/superisaac/jsonrpc"
 	"sync"
 )
 

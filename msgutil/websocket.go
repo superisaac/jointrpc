@@ -4,7 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jsonrpc"
 )
 
 func WSSend(ws *websocket.Conn, msg jsonrpc.IMessage) error {

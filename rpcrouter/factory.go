@@ -6,7 +6,7 @@ import (
 	//"errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/datadir"
-	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	//jsonrpc "github.com/superisaac/jsonrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	//"time"
 )

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
-	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
+	jsonrpc "github.com/superisaac/jsonrpc"
+	schema "github.com/superisaac/jsonrpc/schema"
 )
 
 const (

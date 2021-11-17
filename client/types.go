@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/superisaac/jointrpc/dispatch"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jsonrpc"
 	"net/url"
 	"sync"
 	"time"

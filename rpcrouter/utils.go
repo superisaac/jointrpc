@@ -2,7 +2,7 @@ package rpcrouter
 
 import (
 	"sync/atomic"
-	//jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	//jsonrpc "github.com/superisaac/jsonrpc"
 )
 
 var counter uint64 = 10000

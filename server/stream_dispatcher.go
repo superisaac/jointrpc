@@ -7,10 +7,10 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/dispatch"
-	"github.com/superisaac/jointrpc/jsonrpc"
-	schema "github.com/superisaac/jointrpc/jsonrpc/schema"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jsonrpc"
+	schema "github.com/superisaac/jsonrpc/schema"
 	"net"
 	"sync"
 )

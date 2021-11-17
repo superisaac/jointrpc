@@ -7,7 +7,7 @@ import (
 	//grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	jsonrpc "github.com/superisaac/jointrpc/jsonrpc"
+	"github.com/superisaac/jsonrpc"
 	//"io"
 	"net/url"
 	//"time"

@@ -4,8 +4,8 @@ import (
 	"context"
 	//"errors"
 	"github.com/pkg/errors"
-	"github.com/superisaac/jointrpc/jsonrpc"
 	"github.com/superisaac/jointrpc/rpcrouter"
+	"github.com/superisaac/jsonrpc"
 )
 
 type RPCRequest struct {
