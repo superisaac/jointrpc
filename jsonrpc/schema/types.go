@@ -90,7 +90,9 @@ type NotSchema struct {
 
 type ListSchema struct {
 	SchemaMixin
-	Item Schema
+	Item     Schema
+	MinItems *int
+	MaxItems *int
 }
 
 type TupleSchema struct {

@@ -207,7 +207,6 @@ func (self *SchemaBuilder) buildListSchema(node map[string](interface{}), paths 
 	}
 
 	// build list
-	//if itemsMap, ok := items.(map[string]interface{}); ok {
 
 	itemSchema, err := self.buildNode(items, paths...)
 	if err != nil {
@@ -215,10 +214,15 @@ func (self *SchemaBuilder) buildListSchema(node map[string](interface{}), paths 
 	}
 	schema := NewListSchema()
 	schema.Item = itemSchema
-	return schema, nil
-	//}
 
-	return nil, NewBuildError("fail to build list schema", paths)
+	if maxItems, ok := convertAttrInt(node, "maxItems", false); ok && maxItems >= 0 {
+		schema.MaxItems = &maxItems
+	}
+
+	if minItems, ok := convertAttrInt(node, "minItems", false); ok && minItems >= 0 {
+		schema.MinItems = &minItems
+	}
+	return schema, nil
 }
 
 func (self *SchemaBuilder) buildAnyOfSchema(node map[string](interface{}), paths ...string) (*AnyOfSchema, error) {
@@ -332,7 +336,7 @@ func (self *SchemaBuilder) buildStringSchema(node map[string](interface{}), path
 	if minLength, ok := convertAttrInt(node, "minLength", false); ok && minLength >= 0 {
 		schema.MinLength = &minLength
 	}
-	
+
 	return schema, nil
 }
 

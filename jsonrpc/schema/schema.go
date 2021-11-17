@@ -275,6 +275,15 @@ func (self *ListSchema) Scan(validator *SchemaValidator, data interface{}) *Erro
 	if !ok {
 		return validator.NewErrorPos("data is not a list")
 	}
+
+	if self.MaxItems != nil && len(items) > *self.MaxItems {
+		return validator.NewErrorPos("len(items) > maxItems")
+	}
+
+	if self.MinItems != nil && len(items) < *self.MinItems {
+		return validator.NewErrorPos("len(items) < minItems")
+	}
+
 	for i, item := range items {
 		if errPos := validator.Scan(self.Item, fmt.Sprintf("[%d]", i), item); errPos != nil {
 			return errPos

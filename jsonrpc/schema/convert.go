@@ -24,12 +24,14 @@ func convertTypeMap(maybeType interface{}) (map[string]interface{}, bool) {
 			} else if _, ok := typeMap["properties"]; ok {
 				// has field `properties`, so this is a method schema
 				typeMap["type"] = "object"
-			} else if _, ok := typeMap["anyOf"]; ok {
-				typeMap["type"] = "anyOf"
-			} else if _, ok := typeMap["allOf"]; ok {
-				typeMap["type"] = "allOf"
-			} else if _, ok := typeMap["not"]; ok {
-				typeMap["type"] = "not"
+			} else {
+				compositTypes := []string{"anyOf", "allOf", "not"}
+				for _, tp := range compositTypes {
+					if _, ok := typeMap[tp]; ok {
+						typeMap["type"] = tp
+						break
+					}
+				}
 			}
 		}
 		return typeMap, ok
