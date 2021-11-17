@@ -68,7 +68,8 @@ type IntegerSchema struct {
 
 type StringSchema struct {
 	SchemaMixin
-	MaxLength int
+	MaxLength *int
+	MinLength *int
 }
 
 // composits

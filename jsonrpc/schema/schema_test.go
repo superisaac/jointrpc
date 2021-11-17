@@ -216,22 +216,28 @@ func TestStringValidator(t *testing.T) {
 	assert := assert.New(t)
 
 	// number schema
-	s1 := []byte(`{"type": "string", "maxLength": 10}`)
+	s1 := []byte(`{"type": "string", "maxLength": 10, "minLength": 1}`)
 	builder := NewSchemaBuilder()
 	schema, err := builder.BuildBytes(s1)
 	assert.Nil(err)
 	stringSchema, ok := schema.(*StringSchema)
 	assert.True(ok)
-	assert.Equal(10, stringSchema.MaxLength)
+	assert.Equal(10, *stringSchema.MaxLength)
 
 	validator := NewSchemaValidator()
 	errPos := validator.ValidateBytes(stringSchema, []byte(`"a string"`))
 	assert.Nil(errPos)
 
-	//validator = NewSchemaValidator()
+	// test maxLength
 	errPos = validator.ValidateBytes(stringSchema, []byte(`"a very loooooooooooooooooooooong string"`))
 	assert.NotNil(errPos)
-	assert.Equal("string length exceeds max length", errPos.hint)
+	assert.Equal("len(str) > maxLength", errPos.hint)
+	assert.Equal("", errPos.Path())
+
+	// test minLength
+	errPos = validator.ValidateBytes(stringSchema, []byte(`""`))
+	assert.NotNil(errPos)
+	assert.Equal("len(str) < minLength", errPos.hint)
 	assert.Equal("", errPos.Path())
 }
 

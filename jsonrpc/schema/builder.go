@@ -326,8 +326,13 @@ func (self *SchemaBuilder) buildIntegerSchema(node map[string](interface{}), pat
 func (self *SchemaBuilder) buildStringSchema(node map[string](interface{}), paths ...string) (*StringSchema, error) {
 	schema := NewStringSchema()
 	if maxLength, ok := convertAttrInt(node, "maxLength", false); ok && maxLength >= 0 {
-		schema.MaxLength = maxLength
+		schema.MaxLength = &maxLength
 	}
+
+	if minLength, ok := convertAttrInt(node, "minLength", false); ok && minLength >= 0 {
+		schema.MinLength = &minLength
+	}
+	
 	return schema, nil
 }
 
