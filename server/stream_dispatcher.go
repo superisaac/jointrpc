@@ -209,7 +209,8 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msg jsonrpc.IMe
 		if msg.IsRequestOrNotify() && self.disp.HasMethod(msg.MustMethod()) {
 			self.disp.Feed(ctx, cmdMsg, chResult, dispatch.WithRequestData(conn))
 		} else if msg.IsRequest() && !allowRequest {
-			instRes := jsonrpc.ErrNotAllowed.ToMessage(msg)
+			reqMsg, _ := msg.(*jsonrpc.RequestMessage)
+			instRes := jsonrpc.ErrNotAllowed.ToMessage(reqMsg)
 			return instRes
 		} else if msg.IsNotify() && !allowRequest {
 			msg.Log().Warnf("not allowed")

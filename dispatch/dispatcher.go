@@ -115,25 +115,23 @@ func (self *Dispatcher) UnHandle(method string) bool {
 	return found
 }
 
-func (self *Dispatcher) wrapHandlerResult(msg jsonrpc.IMessage, res interface{}, err error) (jsonrpc.IMessage, error) {
+func (self *Dispatcher) wrapHandlerResult(reqmsg *jsonrpc.RequestMessage, res interface{}, err error) (jsonrpc.IMessage, error) {
 	if err != nil {
 		var rpcErr *jsonrpc.RPCError
 		if errors.As(err, &rpcErr) {
-			return rpcErr.ToMessage(msg), nil
+			return rpcErr.ToMessage(reqmsg), nil
 		}
-		msg.Log().Warnf("error %s", err.Error())
-		errmsg := jsonrpc.ErrServerError.ToMessage(msg)
+		reqmsg.Log().Warnf("error %s", err.Error())
+		errmsg := jsonrpc.ErrServerError.ToMessage(reqmsg)
 		return errmsg, nil
 		//return , err
-	} else if msg.IsRequest() {
-		if resMsg, ok := res.(jsonrpc.IMessage); ok {
-			// TODO: assert resMsg is res and resId matches
-			return resMsg, nil
-		}
-		return jsonrpc.NewResultMessage(msg, res), nil
-	} else {
-		return nil, nil
 	}
+
+	if resMsg, ok := res.(jsonrpc.IMessage); ok {
+		// TODO: assert resMsg is res and resId matches
+		return resMsg, nil
+	}
+	return jsonrpc.NewResultMessage(reqmsg, res), nil
 }
 
 func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrouter.CmdMsg, chResult chan ResultT) {

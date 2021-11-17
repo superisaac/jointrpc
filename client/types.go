@@ -34,7 +34,7 @@ type LiveCallback func(jsonrpc.IMessage)
 
 type LivecallT struct {
 	Expire   time.Time
-	Request  jsonrpc.IMessage
+	Request  *jsonrpc.RequestMessage
 	Callback LiveCallback
 }
 

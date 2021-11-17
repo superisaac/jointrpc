@@ -218,7 +218,8 @@ func (self *ConnT) returnTimeout(pending ConnPending) {
 		}
 	}()
 
-	errMsg := jsonrpc.ErrTimeout.ToMessage(pending.cmdMsg.Msg)
+	reqMsg, _ := pending.cmdMsg.Msg.(*jsonrpc.RequestMessage)
+	errMsg := jsonrpc.ErrTimeout.ToMessage(reqMsg)
 	errCmdMsg := pending.cmdMsg
 	errCmdMsg.Msg = errMsg
 	pending.cmdMsg.ChRes <- errCmdMsg

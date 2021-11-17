@@ -73,6 +73,8 @@ github.com/superisaac/jsonrpc v0.0.0-20211117064259-24b0b944cf69 h1:qQIF2vMlLCut
 github.com/superisaac/jsonrpc v0.0.0-20211117064259-24b0b944cf69/go.mod h1:iD47oOk6MEfkLhrZdn1At5M3oxp9jrU6HtDEvmv5a8w=
 github.com/superisaac/jsonrpc v0.0.1 h1:cytMsqjxXzR9lDU9jddHpTAkh+LZ4caziWQR7mtoRZI=
 github.com/superisaac/jsonrpc v0.0.1/go.mod h1:iD47oOk6MEfkLhrZdn1At5M3oxp9jrU6HtDEvmv5a8w=
+github.com/superisaac/jsonrpc v0.0.2 h1:US6ZjaCIaxg9Lw2zivpctUju1x0Rgq0F/Umw9IHGiCQ=
+github.com/superisaac/jsonrpc v0.0.2/go.mod h1:iD47oOk6MEfkLhrZdn1At5M3oxp9jrU6HtDEvmv5a8w=
 go.etcd.io/etcd v3.3.25+incompatible/go.mod h1:yaeTdrJi5lOmYerz05bd8+V7KubZs8YSFZfzsF9A6aI=
 go.uber.org/atomic v1.4.0/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
 go.uber.org/multierr v1.1.0/go.mod h1:wR5kodmAFQ0UK8QlbwjlSNy0Z68gJhDJUG5sjR94q/0=

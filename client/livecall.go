@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (self *RPCClient) LiveCall(rootCtx context.Context, reqmsg jsonrpc.IMessage, callback LiveCallback, opts ...CallOptionFunc) error {
+func (self *RPCClient) LiveCall(rootCtx context.Context, reqmsg *jsonrpc.RequestMessage, callback LiveCallback, opts ...CallOptionFunc) error {
 	if !self.connected {
 		log.Warnf("live stream is not connected")
 		return errors.New("live stream is not connected")
