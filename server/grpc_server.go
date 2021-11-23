@@ -206,11 +206,14 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 // GRPCServer implements dispatch.ISender
 type GRPCSender struct {
 	stream intf.JointRPC_LiveServer
+	done   chan error
 }
 
 func NewGRPCSender(stream intf.JointRPC_LiveServer) *GRPCSender {
+
 	sender := &GRPCSender{
 		stream: stream,
+		done:   make(chan error, 10),
 	}
 	return sender
 }
@@ -221,6 +224,10 @@ func (self GRPCSender) SendMessage(context context.Context, msg jsonrpc.IMessage
 
 func (self GRPCSender) SendCmdMsg(context context.Context, cmdMsg rpcrouter.CmdMsg) error {
 	return msgutil.GRPCServerSend(self.stream, cmdMsg.Msg)
+}
+
+func (self GRPCSender) Done() chan error {
+	return self.done
 }
 
 func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
@@ -241,15 +248,32 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 	}()
 
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
-	//go relayDownMessages(ctx, stream, conn, chResult)
 	sender := NewGRPCSender(stream)
 	go dispatch.SenderLoop(ctx, sender, conn, chResult)
+	go self.serverReceive(ctx, sender, conn, chResult)
+
+	for {
+		select {
+		case err, ok := <-sender.Done():
+			if !ok {
+				log.Debugf("done received not ok")
+			} else if err != nil {
+				log.Errorf("stream err %+v", err)
+			}
+			return nil
+		}
+	}
+}
+
+func (self *JointRPC) serverReceive(ctx context.Context, sender *GRPCSender, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
 	streamDisp := GetStreamDispatcher()
 
 	for {
-		msg, err := msgutil.GRPCServerRecv(stream)
+		msg, err := msgutil.GRPCServerRecv(sender.stream)
 		if err != nil {
-			return msgutil.GRPCHandleCodes(err, codes.Canceled)
+			err1 := msgutil.GRPCHandleCodes(err, codes.Canceled)
+			sender.Done() <- err1
+			return
 		}
 		msg.Log().Debugf("received from grpc stream")
 		instRes := streamDisp.HandleMessage(ctx,
@@ -258,9 +282,10 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 			chResult,
 			conn, true)
 		if instRes != nil {
-			msgutil.GRPCServerSend(stream, instRes)
+			msgutil.GRPCServerSend(sender.stream, instRes)
 			if instRes.IsError() {
-				return nil
+				sender.Done() <- nil
+				return
 			}
 		}
 	}

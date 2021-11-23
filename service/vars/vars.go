@@ -22,6 +22,7 @@ type VarsService struct {
 	namedVars map[string](map[string]interface{})
 	//router *rpcrouter.Router
 	conn *rpcrouter.ConnT
+	done chan error
 }
 
 func NewVarsService() *VarsService {
@@ -87,6 +88,7 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 
 	self.disp = dispatch.NewDispatcher()
 	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
+	self.done = make(chan error, 10)
 	//self.conn = commonRouter.Join()
 	self.conn = rpcrouter.NewConn()
 	commonRouter.ChJoin <- rpcrouter.CmdJoin{Conn: self.conn}
@@ -151,7 +153,16 @@ func (self *VarsService) Start(rootCtx context.Context) error {
 				return nil
 			}
 			log.Warnf("vars watcher error: %+v", err)
+		case err, ok := <-self.Done():
+			if !ok {
+				return nil
+			} else if err != nil {
+				return err
+			} else {
+				return nil
+			}
 		}
+
 	}
 	return nil
 }
@@ -186,4 +197,8 @@ func (self VarsService) SendCmdMsg(ctx context.Context, cmdMsg rpcrouter.CmdMsg)
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}
 	return nil
+}
+
+func (self VarsService) Done() chan error {
+	return self.done
 }

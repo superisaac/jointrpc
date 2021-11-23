@@ -45,6 +45,7 @@ func NewNeighborPort(namespace string, nbrCfg datadir.NeighborConfig) *NeighborP
 	port.edges = make(map[string]*Edge)
 	port.dispatcher = dispatch.NewDispatcher()
 	port.chResult = make(chan dispatch.ResultT, 1000)
+	port.done = make(chan error, 10)
 	port.ChState = make(chan CmdStateChange)
 	return port
 }
@@ -118,6 +119,11 @@ func (self *NeighborPort) Start(rootCtx context.Context) {
 		select {
 		case <-mainCtx.Done():
 			// TODO: log
+			return
+		case err, _ := <-self.Done():
+			if err != nil {
+				log.Errorf("done, %+v", err)
+			}
 			return
 		case stateChange, ok := <-self.ChState:
 			if !ok {
@@ -211,4 +217,8 @@ func (self NeighborPort) SendCmdMsg(ctx context.Context, cmdMsg rpcrouter.CmdMsg
 		log.Warnf("unexpected msg received %+v", msg)
 	}
 	return nil
+}
+
+func (self NeighborPort) Done() chan error {
+	return self.done
 }

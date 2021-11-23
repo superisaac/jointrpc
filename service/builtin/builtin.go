@@ -15,6 +15,7 @@ type BuiltinService struct {
 	chResult chan dispatch.ResultT
 	//router *rpcrouter.Router
 	conn *rpcrouter.ConnT
+	done chan error
 }
 
 func (self BuiltinService) Name() string {
@@ -78,6 +79,7 @@ func (self *BuiltinService) Init(rootCtx context.Context) *BuiltinService {
 
 	self.disp = dispatch.NewDispatcher()
 	self.chResult = make(chan dispatch.ResultT, misc.DefaultChanSize())
+	self.done = make(chan error, 10)
 
 	self.disp.OnTyped("_listMethods", func(req *dispatch.RPCRequest) ([]rpcrouter.MethodInfo, error) {
 		router := factory.Get(req.CmdMsg.Namespace)
@@ -130,4 +132,8 @@ func (self BuiltinService) SendCmdMsg(ctx context.Context, cmdMsg rpcrouter.CmdM
 		log.Warnf("builtin handler, receved none request msg %+v", msg)
 	}
 	return nil
+}
+
+func (self BuiltinService) Done() chan error {
+	return self.done
 }

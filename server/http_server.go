@@ -198,12 +198,14 @@ func (self *WSServer) Authorize(r *http.Request) (bool, string) {
 
 // lives
 type WSSender struct {
-	ws *websocket.Conn
+	ws   *websocket.Conn
+	done chan error
 }
 
 func NewWSSender(ws *websocket.Conn) *WSSender {
 	sender := &WSSender{
-		ws: ws,
+		ws:   ws,
+		done: make(chan error, 10),
 	}
 	return sender
 }
@@ -214,6 +216,10 @@ func (self WSSender) SendMessage(context context.Context, msg jsonrpc.IMessage) 
 
 func (self WSSender) SendCmdMsg(context context.Context, cmdMsg rpcrouter.CmdMsg) error {
 	return msgutil.WSSend(self.ws, cmdMsg.Msg)
+}
+
+func (self WSSender) Done() chan error {
+	return self.done
 }
 
 func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -243,13 +249,28 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
 	sender := NewWSSender(ws)
 	go dispatch.SenderLoop(ctx, sender, conn, chResult)
-	//go relayDownWSMessages(ctx, ws, conn, chResult)
+	go self.serverReceive(ctx, sender, conn, chResult)
+	for {
+		select {
+		case err, ok := <-sender.Done():
+			if !ok {
+				log.Debugf("done received not ok")
+			} else if err != nil {
+				log.Errorf("stream err %+v", err)
+			}
+			return
+		}
+	}
+}
+
+func (self *WSServer) serverReceive(ctx context.Context, sender *WSSender, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
 	streamDisp := NewStreamDispatcher()
 	for {
-		msg, err := msgutil.WSRecv(ws)
+		msg, err := msgutil.WSRecv(sender.ws)
 		if err != nil {
 			//jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
 			log.Warnf("bad request %s", err)
+			sender.Done() <- err
 			return
 		}
 
@@ -264,12 +285,14 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			conn, false)
 
 		if instRes != nil {
-			err := msgutil.WSSend(ws, instRes)
+			err := msgutil.WSSend(sender.ws, instRes)
 			if err != nil {
-				break
+				sender.Done() <- err
+				return
 			}
 			if instRes.IsError() {
-				break
+				sender.Done() <- nil
+				return
 			}
 		}
 	} // end of for
