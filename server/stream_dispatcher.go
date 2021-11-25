@@ -20,11 +20,6 @@ var (
 	streamDisp *StreamDispatcher
 )
 
-type StreamDispatcher struct {
-	disp     *dispatch.Dispatcher
-	authDisp *dispatch.Dispatcher
-}
-
 func NewStreamDispatcher() *StreamDispatcher {
 	disp := dispatch.NewDispatcher()
 	h := &StreamDispatcher{disp: disp}

@@ -29,10 +29,6 @@ import (
 	peer "google.golang.org/grpc/peer"
 )
 
-type JointRPC struct {
-	intf.UnimplementedJointRPCServer
-}
-
 func (self JointRPC) Authorize(context context.Context, auth *intf.ClientAuth, ipAddr net.Addr) (*intf.Status, string) {
 	factory := rpcrouter.RouterFactoryFromContext(context)
 	cfg := factory.Config
@@ -203,32 +199,6 @@ func (self *JointRPC) ListDelegates(context context.Context, req *intf.ListDeleg
 }
 
 // Lives
-// GRPCServer implements dispatch.ISender
-type GRPCSender struct {
-	stream intf.JointRPC_LiveServer
-	done   chan error
-}
-
-func NewGRPCSender(stream intf.JointRPC_LiveServer) *GRPCSender {
-
-	sender := &GRPCSender{
-		stream: stream,
-		done:   make(chan error, 10),
-	}
-	return sender
-}
-
-func (self GRPCSender) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
-	return msgutil.GRPCServerSend(self.stream, msg)
-}
-
-func (self GRPCSender) SendCmdMsg(context context.Context, cmdMsg rpcrouter.CmdMsg) error {
-	return msgutil.GRPCServerSend(self.stream, cmdMsg.Msg)
-}
-
-func (self GRPCSender) Done() chan error {
-	return self.done
-}
 
 func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 	conn := rpcrouter.NewConn()
@@ -247,50 +217,41 @@ func (self *JointRPC) Live(stream intf.JointRPC_LiveServer) error {
 		}
 	}()
 
-	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
-	sender := NewGRPCSender(stream)
-	go dispatch.SenderLoop(ctx, sender, conn, chResult)
-	go self.serverReceive(ctx, sender, conn, chResult)
-
-	for {
-		select {
-		case err, ok := <-sender.Done():
-			if !ok {
-				log.Debugf("done received not ok")
-			} else if err != nil {
-				log.Errorf("stream err %+v", err)
-			}
-			return nil
-		}
-	}
-}
-
-func (self *JointRPC) serverReceive(ctx context.Context, sender *GRPCSender, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
-	streamDisp := GetStreamDispatcher()
-
-	for {
-		msg, err := msgutil.GRPCServerRecv(sender.stream)
-		if err != nil {
-			err1 := msgutil.GRPCHandleCodes(err, codes.Canceled)
-			sender.Done() <- err1
-			return
-		}
-		msg.Log().Debugf("received from grpc stream")
-		instRes := streamDisp.HandleMessage(ctx,
-			msg,
-			conn.Namespace,
-			chResult,
-			conn, true)
-		if instRes != nil {
-			msgutil.GRPCServerSend(sender.stream, instRes)
-			if instRes.IsError() {
-				sender.Done() <- nil
-				return
-			}
-		}
-	}
+	//chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
+	adaptor := NewGRPCAdaptor(stream)
+	return WaitStream(ctx, adaptor, adaptor, conn)
 }
 
 func NewJointRPCServer() *JointRPC {
 	return &JointRPC{}
+}
+
+// GRPCAdaptor implements dispatch.IAdaptor
+func NewGRPCAdaptor(stream intf.JointRPC_LiveServer) *GRPCAdaptor {
+	adaptor := &GRPCAdaptor{
+		stream: stream,
+		done:   make(chan error, 10),
+	}
+	return adaptor
+}
+
+func (self GRPCAdaptor) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
+	return msgutil.GRPCServerSend(self.stream, msg)
+}
+
+func (self GRPCAdaptor) SendCmdMsg(context context.Context, cmdMsg rpcrouter.CmdMsg) error {
+	return msgutil.GRPCServerSend(self.stream, cmdMsg.Msg)
+}
+
+func (self GRPCAdaptor) Done() chan error {
+	return self.done
+}
+
+func (self GRPCAdaptor) Recv() (jsonrpc.IMessage, error) {
+	msg, err := msgutil.GRPCServerRecv(self.stream)
+	if err != nil {
+		err1 := msgutil.GRPCHandleCodes(err, codes.Canceled)
+		return nil, err1
+	}
+	return msg, err
 }

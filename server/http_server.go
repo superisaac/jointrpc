@@ -11,7 +11,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	//datadir "github.com/superisaac/jointrpc/datadir"
-	"github.com/superisaac/jointrpc/dispatch"
+	//"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/msgutil"
 	"github.com/superisaac/jointrpc/rpcrouter"
@@ -161,11 +161,6 @@ func (self *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 } // ServeHTTP
 
 // Websocket servo
-type WSServer struct {
-	//router *rpcrouter.Router
-	rootCtx context.Context
-}
-
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  10240,
 	WriteBufferSize: 10240,
@@ -197,31 +192,6 @@ func (self *WSServer) Authorize(r *http.Request) (bool, string) {
 }
 
 // lives
-type WSSender struct {
-	ws   *websocket.Conn
-	done chan error
-}
-
-func NewWSSender(ws *websocket.Conn) *WSSender {
-	sender := &WSSender{
-		ws:   ws,
-		done: make(chan error, 10),
-	}
-	return sender
-}
-
-func (self WSSender) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
-	return msgutil.WSSend(self.ws, msg)
-}
-
-func (self WSSender) SendCmdMsg(context context.Context, cmdMsg rpcrouter.CmdMsg) error {
-	return msgutil.WSSend(self.ws, cmdMsg.Msg)
-}
-
-func (self WSSender) Done() chan error {
-	return self.done
-}
-
 func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -245,55 +215,35 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			router.ChLeave <- rpcrouter.CmdLeave{Conn: conn}
 		}
 	}()
-
-	chResult := make(chan dispatch.ResultT, misc.DefaultChanSize())
-	sender := NewWSSender(ws)
-	go dispatch.SenderLoop(ctx, sender, conn, chResult)
-	go self.serverReceive(ctx, sender, conn, chResult)
-	for {
-		select {
-		case err, ok := <-sender.Done():
-			if !ok {
-				log.Debugf("done received not ok")
-			} else if err != nil {
-				log.Errorf("stream err %+v", err)
-			}
-			return
-		}
+	adaptor := NewWSAdaptor(ws)
+	err = WaitStream(ctx, adaptor, adaptor, conn)
+	if err != nil {
+		log.Errorf("serve websocket error %+v", err)
 	}
 }
 
-func (self *WSServer) serverReceive(ctx context.Context, sender *WSSender, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
-	streamDisp := NewStreamDispatcher()
-	for {
-		msg, err := msgutil.WSRecv(sender.ws)
-		if err != nil {
-			//jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
-			log.Warnf("bad request %s", err)
-			sender.Done() <- err
-			return
-		}
+// WSAdaptor
+func NewWSAdaptor(ws *websocket.Conn) *WSAdaptor {
+	adaptor := &WSAdaptor{
+		ws:   ws,
+		done: make(chan error, 10),
+	}
+	return adaptor
+}
 
-		if msg.TraceId() == "" {
-			msg.SetTraceId(misc.NewUuid())
-		}
+func (self WSAdaptor) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
+	return msgutil.WSSend(self.ws, msg)
+}
 
-		instRes := streamDisp.HandleMessage(
-			ctx, msg,
-			conn.Namespace,
-			chResult,
-			conn, false)
+func (self WSAdaptor) SendCmdMsg(context context.Context, cmdMsg rpcrouter.CmdMsg) error {
+	return msgutil.WSSend(self.ws, cmdMsg.Msg)
+}
 
-		if instRes != nil {
-			err := msgutil.WSSend(sender.ws, instRes)
-			if err != nil {
-				sender.Done() <- err
-				return
-			}
-			if instRes.IsError() {
-				sender.Done() <- nil
-				return
-			}
-		}
-	} // end of for
-} // ServeHTTP
+func (self WSAdaptor) Done() chan error {
+	return self.done
+}
+
+func (self WSAdaptor) Recv() (jsonrpc.IMessage, error) {
+	msg, err := msgutil.WSRecv(self.ws)
+	return msg, err
+}
