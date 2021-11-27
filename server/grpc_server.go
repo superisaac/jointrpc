@@ -24,7 +24,7 @@ import (
 	//misc "github.com/superisaac/jointrpc/misc"
 	//datadir "github.com/superisaac/jointrpc/datadir"
 	//schema "github.com/superisaac/jsonrpc/schema"
-	"github.com/superisaac/jointrpc/dispatch"
+	//"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	peer "google.golang.org/grpc/peer"
 )
