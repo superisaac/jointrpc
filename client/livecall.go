@@ -8,12 +8,12 @@ import (
 	//"github.com/superisaac/jointrpc/msgutil"
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/misc"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func (self *RPCClient) LiveCall(rootCtx context.Context, reqmsg *jsonrpc.RequestMessage, callback LiveCallback, opts ...CallOptionFunc) error {
+func (self *RPCClient) LiveCall(rootCtx context.Context, reqmsg *jsonz.RequestMessage, callback LiveCallback, opts ...CallOptionFunc) error {
 	if !self.connected {
 		log.Warnf("live stream is not connected")
 		return errors.New("live stream is not connected")
@@ -60,13 +60,13 @@ func (self *RPCClient) cleanTimeoutLivecalls() {
 	for _, k := range arr {
 		if v, ok := self.pendingLivecalls.LoadAndDelete(k); ok {
 			wc, _ := v.(*LivecallT)
-			errmsg := jsonrpc.ErrTimeout.ToMessage(wc.Request)
+			errmsg := jsonz.ErrTimeout.ToMessage(wc.Request)
 			wc.Callback(errmsg)
 		}
 	}
 }
 
-func (self *RPCClient) handleLiveResult(res jsonrpc.IMessage) {
+func (self *RPCClient) handleLiveResult(res jsonz.Message) {
 	reqId := res.MustId()
 	if r, ok := self.pendingLivecalls.LoadAndDelete(reqId); ok {
 		wc, _ := r.(*LivecallT)

@@ -4,18 +4,18 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	"io"
 )
 
-func GRPCClientSend(stream intf.JointRPC_LiveClient, msg jsonrpc.IMessage) error {
+func GRPCClientSend(stream intf.JointRPC_LiveClient, msg jsonz.Message) error {
 	envo := MessageToEnvolope(msg)
 	return stream.Send(envo)
 }
 
-func GRPCClientRecv(stream intf.JointRPC_LiveClient) (jsonrpc.IMessage, error) {
+func GRPCClientRecv(stream intf.JointRPC_LiveClient) (jsonz.Message, error) {
 	envo, err := stream.Recv()
 	if err != nil {
 		return nil, errors.Wrap(err, "stream.Recv()")
@@ -25,12 +25,12 @@ func GRPCClientRecv(stream intf.JointRPC_LiveClient) (jsonrpc.IMessage, error) {
 	return msg, err
 }
 
-func GRPCServerSend(stream intf.JointRPC_LiveServer, msg jsonrpc.IMessage) error {
+func GRPCServerSend(stream intf.JointRPC_LiveServer, msg jsonz.Message) error {
 	envo := MessageToEnvolope(msg)
 	return stream.Send(envo)
 }
 
-func GRPCServerRecv(stream intf.JointRPC_LiveServer) (jsonrpc.IMessage, error) {
+func GRPCServerRecv(stream intf.JointRPC_LiveServer) (jsonz.Message, error) {
 	envo, err := stream.Recv()
 	if err != nil {
 		return nil, errors.Wrap(err, "stream.Recv()")

@@ -12,7 +12,7 @@ import (
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
 	server "github.com/superisaac/jointrpc/server"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"testing"
 	"time"
 )
@@ -63,8 +63,8 @@ func TestBridgeRun(t *testing.T) {
 	c1 := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10020", ""})
 	disp1 := dispatch.NewDispatcher()
 	disp1.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		a := jsonrpc.MustInt(params[0], "params[0]")
-		b := jsonrpc.MustInt(params[1], "params[1]")
+		a := jsonz.MustInt(params[0], "params[0]")
+		b := jsonz.MustInt(params[1], "params[1]")
 		return a + b, nil
 	}, dispatch.WithSchema(addSchema))
 	err := c1.Connect()
@@ -132,7 +132,7 @@ func TestBridgeRun(t *testing.T) {
 	assert.Equal("trace4", res4.TraceId())
 	assert.True(res4.IsError())
 	errBody4 := res4.MustError()
-	assert.Equal(jsonrpc.ErrMethodNotFound.Code, errBody4.Code)
+	assert.Equal(jsonz.ErrMethodNotFound.Code, errBody4.Code)
 	assert.Equal("method not found", errBody4.Message)
 }
 
@@ -158,8 +158,8 @@ func TestServerBreak(t *testing.T) {
 	c1 := client.NewRPCClient(client.ServerEntry{"h2c://127.0.0.1:10030", ""})
 	disp1 := dispatch.NewDispatcher()
 	disp1.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		a := jsonrpc.MustInt(params[0], "params[0]")
-		b := jsonrpc.MustInt(params[1], "params[1]")
+		a := jsonz.MustInt(params[0], "params[0]")
+		b := jsonz.MustInt(params[1], "params[1]")
 		return a + b, nil
 	}, dispatch.WithSchema(addSchema))
 	err := c1.Connect()
@@ -223,6 +223,6 @@ func TestServerBreak(t *testing.T) {
 	assert.True(res3.IsError())
 
 	errBody3 := res3.MustError()
-	assert.Equal(jsonrpc.ErrMethodNotFound.Code, errBody3.Code)
+	assert.Equal(jsonz.ErrMethodNotFound.Code, errBody3.Code)
 	assert.Equal("method not found", errBody3.Message)
 }

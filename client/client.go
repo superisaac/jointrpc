@@ -7,7 +7,7 @@ import (
 	//grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	//"io"
 	"net/url"
 	//"time"
@@ -24,7 +24,7 @@ func (self RPCStatusError) Error() string {
 }
 
 func NewRPCClient(serverEntry ServerEntry) *RPCClient {
-	chSendUp := make(chan jsonrpc.IMessage, misc.DefaultChanSize())
+	chSendUp := make(chan jsonz.Message, misc.DefaultChanSize())
 	serverUrl, err := url.Parse(serverEntry.ServerUrl)
 	if err != nil {
 		log.Panicf("parse url error %s %+v", serverEntry.ServerUrl, errors.Wrap(err, "url.Parse()"))

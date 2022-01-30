@@ -6,7 +6,7 @@ import (
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"testing"
 )
 
@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 func TestMsgEncoding(t *testing.T) {
 	assert := assert.New(t)
 
-	req := jsonrpc.NewRequestMessage(1, "test", []interface{}{})
+	req := jsonz.NewRequestMessage(1, "test", []interface{}{})
 	req.SetTraceId("hello1")
 	assert.Equal("hello1", req.TraceId())
 

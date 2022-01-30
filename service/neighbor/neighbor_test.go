@@ -12,7 +12,7 @@ import (
 	"github.com/superisaac/jointrpc/rpcrouter"
 	"github.com/superisaac/jointrpc/server"
 	"github.com/superisaac/jointrpc/service"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -74,8 +74,8 @@ func TestNeighborRun(t *testing.T) {
 	c1 := client.NewRPCClient(client.ServerEntry{"h2c://localhost:10010", ""})
 	disp1 := dispatch.NewDispatcher()
 	disp1.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		a := jsonrpc.MustInt(params[0], "params[0]")
-		b := jsonrpc.MustInt(params[1], "params[1]")
+		a := jsonz.MustInt(params[0], "params[0]")
+		b := jsonz.MustInt(params[1], "params[1]")
 		return a + b, nil
 	}, dispatch.WithSchema(addSchema))
 
@@ -115,7 +115,7 @@ func TestNeighborRun(t *testing.T) {
 	assert.Equal("test21", res3.TraceId())
 	assert.True(res3.IsError())
 	errbody := res3.MustError()
-	assert.Equal(jsonrpc.ErrMethodNotFound.Code, errbody.Code)
+	assert.Equal(jsonz.ErrMethodNotFound.Code, errbody.Code)
 	assert.Equal("method not found", errbody.Message)
 
 	// close client serve, the add2int() provider
@@ -136,6 +136,6 @@ func TestNeighborRun(t *testing.T) {
 	assert.Equal("trace13", res4.TraceId())
 	assert.True(res4.IsError())
 	errbody4 := res4.MustError()
-	assert.Equal(jsonrpc.ErrMethodNotFound.Code, errbody4.Code)
+	assert.Equal(jsonz.ErrMethodNotFound.Code, errbody4.Code)
 	assert.Equal("method not found", errbody4.Message)
 }

@@ -5,7 +5,7 @@ import (
 	//"fmt"
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"sync"
 )
 
@@ -23,7 +23,7 @@ func ExampleBenchmark(serverEntry client.ServerEntry, concurrency int) error {
 	disp.SetSpawnExec(true)
 	// hooked methods
 	disp.On("benchmark.echo", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		src := jsonrpc.ConvertString(params[0])
+		src := jsonz.ConvertString(params[0])
 		return src, nil
 	}, dispatch.WithSchema(benchmarkEchoSchema))
 

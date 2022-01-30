@@ -7,8 +7,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
-	jsonrpc "github.com/superisaac/jsonrpc"
-	schema "github.com/superisaac/jsonrpc/schema"
+	"github.com/superisaac/jsonz"
+	schema "github.com/superisaac/jsonz/schema"
 )
 
 const (
@@ -60,7 +60,7 @@ func (self Dispatcher) GetMethodInfos() []rpcrouter.MethodInfo {
 func (self Dispatcher) GetPublicMethodInfos() []rpcrouter.MethodInfo {
 	minfos := make([]rpcrouter.MethodInfo, 0)
 	for _, minfo := range self.GetMethodInfos() {
-		if jsonrpc.IsPublicMethod(minfo.Name) {
+		if jsonz.IsPublicMethod(minfo.Name) {
 			minfos = append(minfos, minfo)
 		}
 	}
@@ -68,7 +68,7 @@ func (self Dispatcher) GetPublicMethodInfos() []rpcrouter.MethodInfo {
 }
 
 func (self *Dispatcher) On(method string, handler HandlerFunc, opts ...func(*MethodHandler)) {
-	if !jsonrpc.IsMethod(method) {
+	if !jsonz.IsMethod(method) {
 		panic(errors.New("invalid method name"))
 	}
 	h := MethodHandler{function: handler}
@@ -115,33 +115,33 @@ func (self *Dispatcher) UnHandle(method string) bool {
 	return found
 }
 
-func (self *Dispatcher) wrapHandlerResult(reqmsg *jsonrpc.RequestMessage, res interface{}, err error) (jsonrpc.IMessage, error) {
+func (self *Dispatcher) wrapHandlerResult(reqmsg *jsonz.RequestMessage, res interface{}, err error) (jsonz.Message, error) {
 	if err != nil {
-		var rpcErr *jsonrpc.RPCError
+		var rpcErr *jsonz.RPCError
 		if errors.As(err, &rpcErr) {
 			return rpcErr.ToMessage(reqmsg), nil
 		}
 		reqmsg.Log().Warnf("error %s", err.Error())
-		errmsg := jsonrpc.ErrServerError.ToMessage(reqmsg)
+		errmsg := jsonz.ErrServerError.ToMessage(reqmsg)
 		return errmsg, nil
 		//return , err
 	}
 
-	if resMsg, ok := res.(jsonrpc.IMessage); ok {
+	if resMsg, ok := res.(jsonz.Message); ok {
 		// TODO: assert resMsg is res and resId matches
 		return resMsg, nil
 	}
-	return jsonrpc.NewResultMessage(reqmsg, res), nil
+	return jsonz.NewResultMessage(reqmsg, res), nil
 }
 
-func (self *Dispatcher) ReturnResultMessage(resmsg jsonrpc.IMessage, req rpcrouter.CmdMsg, chResult chan ResultT) {
+func (self *Dispatcher) ReturnResultMessage(resmsg jsonz.Message, req rpcrouter.CmdMsg, chResult chan ResultT) {
 	chResult <- ResultT{
 		ResMsg:    resmsg,
 		ReqCmdMsg: req,
 	}
 }
 
-func (self *Dispatcher) Expect(ctx context.Context, cmdMsg rpcrouter.CmdMsg, opts ...func(*RPCRequest)) jsonrpc.IMessage {
+func (self *Dispatcher) Expect(ctx context.Context, cmdMsg rpcrouter.CmdMsg, opts ...func(*RPCRequest)) jsonz.Message {
 	chResult := make(chan ResultT, 2)
 	self.Feed(ctx, cmdMsg, chResult, opts...)
 	res := <-chResult
@@ -170,7 +170,7 @@ func (self *Dispatcher) feed(req *RPCRequest, chResult chan ResultT) {
 }
 
 func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
-	reqmsg, ok := req.CmdMsg.Msg.(*jsonrpc.RequestMessage)
+	reqmsg, ok := req.CmdMsg.Msg.(*jsonz.RequestMessage)
 
 	misc.Assert(ok, "msg is not request")
 
@@ -182,11 +182,11 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 				fmt.Printf("recovered r %+v\n", r)
 
 				if err, ok := r.(error); ok {
-					var rpcError *jsonrpc.RPCError
+					var rpcError *jsonz.RPCError
 					if errors.Is(err, Deferred) {
 						reqmsg.Log().Debugf("handler is deferred")
 						return
-						//} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+						//} else if rpcError, ok := r.(*jsonz.RPCError); ok {
 					} else if errors.As(err, &rpcError) {
 						errmsg := rpcError.ToMessage(reqmsg)
 						self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
@@ -198,7 +198,7 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 		}()
 	}
 
-	var resmsg jsonrpc.IMessage
+	var resmsg jsonz.Message
 	var err error
 	if ok {
 		res, err := handler.function(req, reqmsg.Params)
@@ -208,7 +208,7 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 		res, err := self.defaultHandler(req, reqmsg.Method, reqmsg.Params)
 		resmsg, err = self.wrapHandlerResult(reqmsg, res, err)
 	} else {
-		resmsg, err = jsonrpc.ErrMethodNotFound.ToMessage(reqmsg), nil
+		resmsg, err = jsonz.ErrMethodNotFound.ToMessage(reqmsg), nil
 	}
 
 	//log.Debugf("handle request method %+v, resmsg %+v, error %+v", msg, resmsg, err)
@@ -218,7 +218,7 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 	}
 	if err != nil {
 		log.Warnf("bad up message %s", err)
-		errmsg := jsonrpc.ErrBadResource.ToMessage(reqmsg)
+		errmsg := jsonz.ErrBadResource.ToMessage(reqmsg)
 		self.ReturnResultMessage(errmsg, req.CmdMsg, chResult)
 		return
 	}
@@ -228,7 +228,7 @@ func (self *Dispatcher) feedRequest(req *RPCRequest, chResult chan ResultT) {
 }
 
 func (self *Dispatcher) feedNotify(req *RPCRequest, chResult chan ResultT) {
-	ntfmsg, ok := req.CmdMsg.Msg.(*jsonrpc.NotifyMessage)
+	ntfmsg, ok := req.CmdMsg.Msg.(*jsonz.NotifyMessage)
 	misc.Assert(ok, "message is not ok")
 	handler, ok := self.methodHandlers[ntfmsg.Method]
 
@@ -238,7 +238,7 @@ func (self *Dispatcher) feedNotify(req *RPCRequest, chResult chan ResultT) {
 				if r == Deferred {
 					ntfmsg.Log().Debugf("handler is deferred")
 					return
-				} else if rpcError, ok := r.(*jsonrpc.RPCError); ok {
+				} else if rpcError, ok := r.(*jsonz.RPCError); ok {
 					ntfmsg.Log().Warnf("RPCError code=%d, message=%s", rpcError.Code, rpcError.Message)
 					return
 				} else {

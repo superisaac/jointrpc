@@ -2,12 +2,9 @@ package dispatch
 
 import (
 	"fmt"
-	"reflect"
-	//"encoding/json"
-	"github.com/pkg/errors"
-	//"github.com/superisaac/jsonrpc"
 	"github.com/mitchellh/mapstructure"
-	//"github.com/superisaac/jointrpc/misc"
+	"github.com/pkg/errors"
+	"reflect"
 )
 
 func typeIsStruct(tp reflect.Type) bool {

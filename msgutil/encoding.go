@@ -5,8 +5,8 @@ import (
 	//"github.com/pkg/errors"
 	//"fmt"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	jsonrpc "github.com/superisaac/jsonrpc"
-	//schema "github.com/superisaac/jsonrpc/schema"
+	"github.com/superisaac/jsonz"
+	//schema "github.com/superisaac/jsonz/schema"
 	"github.com/superisaac/jointrpc/rpcrouter"
 )
 
@@ -29,15 +29,15 @@ func DecodeMethodInfo(iminfo *intf.MethodInfo) *rpcrouter.MethodInfo {
 	}
 }
 
-func MessageToEnvolope(msg jsonrpc.IMessage) *intf.JSONRPCEnvolope {
+func MessageToEnvolope(msg jsonz.Message) *intf.JSONRPCEnvolope {
 	return &intf.JSONRPCEnvolope{
-		Body: jsonrpc.MessageString(msg),
+		Body: jsonz.MessageString(msg),
 	}
 }
 
-func MessageFromEnvolope(envo *intf.JSONRPCEnvolope) (jsonrpc.IMessage, error) {
+func MessageFromEnvolope(envo *intf.JSONRPCEnvolope) (jsonz.Message, error) {
 
-	msg, err := jsonrpc.ParseBytes([]byte(envo.Body))
+	msg, err := jsonz.ParseBytes([]byte(envo.Body))
 	if err != nil {
 		return nil, err
 	}

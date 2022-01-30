@@ -20,10 +20,10 @@ import (
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	misc "github.com/superisaac/jointrpc/misc"
 	msgutil "github.com/superisaac/jointrpc/msgutil"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	//misc "github.com/superisaac/jointrpc/misc"
 	//datadir "github.com/superisaac/jointrpc/datadir"
-	//schema "github.com/superisaac/jsonrpc/schema"
+	//schema "github.com/superisaac/jsonz/schema"
 	//"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	peer "google.golang.org/grpc/peer"
@@ -89,7 +89,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 		return nil, err
 	}
 	if recvmsg == nil {
-		recvmsg = jsonrpc.NewResultMessage(reqmsg, nil)
+		recvmsg = jsonz.NewResultMessage(reqmsg, nil)
 	}
 	if !recvmsg.IsResultOrError() {
 		log.Warnf("bad recvmsg is neither result nor error %+v", recvmsg)
@@ -235,7 +235,7 @@ func NewGRPCAdaptor(stream intf.JointRPC_LiveServer) *GRPCAdaptor {
 	return adaptor
 }
 
-func (self GRPCAdaptor) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
+func (self GRPCAdaptor) SendMessage(context context.Context, msg jsonz.Message) error {
 	return msgutil.GRPCServerSend(self.stream, msg)
 }
 
@@ -247,7 +247,7 @@ func (self GRPCAdaptor) Done() chan error {
 	return self.done
 }
 
-func (self GRPCAdaptor) Recv() (jsonrpc.IMessage, error) {
+func (self GRPCAdaptor) Recv() (jsonz.Message, error) {
 	msg, err := msgutil.GRPCServerRecv(self.stream)
 	if err != nil {
 		err1 := msgutil.GRPCHandleCodes(err, codes.Canceled)

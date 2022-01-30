@@ -9,8 +9,8 @@ import (
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jsonrpc"
-	schema "github.com/superisaac/jsonrpc/schema"
+	"github.com/superisaac/jsonz"
+	schema "github.com/superisaac/jsonz/schema"
 	"net"
 	"sync"
 )
@@ -89,16 +89,16 @@ func (self *StreamDispatcher) Init() {
 
 			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
-				return "", jsonrpc.ParamsError("conn not found")
+				return "", jsonz.ParamsError("conn not found")
 			}
 			upMethods := make([]rpcrouter.MethodInfo, 0)
 			var methodNames []string
 			for _, minfo := range methodInfos {
-				if !jsonrpc.IsPublicMethod(minfo.Name) {
+				if !jsonz.IsPublicMethod(minfo.Name) {
 					conn.Log().WithFields(log.Fields{
 						"rpc": "DeclareMethods",
 					}).Warnf("%s is not valid public method name", minfo.Name)
-					return "", jsonrpc.ParamsError(fmt.Sprintf("method %s cannot prefix with .", minfo.Name))
+					return "", jsonz.ParamsError(fmt.Sprintf("method %s cannot prefix with .", minfo.Name))
 				}
 				methodNames = append(methodNames, minfo.Name)
 				_, err := minfo.SchemaOrError()
@@ -109,7 +109,7 @@ func (self *StreamDispatcher) Init() {
 						conn.Log().WithFields(log.Fields{
 							"rpc": "DeclareMethods",
 						}).Warnf("error build schema %s, %+v", buildError.Error(), minfo)
-						return "", jsonrpc.ParamsError(fmt.Sprintf("build schema error %s", buildError.Error()))
+						return "", jsonz.ParamsError(fmt.Sprintf("build schema error %s", buildError.Error()))
 					}
 					return "", err
 				}
@@ -130,7 +130,7 @@ func (self *StreamDispatcher) Init() {
 		func(req *dispatch.RPCRequest, methodNames []string) (string, error) {
 			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
-				return "", jsonrpc.ParamsError("conn not found")
+				return "", jsonz.ParamsError("conn not found")
 			}
 
 			conn.Log().Infof("call _stream.declareDelegates %+v", methodNames)
@@ -151,7 +151,7 @@ func (self *StreamDispatcher) Init() {
 		func(req *dispatch.RPCRequest) (string, error) {
 			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
-				return "", jsonrpc.ParamsError("conn not found")
+				return "", jsonz.ParamsError("conn not found")
 			}
 			conn.SetWatchState(true)
 			factory := rpcrouter.RouterFactoryFromContext(req.Context)
@@ -167,7 +167,7 @@ func (self *StreamDispatcher) Init() {
 		func(req *dispatch.RPCRequest, username string, password string) (string, error) {
 			conn, found := req.Data.(*rpcrouter.ConnT)
 			if !found {
-				return "", jsonrpc.ParamsError("conn not found")
+				return "", jsonz.ParamsError("conn not found")
 			}
 
 			v := req.Context.Value("remoteAddress")
@@ -191,11 +191,11 @@ func (self *StreamDispatcher) Init() {
 				conn.Log().Infof("joined to router %s", namespace)
 				return namespace, nil
 			}
-			return "", jsonrpc.ErrAuthFailed
+			return "", jsonz.ErrAuthFailed
 		}, dispatch.WithSchema(authorizeSchema))
 } // end of Init()
 
-func (self *StreamDispatcher) HandleMessage(ctx context.Context, msg jsonrpc.IMessage, ns string, chResult chan dispatch.ResultT, conn *rpcrouter.ConnT, allowRequest bool) jsonrpc.IMessage {
+func (self *StreamDispatcher) HandleMessage(ctx context.Context, msg jsonz.Message, ns string, chResult chan dispatch.ResultT, conn *rpcrouter.ConnT, allowRequest bool) jsonz.Message {
 	cmdMsg := rpcrouter.CmdMsg{Msg: msg, Namespace: ns}
 	if !conn.Joined() {
 		instRes := self.authDisp.Expect(ctx, cmdMsg, dispatch.WithRequestData(conn))
@@ -204,8 +204,8 @@ func (self *StreamDispatcher) HandleMessage(ctx context.Context, msg jsonrpc.IMe
 		if msg.IsRequestOrNotify() && self.disp.HasMethod(msg.MustMethod()) {
 			self.disp.Feed(ctx, cmdMsg, chResult, dispatch.WithRequestData(conn))
 		} else if msg.IsRequest() && !allowRequest {
-			reqMsg, _ := msg.(*jsonrpc.RequestMessage)
-			instRes := jsonrpc.ErrNotAllowed.ToMessage(reqMsg)
+			reqMsg, _ := msg.(*jsonz.RequestMessage)
+			instRes := jsonz.ErrNotAllowed.ToMessage(reqMsg)
 			return instRes
 		} else if msg.IsNotify() && !allowRequest {
 			msg.Log().Warnf("not allowed")

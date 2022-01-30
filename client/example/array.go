@@ -5,7 +5,7 @@ import (
 	"fmt"
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 )
 
 func ExampleArray(serverEntry client.ServerEntry) error {
@@ -27,7 +27,7 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 	disp.OnTyped("array.at",
 		func(req *dispatch.RPCRequest, n int) (interface{}, error) {
 			if n < 0 || n >= len(items) {
-				return nil, &jsonrpc.RPCError{10423, "parameter 1 index out of range", false}
+				return nil, &jsonz.RPCError{10423, "parameter 1 index out of range", false}
 			}
 			return items[n], nil
 		},
@@ -72,13 +72,13 @@ func ExampleArray(serverEntry client.ServerEntry) error {
 	disp.OnTyped("array.add",
 		func(req *dispatch.RPCRequest) (float64, error) {
 			if len(items) < 2 {
-				return 0, &jsonrpc.RPCError{Code: 10408, Message: "array size < 2"}
+				return 0, &jsonz.RPCError{Code: 10408, Message: "array size < 2"}
 			}
-			a, err := jsonrpc.ValidateFloat(items[len(items)-2], "array[-2]")
+			a, err := jsonz.ValidateFloat(items[len(items)-2], "array[-2]")
 			if err != nil {
 				return 0, err
 			}
-			b, err := jsonrpc.ValidateFloat(items[len(items)-1], "array[-1]")
+			b, err := jsonz.ValidateFloat(items[len(items)-1], "array[-1]")
 			if err != nil {
 				return 0, err
 			}

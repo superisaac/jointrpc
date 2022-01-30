@@ -8,7 +8,7 @@ import (
 	dispatch "github.com/superisaac/jointrpc/dispatch"
 	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -48,7 +48,7 @@ func (self *VarsService) BroadcastVars(factory *rpcrouter.RouterFactory) error {
 		if router == nil {
 			continue
 		}
-		notify := jsonrpc.NewNotifyMessage("vars.change", []interface{}{vars})
+		notify := jsonz.NewNotifyMessage("vars.change", []interface{}{vars})
 		notify.SetTraceId(misc.NewUuid())
 		notify.Log().Infof("broadcast vars.change")
 
@@ -179,7 +179,7 @@ func (self *VarsService) declareMethods(factory *rpcrouter.RouterFactory) {
 	}
 }
 
-func (self VarsService) SendMessage(ctx context.Context, msg jsonrpc.IMessage) error {
+func (self VarsService) SendMessage(ctx context.Context, msg jsonz.Message) error {
 	factory := rpcrouter.RouterFactoryFromContext(ctx)
 	commonRouter := factory.CommonRouter()
 	self.conn.MsgInput() <- rpcrouter.CmdMsg{

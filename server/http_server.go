@@ -15,7 +15,7 @@ import (
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/msgutil"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 )
 
 type HTTPOption struct {
@@ -107,7 +107,7 @@ func (self *HTTPServer) Authorize(r *http.Request) (bool, string) {
 func (self *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// only support POST
 	if r.Method != "POST" {
-		jsonrpc.ErrorResponse(w, r, errors.New("method not allowed"), 405, "Method not allowed")
+		jsonz.ErrorResponse(w, r, errors.New("method not allowed"), 405, "Method not allowed")
 		return
 	}
 
@@ -122,13 +122,13 @@ func (self *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var buffer bytes.Buffer
 	_, err := buffer.ReadFrom(r.Body)
 	if err != nil {
-		jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
+		jsonz.ErrorResponse(w, r, err, 400, "Bad request")
 		return
 	}
 
-	msg, err := jsonrpc.ParseBytes(buffer.Bytes())
+	msg, err := jsonz.ParseBytes(buffer.Bytes())
 	if err != nil {
-		jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
+		jsonz.ErrorResponse(w, r, err, 400, "Bad request")
 		return
 	}
 
@@ -143,13 +143,13 @@ func (self *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	router := factory.Get(namespace)
 	result, err := router.CallOrNotify(msg, namespace)
 	if err != nil {
-		jsonrpc.ErrorResponse(w, r, err, 500, "Server error")
+		jsonz.ErrorResponse(w, r, err, 500, "Server error")
 		return
 	}
 	if result != nil {
-		data, err1 := jsonrpc.MessageBytes(result)
+		data, err1 := jsonz.MessageBytes(result)
 		if err1 != nil {
-			jsonrpc.ErrorResponse(w, r, err1, 500, "Server error")
+			jsonz.ErrorResponse(w, r, err1, 500, "Server error")
 			return
 		}
 		w.Header().Add("X-Trace-Id", result.TraceId())
@@ -196,7 +196,7 @@ func (self *WSServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Warnf("ws upgrade failed %s", err)
-		jsonrpc.ErrorResponse(w, r, err, 400, "Bad request")
+		jsonz.ErrorResponse(w, r, err, 400, "Bad request")
 		return
 	}
 
@@ -231,7 +231,7 @@ func NewWSAdaptor(ws *websocket.Conn) *WSAdaptor {
 	return adaptor
 }
 
-func (self WSAdaptor) SendMessage(context context.Context, msg jsonrpc.IMessage) error {
+func (self WSAdaptor) SendMessage(context context.Context, msg jsonz.Message) error {
 	return msgutil.WSSend(self.ws, msg)
 }
 
@@ -243,7 +243,7 @@ func (self WSAdaptor) Done() chan error {
 	return self.done
 }
 
-func (self WSAdaptor) Recv() (jsonrpc.IMessage, error) {
+func (self WSAdaptor) Recv() (jsonz.Message, error) {
 	msg, err := msgutil.WSRecv(self.ws)
 	return msg, err
 }

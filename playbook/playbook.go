@@ -9,8 +9,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
-	jsonrpc "github.com/superisaac/jsonrpc"
-	"github.com/superisaac/jsonrpc/schema"
+	"github.com/superisaac/jsonz"
+	"github.com/superisaac/jsonz/schema"
 	yaml "gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
@@ -86,7 +86,7 @@ func (self MethodT) Exec(req *dispatch.RPCRequest, methodName string) (interface
 	}
 	defer stdin.Close()
 
-	msgJson := jsonrpc.MessageString(msg)
+	msgJson := jsonz.MessageString(msg)
 	io.WriteString(stdin, msgJson)
 	stdin.Close()
 
@@ -134,7 +134,7 @@ func (self *Playbook) Run(serverEntry client.ServerEntry) error {
 						"command exit, code: %d, stderr: %s",
 						exitErr.ExitCode(),
 						string(exitErr.Stderr)[:100])
-					return nil, jsonrpc.ErrLiveExit
+					return nil, jsonz.ErrLiveExit
 				}
 
 				req.CmdMsg.Msg.Log().Warnf("error exec %s, %s", name, err.Error())

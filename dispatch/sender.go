@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"time"
 )
 
@@ -83,7 +83,7 @@ func SenderLoop(rootCtx context.Context, sender ISender, conn *rpcrouter.ConnT, 
 					sender.Done() <- err
 					return
 				}
-				ntf := jsonrpc.NewNotifyMessage("_state.changed", []interface{}{stateJson})
+				ntf := jsonz.NewNotifyMessage("_state.changed", []interface{}{stateJson})
 				err = sender.SendMessage(ctx, ntf)
 				if err != nil {
 					//panic(err)

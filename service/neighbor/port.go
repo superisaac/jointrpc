@@ -11,7 +11,7 @@ import (
 	"github.com/superisaac/jointrpc/dispatch"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"strings"
 )
 
@@ -78,7 +78,7 @@ func (self *NeighborPort) connectRemote(rootCtx context.Context, entry client.Se
 	edge.remoteClient.OnAuthorized(func() {
 		req := edge.remoteClient.NewWatchStateRequest()
 		edge.remoteClient.LiveCall(rootCtx, req,
-			func(res jsonrpc.IMessage) {
+			func(res jsonz.Message) {
 				log.Infof("watch state")
 			})
 	})
@@ -141,7 +141,7 @@ func (self *NeighborPort) handleStateChange(factory *rpcrouter.RouterFactory, st
 		var newMethods []rpcrouter.MethodInfo
 		methodNames := make(misc.StringSet)
 		for _, minfo := range stateChange.State.Methods {
-			if !jsonrpc.IsPublicMethod(minfo.Name) {
+			if !jsonz.IsPublicMethod(minfo.Name) {
 				continue
 			}
 			if _, ok := methodNames[minfo.Name]; ok {
@@ -181,7 +181,7 @@ func (self *NeighborPort) tryUpdateMethods(factory *rpcrouter.RouterFactory) {
 	}
 }
 
-func (self NeighborPort) SendMessage(ctx context.Context, msg jsonrpc.IMessage) error {
+func (self NeighborPort) SendMessage(ctx context.Context, msg jsonz.Message) error {
 	factory := rpcrouter.RouterFactoryFromContext(ctx)
 	router := factory.Get(self.namespace)
 	self.conn.MsgInput() <- rpcrouter.CmdMsg{

@@ -3,10 +3,9 @@ package rpcrouter
 import (
 	//"fmt"
 	"context"
-	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -61,10 +60,10 @@ func TestRouteMessage(t *testing.T) {
 "params": [1, 3]
 }`
 
-	msg, err := jsonrpc.ParseBytes([]byte(j1))
+	msg, err := jsonz.ParseBytes([]byte(j1))
 	assert.Nil(err)
 	assert.True(msg.IsRequest())
-	assert.Equal(json.Number("100002"), msg.MustId())
+	assert.Equal(100002, msg.MustId())
 	assert.False(router.Started())
 
 	//router.deliverMessage(CmdMsg{
@@ -104,9 +103,9 @@ func TestRouteRoutine(t *testing.T) {
 "params": [1, 3]
 }`
 	time.Sleep(100 * time.Millisecond)
-	msg, err := jsonrpc.ParseBytes([]byte(j1))
+	msg, err := jsonz.ParseBytes([]byte(j1))
 	assert.Nil(err)
-	assert.Equal(json.Number("100002"), msg.MustId())
+	assert.Equal(100002, msg.MustId())
 
 	conn.handleRequest(factory.startCtx, CmdMsg{
 		Msg:       msg,
@@ -127,9 +126,9 @@ func TestRouteRoutine(t *testing.T) {
 "method": "abc",
 "params": [2, 6]
 }`
-	msg2, err := jsonrpc.ParseBytes([]byte(j2))
+	msg2, err := jsonz.ParseBytes([]byte(j2))
 	assert.Nil(err)
-	assert.Equal(json.Number("100003"), msg2.MustId())
+	assert.Equal(100003, msg2.MustId())
 	chRes2 := make(MsgChannel, 100)
 	router.relayMessage(CmdMsg{
 		Msg:     msg2,

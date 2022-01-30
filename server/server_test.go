@@ -11,7 +11,7 @@ import (
 	"github.com/superisaac/jointrpc/datadir"
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"io/ioutil"
 
 	"os"
@@ -50,8 +50,8 @@ func StartTestServe(rootCtx context.Context, serverUrl string, whoami string) {
 	disp := dispatch.NewDispatcher()
 
 	disp.On("add2int", func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
-		a := jsonrpc.MustInt(params[0], "params[0]")
-		b := jsonrpc.MustInt(params[1], "params[1]")
+		a := jsonz.MustInt(params[0], "params[0]")
+		b := jsonz.MustInt(params[1], "params[1]")
 		return a + b, nil
 	}, dispatch.WithSchema(addSchema))
 

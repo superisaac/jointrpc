@@ -4,7 +4,7 @@ import (
 	//"fmt"
 	log "github.com/sirupsen/logrus"
 	misc "github.com/superisaac/jointrpc/misc"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"time"
 )
 
@@ -27,7 +27,7 @@ func WithTimeout(timeout time.Duration) CallOptionFunc {
 	}
 }
 
-func (self *Router) SingleCall(msg jsonrpc.IMessage, ns string, callOption *CallOption) (jsonrpc.IMessage, error) {
+func (self *Router) SingleCall(msg jsonz.Message, ns string, callOption *CallOption) (jsonz.Message, error) {
 	if msg.IsRequest() {
 		chRes := make(MsgChannel, 10)
 
@@ -51,9 +51,9 @@ func (self *Router) SingleCall(msg jsonrpc.IMessage, ns string, callOption *Call
 	}
 }
 
-func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callOption *CallOption) (resmsg jsonrpc.IMessage, err error) {
+func (self *Router) GatherCall(msg jsonz.Message, ns string, limit int, callOption *CallOption) (resmsg jsonz.Message, err error) {
 	if msg.IsRequest() {
-		reqmsg, _ := msg.(*jsonrpc.RequestMessage)
+		reqmsg, _ := msg.(*jsonz.RequestMessage)
 
 		servoIds := self.ListConns(reqmsg.Method, limit)
 
@@ -79,12 +79,12 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 
 			misc.Assert(resMsgvec.Msg.IsResultOrError(), "recved neither result not error")
 			misc.AssertEqual(resMsgvec.Msg.TraceId(), reqmsg.TraceId(), "")
-			arr = append(arr, jsonrpc.MessageInterface(resMsgvec.Msg))
+			arr = append(arr, jsonz.MessageInterface(resMsgvec.Msg))
 		}
-		resmsg := jsonrpc.NewResultMessage(reqmsg, arr)
+		resmsg := jsonz.NewResultMessage(reqmsg, arr)
 		return resmsg, nil
 	} else if msg.IsNotify() {
-		notifymsg, _ := msg.(*jsonrpc.NotifyMessage)
+		notifymsg, _ := msg.(*jsonz.NotifyMessage)
 		servoIds := self.ListConns(notifymsg.Method, limit)
 
 		for _, servoId := range servoIds {
@@ -101,7 +101,7 @@ func (self *Router) GatherCall(msg jsonrpc.IMessage, ns string, limit int, callO
 	}
 }
 
-func (self *Router) CallOrNotify(msg jsonrpc.IMessage, ns string, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
+func (self *Router) CallOrNotify(msg jsonz.Message, ns string, opts ...CallOptionFunc) (jsonz.Message, error) {
 	callOption := &CallOption{timeout: DefaultRequestTimeout}
 	for _, optfunc := range opts {
 		optfunc(callOption)

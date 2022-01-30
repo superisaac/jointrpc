@@ -6,7 +6,7 @@ import (
 	//"fmt"
 	//log "github.com/sirupsen/logrus"
 	//client "github.com/superisaac/jointrpc/client"
-	//jsonrpc "github.com/superisaac/jsonrpc"
+	//"github.com/superisaac/jsonz"
 	//datadir "github.com/superisaac/jointrpc/datadir"
 	//"github.com/superisaac/jointrpc/dispatch"
 	//misc "github.com/superisaac/jointrpc/misc"

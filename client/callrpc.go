@@ -12,7 +12,7 @@ import (
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/msgutil"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 )
 
 type CallOption struct {
@@ -34,13 +34,13 @@ func WithBroadcast(b bool) CallOptionFunc {
 	}
 }
 
-func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
+func (self *RPCClient) CallRPC(rootCtx context.Context, method string, params []interface{}, opts ...CallOptionFunc) (jsonz.Message, error) {
 	msgId := 1
-	reqmsg := jsonrpc.NewRequestMessage(msgId, method, params)
+	reqmsg := jsonz.NewRequestMessage(msgId, method, params)
 	return self.CallMessage(rootCtx, reqmsg, opts...)
 }
 
-func (self *RPCClient) CallMessage(rootCtx context.Context, reqmsg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
+func (self *RPCClient) CallMessage(rootCtx context.Context, reqmsg jsonz.Message, opts ...CallOptionFunc) (jsonz.Message, error) {
 	if self.IsHttp() {
 		return self.CallHTTPMessage(rootCtx, reqmsg, opts...)
 	} else {
@@ -48,7 +48,7 @@ func (self *RPCClient) CallMessage(rootCtx context.Context, reqmsg jsonrpc.IMess
 	}
 }
 
-func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
+func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonz.Message, opts ...CallOptionFunc) (jsonz.Message, error) {
 	opt := &CallOption{}
 
 	for _, optfunc := range opts {
@@ -66,7 +66,7 @@ func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonrpc.I
 	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
-	marshaled, err := jsonrpc.MessageBytes(reqmsg)
+	marshaled, err := jsonz.MessageBytes(reqmsg)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonrpc.I
 	}
 
 	if reqmsg.IsRequest() {
-		respMsg, err := jsonrpc.ParseBytes(respBody)
+		respMsg, err := jsonz.ParseBytes(respBody)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +102,7 @@ func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonrpc.I
 	}
 }
 
-func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonrpc.IMessage, opts ...CallOptionFunc) (jsonrpc.IMessage, error) {
+func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonz.Message, opts ...CallOptionFunc) (jsonz.Message, error) {
 
 	opt := &CallOption{}
 
@@ -134,14 +134,14 @@ func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonrpc.I
 		return nil, err
 	}
 
-	resmsg, err := jsonrpc.ParseBytes([]byte(res.Envolope.Body))
+	resmsg, err := jsonz.ParseBytes([]byte(res.Envolope.Body))
 
 	if err != nil {
 		return nil, err
 	}
 	if !resmsg.IsResultOrError() {
 		log.Warnf("bad result or error message %+v", res.Envolope.Body)
-		return nil, &jsonrpc.RPCError{10409, "msg is neither result nor error", false}
+		return nil, &jsonz.RPCError{10409, "msg is neither result nor error", false}
 	}
 	return resmsg, nil
 }
@@ -159,7 +159,7 @@ func (self *RPCClient) SendHTTPNotify(rootCtx context.Context, method string, pa
 	for _, optfunc := range opts {
 		optfunc(opt)
 	}
-	notify := jsonrpc.NewNotifyMessage(method, params)
+	notify := jsonz.NewNotifyMessage(method, params)
 
 	if opt.traceId == "" {
 		opt.traceId = misc.NewUuid()
@@ -167,7 +167,7 @@ func (self *RPCClient) SendHTTPNotify(rootCtx context.Context, method string, pa
 
 	notify.SetTraceId(opt.traceId)
 
-	marshaled, err := jsonrpc.MessageBytes(notify)
+	marshaled, err := jsonz.MessageBytes(notify)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func (self *RPCClient) SendGRPCNotify(rootCtx context.Context, method string, pa
 	for _, optfunc := range opts {
 		optfunc(opt)
 	}
-	notify := jsonrpc.NewNotifyMessage(method, params)
+	notify := jsonz.NewNotifyMessage(method, params)
 
 	if opt.traceId == "" {
 		opt.traceId = misc.NewUuid()
@@ -210,7 +210,7 @@ func (self *RPCClient) SendGRPCNotify(rootCtx context.Context, method string, pa
 	notify.SetTraceId(opt.traceId)
 
 	env := &intf.JSONRPCEnvolope{
-		Body: jsonrpc.MessageString(notify),
+		Body: jsonz.MessageString(notify),
 	}
 	//		TraceId: opt.traceId}
 	req := &intf.JSONRPCNotifyRequest{

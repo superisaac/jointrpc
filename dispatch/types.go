@@ -5,7 +5,7 @@ import (
 	//"errors"
 	"github.com/pkg/errors"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 )
 
 type RPCRequest struct {
@@ -33,7 +33,7 @@ type MethodHandler struct {
 type HandlerOption func(*MethodHandler)
 
 type ResultT struct {
-	ResMsg    jsonrpc.IMessage
+	ResMsg    jsonz.Message
 	ReqCmdMsg rpcrouter.CmdMsg
 }
 
@@ -52,7 +52,7 @@ type StateListener struct {
 }
 
 type ISender interface {
-	SendMessage(ctx context.Context, msg jsonrpc.IMessage) error
+	SendMessage(ctx context.Context, msg jsonz.Message) error
 	SendCmdMsg(ctx context.Context, cmdMsg rpcrouter.CmdMsg) error
 	Done() chan error
 }

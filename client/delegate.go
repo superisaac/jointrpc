@@ -7,7 +7,7 @@ import (
 	//log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	"github.com/superisaac/jointrpc/misc"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 )
 
 func (self *RPCClient) ListDelegates(rootCtx context.Context) ([]string, error) {
@@ -37,9 +37,9 @@ func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []strin
 	}
 	params := [](interface{}){methods}
 
-	reqmsg := jsonrpc.NewRequestMessage(reqId, "_stream.declareDelegates", params)
+	reqmsg := jsonz.NewRequestMessage(reqId, "_stream.declareDelegates", params)
 
-	return self.LiveCall(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+	return self.LiveCall(rootCtx, reqmsg, func(res jsonz.Message) {
 		res.Log().Debugf("declared delegates")
 	})
 }

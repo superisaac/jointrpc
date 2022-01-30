@@ -4,11 +4,11 @@ import (
 	"fmt"
 	//log "github.com/sirupsen/logrus"
 	misc "github.com/superisaac/jointrpc/misc"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	//"time"
 )
 
-func (self CmdMsg) Res(res jsonrpc.IMessage) CmdMsg {
+func (self CmdMsg) Res(res jsonz.Message) CmdMsg {
 	return CmdMsg{Msg: res, Namespace: self.Namespace}
 }
 
@@ -28,8 +28,8 @@ func (self *Router) relayMessage(cmdMsg CmdMsg) {
 	if found {
 		toConn.MsgInput() <- cmdMsg
 	} else if msg.IsRequest() {
-		reqMsg, _ := msg.(*jsonrpc.RequestMessage)
-		errMsg := jsonrpc.ErrMethodNotFound.WithData(fmt.Sprintf("request method %s", reqMsg.Method)).ToMessage(reqMsg)
+		reqMsg, _ := msg.(*jsonz.RequestMessage)
+		errMsg := jsonz.ErrMethodNotFound.WithData(fmt.Sprintf("request method %s", reqMsg.Method)).ToMessage(reqMsg)
 		errMsg.SetTraceId(reqMsg.TraceId())
 		cmdMsg.ChRes <- cmdMsg.Res(errMsg)
 	}
@@ -50,8 +50,8 @@ func (self *Router) redirectMessage(cmdMsg CmdMsg) {
 	if ret, ok := <-chRet; ok && ret.Found {
 		ret.Conn.MsgInput() <- cmdMsg
 	} else if msg.IsRequest() {
-		reqMsg, _ := msg.(*jsonrpc.RequestMessage)
-		errMsg := jsonrpc.ErrMethodNotFound.WithData(fmt.Sprintf("request method %s", reqMsg.Method)).ToMessage(reqMsg)
+		reqMsg, _ := msg.(*jsonz.RequestMessage)
+		errMsg := jsonz.ErrMethodNotFound.WithData(fmt.Sprintf("request method %s", reqMsg.Method)).ToMessage(reqMsg)
 		errMsg.SetTraceId(reqMsg.TraceId())
 		cmdMsg.ChRes <- cmdMsg.Res(errMsg)
 	} else {

@@ -13,7 +13,7 @@ import (
 	client "github.com/superisaac/jointrpc/client"
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"os"
 	//example "github.com/superisaac/jointrpc/client/example"
 	//grpc "google.golang.org/grpc"
@@ -37,7 +37,7 @@ func CommandSendNotify() {
 	method := args[0]
 	clParams := args[1:len(args)]
 
-	params, err := jsonrpc.GuessJsonArray(clParams)
+	params, err := jsonz.GuessJsonArray(clParams)
 	if err != nil {
 		//panic(err)
 		log.Errorf("params error %s", err)
@@ -85,7 +85,7 @@ func CommandCallRPC(subcmd string) {
 	method := args[0]
 	clParams := args[1:len(args)]
 
-	params, err := jsonrpc.GuessJsonArray(clParams)
+	params, err := jsonz.GuessJsonArray(clParams)
 	if err != nil {
 		//panic(err)
 		log.Errorf("fail to parse json %s", err)
@@ -113,7 +113,7 @@ func RunCallRPC(serverEntry client.ServerEntry, method string, params []interfac
 		return err
 	}
 	log.Debugf("result got trace id %s", res.TraceId())
-	repr, err := jsonrpc.EncodePretty(res)
+	repr, err := jsonz.EncodePretty(res)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func CommandWatch() {
 	for _, notifyName := range notifyNames {
 		disp.On(notifyName, func(req *dispatch.RPCRequest, params []interface{}) (interface{}, error) {
 			msg := req.CmdMsg.Msg
-			repr, err := jsonrpc.EncodePretty(msg)
+			repr, err := jsonz.EncodePretty(msg)
 			if err != nil {
 				panic(err)
 			}
@@ -239,7 +239,7 @@ func CommandWatchState() {
 	rpcClient.OnAuthorized(func() {
 		req := rpcClient.NewWatchStateRequest()
 		rpcClient.LiveCall(context.Background(), req,
-			func(res jsonrpc.IMessage) {
+			func(res jsonz.Message) {
 				log.Infof("watch state")
 			})
 

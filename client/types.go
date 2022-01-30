@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/superisaac/jointrpc/dispatch"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"net/url"
 	"sync"
 	"time"
@@ -20,7 +20,7 @@ type ServerFlag struct {
 }
 
 type RPCRequest struct {
-	Message jsonrpc.IMessage
+	Message jsonz.Message
 	// TODO: add more fields
 }
 
@@ -30,11 +30,11 @@ type RPCStatusError struct {
 	Reason string
 }
 
-type LiveCallback func(jsonrpc.IMessage)
+type LiveCallback func(jsonz.Message)
 
 type LivecallT struct {
 	Expire   time.Time
-	Request  *jsonrpc.RequestMessage
+	Request  *jsonz.RequestMessage
 	Callback LiveCallback
 }
 
@@ -50,7 +50,7 @@ type RPCClient struct {
 	// grpc transport
 	grpcClient intf.JointRPCClient
 
-	chSendUp chan jsonrpc.IMessage
+	chSendUp chan jsonz.Message
 
 	LiveRetryTimes int
 	retry          int

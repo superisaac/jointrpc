@@ -6,7 +6,7 @@ import (
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	//"github.com/superisaac/jsonrpc"
+	//"github.com/superisaac/jsonz"
 )
 
 func ReceiverLoop(ctx context.Context, sender dispatch.ISender, receiver IReceiver, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {

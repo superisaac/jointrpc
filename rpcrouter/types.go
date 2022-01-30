@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/pkg/errors"
 	datadir "github.com/superisaac/jointrpc/datadir"
-	jsonrpc "github.com/superisaac/jsonrpc"
-	schema "github.com/superisaac/jsonrpc/schema"
+	"github.com/superisaac/jsonz"
+	schema "github.com/superisaac/jsonz/schema"
 	"net"
 	"sync"
 	"time"
@@ -27,7 +27,7 @@ const ZeroCID = CID(0)
 
 // Commands
 // type MsgVec struct {
-// 	Msg       jsonrpc.IMessage
+// 	Msg       jsonz.Message
 // 	Namespace string
 // }
 
@@ -111,7 +111,7 @@ type CmdSelectConn struct {
 }
 
 type CmdMsg struct {
-	Msg       jsonrpc.IMessage
+	Msg       jsonz.Message
 	Namespace string
 	ConnId    CID
 	Timeout   time.Duration

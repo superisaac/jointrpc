@@ -3,8 +3,8 @@ package dispatch
 import (
 	//"errors"
 	//log "github.com/sirupsen/logrus"
-	//jsonrpc "github.com/superisaac/jsonrpc"
-	//schema "github.com/superisaac/jsonrpc/schema"
+	//"github.com/superisaac/jsonz"
+	//schema "github.com/superisaac/jsonz/schema"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 )
 

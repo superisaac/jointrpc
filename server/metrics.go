@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"strings"
 	//"net"
 	//datadir "github.com/superisaac/jointrpc/datadir"
@@ -77,7 +77,7 @@ func (self *MetricsCollector) Collect() ([]string, error) {
 func (self *MetricsCollector) CollectRouter(router *rpcrouter.Router) ([]string, error) {
 	msgId := misc.NewUuid()
 	emptyArr := make([]interface{}, 0)
-	reqmsg := jsonrpc.NewRequestMessage(msgId, "metrics.collect", emptyArr)
+	reqmsg := jsonz.NewRequestMessage(msgId, "metrics.collect", emptyArr)
 	resmsg, err := router.CallOrNotify(reqmsg, router.Name(), rpcrouter.WithBroadcast(true))
 	if err != nil {
 		return nil, nil
@@ -98,7 +98,7 @@ func (self *MetricsCollector) CollectRouter(router *rpcrouter.Router) ([]string,
 		}
 		msgProto := simplejson.New()
 		msgProto.SetPath(nil, b)
-		msgItem, err := jsonrpc.Parse(msgProto)
+		msgItem, err := jsonz.Parse(msgProto)
 		if err != nil {
 			log.Warnf("metrics error %s %+v", err.Error(), b)
 			continue

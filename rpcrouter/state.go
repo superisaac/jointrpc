@@ -2,7 +2,7 @@ package rpcrouter
 
 import (
 	log "github.com/sirupsen/logrus"
-	schema "github.com/superisaac/jsonrpc/schema"
+	schema "github.com/superisaac/jsonz/schema"
 )
 
 // lazy style schema builder

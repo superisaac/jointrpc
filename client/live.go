@@ -16,7 +16,7 @@ import (
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/msgutil"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	"io"
 	//grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -44,17 +44,17 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 	reqId := misc.NewUuid()
 	params := make([]interface{}, 0)
 	params = append(params, upMethods)
-	reqmsg := jsonrpc.NewRequestMessage(reqId, "_stream.declareMethods", params)
+	reqmsg := jsonz.NewRequestMessage(reqId, "_stream.declareMethods", params)
 
-	return self.LiveCall(rootCtx, reqmsg, func(res jsonrpc.IMessage) {
+	return self.LiveCall(rootCtx, reqmsg, func(res jsonz.Message) {
 		log.Infof("declared methods %+v", upMethods)
 	})
 }
 
 func (self *RPCClient) sendPing(ctx context.Context) {
 	reqId := misc.NewUuid()
-	ping := jsonrpc.NewRequestMessage(reqId, "_stream.ping", nil)
-	self.LiveCall(ctx, ping, func(res jsonrpc.IMessage) {
+	ping := jsonz.NewRequestMessage(reqId, "_stream.ping", nil)
+	self.LiveCall(ctx, ping, func(res jsonz.Message) {
 		log.Debugf("pong received, %s", res.MustResult())
 	})
 }
@@ -176,20 +176,20 @@ func (self *RPCClient) OnAuthorized(cb AuthorizedCallback) {
 	self.onAuthorized = cb
 }
 
-func (self *RPCClient) NewAuthRequest() *jsonrpc.RequestMessage {
+func (self *RPCClient) NewAuthRequest() *jsonz.RequestMessage {
 	reqId := misc.NewUuid()
 	auth := self.ClientAuth()
 	params := [](interface{}){auth.Username, auth.Password}
-	return jsonrpc.NewRequestMessage(reqId, "_stream.authorize", params)
+	return jsonz.NewRequestMessage(reqId, "_stream.authorize", params)
 }
 
-func (self *RPCClient) NewWatchStateRequest() *jsonrpc.RequestMessage {
+func (self *RPCClient) NewWatchStateRequest() *jsonz.RequestMessage {
 	reqId := misc.NewUuid()
 	params := [](interface{}){}
-	return jsonrpc.NewRequestMessage(reqId, "_stream.watchState", params)
+	return jsonz.NewRequestMessage(reqId, "_stream.watchState", params)
 }
 
-func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonrpc.IMessage, disp *dispatch.Dispatcher, namespace string) {
+func (self *RPCClient) handleDownRequest(ctx context.Context, msg jsonz.Message, disp *dispatch.Dispatcher, namespace string) {
 	cmdMsg := rpcrouter.CmdMsg{
 		Msg:       msg,
 		Namespace: namespace}

@@ -7,7 +7,7 @@ import (
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 )
 
 type BuiltinService struct {
@@ -114,7 +114,7 @@ func NewBuiltinService() *BuiltinService {
 	return new(BuiltinService)
 }
 
-func (self BuiltinService) SendMessage(ctx context.Context, msg jsonrpc.IMessage) error {
+func (self BuiltinService) SendMessage(ctx context.Context, msg jsonz.Message) error {
 	factory := rpcrouter.RouterFactoryFromContext(ctx)
 	commonRouter := factory.CommonRouter()
 	self.conn.MsgInput() <- rpcrouter.CmdMsg{

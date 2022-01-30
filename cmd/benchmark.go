@@ -11,7 +11,7 @@ import (
 
 	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
 	client "github.com/superisaac/jointrpc/client"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 	//example "github.com/superisaac/jointrpc/client/example"
 	//grpc "google.golang.org/grpc"
 )
@@ -37,7 +37,7 @@ func CommandCallBenchmark() {
 	method := args[0]
 	clParams := args[1:len(args)]
 
-	params, err := jsonrpc.GuessJsonArray(clParams)
+	params, err := jsonz.GuessJsonArray(clParams)
 	if err != nil {
 		panic(err)
 	}

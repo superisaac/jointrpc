@@ -11,7 +11,7 @@ import (
 	"github.com/superisaac/jointrpc/dispatch"
 	misc "github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	jsonrpc "github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 )
 
 // Bridge
@@ -74,7 +74,7 @@ func (self *Bridge) requestReceived(cmdMsg rpcrouter.CmdMsg, fromAddress string)
 				return resmsg.MustResult(), nil
 			}
 		}
-		return nil, &jsonrpc.RPCError{404, "method not found", false}
+		return nil, &jsonz.RPCError{404, "method not found", false}
 	} else {
 		log.Warnf("unexpected msg received %+v", msg)
 		return nil, nil
@@ -131,7 +131,7 @@ func (self *Edge) onStateChange(state *rpcrouter.ServerState) {
 	methodNames := make(misc.StringSet)
 	if state != nil {
 		for _, minfo := range state.Methods {
-			if !jsonrpc.IsPublicMethod(minfo.Name) {
+			if !jsonz.IsPublicMethod(minfo.Name) {
 				continue
 			}
 			if _, ok := methodNames[minfo.Name]; ok {
@@ -182,7 +182,7 @@ func (self *Edge) Start(rootCtx context.Context, bridge *Bridge) error {
 	self.remoteClient.OnAuthorized(func() {
 		req := self.remoteClient.NewWatchStateRequest()
 		self.remoteClient.LiveCall(rootCtx, req,
-			func(res jsonrpc.IMessage) {
+			func(res jsonz.Message) {
 				log.Infof("authorized, watch state")
 			})
 	})

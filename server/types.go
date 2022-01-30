@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/superisaac/jointrpc/dispatch"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jsonrpc"
+	"github.com/superisaac/jsonz"
 )
 
 type StreamDispatcher struct {
@@ -14,7 +14,7 @@ type StreamDispatcher struct {
 }
 
 type IReceiver interface {
-	Recv() (jsonrpc.IMessage, error)
+	Recv() (jsonz.Message, error)
 }
 
 // Websocket server

@@ -5,8 +5,8 @@ import (
 	"context"
 	log "github.com/sirupsen/logrus"
 	"github.com/superisaac/jointrpc/misc"
-	jsonrpc "github.com/superisaac/jsonrpc"
-	schema "github.com/superisaac/jsonrpc/schema"
+	"github.com/superisaac/jsonz"
+	schema "github.com/superisaac/jsonz/schema"
 	"time"
 )
 
@@ -55,11 +55,11 @@ func (self ConnT) GetMethods() []string {
 	return keys
 }
 
-func (self ConnT) ValidateRequestMsg(reqMsg *jsonrpc.RequestMessage) (bool, jsonrpc.IMessage) {
+func (self ConnT) ValidateRequestMsg(reqMsg *jsonz.RequestMessage) (bool, jsonz.Message) {
 	if info, ok := self.ServeMethods[reqMsg.Method]; ok && info.Schema() != nil {
 		s := info.Schema()
 		validator := schema.NewSchemaValidator()
-		errPos := validator.Validate(s, jsonrpc.MessageInterface(reqMsg))
+		errPos := validator.Validate(s, jsonz.MessageInterface(reqMsg))
 		if errPos != nil {
 			errmsg := errPos.ToMessage(reqMsg)
 			return false, errmsg
@@ -68,11 +68,11 @@ func (self ConnT) ValidateRequestMsg(reqMsg *jsonrpc.RequestMessage) (bool, json
 	return true, nil
 }
 
-func (self ConnT) ValidateNotifyMsg(notifyMsg *jsonrpc.NotifyMessage) (bool, error) {
+func (self ConnT) ValidateNotifyMsg(notifyMsg *jsonz.NotifyMessage) (bool, error) {
 	if info, ok := self.ServeMethods[notifyMsg.Method]; ok && info.Schema() != nil {
 		s := info.Schema()
 		validator := schema.NewSchemaValidator()
-		errPos := validator.Validate(s, jsonrpc.MessageInterface(notifyMsg))
+		errPos := validator.Validate(s, jsonz.MessageInterface(notifyMsg))
 		if errPos != nil {
 			return false, errPos
 		}
@@ -80,11 +80,11 @@ func (self ConnT) ValidateNotifyMsg(notifyMsg *jsonrpc.NotifyMessage) (bool, err
 	return true, nil
 }
 
-func (self ConnT) ValidateResultMsg(resMsg *jsonrpc.ResultMessage, reqMsg *jsonrpc.RequestMessage) (bool, jsonrpc.IMessage) {
+func (self ConnT) ValidateResultMsg(resMsg *jsonz.ResultMessage, reqMsg *jsonz.RequestMessage) (bool, jsonz.Message) {
 	if info, ok := self.ServeMethods[reqMsg.Method]; ok && info.Schema() != nil {
 		s := info.Schema()
 		validator := schema.NewSchemaValidator()
-		errPos := validator.Validate(s, jsonrpc.MessageInterface(resMsg))
+		errPos := validator.Validate(s, jsonz.MessageInterface(resMsg))
 		if errPos != nil {
 			errmsg := errPos.ToMessage(reqMsg)
 			return false, errmsg
@@ -131,7 +131,7 @@ func (self *ConnT) HandleRouteMessage(ctx context.Context, cmdMsg CmdMsg) error 
 }
 
 func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
-	reqMsg, _ := cmdMsg.Msg.(*jsonrpc.RequestMessage)
+	reqMsg, _ := cmdMsg.Msg.(*jsonz.RequestMessage)
 	if self.router.factory.Config.ValidateSchema() {
 		if v, errmsg := self.ValidateRequestMsg(reqMsg); !v && errmsg != nil {
 			cmdMsg.ChRes <- cmdMsg.Res(errmsg)
@@ -157,7 +157,7 @@ func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
 }
 
 func (self *ConnT) handleNotify(ctx context.Context, cmdMsg CmdMsg) error {
-	notifyMsg, _ := cmdMsg.Msg.(*jsonrpc.NotifyMessage)
+	notifyMsg, _ := cmdMsg.Msg.(*jsonz.NotifyMessage)
 	if self.router.factory.Config.ValidateSchema() {
 		if v, err := self.ValidateNotifyMsg(notifyMsg); !v && err != nil {
 			notifyMsg.Log().Errorf("notify not valid, %s", err.Error())
@@ -173,7 +173,7 @@ func (self *ConnT) handleResultOrError(ctx context.Context, cmdMsg CmdMsg) error
 	msg := cmdMsg.Msg
 	msgId := msg.MustId()
 	if pending, ok := self.pendings[msgId]; ok {
-		origReq, ok := pending.cmdMsg.Msg.(*jsonrpc.RequestMessage)
+		origReq, ok := pending.cmdMsg.Msg.(*jsonz.RequestMessage)
 		misc.Assert(ok, "original is not request")
 		// delete pendings
 		delete(self.pendings, msgId)
@@ -187,18 +187,18 @@ func (self *ConnT) handleResultOrError(ctx context.Context, cmdMsg CmdMsg) error
 			msg.Log().Warnf("result traceid is different from original request %s", origReq.TraceId())
 		}
 
-		if resMsg, ok := msg.(*jsonrpc.ResultMessage); ok {
+		if resMsg, ok := msg.(*jsonz.ResultMessage); ok {
 			if self.router.factory.Config.ValidateSchema() {
 				if v, errmsg := self.ValidateResultMsg(resMsg, origReq); !v && errmsg != nil {
 					pending.cmdMsg.ChRes <- cmdMsg.Res(errmsg)
 					return nil
 				}
 			}
-			newRes := jsonrpc.NewResultMessage(origReq, resMsg.Result)
+			newRes := jsonz.NewResultMessage(origReq, resMsg.Result)
 			pending.cmdMsg.ChRes <- cmdMsg.Res(newRes)
 			return nil
-		} else if errMsg, ok := msg.(*jsonrpc.ErrorMessage); ok {
-			newErr := jsonrpc.NewErrorMessage(origReq, errMsg.Error)
+		} else if errMsg, ok := msg.(*jsonz.ErrorMessage); ok {
+			newErr := jsonz.NewErrorMessage(origReq, errMsg.Error)
 			pending.cmdMsg.ChRes <- cmdMsg.Res(newErr)
 			return nil
 		}
@@ -218,8 +218,8 @@ func (self *ConnT) returnTimeout(pending ConnPending) {
 		}
 	}()
 
-	reqMsg, _ := pending.cmdMsg.Msg.(*jsonrpc.RequestMessage)
-	errMsg := jsonrpc.ErrTimeout.ToMessage(reqMsg)
+	reqMsg, _ := pending.cmdMsg.Msg.(*jsonz.RequestMessage)
+	errMsg := jsonz.ErrTimeout.ToMessage(reqMsg)
 	errCmdMsg := pending.cmdMsg
 	errCmdMsg.Msg = errMsg
 	pending.cmdMsg.ChRes <- errCmdMsg
