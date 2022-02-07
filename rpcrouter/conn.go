@@ -144,7 +144,7 @@ func (self *ConnT) handleRequest(ctx context.Context, cmdMsg CmdMsg) error {
 	}
 
 	expireTime := time.Now().Add(cmdMsg.Timeout)
-	newMsgId := misc.NewUuid()
+	newMsgId := jsonz.NewUuid()
 	newReqMsg := reqMsg.Clone(newMsgId)
 	self.pendings[newMsgId] = ConnPending{
 		cmdMsg: cmdMsg,

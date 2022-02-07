@@ -49,7 +49,7 @@ func (self *VarsService) BroadcastVars(factory *rpcrouter.RouterFactory) error {
 			continue
 		}
 		notify := jsonz.NewNotifyMessage("vars.change", []interface{}{vars})
-		notify.SetTraceId(misc.NewUuid())
+		notify.SetTraceId(jsonz.NewUuid())
 		notify.Log().Infof("broadcast vars.change")
 
 		_, err := router.CallOrNotify(

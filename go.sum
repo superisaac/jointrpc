@@ -83,6 +83,10 @@ github.com/superisaac/jsonrpc v0.0.3 h1:UuK1uTQaBPajSHOBV3ngkq1cwnA+EaVNTXyVeO+e
 github.com/superisaac/jsonrpc v0.0.3/go.mod h1:iD47oOk6MEfkLhrZdn1At5M3oxp9jrU6HtDEvmv5a8w=
 github.com/superisaac/jsonz v0.0.14 h1:OifE1diJEqBbgc3MbAjhSyqfCpsm70nKhPOD+R8VgtE=
 github.com/superisaac/jsonz v0.0.14/go.mod h1:xqYhR0gzR253NPOGXi5TSbgvZtKQEgD7ug6DDu/5Y5M=
+github.com/superisaac/jsonz v0.0.17 h1:ugDWu8f712aFCcUAXqbXp2Unqy29u9PhNyj4r8jO2DQ=
+github.com/superisaac/jsonz v0.0.17/go.mod h1:xqYhR0gzR253NPOGXi5TSbgvZtKQEgD7ug6DDu/5Y5M=
+github.com/superisaac/jsonz v0.0.21 h1:KlYffNhLnAG1vcFXrKxgPooHiBWyqhl0cuZq4qlMtq0=
+github.com/superisaac/jsonz v0.0.21/go.mod h1:xqYhR0gzR253NPOGXi5TSbgvZtKQEgD7ug6DDu/5Y5M=
 github.com/superisaac/jsoz v0.0.10 h1:+cRMTZcp+hTPuWyjBcbg3LA3bwa+gNCwT53iR8hPs5w=
 github.com/superisaac/jsoz v0.0.10/go.mod h1:YUeVmNbob9nSNG8XsL6LLQbVh1jSQuJnj0x5IfKELRQ=
 go.etcd.io/etcd v3.3.25+incompatible/go.mod h1:yaeTdrJi5lOmYerz05bd8+V7KubZs8YSFZfzsF9A6aI=

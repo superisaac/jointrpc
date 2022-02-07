@@ -62,7 +62,7 @@ func (self *Router) GatherCall(msg jsonz.Message, ns string, limit int, callOpti
 		chRes := make(MsgChannel, len(servoIds))
 
 		for _, servoId := range servoIds {
-			newId := misc.NewUuid()
+			newId := jsonz.NewUuid()
 			newmsg := reqmsg.Clone(newId)
 			self.PostMessage(CmdMsg{
 				Msg:       newmsg,

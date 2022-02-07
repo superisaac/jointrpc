@@ -10,9 +10,6 @@ import (
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
-	//datadir "github.com/superisaac/jointrpc/datadir"
-	//"github.com/superisaac/jointrpc/dispatch"
-	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/msgutil"
 	"github.com/superisaac/jointrpc/rpcrouter"
 	"github.com/superisaac/jsonz"
@@ -135,7 +132,7 @@ func (self *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// FIXME: sennity check against TraceId
 	msg.SetTraceId(r.Header.Get("X-Trace-Id"))
 	if msg.TraceId() == "" {
-		msg.SetTraceId(misc.NewUuid())
+		msg.SetTraceId(jsonz.NewUuid())
 	}
 
 	factory := rpcrouter.RouterFactoryFromContext(self.rootCtx)

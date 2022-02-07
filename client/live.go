@@ -41,7 +41,7 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 		}
 		upMethods = append(upMethods, infoDict)
 	}
-	reqId := misc.NewUuid()
+	reqId := jsonz.NewUuid()
 	params := make([]interface{}, 0)
 	params = append(params, upMethods)
 	reqmsg := jsonz.NewRequestMessage(reqId, "_stream.declareMethods", params)
@@ -52,7 +52,7 @@ func (self *RPCClient) declareMethods(rootCtx context.Context, disp *dispatch.Di
 }
 
 func (self *RPCClient) sendPing(ctx context.Context) {
-	reqId := misc.NewUuid()
+	reqId := jsonz.NewUuid()
 	ping := jsonz.NewRequestMessage(reqId, "_stream.ping", nil)
 	self.LiveCall(ctx, ping, func(res jsonz.Message) {
 		log.Debugf("pong received, %s", res.MustResult())
@@ -177,14 +177,14 @@ func (self *RPCClient) OnAuthorized(cb AuthorizedCallback) {
 }
 
 func (self *RPCClient) NewAuthRequest() *jsonz.RequestMessage {
-	reqId := misc.NewUuid()
+	reqId := jsonz.NewUuid()
 	auth := self.ClientAuth()
 	params := [](interface{}){auth.Username, auth.Password}
 	return jsonz.NewRequestMessage(reqId, "_stream.authorize", params)
 }
 
 func (self *RPCClient) NewWatchStateRequest() *jsonz.RequestMessage {
-	reqId := misc.NewUuid()
+	reqId := jsonz.NewUuid()
 	params := [](interface{}){}
 	return jsonz.NewRequestMessage(reqId, "_stream.watchState", params)
 }

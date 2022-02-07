@@ -1,14 +1,10 @@
 package client
 
 import (
-	"github.com/pkg/errors"
-	"time"
-	//"fmt"
 	"context"
-	//"github.com/superisaac/jointrpc/msgutil"
-	//intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jointrpc/misc"
+	"github.com/pkg/errors"
 	"github.com/superisaac/jsonz"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -29,7 +25,7 @@ func (self *RPCClient) LiveCall(rootCtx context.Context, reqmsg *jsonz.RequestMe
 		reqmsg.SetTraceId(opt.traceId)
 	}
 	if reqmsg.TraceId() == "" {
-		reqmsg.SetTraceId(misc.NewUuid())
+		reqmsg.SetTraceId(jsonz.NewUuid())
 	}
 	reqmsg.Log().Debug("request message created")
 

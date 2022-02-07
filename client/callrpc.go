@@ -10,7 +10,6 @@ import (
 	//simplejson "github.com/bitly/go-simplejson"
 	log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/msgutil"
 	"github.com/superisaac/jsonz"
 )
@@ -59,7 +58,7 @@ func (self *RPCClient) CallHTTPMessage(rootCtx context.Context, reqmsg jsonz.Mes
 		reqmsg.SetTraceId(opt.traceId)
 	}
 	if reqmsg.TraceId() == "" {
-		reqmsg.SetTraceId(misc.NewUuid())
+		reqmsg.SetTraceId(jsonz.NewUuid())
 	}
 
 	reqmsg.Log().Debug("request message created")
@@ -114,7 +113,7 @@ func (self *RPCClient) CallGRPCMessage(rootCtx context.Context, reqmsg jsonz.Mes
 		reqmsg.SetTraceId(opt.traceId)
 	}
 	if reqmsg.TraceId() == "" {
-		reqmsg.SetTraceId(misc.NewUuid())
+		reqmsg.SetTraceId(jsonz.NewUuid())
 	}
 	reqmsg.Log().Debug("request message created")
 	envolope := msgutil.MessageToEnvolope(reqmsg)
@@ -162,7 +161,7 @@ func (self *RPCClient) SendHTTPNotify(rootCtx context.Context, method string, pa
 	notify := jsonz.NewNotifyMessage(method, params)
 
 	if opt.traceId == "" {
-		opt.traceId = misc.NewUuid()
+		opt.traceId = jsonz.NewUuid()
 	}
 
 	notify.SetTraceId(opt.traceId)
@@ -204,7 +203,7 @@ func (self *RPCClient) SendGRPCNotify(rootCtx context.Context, method string, pa
 	notify := jsonz.NewNotifyMessage(method, params)
 
 	if opt.traceId == "" {
-		opt.traceId = misc.NewUuid()
+		opt.traceId = jsonz.NewUuid()
 	}
 
 	notify.SetTraceId(opt.traceId)

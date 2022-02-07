@@ -6,7 +6,7 @@ import (
 	"github.com/superisaac/jointrpc/dispatch"
 	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jointrpc/rpcrouter"
-	//"github.com/superisaac/jsonz"
+	"github.com/superisaac/jsonz"
 )
 
 func ReceiverLoop(ctx context.Context, sender dispatch.ISender, receiver IReceiver, conn *rpcrouter.ConnT, chResult chan dispatch.ResultT) {
@@ -24,7 +24,7 @@ func ReceiverLoop(ctx context.Context, sender dispatch.ISender, receiver IReceiv
 		}
 
 		if msg.TraceId() == "" {
-			msg.SetTraceId(misc.NewUuid())
+			msg.SetTraceId(jsonz.NewUuid())
 		}
 
 		instRes := streamDisp.HandleMessage(

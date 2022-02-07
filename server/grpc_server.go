@@ -71,7 +71,7 @@ func (self *JointRPC) Call(context context.Context, req *intf.JSONRPCCallRequest
 		return nil, rpcrouter.ErrRequestNotifyRequired
 	}
 	if reqmsg.TraceId() == "" {
-		reqmsg.SetTraceId(misc.NewUuid())
+		reqmsg.SetTraceId(jsonz.NewUuid())
 	}
 	reqmsg.Log().Debugf("from ip %s", remotePeer.Addr)
 
@@ -124,7 +124,7 @@ func (self *JointRPC) Notify(context context.Context, req *intf.JSONRPCNotifyReq
 		return nil, rpcrouter.ErrRequestNotifyRequired
 	}
 	if notifymsg.TraceId() == "" {
-		notifymsg.SetTraceId(misc.NewUuid())
+		notifymsg.SetTraceId(jsonz.NewUuid())
 	}
 
 	notifymsg.Log().Debugf("from ip %s", remotePeer.Addr)

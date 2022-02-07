@@ -9,13 +9,10 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	misc "github.com/superisaac/jointrpc/misc"
 	rpcrouter "github.com/superisaac/jointrpc/rpcrouter"
 	"github.com/superisaac/jsonz"
-	"strings"
-	//"net"
-	//datadir "github.com/superisaac/jointrpc/datadir"
 	http "net/http"
+	"strings"
 )
 
 type MetricsCollector struct {
@@ -75,7 +72,7 @@ func (self *MetricsCollector) Collect() ([]string, error) {
 }
 
 func (self *MetricsCollector) CollectRouter(router *rpcrouter.Router) ([]string, error) {
-	msgId := misc.NewUuid()
+	msgId := jsonz.NewUuid()
 	emptyArr := make([]interface{}, 0)
 	reqmsg := jsonz.NewRequestMessage(msgId, "metrics.collect", emptyArr)
 	resmsg, err := router.CallOrNotify(reqmsg, router.Name(), rpcrouter.WithBroadcast(true))

@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	//log "github.com/sirupsen/logrus"
 	intf "github.com/superisaac/jointrpc/intf/jointrpc"
-	"github.com/superisaac/jointrpc/misc"
 	"github.com/superisaac/jsonz"
 )
 
@@ -31,7 +30,7 @@ func (self *RPCClient) DeclareDelegates(rootCtx context.Context, methods []strin
 		return errors.New("live stream not setup")
 	}
 
-	reqId := misc.NewUuid()
+	reqId := jsonz.NewUuid()
 	if methods == nil {
 		methods = make([]string, 0)
 	}
